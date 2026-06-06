@@ -69,6 +69,35 @@ fill ratio + 0-overlap (Per-Stone Overlap), rubble-match total cost + mean yield
 3. SCOPE now: build BRANCH A (decompose -> pack into gangsaw) first; BRANCH B (rubble match) needs a rubble
    catalog fixture + the Hungarian matcher built.
 
+## OUT-OF-PROCESS execution (decided 2026-06-06 after in-process lag)
+In-process (live Rhino via MCP run_python) is TOO LAGGY: importing the full 70k-face bun_zipper.ply +
+FillHoles + Weld exceeded the 300 s MCP timeout and HUNG the live slot. Decision: run the heavy geometry
+OUT-OF-PROCESS in the headless harness (Rhino.Inside, no UI lag, crash-isolated); use the live Rhino ONLY
+for PNG captures after.
+
+Implementation (a new `--statueblocks` harness mode):
+- INPUT: use the lighter `bun_zipper_res2.ply` (8171 v / 16301 f, ASCII) - plenty of surface for 0.5 m
+  boundary blocks, fast enough both in- and out-of-process. (res3 1889 v is the ultra-light fallback.)
+- PLY PARSE: ASCII `format ascii 1.0`, `element vertex N` (x y z confidence intensity = 5 floats),
+  `element face M` (uchar count + int idx). Build a RhinoCommon Mesh.
+- SANITIZE: Mesh.FillHoles + Mesh.Weld(pi) + RebuildNormals/UnifyNormals; verify IsClosed + IsManifold.
+  (Optional GeogramMesh.RemeshUniform for uniform faces - native, only if needed.)
+- SCALE: uniform so Z-extent = 3.0 m; translate base to z=0, centre XY.
+- DECOMPOSE (replicate CgalCutComponents.cs:363-417 WITH interior-skip): grid nX=nY=nZ=ceil(extent/0.5).
+  quarrySnap = CgalConvert.ToSnapshot(statue) [or manual verts/tris via `new MeshSnapshot(verts,tris)`].
+  Per cell: build cellBox -> if cell fully INSIDE statue (BenchBoundary.ContainsBox / all 8 corners + center
+  inside) emit the cube directly (NO boolean, tag=interior); else CgalMeshBoolean.Intersection(quarrySnap,
+  cellSnap, CsgKernelMode.Hybrid, out backend) (tag=boundary, REAL faces). try/catch per cell; drop empties.
+- TAG + METRICS: per block {interior|boundary, true signed-tetra volume, AABB}. recovered_vol_ratio,
+  boundary_block_ratio, block-size distribution, count. Write blocks -> 15_blocks.3dm (layer per tag) +
+  metrics JSON + console report.
+- NATIVE DLLs: copy frahan_cgal.dll + frahan_geogram.dll + gmp-10.dll next to the harness exe (or
+  AddDllDirectory(install/plugin)) so CgalMeshBoolean.IsAvailable is true (else it falls back to managed BSP).
+- CgalConvert lives in src/Frahan.StonePack.GH/CgalTestComponents.cs; Compile-Include it IF Grasshopper-free,
+  else hand-write the Rhino-Mesh<->MeshSnapshot conversion (MeshSnapshot ctor is `new MeshSnapshot(verts,tris)`).
+- CAPTURES: after the harness writes 15_blocks.3dm, open it in the live Rhino (restarted) and capture PNGs
+  per step (clean bunny, grid, blocks colored by interior/boundary, pack, rubble match).
+
 ## Gaps surfaced by research (to implement or work around)
 - Quarry Decompose By Mesh does not TAG interior/boundary or skip interior booleans -> add via Clip Boxes By
   Mesh + volume compare (workaround) or a small component addition.
