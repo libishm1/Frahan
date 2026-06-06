@@ -27,6 +27,20 @@ on the photogrammetry cloud).
 is background-threaded with a default-false Run gate (open the file -> nothing runs; flip Run
 left-to-right).
 
+## Packable volume (Poisson Geogram -> remesh -> mesh bench -> offset)
+From the same `.laz` cloud, processed through the reconstruction chain (verified via the Core engines
+the GH components call):
+
+![Scan surface + packable bench volume](04_packable_volume.png)
+
+- `Scan Reconstruct` **Poisson (Geogram)** on the 33,608-voxel cloud -> rock surface (33,765 tris, 1.7 s).
+- `Mesh Remesh (Geogram)` -> clean uniform surface (15,651 tris).
+- `Bench From Mesh` + inward **offset** (2 m) -> a closed axis-aligned **packable volume** inside the
+  scanned rock envelope: a 101 x 101 x 10 m bench box, **~97,885 m3**. Wire it as the container into
+  `Block Pack (Tree)` / `Rubble Multi-Bin Pack` / `Fracture Block Pack` for extraction packing.
+- Files: `04_packable_volume.3dm` (scan surface + packable box), `04_packable_volume.png`,
+  `04_packable_volume_metrics.json`.
+
 ## Files
 - `11_granite_scan_to_bench.gh` - the LiDAR scan-to-bench card.
 - `04_scan_to_bench.gh` / `.3dm` - the earlier scan-to-bench canvas + result.

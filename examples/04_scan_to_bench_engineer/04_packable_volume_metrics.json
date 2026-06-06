@@ -1,0 +1,20 @@
+{
+ "workflow": "LiDAR .laz -> Poisson(Geogram) reconstruct -> Geogram remesh -> mesh bench (inward offset) -> packable volume",
+ "las_input_pts": 4977725,
+ "voxel_cloud_pts": 33608,
+ "poisson_tris": 33765,
+ "remesh_tris": 15651,
+ "scan_extent_m": [
+  105.1,
+  105.0,
+  19.3
+ ],
+ "offset_m": 2.0,
+ "packable_box_m": [
+  101.1,
+  101.0,
+  9.6
+ ],
+ "packable_volume_m3": 97885.4,
+ "note": "Poisson(Geogram) surface from the LiDAR cloud, Geogram-remeshed; the mesh bench is an inward-offset axis-aligned box inside the scanned rock envelope - a clean closed packable container for Block Pack / Rubble Multi-Bin."
+}
