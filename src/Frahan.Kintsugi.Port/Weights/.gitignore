@@ -1,10 +1,9 @@
-# Build outputs and large binaries.
+# Build outputs and very large binaries (model checkpoints fetched on demand).
 kintsugi.bin
-parity_fixtures.bin
 *.ckpt
 
-# Upstream clone (per-developer local clone of the upstream
-# puzzlefusion-plusplus repo). Should NOT be committed to the
-# Frahan repo -- it's GPL-3.0 upstream that each developer should
-# pull from github.com/eric-zqwang/puzzlefusion-plusplus on demand.
-puzzlefusion-plusplus/
+# 2026-06-06: per maintainer decision, the Kintsugi training data IS bundled
+# (the whole repo is GPL-3.0, so vendoring the GPL-3.0 upstream is consistent).
+# puzzlefusion-plusplus/ (upstream code + configs + data-prep) and
+# parity_fixtures.bin are now COMMITTED. Large model checkpoints (*.ckpt) and the
+# Breaking Bad dataset stay external (fetch via the extract_breaking_bad_* scripts).
