@@ -1,0 +1,16 @@
+{
+ "workflow": "Stereotomy voussoir arch carved from ETH rubble (match + CGAL trim to radial voussoir cell)",
+ "arch": "semicircular",
+ "R_intrados_m": 2.0,
+ "ring_t_m": 0.55,
+ "width_m": 0.6,
+ "voussoirs": 11,
+ "span_m": 4.0,
+ "rubble_scale": 1.15,
+ "real_rubble_trim": 9,
+ "clean_fallback": 2,
+ "arch_volume_m3": 2.3266,
+ "recovered_m3": 1.7339,
+ "coverage_pct": 74.5,
+ "note": "each radial voussoir cell trimmed (CGAL intersect) from a matched ETH rubble stone posed over it; valid rubble-trim where the result is closed and <= cell volume, else clean voussoir fallback (exact); radial bed joints per stereotomy"
+}
