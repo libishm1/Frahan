@@ -1,0 +1,16 @@
+{
+ "workflow": "Ashlar Pack coursed-ashlar wall (running bond)",
+ "n_blocks_inventory": 60,
+ "n_placed": 45,
+ "wall_m": [
+  3.0,
+  1.2,
+  0.3
+ ],
+ "course_height_m": 0.15,
+ "bed_head_joint_m": 0.005,
+ "stagger": 0.5,
+ "note": "Wall thickness 0.3 m > block depth 0.18 m so blocks fit; course height 0.15 = block height. Blocks coloured by course.",
+ "component": "Ashlar Pack (Frahan>Masonry) + Pack Preview",
+ "data": "dressed block boxes internalized in .gh + baked in .3dm"
+}

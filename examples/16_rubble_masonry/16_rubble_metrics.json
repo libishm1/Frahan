@@ -1,0 +1,10 @@
+{
+ "workflow": "Rubble Wall Settle on real ETH1100 dry-stone (staggered courses)",
+ "n_stones": 40,
+ "n_settled": 40,
+ "n_stable": 36,
+ "stable_pct": 90.0,
+ "width_units": 8.0,
+ "note": "Width=8 -> ~5 staggered courses; running bond emerges from per-(x,y)-cell dimple settling of the course below",
+ "data": "ETH1100 0000-0039, internalized in .gh + baked in .3dm"
+}
