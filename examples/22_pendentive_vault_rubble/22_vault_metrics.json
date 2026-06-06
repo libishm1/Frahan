@@ -1,0 +1,18 @@
+{
+ "workflow": "Pendentive (sail) vault voussoirs carved from ETH rubble boulders (evolve-match + CGAL trim)",
+ "vault": "pendentive dome / sail vault (sphere over square)",
+ "R_m": 2.5,
+ "square_half_m": 1.6,
+ "thickness_m": 0.4,
+ "grid": [
+  6,
+  6
+ ],
+ "voussoirs": 36,
+ "rubble_trim": 17,
+ "exact_contained": 0,
+ "arch_volume_m3": 5.6793,
+ "recovered_m3": 4.8369,
+ "coverage_pct": 85.2,
+ "note": "sphere-over-square pendentive dome tessellated by lines of curvature (meridian/parallel patches); each voussoir cell evolve-matched (24 rot seeds + SE3 containment) to an ETH boulder then CGAL-trimmed to the voussoir geometry"
+}
