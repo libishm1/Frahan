@@ -1,0 +1,7 @@
+{
+ "algorithm":"CoACD convex blocks + multi-bin voxel containment",
+ "n_blocks":79, "n_placed":60, "n_unplaced":19, "bins_used":11,
+ "total_block_vol_m3":5.5172, "placed_block_vol_m3":1.3647, "total_stone_vol_used_m3":7.0383,
+ "material_efficiency":0.1939, "mean_bin_fill":0.1890, "blocks_per_bin_mean":5.45, "blocks_per_bin_max":14,
+ "vox":0.05, "kerf":0.01, "decomposition":"CoACD convex"
+}

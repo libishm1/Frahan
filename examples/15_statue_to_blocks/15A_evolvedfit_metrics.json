@@ -1,0 +1,6 @@
+{
+ "algorithm":"A evolved single-block-in-rubble fit (24 rotation seeds + (1+8)-ES pose refine, all-vertex IsPointInside enclosure, tightest stone per block, 1 block/stone)",
+ "n_blocks":100, "n_placed":54, "stones_used":54, "es_refined":21,
+ "mean_carve_yield":0.0969, "min_yield":0.0052, "max_yield":0.3802,
+ "enclosure_pct":1.0, "rubble_used_m3":11.8829, "placed_block_vol_m3":4.8012, "material_efficiency":0.4040
+}

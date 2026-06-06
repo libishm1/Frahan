@@ -1,0 +1,11 @@
+{
+ "method": "CoACD convex decomposition (SarahWeiii 2022, threshold 0.06 m RealMetric, merge, seed 0)",
+ "decompose_s": 187.5,
+ "n_parts": 81,
+ "bunny_vol_m3": 5.4009,
+ "sum_part_vol_m3": 5.5185,
+ "recovery_ratio": 1.0218,
+ "vol_min": 0.00045,
+ "vol_med": 0.01889,
+ "vol_max": 0.8803
+}

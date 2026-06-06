@@ -90,38 +90,72 @@ guillotine, the same engine as example 11) re-nests the 100 fabricable pieces (>
 so at 100+ pieces the practical paths are: batch by region, or keep the as-carved plan above. This is a
 known packer-scaling limit, reported honestly rather than hidden.
 
-## Branch B - match to a rubble lot (verified)
-Each carved block is matched one-to-one to a stone from an ETH1100 rubble lot (the block is carved from
-that stone). `Block Pair Match 3D` (planar-face mating) is still a skeleton, so this uses an honest
-AABB-containment proxy: a block fits a stone iff its sorted AABB dims are all <= the stone's sorted AABB
-dims (axis-permutable). Greedy one-to-one assignment, largest block first, picks the smallest-volume
-stone that still contains the block (max carve yield). Carve yield = block true volume / stone true
-volume. `Soft ICP 3D` refines the pose post-match. Runner: `match_rubble.py` (parses the OBJ lot
-directly). Units: meters.
+## Branch B - carve blocks from a rubble lot (TRUE enclosure)
 
-Two framings, both verified on 400 ETH1100 stones, 100 fabricable blocks (>= 1 L):
+The goal: match each carved block to a real ETH1100 rubble stone it can be carved FROM, meaning the
+block must sit FULLY INSIDE the stone (every block vertex inside the stone mesh).
 
-| Framing | Mean carve yield | Rubble used | Matched |
-|---|---|---|---|
-| Natural rubble (0.5-1.4 m, as scanned) | 30.3 % | 21.5 m3 | 100/100 |
-| Rubble scaled to the avg block (x0.74, mean stone 0.53 m) | 58.8 % | 8.9 m3 | 100/100 |
+**The flawed first attempt (AABB-containment proxy).** A sorted-AABB-dims fit with greedy one-to-one
+assignment reported 30-58 % "yield", but it never tested real enclosure. Measured after the fact, the
+matched blocks were only **30-47 % enclosed**: the rest poked through the irregular stone surface
+(an AABB is bigger than the wavy stone inside it). Scaling the lot tighter made the piercing worse.
+That proxy is superseded by the three true-enclosure methods below. Runner kept for reference:
+`match_rubble.py`; the poke-out is visible in `15B_rubble_match_scaled.png`.
 
-Natural ETH stones are much larger than the <= 0.5 m blocks, so small blocks sit in oversized stone
-(low yield, lots of waste). Scaling the lot to the average block being cut (uniform x0.7355 so the mean
-stone is 1.4x the average block linearly, natural size variation preserved) more than doubles the mean
-yield and halves the rubble consumed. Both are kept for comparison.
+**The fix: true all-vertex enclosure.** All three methods below accept a placement only when every
+block vertex returns `Mesh.IsPointInside == true` on the (closed, repaired) stone. Engine ported from
+the verified containment test in `Fracture Block Pack` (`BlockInside` + voxel occupancy), driven
+headless via `run_csharp` (native `IsPointInside` at ~1 us each). Lot: 150 closed ETH1100 stones,
+natural scale; blocks: the 100 fabricable (>= 1 L) grid blocks, or the CoACD convex blocks.
 
-![Natural-size rubble match](15B_rubble_match_natural.png)
-*Natural ETH1100 rubble (oversized): each carved block (red) nested in its matched stone (ghosted).*
+### Three methods, head to head (same rubble lot, 100 % enclosure enforced)
 
-![Scaled rubble match](15B_rubble_match_scaled.png)
-*Rubble scaled to the average block: snug carve fit, ~50-60 % yield.*
+| Method | Decomposition | Blocks placed | Stones used | Blocks / stone | Rubble used | Enclosure |
+|---|---|---|---|---|---|---|
+| A - evolved single fit | grid (real-face) | 54 / 100 | 54 | 1.0 | 11.9 m3 | 100 % |
+| B - multi-bin pack | grid (real-face) | 74 / 100 | 36 | 2.1 | 19.8 m3 | 100 % |
+| C - multi-bin pack | CoACD convex | 60 / 79 | 11 | 5.5 | 7.0 m3 | 100 % |
 
-Honest limit: AABB-containment over-promises on the highest-yield matches (block AABB approx stone
-AABB), because the irregular stone is smaller than its AABB, so a full block can pierce the real
-surface. True surface-containment (or the face-mating `Block Pair Match 3D` once built, plus
-`Adaptive Block Match 3D` to trim oversize stones) replaces the proxy. Convert mm-default matchers to
-meters at the boundary.
+**A - evolved single-block fit** (`15A_evolvedfit.png`, `.3dm`, `15A_evolvedfit_metrics.json`). One block
+per stone, carved from the tightest stone that can fully enclose it. The pose is *evolved*: 24
+axis-rotation seeds, then a (1+8)-ES that perturbs rotation + translation to drive the outside-vertex
+count to zero (21 of 54 needed the ES). Honest result: only **54 % of rectangular grid blocks can be
+fully enclosed at all** in irregular rubble; a 0.5 m cube's corners hit the stone's concavities. Best
+per-block fit, but one block per stone wastes the rest of each stone.
+
+![Evolved single-block fit](15A_evolvedfit.png)
+*A: each red grid block evolved into the tightest stone that fully encloses it (gray cage). One per stone.*
+
+**B - multi-bin pack** (`15B_multibin_pack.png`, `15B_multibin.3dm`, `15B_multibin_metrics.json`). Each
+stone is a bin; a voxel-occupancy FFD packer places multiple blocks per stone (real-vertex enclosure +
+non-overlap), spilling to the next stone. Places more blocks (74) sharing 36 stones (2.1 / bin).
+
+![Grid multi-bin](15B_multibin_pack.png)
+*B: grid blocks packed multiple-per-stone, coloured by bin.*
+
+**C - CoACD convex blocks + multi-bin** (`15C_multibin_pack.png`, `15C_multibin.3dm`,
+`15C_coacd_*.json/.3dm`, decomposition in `15C_coacd_decompose.png`). Decomposing the bunny with CoACD
+(SarahWeiii 2022, threshold 0.06 m, 81 convex parts, recovery 1.02) instead of the grid gives convex
+pieces that enclose far better in irregular rubble. Same multi-bin packer now reaches **5.5 blocks per
+stone and just 11 stones** for 60 blocks - roughly 3x fewer stones than the grid blocks.
+
+![CoACD decomposition](15C_coacd_decompose.png)
+*CoACD convex decomposition of the 3 m bunny (81 parts).*
+
+![CoACD multi-bin](15C_multibin_pack.png)
+*C: convex blocks packed multiple-per-stone; far denser than grid blocks.*
+
+### Read-out
+- All three enforce TRUE enclosure (100 %), fixing the 30-47 % poke-out of the AABB proxy.
+- Evolving the pose (A) gives the best single-block fit but cannot enclose ~46 % of rectangular blocks
+  and wastes one stone per block.
+- Multi-bin (B) shares stones and places more blocks.
+- The real lever is the DECOMPOSITION: CoACD convex blocks (C) enclose and pack dramatically better
+  than rectangular grid blocks (11 vs 36 stones). For a rubble-carving factory, decompose convex.
+- Honest limits: greedy FFD is not optimal bin-minimisation; axis-aligned-only placement (6 orientations
+  in the packer, 24 seeds in the evolved fit) under-fills wavy stones; corner/voxel sampling is backed
+  by a final all-vertex enclosure check. `Adaptive Block Match 3D` (trim oversize stones) and the
+  face-mating `Block Pair Match 3D` (when built) are the next refinements.
 
 ## Performance note (in-process vs out-of-process)
 In-process (live Rhino via MCP) is fast and stable on the res2 + remesh path: 3.6 s for 173 booleans,
