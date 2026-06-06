@@ -1,0 +1,65 @@
+## Kintsugi component licensing notice
+
+The `Frahan.GH.Kintsugi.KintsugiAssemblyComponent` and any
+`Frahan.Kintsugi.Port.*` derivative-work classes that port code from
+PuzzleFusion++ (Wang, Chen, Furukawa 2024; https://github.com/eric-zqwang/puzzlefusion-plusplus)
+are licensed under the **GNU General Public License version 3.0**
+(GPL-3.0).
+
+The PuzzleFusion++ original is GPL-3.0; per the GPL viral-copyleft
+terms, any work that translates, reimplements, or includes substantial
+portions of GPL-licensed code falls under GPL-3.0 itself, and must
+ship its source on request.
+
+Libish (the project owner) elected to honor the GPL on 2026-05-22 in
+order to do a direct, line-by-line port of the original PyTorch
+implementation rather than the previous clean-room geometric
+substitute.
+
+## Scope of this notice
+
+GPL-3.0 applies to:
+- `Frahan.StonePack.GH/Kintsugi/` directory and its descendants.
+- Any `Frahan.Kintsugi.Port` C# files that translate functions /
+  classes / weights / training-protocol details from the
+  PuzzleFusion++ Python source.
+
+GPL-3.0 does NOT apply to:
+- The rest of the `Frahan.StonePack.*` codebase, which retains its
+  original (non-GPL) licensing.
+- Frahan-original algorithms in `Frahan.StonePack.Core` or
+  `Frahan.EdgeMatching.Core` that pre-date this addition.
+- The geometric `KintsugiAssemblyComponent` 2026-05-22 clean-room
+  variant (kept as a fallback path; it never linked GPL code).
+
+## Practical implication
+
+If the full port ships, the resulting `Frahan.StonePack.gha` becomes
+GPL-3.0 in distribution because it links the ported port code. Users
+of the `.gha` may request the source. Frahan must make the source
+available.
+
+The non-GPL parts of Frahan can still be developed independently,
+but binary distribution of the COMBINED `.gha` is GPL-3.0 once the
+port lands.
+
+## Full license text
+
+The full GPL-3.0 license text is at:
+  https://www.gnu.org/licenses/gpl-3.0.txt
+
+Distribute a copy of that text alongside any binary release of the
+Frahan `.gha` once the port code is included.
+
+## Source of the upstream work
+
+  PuzzleFusion++: Auto-agglomerative 3D Fracture Assembly by
+  Denoise and Verify
+  Wang, Zhengqing; Chen, Jiacheng; Furukawa, Yasutaka
+  ICLR 2025
+  arXiv:2406.00259
+  https://github.com/eric-zqwang/puzzlefusion-plusplus
+
+## Last updated
+
+2026-05-22.

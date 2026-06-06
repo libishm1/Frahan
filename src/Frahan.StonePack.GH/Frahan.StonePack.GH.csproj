@@ -1,0 +1,125 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <!-- AssemblyName unchanged: the .gha file name is what existing .gh
+         documents reference. RootNamespace updated to Frahan.GH per R1. -->
+    <AssemblyName>Frahan.StonePack</AssemblyName>
+    <RootNamespace>Frahan.GH</RootNamespace>
+    <OutputType>Library</OutputType>
+    <!-- R3 PR 8 transition release: 0.7.0. See CHANGELOG.md. -->
+    <Version>0.7.0</Version>
+    <AssemblyVersion>0.7.0.0</AssemblyVersion>
+    <FileVersion>0.7.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Frahan.StonePack.Core\Frahan.StonePack.Core.csproj" />
+    <!-- BulletSharp.x64 also referenced here so the native libbulletc.dll lands in the
+         .gha output dir (the SettleContactPhysics component uses Core's BulletSettleService).
+         Authorized 2026-06-04. -->
+    <PackageReference Include="BulletSharp.x64" Version="0.12.0" />
+    <!-- Frahan.EdgeMatching.Core (added 2026-05-11) — Trencadís / wood-plank
+         edge-matching solver. The two new GH components in this assembly
+         (EdgeMatchSolve, EdgeMatchSegments) front it on the canvas. -->
+    <ProjectReference Include="..\Frahan.EdgeMatching.Core\Frahan.EdgeMatching.Core.csproj" />
+    <!-- Frahan.Kintsugi.Port (added 2026-05-22) — GPL-3.0 direct port of
+         PuzzleFusion++. Linking it makes the resulting .gha GPL-3.0 in
+         distribution; see Kintsugi/LICENSE-GPL-3.0.txt. -->
+    <ProjectReference Include="..\Frahan.Kintsugi.Port\Frahan.Kintsugi.Port.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*.png" />
+  </ItemGroup>
+
+  <!-- E57 ingest worker: copied to the output root (beside the .gha) so
+       LoadE57CloudComponent / E57CloudWorker resolve it next to the assembly.
+       Must also be deployed alongside Frahan.StonePack.gha. Needs python +
+       pye57 + numpy on PATH at runtime. -->
+  <ItemGroup>
+    <None Include="ScanIngest\workers\frahan_e57_worker.py">
+      <Link>frahan_e57_worker.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Rhino HintPaths bumped to Rhino 8 on 2026-05-04. -->
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Grasshopper">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="GH_IO">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Kangaroo 2 (Daniel Piker) ships with Rhino 8 by default. Reference
+         the bundled DLL so Pack2DTrencadisDynamicComponent can build a
+         PhysicalSystem with Anchor / SphereCollide / OnCurve goals. -->
+    <Reference Include="KangarooSolver">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Components\KangarooSolver.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Right-click context menus on GH components need System.Windows.Forms
+         (ToolStripDropDown). Already part of the .NET Framework, but the
+         SDK-style csproj doesn't reference it implicitly on net48. -->
+    <Reference Include="System.Windows.Forms" />
+    <!-- Download Frahan Data: zip extraction (ZipFile/ZipArchive) + WebClient. -->
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <Target Name="CopyGrasshopperAssembly" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)$(AssemblyName).gha" />
+  </Target>
+
+  <!--
+    Copy libtorch native DLLs into bin/$(Configuration)/$(TargetFramework)
+    so the TorchSharp Mode=Port denoiser path can load libtorch at runtime
+    from alongside Frahan.StonePack.gha after deploy. The libtorch-cpu-win-x64
+    NuGet package ships them under runtimes/win-x64/native/ but net48
+    does not auto-copy native runtimes (a net6+ feature). We do it explicitly
+    via this AfterBuild target.
+
+    Total payload ~245 MB (torch_cpu.dll dominates at 238 MB). The Frahan
+    Kintsugi component will still work without these via the manual port
+    denoiser; libtorch is the opt-in paper-quality path. If the NuGet
+    package is not present, this target silently skips (ContinueOnError).
+  -->
+  <Target Name="CopyLibtorchNatives" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- CPU by default; CUDA when built with -p:KintsugiUseCuda=true.
+           The CUDA libtorch natives are multi-GB and only present after
+           restoring TorchSharp-cuda-windows (see Frahan.Kintsugi.Port.csproj).
+           CUDA note: the CUDA package splits its native DLLs across
+           libtorch-cuda-12.1-win-x64-part1..part9 (+ -primary/-fragment
+           sub-packages); torch_cuda.dll alone is ~928 MB, assembled in
+           part9-primary by the package's own concatenation target during
+           build. The meta-package's own native/ folder is empty, so we glob
+           every part* native folder. Fragment folders contain no .dll. -->
+      <LibtorchNativeDir Condition="'$(KintsugiUseCuda)' != 'true'">$(NuGetPackageRoot)libtorch-cpu-win-x64\2.5.1\runtimes\win-x64\native</LibtorchNativeDir>
+      <LibtorchNativeDir Condition="'$(KintsugiUseCuda)' == 'true'">$(NuGetPackageRoot)libtorch-cuda-12.1-win-x64-part*\2.5.1\runtimes\win-x64\native</LibtorchNativeDir>
+      <!--
+        LibTorchSharp.dll is the managed-to-native P/Invoke shim. It ships
+        in the TorchSharp package (NOT libtorch-cpu-win-x64). Without it the
+        very first torch.tensor() call throws DllNotFoundException at runtime
+        and the Mode=Port denoiser silently falls back to the manual C# port
+        (the 2026-05-24 "manual port" HitL observation). Keep this version in
+        sync with the TorchSharp PackageReference in Frahan.Kintsugi.Port.csproj.
+      -->
+      <TorchSharpNativeDir>$(NuGetPackageRoot)torchsharp\0.105.0\runtimes\win-x64\native</TorchSharpNativeDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <LibtorchDll Include="$(LibtorchNativeDir)\*.dll" />
+      <LibtorchDll Include="$(TorchSharpNativeDir)\LibTorchSharp.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LibtorchDll)" DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Message Text="Copied @(LibtorchDll->Count()) libtorch DLLs to $(TargetDir)"
+             Importance="high" Condition="'@(LibtorchDll->Count())' != '0'" />
+  </Target>
+</Project>

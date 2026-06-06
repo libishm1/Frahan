@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <!-- AssemblyName intentionally unchanged to preserve binary identity for
+         existing .gh / .rhp consumers. RootNamespace updated to Frahan.Core
+         after the 2026-05-04 namespace rename (R1 source-only phase). -->
+    <AssemblyName>Frahan.StonePack.Core</AssemblyName>
+    <RootNamespace>Frahan.Core</RootNamespace>
+    <!-- R3 PR 8 transition release: 0.7.0. Adds the unified IrregularSheetFill
+         facade + IrregularSheetFillComponent. V1/V2/V3 components Obsolete;
+         V506 stays primary until async unified lands. Removal in 0.8.0 per
+         R3 plan PR 9. See CHANGELOG.md for full details. -->
+    <Version>0.7.0</Version>
+    <AssemblyVersion>0.7.0.0</AssemblyVersion>
+    <FileVersion>0.7.0.0</FileVersion>
+  </PropertyGroup>
+
+  <!-- RhinoCommon is needed by the Frahan.Surface subsystem.
+       Default HintPath bumped to Rhino 8 on 2026-05-04 per user direction. -->
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <!-- ZipArchive for Metashape .psx reader (System.IO.Compression on net48). -->
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <!-- Clipper2 (Angus Johnson, BSL-1.0). Industrial-grade 2D polygon
+       Booleans with proper degenerate-case handling. Used as the
+       production back-end for non-convex polygon clipping; Greiner-
+       Hormann stays in-tree as a managed-only fallback for environments
+       that can't pull NuGet packages. .NET Standard 2.0 → net48
+       compatible via the standard compatibility shim. -->
+  <ItemGroup>
+    <PackageReference Include="Clipper2" Version="2.0.0" />
+    <!-- BulletSharp.x64 (Bullet physics, zlib license) for rigid-body settle of irregular
+         stone piles. netstandard2.0 -> net48-consumable; x64 (Rhino 8 is x64); double
+         precision. Ships native libbulletc.dll (copied to output, deployed beside the .gha).
+         Verified in-process on net48 (outputs/2026-06-03/pack3d_evolution/harness/bullet_smoke).
+         Used by Frahan.Masonry.Physics.BulletSettleService. Authorized 2026-06-04. -->
+    <PackageReference Include="BulletSharp.x64" Version="0.12.0" />
+    <PackageReference Include="NetTopologySuite.IO.Esri.Shapefile" Version="1.2.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+    <!-- Unofficial.laszip.net (LGPL-2.1) — pure-managed C# port of LASzip.
+         Targets net40, so net48-compatible; no native DLL dependency. Reads
+         both uncompressed .las and compressed .laz. Used by LazCloudReader to
+         stream large LiDAR / TLS point clouds straight into the voxel hash-grid
+         (memory bounded by occupied voxels). Authorized 2026-05-27. -->
+    <PackageReference Include="Unofficial.laszip.net" Version="2.2.0" />
+  </ItemGroup>
+</Project>

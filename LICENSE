@@ -1,0 +1,28 @@
+Frahan StonePack
+Copyright (C) 2026 Frahan StonePack contributors
+
+This program is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this
+program. If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
+
+-------------------------------------------------------------------------------
+WHY GPL-3.0 (and not MIT): this distribution links Frahan.Kintsugi.Port, which is
+a GPL-3.0 port of PuzzleFusion++. Under the GPL, the combined/distributed work is
+GPL-3.0. If Kintsugi.Port is removed or isolated behind a separate build, the rest
+of the codebase may be relicensed; until then the whole repo is GPL-3.0.
+
+NOTE TO MAINTAINER: replace this notice with the FULL canonical GPL-3.0 text
+(https://www.gnu.org/licenses/gpl-3.0.txt) before the public release; this header
+states the license and intent but the complete text must accompany the repo.
+
+DATASETS in data/ carry their OWN upstream licenses (see data/ATTRIBUTION.md) and
+are NOT covered by this code license; honor each dataset's terms (several are
+non-commercial or research-only).
+-------------------------------------------------------------------------------

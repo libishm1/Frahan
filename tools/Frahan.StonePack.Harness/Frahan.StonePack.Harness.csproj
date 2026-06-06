@@ -1,0 +1,133 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Frahan.StonePack.Harness</AssemblyName>
+    <RootNamespace>Frahan.StonePack.Harness</RootNamespace>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <!-- Rhino.Inside boots RhinoCommon's x64-only native core (rhcommon_c.dll).
+         Force x64 so the process bitness matches Rhino 8; AnyCPU would launch
+         i386 on this host and the native DLL would fail to init (the same
+         0x8007045A bitness trap documented in the test csproj). -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- NuGetPackageRoot fallback: outside a restore context $(NuGetPackageRoot)
+       is empty, so point at the per-user global packages folder. Defined before
+       the Reference ItemGroup that consumes it. -->
+  <PropertyGroup Condition="'$(NuGetPackageRoot)' == ''">
+    <NuGetPackageRoot>$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The edge-matching solver under validation. ProjectReference (not the
+         built DLL) so the harness exercises the current source. -->
+    <ProjectReference Include="..\..\src\Frahan.EdgeMatching.Core\Frahan.EdgeMatching.Core.csproj" />
+    <!-- Frahan.StonePack.Core (added 2026-05-25) the PRODUCTION masonry
+         packers the rubble harness mode runs on the ETH stones:
+         BestFitInventoryPacker, AshlarLayoutEngine, AshlarPackOptions,
+         WallFrame, Slab. Geometry-runtime-agnostic (no Rhino types), so the
+         harness builds Slab inputs from RhinoCommon mesh AABBs and feeds them
+         straight in. Core pulls RhinoCommon (its Surface subsystem) + Clipper2
+         + NetTopologySuite, all net48. -->
+    <ProjectReference Include="..\..\src\Frahan.StonePack.Core\Frahan.StonePack.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The PRODUCTION 2D polygon-NFP nester the nfp harness mode runs on the
+       ETH footprints. NfpBottomLeftFillRhino + its support types live in the
+       Frahan.StonePack.GH assembly, but the four files below are RhinoCommon
+       only (no Grasshopper). We Compile-Include the production SOURCE rather
+       than ProjectReference the whole .gha, which would drag in Grasshopper,
+       KangarooSolver, Frahan.Kintsugi.Port and a ~245 MB libtorch copy the
+       harness does not need. This runs the byte-identical NFP code a canvas
+       user gets from the NfpPack2DComponent. (added 2026-05-25) -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\NfpBottomLeftFillRhino.cs">
+      <Link>Nfp\NfpBottomLeftFillRhino.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\NfpCache.cs">
+      <Link>Nfp\NfpCache.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\NfpRhino.cs">
+      <Link>Nfp\NfpRhino.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\Packing2DModels.cs">
+      <Link>Nfp\Packing2DModels.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- 2D sheet-fill engines for the packbench mode (RhinoCommon only; no Grasshopper.
+       BoundaryRail and Frahan.Surface live in Core, already referenced). Source-
+       included like the NFP files so the harness exercises the production engines
+       without a Grasshopper ProjectReference. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFill.cs"><Link>SheetFill\IrregularSheetFill.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFillRhino.cs"><Link>SheetFill\IrregularSheetFillRhino.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFillV2.cs"><Link>SheetFill\IrregularSheetFillV2.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFillV3.cs"><Link>SheetFill\IrregularSheetFillV3.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFillV506.cs"><Link>SheetFill\IrregularSheetFillV506.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\BottomLeftFillRhino.cs"><Link>SheetFill\BottomLeftFillRhino.cs</Link></Compile>
+    <!-- Exact Clipper2 NFP-BLF engine + its 2026-06-06 compaction/reinsertion
+         evolution. Source-included so the packbench mode measures the real
+         Clipper2 engine (the W2 65.2% row was the rectangle-strip
+         NfpBottomLeftFillRhino, a different engine). RhinoCommon + Clipper2Adapter only. -->
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\IrregularSheetFillNfpBlf.cs"><Link>SheetFill\IrregularSheetFillNfpBlf.cs</Link></Compile>
+    <!-- Trencadis mosaic (physics-field 2D packing: CVD-Lloyd relaxation + GVF
+         orientation field). RhinoCommon only. The Kangaroo dynamic-settle variant
+         is a separate GH component and is NOT here (needs the Kangaroo plugin). -->
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\TrencadisFill.cs"><Link>SheetFill\TrencadisFill.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\CvdLloyd2d.cs"><Link>SheetFill\CvdLloyd2d.cs</Link></Compile>
+    <Compile Include="..\..\src\Frahan.StonePack.GH\TwoD\Gvf2d.cs"><Link>SheetFill\Gvf2d.cs</Link></Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- RhinoCommon 8 via HintPath, EXACTLY as the other projects reference it.
+         Private=true so RhinoCommon.dll lands next to the exe. -->
+    <!-- CopyLocal=False is REQUIRED for Rhino.Inside: if RhinoCommon.dll is
+         copied into bin, RhinoCore resolves its satellite RhinoWindows.dll
+         relative to RhinoCommon's location (bin) and throws FileNotFound. With
+         CopyLocal=False the Rhino.Inside resolver loads RhinoCommon from the
+         Rhino 8 System folder, so RhinoCore finds RhinoWindows.dll next to it
+         there. The StripRhinoFromOutput target below also removes any copy that
+         arrives transitively via the Frahan.EdgeMatching.Core project reference. -->
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Rhino.Inside 8.0.7-beta (matches the installed Rhino 8.30; the 9.0-beta
+         targets the Rhino 9 WIP and would not arrange the Rhino 8 satellites).
+         Referenced by HintPath to the resolver DLL ONLY, NOT via
+         <PackageReference Include="Rhino.Inside">.
+
+         Why HintPath-only: the Rhino.Inside 8.0.7-beta package declares
+         transitive deps on RhinoCommon / Grasshopper 8.0.23304, which would be
+         pulled in ALONGSIDE our RhinoCommon 8.30 HintPath (and the 8.30 that
+         Frahan.EdgeMatching.Core references), producing CS1705 (two RhinoCommon
+         versions); the exact failure recorded in the test csproj. Binding only
+         the resolver DLL by path sidesteps the transitive deps entirely; the
+         resolver has no RhinoCommon-version surface (it only sets up the
+         AppDomain assembly-resolve hook + Rhino 8 satellite layout), so the
+         installed RhinoCommon 8.30 is the single version compiler and runtime
+         ever see. The package is fetched into the global packages folder via
+         `dotnet add package Rhino.Inside` at version 8.0.7-beta (one-time). NOTE:
+         the assembly is named Rhino.Inside.dll in 8.x (was RhinoInside.dll in
+         7.0.0); the resolver namespace/type stays RhinoInside.Resolver. -->
+    <Reference Include="Rhino.Inside">
+      <HintPath>$(NuGetPackageRoot)rhino.inside\8.0.7-beta\lib\net48\Rhino.Inside.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Strip Rhino assemblies that get copied into the output (transitively via
+       the EdgeMatching.Core project reference, whose RhinoCommon is CopyLocal).
+       They MUST load from the Rhino 8 System folder at runtime (see the
+       RhinoCommon comment above), not from bin. -->
+  <Target Name="StripRhinoFromOutput" AfterTargets="Build">
+    <Delete Files="$(OutDir)RhinoCommon.dll;$(OutDir)RhinoWindows.dll;$(OutDir)Eto.dll;$(OutDir)Rhino.UI.dll" />
+  </Target>
+</Project>

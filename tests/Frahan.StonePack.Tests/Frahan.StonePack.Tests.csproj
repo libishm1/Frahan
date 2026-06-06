@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!-- AssemblyName intentionally unchanged: keeps the test executable name
+         stable for the build pipeline. RootNamespace updated to Frahan.Tests
+         after the 2026-05-04 namespace rename (R1 source-only phase). -->
+    <AssemblyName>Frahan.StonePack.Tests</AssemblyName>
+    <RootNamespace>Frahan.Tests</RootNamespace>
+    <!-- R3 PR 8 transition release: 0.7.0. See CHANGELOG.md. -->
+    <Version>0.7.0</Version>
+    <AssemblyVersion>0.7.0.0</AssemblyVersion>
+    <FileVersion>0.7.0.0</FileVersion>
+    <!-- 2026-05-04 - force x64 so rhcommon_c.dll (x64-only since Rhino 7+)
+         loads. Without this, the test exe bound to AnyCPU runs as i386 on
+         this host and DllImport reports "DLL init failed" (HRESULT 0x8007045A)
+         which is a bitness mismatch in disguise. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Frahan.StonePack.Core\Frahan.StonePack.Core.csproj" />
+    <!-- Reference the GH project so the R3 equivalence harness can exercise
+         IrregularSheetFill / IrregularSheetFillV506 / PackingResult /
+         PackingSortMode / PackingCornerMode (all in Frahan.GH.TwoD).
+         Added 2026-05-04 for R3 PR 1 stub. -->
+    <ProjectReference Include="..\..\src\Frahan.StonePack.GH\Frahan.StonePack.GH.csproj" />
+    <!-- Frahan.EdgeMatching.Core (added 2026-05-11) — Trencadís/wood-plank
+         edge-matching solver. Pure-managed tests (PhaseCorrelator, hash index)
+         run without Rhino; Panel/Segmenter/ICP tests need rhcommon_c.dll and
+         take the existing SKIP path when it is unavailable. -->
+    <ProjectReference Include="..\..\src\Frahan.EdgeMatching.Core\Frahan.EdgeMatching.Core.csproj" />
+    <!-- Frahan.Kintsugi.Port (added 2026-05-22) — GPL-3.0 direct port of
+         PuzzleFusion++. Primitive tests are pure managed, run headless. -->
+    <ProjectReference Include="..\..\src\Frahan.Kintsugi.Port\Frahan.Kintsugi.Port.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- RhinoCommon needed for surface packing tests (Point2d, FaceCornerUvTable API).
+         Default HintPath: Rhino 8. The Rhino 7 path is left as a fallback comment; the
+         RhinoCommon API surface used by these tests (Point2d, Mesh, Point3d, LineCurve,
+         Vector3d) is stable across Rhino 7 -> 8. -->
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <!-- Grasshopper assemblies needed transitively now that we reference the
+         GH project (Frahan.StonePack.GH brings in Grasshopper / GH_IO).
+         2026-05-04 (item E): Private flipped to true so the DLLs land in
+         test bin output and the 8 component-smoke SKIPs ("requires
+         Grasshopper runtime") become PASS at the cost of ~50MB extra in
+         bin. The 16 native-runtime SKIPs ("requires Rhino runtime") still
+         need a live Rhino process and stay SKIP until B11 lands. -->
+    <Reference Include="Grasshopper">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="GH_IO">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- 2026-05-04: tried to add Rhino.Inside NuGet (Version="7.0.0") so the
+       16 Rhino-runtime SKIP tests would auto-execute. Failed with CS1705:
+       Rhino.Inside 7 transitively brings RhinoCommon 7.0; Frahan.StonePack.Core
+       references RhinoCommon 8.7 via HintPath; the C# compiler refuses to
+       bind two different versions. The 9.0.x-beta has the same problem in
+       reverse. Reverted. Proper fix is a separate refactor that converts
+       all four csproj files from HintPath to <PackageReference Include="RhinoCommon">,
+       which decouples version selection from the Rhino install path. Tracked
+       as B11 follow-up. -->
+
+</Project>

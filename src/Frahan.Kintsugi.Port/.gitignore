@@ -1,0 +1,6 @@
+# Converted PyTorch checkpoint -- ~267 MB, not in git.
+# Generated locally per release via Weights/convert_pytorch_checkpoint.py.
+# See Weights/README.md for the workflow.
+kintsugi.bin
+parity_fixtures.bin
+*.ckpt

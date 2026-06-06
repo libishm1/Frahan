@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>Frahan.Kintsugi.Port</AssemblyName>
+    <RootNamespace>Frahan.Kintsugi.Port</RootNamespace>
+    <OutputType>Library</OutputType>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!--
+      GPL-3.0 module. Direct C# port of PuzzleFusion++ (Wang, Chen,
+      Furukawa; ICLR 2025; arXiv:2406.00259) from
+      https://github.com/eric-zqwang/puzzlefusion-plusplus
+      Linking this assembly into Frahan.StonePack.gha makes the .gha
+      GPL-3.0 in distribution. See LICENSE.txt in this folder.
+    -->
+  </PropertyGroup>
+
+  <!-- System.Numerics.Vectors via NuGet (4.5.0). net48's GAC version
+       lacks Vector<T> wrappers; the NuGet package supplies them. -->
+  <!--
+    libtorch backend selection. Default = CPU (TorchSharp-cpu, ~250 MB).
+    OPT-IN CUDA: build with  -p:KintsugiUseCuda=true  to pull
+    TorchSharp-cuda-windows instead (multi-GB download; needs a CUDA 12.x
+    capable GPU + driver). TorchSharpDenoiserPath auto-selects the CUDA
+    device at runtime when cuda.is_available() is true, so no code change
+    is needed; only the package swap plus the matching CUDA libtorch native
+    DLLs in the deploy folder (see CopyLibtorchNatives in
+    Frahan.StonePack.GH.csproj). Installing the CUDA package is a deliberate
+    user action (large download); do not enable by default.
+  -->
+  <ItemGroup>
+    <PackageReference Include="ILGPU" Version="1.5.1" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="TorchSharp" Version="0.105.0" />
+    <PackageReference Include="TorchSharp-cpu" Version="0.105.0"
+                      Condition="'$(KintsugiUseCuda)' != 'true'" />
+    <PackageReference Include="TorchSharp-cuda-windows" Version="0.105.0"
+                      Condition="'$(KintsugiUseCuda)' == 'true'" />
+  </ItemGroup>
+</Project>

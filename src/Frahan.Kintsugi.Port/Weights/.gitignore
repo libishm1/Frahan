@@ -1,0 +1,10 @@
+# Build outputs and large binaries.
+kintsugi.bin
+parity_fixtures.bin
+*.ckpt
+
+# Upstream clone (per-developer local clone of the upstream
+# puzzlefusion-plusplus repo). Should NOT be committed to the
+# Frahan repo -- it's GPL-3.0 upstream that each developer should
+# pull from github.com/eric-zqwang/puzzlefusion-plusplus on demand.
+puzzlefusion-plusplus/

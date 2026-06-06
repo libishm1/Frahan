@@ -1,0 +1,25 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+*.dll
+*.pdb
+*.exe
+*.cache
+.vs/
+*.user
+
+# Large dataset blobs: tracked via Git LFS at the public step, not in normal git.
+# Only the attribution markdown + README + small .3dm fixtures are committed now.
+/data/**
+!/data/**/
+!/data/**/*.md
+!/data/**/*.3dm
+
+# Rhino/GH temp
+*.3dmbak
+*.rhl
+*_backup*
+
+# OS / editor
+Thumbs.db
+.DS_Store
