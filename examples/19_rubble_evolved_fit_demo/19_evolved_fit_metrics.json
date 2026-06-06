@@ -1,0 +1,12 @@
+{
+ "workflow": "Rubble Evolved Fit (NEW Frahan>Quarry component) demonstrator",
+ "component": "Rubble Evolved Fit (Frahan.RubblePack.gha)",
+ "n_blocks": 10,
+ "n_placed": 10,
+ "stones_used": 10,
+ "es_refined": 7,
+ "mean_carve_yield_pct": 12.1,
+ "enclosure_pct": 100,
+ "data": "10 boundary blocks (0.006-0.03 m3) from example 15 + 16 ETH1100 stones, internalized in .gh",
+ "note": "Each block pose-evolved (24 rotation seeds + (1+8)-ES) into the tightest stone that FULLY encloses it (every vertex inside). One block per stone. Shown: red block inside gray stone cage."
+}

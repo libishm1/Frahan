@@ -1,0 +1,13 @@
+{
+ "workflow": "Rubble Multi-Bin Pack (NEW Frahan>Quarry component) demonstrator",
+ "component": "Rubble Multi-Bin Pack (Frahan.RubblePack.gha)",
+ "n_blocks": 20,
+ "n_placed": 17,
+ "bins_used": 6,
+ "blocks_per_bin": 2.8,
+ "enclosure_pct": 100,
+ "voxel": 0.04,
+ "kerf": 0.005,
+ "data": "20 small boundary blocks (0.003-0.02 m3) from example 15 + 6 largest of 30 ETH stones, internalized in .gh",
+ "note": "Each stone is a bin holding multiple blocks; voxel-occupancy FFD with true per-vertex enclosure. Blocks coloured by bin inside gray stone cages."
+}
