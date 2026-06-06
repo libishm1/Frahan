@@ -74,13 +74,26 @@ side too.
 - Remesh target ~ block / 20 (~25 mm edge); 5000 points gives ~25 mm spacing on this envelope.
 - Saw kerf 5-10 mm (diamond wire) applied at the pack/cut stage, not the decompose.
 
-## Branches (next)
-- BRANCH A (pack into gangsaw / quarry block): block AABBs -> `Block Pack (Tree)` (guillotine, Kim
-  2025) into a stone-block container; or closed block meshes -> `Pack3D Irregular Container` ->
-  `Settle 3D` -> `Frahan Packing Report`.
-- BRANCH B (match to rubble): per block -> `Block Pair Match 3D` vs each ETH1100 rubble mesh -> top-N
-  poses + Hausdorff residual; refine with `Soft ICP 3D`; oversize stones trimmed by
-  `Adaptive Block Match 3D`. Convert mm-default matchers to meters at the boundary.
+## Branch A - gangsaw cut-from yield (verified)
+![Blocks inside the quarry envelope](15A_gangsaw_yield.png)
+
+The carved blocks sit inside their quarry-block envelope: the 6 x 6 x 5 grid = 3.0 x 3.0 x 2.5 m =
+**22.5 m3** of raw stone. The statue is 5.40 m3, so the **gangsaw yield is 24.0 %** (76 % becomes
+offcut). That is the honest factory cost of carving a freeform form from a rectangular block. Because
+the grid is ALIGNED, every cut plane is axis-aligned and the plan is guillotine-separable by
+construction: a gangsaw makes the planar 0.5 m cuts, then the boundary blocks are carved to the real
+surface. Metrics in `15A_pack_metrics.json`.
+
+Re-packing the loose pieces (logistics framing) is a separate question. `Block Pack (Tree)` (Kim 2025
+guillotine, the same engine as example 11) re-nests the 100 fabricable pieces (>= 1 L) but places
+83/100 into a 12 m3 block. The tree packer is tuned for small instances (Kim 2025 tested 45 elements),
+so at 100+ pieces the practical paths are: batch by region, or keep the as-carved plan above. This is a
+known packer-scaling limit, reported honestly rather than hidden.
+
+## Branch B - match to rubble (next)
+Per block -> `Block Pair Match 3D` vs each ETH1100 rubble mesh -> top-N poses + Hausdorff residual;
+refine with `Soft ICP 3D`; oversize stones trimmed by `Adaptive Block Match 3D`. Convert mm-default
+matchers to meters at the boundary.
 
 ## Performance note (in-process vs out-of-process)
 In-process (live Rhino via MCP) is fast and stable on the res2 + remesh path: 3.6 s for 173 booleans,

@@ -1,0 +1,19 @@
+{
+ "framing": "as-carved gangsaw cut-from (aligned 0.5 m grid = guillotine-separable by construction)",
+ "quarry_envelope_cells": [
+  6,
+  6,
+  5
+ ],
+ "quarry_envelope_m": [
+  3.0,
+  3.0,
+  2.5
+ ],
+ "envelope_vol_m3": 22.5,
+ "statue_vol_m3": 5.4009,
+ "yield_pct": 24.0,
+ "offcut_pct": 76.0,
+ "n_blocks": 113,
+ "repack_note": "Block Pack (Tree) re-nesting of the 100 fabricable (>=1L) loose pieces places 83/100 into a 12 m3 block; the tree packer is tuned for <50 elements (Kim 2025 tested 45). For 100+ pieces batch by region or keep the as-carved plan."
+}
