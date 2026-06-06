@@ -26,6 +26,8 @@
 !install/plugin/*.exe
 !install/plugin/*.gha
 !install/tools/*.exe
+!install/tools/*.dll
+!install/tools/*.txt
 
 # Rhino/GH temp
 *.3dmbak

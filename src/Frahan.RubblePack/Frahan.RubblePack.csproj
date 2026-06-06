@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <!-- Sibling Frahan plugin assembly: two real GH components for carving
+         decomposed statue blocks out of a rubble lot with TRUE enclosure.
+         Built separately from the heavy main Frahan.StonePack.gha (libtorch /
+         bullet / kintsugi) so it compiles fast and deploys without relocking
+         the main plugin. Components register under Category "Frahan" so they
+         appear in the same ribbon tab. -->
+    <AssemblyName>Frahan.RubblePack</AssemblyName>
+    <RootNamespace>Frahan.GH.RubblePack</RootNamespace>
+    <OutputType>Library</OutputType>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Grasshopper">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="GH_IO">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Emit the .gha next to the built DLL (GH loads *.gha). -->
+  <Target Name="CopyGrasshopperAssembly" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)$(AssemblyName).gha" />
+  </Target>
+</Project>
