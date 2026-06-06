@@ -1,5 +1,8 @@
 # Example 10 - 2D irregular nesting (exact NFP, evolved V506)
 
+> **Scale, units, position (corrected 2026-06-06):** METERS. Slab 3.2 x 2.0 m (jumbo gangsaw), cut parts 0.3-1.2 m. Lies flat on the XY plane at z=0, sheet lower-left at the origin. Tolerance 1 mm, Spacing = saw kerf 5 mm. Packer switched to **FreeNestX (exact NFP-BLF)** which is strictly 0-overlap by construction (verified 0.0 overlap live in the rebuilt .gha). V506's apparent overlap was the default Trim Tolerance 0.1 (overlap-then-trim by design), not a fault. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+
+
 Nest closed planar parts into a sheet (with optional holes), zero overlap, maximising stock utilisation.
 This is the slab/sheet-cutting entrypoint: cut the most parts from the least stone. Style: short sentences,
 no em dashes.

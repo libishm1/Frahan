@@ -1,5 +1,8 @@
 # Example 11 - 3D block packing (saw-cuttable guillotine)
 
+> **Scale, units, position (corrected 2026-06-06):** METERS. Container = one quarry dimension block 3.0 x 1.5 x 1.5 m; elements 0.2-1.0 m. Block base sits on the z=0 bed plane (not straddling). Tolerance 1 mm, wire-saw Kerf 8 mm (50 mm for primary-quarry yield accounting). Packer = Block Pack (Tree) / DLBF (no cell-size grid; levers are Forests + Kerf). See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+
+
 Pack final-piece cuboids into a stone-block container with axis-aligned, saw-cuttable guillotine cuts.
 This is the digital-fabrication entrypoint for quarry block subdivision and monument nesting. Style:
 short sentences, no em dashes.

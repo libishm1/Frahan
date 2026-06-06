@@ -1,5 +1,8 @@
 # Example 14 - Kintsugi fracture reassembly (Breaking Bad parity data, Port mode)
 
+> **Scale, units, position (corrected 2026-06-06):** MILLIMETERS. Reassembled vessel ~100-220 x 280 mm (the Breaking Bad shape is slender), base on z=0, centred in XY. Geometric tolerance 0.1 mm (= scan-noise floor); seam 1-3 mm; no kerf (restoration, not cutting). The Port-mode network runs in normalized space; the shipped result is scaled to vessel size for display. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+
+
 Reassemble fractured fragments into the original solid by matching fracture surfaces. This is the
 restoration / repair entrypoint (broken artefact -> joined). Style: short sentences, no em dashes.
 

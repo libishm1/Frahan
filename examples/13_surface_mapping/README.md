@@ -1,5 +1,8 @@
 # Example 13 - Surfaces from a solid + Trencadís on the surfaces
 
+> **Scale, units, position (corrected 2026-06-06):** MILLIMETERS. Twisted monument 1200 x 1200 mm cross-section x 3500 mm tall, base on z=0. Trencadis cladding shards 40-200 mm with 4 mm grout, surface-conformal. Geometric tolerance 0.05 mm; CGAL dihedral Angle 35 deg. Modelled in mm so scale-relative epsilon engages on the cm-scale shards. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+
+
 Split a twisted block into its constituent surfaces by dihedral angle, then clad those surfaces with a
 Trencadís mosaic. This is the freeform-cladding entrypoint: take a sculpted form, find its faces, tile
 them. Style: short sentences, no em dashes.

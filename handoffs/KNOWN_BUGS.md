@@ -117,11 +117,18 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 - **Implication for examples:** `examples/10_pack2d/` ships the correct `.gh` wiring plus the
   headless-validated result `.png`/`.3dm` (from `wiki/research/packing/figures/`), NOT a live solve. Re-render
   the live capture only after redeploying the fixed `.gha`.
-- **Status:** SOURCE FIX BUILT + BUNDLED 2026-06-06. Rebuilt `Frahan.StonePack.gha` from current source
-  (`dotnet build ... -c Release`, 0 errors) and refreshed `install/plugin/` with it (Jun 6 15:52 build).
-  The bundled `.gha` now contains the 0-overlap 2D nesters. LIVE REDEPLOY still pending: the running Rhino
-  locks the old `.gha`, so loading the fresh one needs Rhino CLOSED -> `install/deploy.ps1` -> reopen ->
-  `MCPStart`. After that, re-capture the live 2D example. Live-build handoff: `LIVE_EXAMPLE_BUILD_HANDOFF.md`.
+- **RESOLVED 2026-06-06.** Two distinct facts, now both settled:
+  (1) `FreeNestX` (exact NFP-BLF) genuinely overlapped in the STALE deployed `.gha`. Rebuilt from current
+  source (`dotnet build -c Release`, 0 errors), redeployed to `%APPDATA%/Grasshopper/Libraries/` (Rhino
+  closed), and VERIFIED LIVE in a fresh Rhino: FreeNestX = 16/16 placed, overlapArea exactly 0.0. So
+  FreeNestX is strictly 0-overlap by construction once the current build is loaded.
+  (2) `V506` (Frahan Sheet Pack Unified) "overlap" is BY DESIGN, not a bug: the default `Trim Tolerance`
+  0.1 permits part-to-part overlap during placement, then boolean-trims it. The clean geometry is the
+  `Trimmed Curves` output, or set `Trim Tolerance = 0` for strict no-overlap. (User-confirmed.)
+- **Action taken:** example 10 now uses FreeNestX (strict 0-overlap), rebuilt live at slab scale
+  (3.2 x 2.0 m, parts 0.3-1.2 m, spacing = 5 mm kerf, 0.0 overlap). install/plugin/ ships the fresh `.gha`.
+  Open policy question: flip the shipped V506 Trim Tolerance default 0.1 -> 0 (see
+  `wiki/research/tolerances_dimensions_slm_roses.md` open question 4).
 
 ---
 

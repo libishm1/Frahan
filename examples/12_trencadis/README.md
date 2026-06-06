@@ -1,5 +1,8 @@
 # Example 12 - Trencadís mosaic (catalog pack)
 
+> **Scale, units, position (corrected 2026-06-06):** MILLIMETERS. Panel ~1100 mm, shards 40-120 mm, **grout 5 mm (far smaller than the shards)**. Flat on XY at z=0, lower-left at origin. Geometric tolerance 0.05 mm (well below the grout). Kept in mm so the scale-relative epsilon engages on the 40-120 mm shards. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+
+
 Place a catalog of irregular shards into a sheet as a Trencadís ("broken-tile") mosaic. Each shard is
 placed exactly once, assigned to a CVD-Lloyd cell, with a grout (mortar) gap. This is the mosaic /
 cladding entrypoint: turn a pile of offcut shards into a coherent surface. Style: short sentences, no em
