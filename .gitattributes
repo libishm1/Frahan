@@ -7,4 +7,7 @@ install/tools/*.exe      filter=lfs diff=lfs merge=lfs -text
 # BFF (Boundary First Flattening) runtime dependencies: SuiteSparse + BLAS/LAPACK
 # + MinGW runtime DLLs that ship beside bff-command-line.exe (~66 MB).
 install/tools/*.dll      filter=lfs diff=lfs merge=lfs -text
+# GPR radargram binaries bundled with example cards (multi-MB raw traces).
+examples/**/*.rd3        filter=lfs diff=lfs merge=lfs -text
+examples/**/*.rd7        filter=lfs diff=lfs merge=lfs -text
 # Kintsugi parity samples are small; keep them as normal git blobs (no LFS)
