@@ -57,7 +57,7 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
         pManager.AddNumberParameter("Spacing", "Gap", "Clearance between parts and boundaries.", GH_ParamAccess.item, 0.1);
         pManager.AddNumberParameter("Rotations", "R", "Allowed rotation angles in degrees.", GH_ParamAccess.list, 0.0);
         pManager.AddIntegerParameter("Sort Mode", "M", "0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓.", GH_ParamAccess.item, 1);
-        pManager.AddNumberParameter("Tolerance", "T", "Geometric tolerance.", GH_ParamAccess.item, 0.01);
+        pManager.AddNumberParameter("Tolerance", "T", "Geometric tolerance. 0 (default) = AUTO: use the active document's absolute tolerance (mm doc -> mm tol, m doc -> m tol). Set a positive value to override.", GH_ParamAccess.item, 0.0);
         pManager.AddIntegerParameter("Seed", "Seed", "0 = deterministic. Non-zero changes tie-break.", GH_ParamAccess.item, 0);
         pManager.AddBooleanParameter("Run", "Run", "Set true to execute packing.", GH_ParamAccess.item, false);
     }
@@ -84,7 +84,7 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
             var spacing      = 0.1;
             var rotationsDeg = new List<double>();
             var sortModeVal  = 1;
-            var tolerance    = 0.01;
+            var tolerance    = 0.0;
             var seed         = 0;
             var run          = false;
 
@@ -95,6 +95,19 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
             da.GetDataList(4, rotationsDeg);
             da.GetData(5, ref sortModeVal);
             da.GetData(6, ref tolerance);
+            // AUTO tolerance (input left at 0): scale-relative epsilon = 1e-4 of the sheet diagonal,
+            // tightened to the document tolerance when finer. Raw doc tolerance alone (0.01 m in a
+            // metre model) is too loose and lets exact-NFP parts overlap; scale-relative stays 0-overlap.
+            if (tolerance <= 0.0)
+            {
+                var autoBox = Rhino.Geometry.BoundingBox.Empty;
+                foreach (var sc in sheets) if (sc != null) autoBox.Union(sc.GetBoundingBox(true));
+                double scaleRel = autoBox.IsValid ? autoBox.Diagonal.Length * 1e-4 : 0.0;
+                double docT = 0.001;
+                var activeDoc = Rhino.RhinoDoc.ActiveDoc;
+                if (activeDoc != null && activeDoc.ModelAbsoluteTolerance > 0.0) docT = activeDoc.ModelAbsoluteTolerance;
+                tolerance = scaleRel > 0.0 ? System.Math.Max(1e-6, System.Math.Min(docT, scaleRel)) : docT;
+            }
             da.GetData(7, ref seed);
             da.GetData(8, ref run);
 
@@ -140,7 +153,7 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
             var spacing      = 0.1;
             var rotationsDeg = new List<double>();
             var sortModeVal  = 1;
-            var tolerance    = 0.01;
+            var tolerance    = 0.0;
             var seed         = 0;
             var run          = false;
 
@@ -151,6 +164,19 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
             da.GetDataList(4, rotationsDeg);
             da.GetData(5, ref sortModeVal);
             da.GetData(6, ref tolerance);
+            // AUTO tolerance (input left at 0): scale-relative epsilon = 1e-4 of the sheet diagonal,
+            // tightened to the document tolerance when finer. Raw doc tolerance alone (0.01 m in a
+            // metre model) is too loose and lets exact-NFP parts overlap; scale-relative stays 0-overlap.
+            if (tolerance <= 0.0)
+            {
+                var autoBox = Rhino.Geometry.BoundingBox.Empty;
+                foreach (var sc in sheets) if (sc != null) autoBox.Union(sc.GetBoundingBox(true));
+                double scaleRel = autoBox.IsValid ? autoBox.Diagonal.Length * 1e-4 : 0.0;
+                double docT = 0.001;
+                var activeDoc = Rhino.RhinoDoc.ActiveDoc;
+                if (activeDoc != null && activeDoc.ModelAbsoluteTolerance > 0.0) docT = activeDoc.ModelAbsoluteTolerance;
+                tolerance = scaleRel > 0.0 ? System.Math.Max(1e-6, System.Math.Min(docT, scaleRel)) : docT;
+            }
             da.GetData(7, ref seed);
             da.GetData(8, ref run);
 

@@ -33,7 +33,7 @@ public sealed class Pack3DIrregularContainerComponent : GH_Component
     {
         pManager.AddMeshParameter("Meshes", "M", "Meshes to pack using mesh-derived footprint and heightmap proxies.", GH_ParamAccess.list);
         pManager.AddMeshParameter("Container Meshes", "C", "One or more irregular container meshes. Each top-down footprint and per-cell height defines an allowed packing volume.", GH_ParamAccess.list);
-        pManager.AddNumberParameter("Cell Size", "Grid", "Solver grid resolution in model units. Smaller values are more detailed but slower.", GH_ParamAccess.item, 10.0);
+        pManager.AddNumberParameter("Cell Size", "Grid", "Solver grid resolution in model units. 0 (default) = AUTO: derived from the smallest element (min bounding-box edge / 8), so the packer works at any unit/scale. Set a positive value to override.", GH_ParamAccess.item, 0.0);
         pManager.AddNumberParameter("Clearance", "Gap", "Extra XY gap added around each mesh footprint in model units. Larger values leave more space between packed parts.", GH_ParamAccess.item, 0.0);
         pManager.AddBooleanParameter("Yaw 90", "Y90", "Try 90 degree yaw rotations.", GH_ParamAccess.item, true);
         pManager.AddIntegerParameter("Max Candidates", "N", "Maximum XY/orientation candidates evaluated per mesh.", GH_ParamAccess.item, 50000);
@@ -74,7 +74,7 @@ public sealed class Pack3DIrregularContainerComponent : GH_Component
     {
         var meshes = new List<Mesh>();
         var containerMeshes = new List<Mesh>();
-        var cellSize = 10.0;
+        var cellSize = 0.0;
         var clearance = 0.0;
         var allowYaw90 = true;
         var maxCandidates = 50000;
@@ -117,10 +117,31 @@ public sealed class Pack3DIrregularContainerComponent : GH_Component
             return;
         }
 
-        if (containerMeshes.Count == 0 || cellSize <= 0)
+        if (containerMeshes.Count == 0)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "At least one Container Mesh is required and Cell Size must be greater than zero.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "At least one Container Mesh is required.");
             return;
+        }
+        if (cellSize <= 0)
+        {
+            // AUTO: grid from the smallest element (min bbox edge / 8) so the packer works at any
+            // unit/scale; the shipped 10.0 default collapsed the grid to one cell in a metre model.
+            var minDim = double.PositiveInfinity;
+            foreach (var m in meshes)
+            {
+                if (m == null || !m.IsValid) continue;
+                var d = m.GetBoundingBox(true).Diagonal;
+                var e = System.Math.Min(d.X, System.Math.Min(d.Y, d.Z));
+                if (e > 1e-9 && e < minDim) minDim = e;
+            }
+            if (double.IsInfinity(minDim) || minDim <= 0)
+            {
+                var cb = containerMeshes[0].GetBoundingBox(true);
+                minDim = cb.Diagonal.Length / 50.0;
+            }
+            cellSize = minDim / 8.0;
+            if (cellSize <= 1e-9) cellSize = 1.0;
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, $"Cell Size auto-derived as {cellSize:0.####} (smallest element / 8).");
         }
 
         var containers = new List<ContainerContext>();

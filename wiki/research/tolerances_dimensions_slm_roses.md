@@ -133,3 +133,24 @@ recentered coords.
 5. Pack3D legacy Cell Size: keep absolute default (unit-fragile) or auto-derive from min-element/8?
 6. Kintsugi firing shrinkage: fragments are scanned POST-firing (shrinkage already happened), so the only
    fit allowance is scan noise + seam width. Model shrinkage at all, or drop it?
+
+## 10. Source UX fixes APPLIED (2026-06-06, user-approved, rebuilt + redeployed + tested live)
+All six decided; users now get correct behaviour out of the box (no manual per-scale tuning):
+- Q1 + Q6 (auto tolerance): the 2D nesters (Frahan Sheet Pack Unified + Freeform Sheet Nest Exact NFP)
+  default Tolerance = 0 = AUTO. When 0, the component computes a SCALE-RELATIVE epsilon =
+  1e-4 x sheet-bbox-diagonal, tightened to the doc tolerance when the user set a finer doc. (The raw doc
+  tolerance alone, 0.01 m in a metre model, is too loose and overlapped exact-NFP parts; the first auto
+  attempt used it and FAILED the 0-overlap test, so it was updated to scale-relative.) VERIFIED LIVE:
+  FreeNestX with Tolerance=0 packs 14/14 at overlap 0.0.
+- Q3 (V506 Trim default): Trim Tolerance default flipped 0.1 -> 0.0 (strict no-overlap out of the box).
+  VERIFIED: default reads 0.
+- Q4 (Pack3D Cell Size): legacy heightmap packers (Pack3D Mesh Heightmap / Irregular / Irregular
+  Container) default Cell Size = 0 = AUTO, deriving the grid from the smallest element (min bbox edge / 8).
+  The shipped 10.0 packed nothing in a metre model. VERIFIED: auto packs 8/8 with a 3200-cell grid.
+- Q2 (kerf): kept as a SEPARATE physical allowance, set per example (50 mm primary-quarry yield for
+  11_pack3d; 5-8 mm slab-saw spacing for 10_pack2d). No risky unit-ambiguous source default.
+- Q5 (firing shrinkage): dropped. No shrinkage parameter exists in the Kintsugi source; fragments are
+  scanned post-firing, so the only fit allowance is scan noise + seam width (documented, not a knob).
+Rebuilt Frahan.StonePack.gha (0 errors), redeployed to the Grasshopper Libraries folder, refreshed
+install/plugin/. Open: whether to also lower the shipped Rhino doc-template tolerance (left at 0.01;
+per-component auto override is the safer path already taken).

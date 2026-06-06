@@ -35,7 +35,7 @@ public sealed class Pack3DIrregularComponent : GH_Component
     {
         pManager.AddMeshParameter("Meshes", "M", "Meshes to pack. MVP uses each mesh bounding box as the packing proxy.", GH_ParamAccess.list);
         pManager.AddBoxParameter("Container", "C", "Container box.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Cell Size", "Grid", "Solver grid resolution in model units. Smaller values are faster but less detailed.", GH_ParamAccess.item, 10.0);
+        pManager.AddNumberParameter("Cell Size", "Grid", "Solver grid resolution in model units. 0 (default) = AUTO: derived from the smallest element (min bounding-box edge / 8), so the packer works at any unit/scale. Set a positive value to override.", GH_ParamAccess.item, 0.0);
         pManager.AddNumberParameter("Clearance", "Gap", "Extra XY gap added around each packing proxy in model units.", GH_ParamAccess.item, 0.0);
         pManager.AddBooleanParameter("Yaw 90", "Y90", "Try 90 degree yaw rotations.", GH_ParamAccess.item, true);
         pManager.AddBooleanParameter("Run", "Run", "Run the packer.", GH_ParamAccess.item, false);
@@ -57,7 +57,7 @@ public sealed class Pack3DIrregularComponent : GH_Component
     {
         var meshes = new List<Mesh>();
         var containerBox = Box.Unset;
-        var cellSize = 10.0;
+        var cellSize = 0.0;
         var clearance = 0.0;
         var allowYaw90 = true;
         var run = false;
@@ -75,10 +75,28 @@ public sealed class Pack3DIrregularComponent : GH_Component
             return;
         }
 
-        if (!containerBox.IsValid || cellSize <= 0)
+        if (!containerBox.IsValid)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Container must be valid and Cell Size must be greater than zero.");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Container must be valid.");
             return;
+        }
+        if (cellSize <= 0)
+        {
+            // AUTO: grid from the smallest element (min bbox edge / 8) so the packer works at any
+            // unit/scale; the shipped 10.0 default collapsed the grid to one cell in a metre model.
+            var minDim = double.PositiveInfinity;
+            foreach (var m in meshes)
+            {
+                if (m == null || !m.IsValid) continue;
+                var d = m.GetBoundingBox(true).Diagonal;
+                var e = Math.Min(d.X, Math.Min(d.Y, d.Z));
+                if (e > 1e-9 && e < minDim) minDim = e;
+            }
+            if (double.IsInfinity(minDim) || minDim <= 0)
+                minDim = containerBox.BoundingBox.Diagonal.Length / 50.0;
+            cellSize = minDim / 8.0;
+            if (cellSize <= 1e-9) cellSize = 1.0;
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, $"Cell Size auto-derived as {cellSize:0.####} (smallest element / 8).");
         }
 
         var containerBounds = containerBox.BoundingBox;

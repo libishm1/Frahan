@@ -71,8 +71,11 @@ public sealed class IrregularSheetFillComponent : GH_Component
             "0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓.",
             GH_ParamAccess.item, 1);
         pManager.AddNumberParameter("Tolerance", "T",
-            "Geometric tolerance for containment and collision.",
-            GH_ParamAccess.item, 0.01);
+            "Geometric tolerance for containment and collision. 0 (default) = " +
+            "AUTO: use the active document's absolute tolerance, so a millimetre " +
+            "document gets a millimetre tolerance and a metre document a metre " +
+            "tolerance (no manual per-scale tuning). Set a positive value to override.",
+            GH_ParamAccess.item, 0.0);
         pManager.AddIntegerParameter("Seed", "Seed",
             "0 = deterministic; non-zero changes tie-breaking.",
             GH_ParamAccess.item, 0);
@@ -127,11 +130,13 @@ public sealed class IrregularSheetFillComponent : GH_Component
             "are boolean-differenced — the EARLIER-placed part wins, the " +
             "later-placed part loses material at the contact. Sheet outline " +
             "and holes are NEVER trimmed (only part-to-part collisions). " +
-            "0 = trim off (strict no-overlap, legacy behavior). Default 0.1; " +
-            "for meter-scale work try 0.1–1.0. Most useful with Boundary " +
-            "Mode > 0 where parts get pushed close together along the " +
+            "0 = trim off (strict no-overlap; THIS IS THE DEFAULT, so packed " +
+            "parts never overlap out of the box). Set > 0 to allow " +
+            "overlap-then-trim (the earlier-placed part wins); for meter-scale " +
+            "shared-contact masonry coursing try 0.003–0.01. Most useful with " +
+            "Boundary Mode > 0 where parts get pushed close together along the " +
             "boundary; the trim cleans the contacts.",
-            GH_ParamAccess.item, 0.1);
+            GH_ParamAccess.item, 0.0);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -174,7 +179,7 @@ public sealed class IrregularSheetFillComponent : GH_Component
         double spacing = 0.1;
         var rotationsDeg = new List<double>();
         int sortModeVal = 1;
-        double tolerance = 0.01;
+        double tolerance = 0.0;
         int seed = 0;
         bool run = false;
         int maxCandidates = 300;
@@ -183,7 +188,7 @@ public sealed class IrregularSheetFillComponent : GH_Component
         int boundaryModeVal = 0;
         double minBoundaryAffinity = 0.5;
         double discretizationTol = -1.0;
-        double trimTolerance = 0.1;
+        double trimTolerance = 0.0;
 
         if (!da.GetDataList(0, parts)) return;
         if (!da.GetDataList(1, sheets)) return;
@@ -192,6 +197,20 @@ public sealed class IrregularSheetFillComponent : GH_Component
         da.GetDataList(4, rotationsDeg);
         da.GetData(5, ref sortModeVal);
         da.GetData(6, ref tolerance);
+        // AUTO tolerance (input left at 0): scale-relative epsilon = 1e-4 of the sheet diagonal,
+        // tightened to the document tolerance when the user has set a finer doc. The raw doc tolerance
+        // alone (e.g. 0.01 m in a metre model) is too loose and lets exact-NFP parts overlap; the
+        // scale-relative value stays 0-overlap at any unit/scale.
+        if (tolerance <= 0.0)
+        {
+            var autoBox = Rhino.Geometry.BoundingBox.Empty;
+            foreach (var sc in sheets) if (sc != null) autoBox.Union(sc.GetBoundingBox(true));
+            double scaleRel = autoBox.IsValid ? autoBox.Diagonal.Length * 1e-4 : 0.0;
+            double docT = 0.001;
+            var activeDoc = Rhino.RhinoDoc.ActiveDoc;
+            if (activeDoc != null && activeDoc.ModelAbsoluteTolerance > 0.0) docT = activeDoc.ModelAbsoluteTolerance;
+            tolerance = scaleRel > 0.0 ? System.Math.Max(1e-6, System.Math.Min(docT, scaleRel)) : docT;
+        }
         da.GetData(7, ref seed);
         da.GetData(8, ref run);
         da.GetData(9, ref maxCandidates);
