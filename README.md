@@ -1,5 +1,11 @@
 # Frahan StonePack
 
+![Fracture modelling to block packing](docs/results/hero_fracture_block_packing.png)
+
+*Fracture modelling -> wire-saw block packing: intact, saw-separable stock (blue/green) recovered from a
+fractured bench around the mapped fracture planes (green). See [docs/results/RESULTS.md](docs/results/RESULTS.md)
+for all benchmarks + process results, no Grasshopper required.*
+
 A Rhino / Grasshopper plugin for stone-fabrication readiness: the bridge layer between design intent and
 machine-ready fabrication for dimension stone, monuments, and dry-stone masonry. It covers the pipeline
 GPR / scan -> fracture mapping -> 3D reconstruction -> block packing + cutting -> masonry assembly ->
@@ -32,6 +38,12 @@ distribution is GPL-3.0.
   `specs/`, `papers/`. `research/` — long-form math derivations + research-level coding context.
 - `handoffs/` — human + agent onboarding, `HANDOFF_LATEST.md`, `KNOWN_BUGS.md`.
 - `docs/` — install, build, deploy, architecture.
+
+## Results at a glance (no Grasshopper required)
+See [docs/results/RESULTS.md](docs/results/RESULTS.md) for the measured benchmark + process figures: the 2D
+stock-utilization study (evolved NFP-BLF crosses the 80% bar at 0 overlap with holes), the 3D volumetric
+ratios (Dlbf best-of-orientation 70.4%), the fracture recovery / block-packing captures, and the
+masonry/quarry decision. 983 tests pass from a clean clone.
 
 ## What makes it research-grade
 Every kept algorithm has a measured benchmark, a math derivation (SLM tier), a statistics review (PRISMA),
