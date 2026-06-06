@@ -117,7 +117,11 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 - **Implication for examples:** `examples/10_pack2d/` ships the correct `.gh` wiring plus the
   headless-validated result `.png`/`.3dm` (from `wiki/research/packing/figures/`), NOT a live solve. Re-render
   the live capture only after redeploying the fixed `.gha`.
-- **Status:** open until `.gha` redeployed. Live-build handoff: `LIVE_EXAMPLE_BUILD_HANDOFF.md`.
+- **Status:** SOURCE FIX BUILT + BUNDLED 2026-06-06. Rebuilt `Frahan.StonePack.gha` from current source
+  (`dotnet build ... -c Release`, 0 errors) and refreshed `install/plugin/` with it (Jun 6 15:52 build).
+  The bundled `.gha` now contains the 0-overlap 2D nesters. LIVE REDEPLOY still pending: the running Rhino
+  locks the old `.gha`, so loading the fresh one needs Rhino CLOSED -> `install/deploy.ps1` -> reopen ->
+  `MCPStart`. After that, re-capture the live 2D example. Live-build handoff: `LIVE_EXAMPLE_BUILD_HANDOFF.md`.
 
 ---
 
