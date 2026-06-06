@@ -8,11 +8,16 @@
 .vs/
 *.user
 
-# Large dataset blobs: tracked via Git LFS at the public step, not in normal git.
-# Only the attribution markdown + README + small .3dm fixtures are committed now.
+# Datasets: the large dataset BLOBS live on GOOGLE DRIVE (link in data/DATA_ACCESS.md), NOT in git
+# (6.3 GB total - geocrack 4.9 GB etc.; too big for GitHub's 1 GB free LFS). The data/ FOLDER, its
+# structure, and ALL metadata/docs are KEPT and tracked so the folder + provenance are never lost.
+# The actual blobs also live locally at D:/code_ws/Data/ (outside this repo, so git never touches them).
 /data/**
 !/data/**/
 !/data/**/*.md
+!/data/**/*.txt
+!/data/**/*.csv
+!/data/**/*.json
 !/data/**/*.3dm
 
 # install/ ships the deployable plugin binaries (overrides the global *.dll / *.exe ignores above).
