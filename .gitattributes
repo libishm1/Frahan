@@ -11,3 +11,5 @@ install/tools/*.dll      filter=lfs diff=lfs merge=lfs -text
 examples/**/*.rd3        filter=lfs diff=lfs merge=lfs -text
 examples/**/*.rd7        filter=lfs diff=lfs merge=lfs -text
 # Kintsugi parity samples are small; keep them as normal git blobs (no LFS)
+examples/**/*.laz        filter=lfs diff=lfs merge=lfs -text
+examples/**/*.las        filter=lfs diff=lfs merge=lfs -text
