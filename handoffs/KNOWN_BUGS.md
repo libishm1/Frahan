@@ -101,6 +101,26 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 
 ---
 
+## KB-7 — Loaded .gha can be STALE; 2D NFP packers overlap live until redeployed
+
+- **Symptom:** Building the 2D nest live on the MCP slot (2026-06-06), both `Freeform Sheet Nest (Exact NFP)`
+  (FreeNestX) and `Frahan Sheet Pack (Unified)` V506 placed parts that visually + measurably OVERLAP (e.g.
+  bottom-left pentagon/hexagon/heptagon overlapping by 200-540 sq units) while the component Report said
+  `Invalid: 0`. Overlap persisted even at 42% utilisation, with convex AND concave parts.
+- **Root cause:** the `Frahan.StonePack.gha` loaded in the running Rhino is an OLDER build that predates the
+  0-overlap evolution in source. The current SOURCE (`IrregularSheetFillNfpBlf.cs`, `IrregularSheetFillV506.cs`)
+  is validated 0-overlap by the headless harness (`--pack2dstudy`: 82-89% util_stock, Invalid 0). The
+  discrepancy is the deployed binary, not the algorithm.
+- **Fix:** rebuild + redeploy the `.gha` from current source (Rhino CLOSED, file-copy per `docs/INSTALL.md`)
+  before trusting live 2D packs. The harness output and the bundled `examples/10_pack2d/` result artifacts
+  are from current source and ARE 0-overlap.
+- **Implication for examples:** `examples/10_pack2d/` ships the correct `.gh` wiring plus the
+  headless-validated result `.png`/`.3dm` (from `wiki/research/packing/figures/`), NOT a live solve. Re-render
+  the live capture only after redeploying the fixed `.gha`.
+- **Status:** open until `.gha` redeployed. Live-build handoff: `LIVE_EXAMPLE_BUILD_HANDOFF.md`.
+
+---
+
 ## Standing rules distilled
 - No multi-million-vertex data internalised in a .gh (KB-1). Decimate or reference externally.
 - No `Mesh.Reduce` on multi-million meshes inline; voxel-cluster instead (KB-2).

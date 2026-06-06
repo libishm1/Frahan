@@ -37,6 +37,9 @@ distribution is GPL-3.0.
 - `wiki/` — curated research: `research/` (SLM/PRISMA/ROSES studies, algorithm cards), `algorithms/`,
   `specs/`, `papers/`. `research/` — long-form math derivations + research-level coding context.
 - `handoffs/` — human + agent onboarding, `HANDOFF_LATEST.md`, `KNOWN_BUGS.md`.
+- `install/` — ready-to-deploy binaries: the `.gha` + native libs (`plugin/`), Kintsugi Port weights
+  (`weights/kintsugi.bin`, LFS), Breaking Bad parity samples (`data/`), BFF (`tools/`), and `deploy.ps1` /
+  `deploy.sh`. Run `git lfs pull` then the deploy script (Rhino closed). See `install/INSTALL.md`.
 - `docs/` — install, build, deploy, architecture.
 
 ## Results at a glance (no Grasshopper required)

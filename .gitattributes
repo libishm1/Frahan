@@ -1,0 +1,7 @@
+# Git LFS - large deployable binaries shipped in install/ (and any bundled weights/native libs)
+install/weights/*.bin   filter=lfs diff=lfs merge=lfs -text
+install/plugin/*.dll     filter=lfs diff=lfs merge=lfs -text
+install/plugin/*.gha     filter=lfs diff=lfs merge=lfs -text
+install/plugin/*.exe     filter=lfs diff=lfs merge=lfs -text
+install/tools/*.exe      filter=lfs diff=lfs merge=lfs -text
+# Kintsugi parity samples are small; keep them as normal git blobs (no LFS)

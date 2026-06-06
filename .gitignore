@@ -15,6 +15,13 @@
 !/data/**/*.md
 !/data/**/*.3dm
 
+# install/ ships the deployable plugin binaries (overrides the global *.dll / *.exe ignores above).
+# Large ones (.dll/.exe/.gha/.bin) are stored via Git LFS (see .gitattributes).
+!install/plugin/*.dll
+!install/plugin/*.exe
+!install/plugin/*.gha
+!install/tools/*.exe
+
 # Rhino/GH temp
 *.3dmbak
 *.rhl
