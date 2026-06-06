@@ -1,0 +1,718 @@
+{
+ "n_blocks": 100,
+ "n_matched": 100,
+ "n_unmatched": 0,
+ "rubble_lot_size": 400,
+ "rubble_scaled_to_blocks": false,
+ "rubble_scale_factor": 1.0,
+ "scale_margin": 1.4,
+ "mean_carve_yield": 0.303,
+ "min_yield": 0.0054,
+ "max_yield": 0.939,
+ "total_rubble_vol_used_m3": 21.445,
+ "method": "AABB-containment (sorted dims), greedy one-to-one by carve yield; one rubble stone per block",
+ "note": "Block Pair Match 3D face-mating is a skeleton; this is the containment proxy. Soft ICP 3D refines pose post-match.",
+ "matches": [
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0141.obj",
+   "stone_vol": 0.1331,
+   "yield": 0.939
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0209.obj",
+   "stone_vol": 0.1442,
+   "yield": 0.867
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0177.obj",
+   "stone_vol": 0.1478,
+   "yield": 0.8455
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0004.obj",
+   "stone_vol": 0.151,
+   "yield": 0.8277
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0020.obj",
+   "stone_vol": 0.153,
+   "yield": 0.8168
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0197.obj",
+   "stone_vol": 0.1606,
+   "yield": 0.7781
+  },
+  {
+   "block_vol": 0.125,
+   "tag": "interior",
+   "stone": "0081.obj",
+   "stone_vol": 0.1617,
+   "yield": 0.7732
+  },
+  {
+   "block_vol": 0.1249,
+   "tag": "boundary",
+   "stone": "0153.obj",
+   "stone_vol": 0.1623,
+   "yield": 0.7691
+  },
+  {
+   "block_vol": 0.1248,
+   "tag": "boundary",
+   "stone": "0082.obj",
+   "stone_vol": 0.1658,
+   "yield": 0.7526
+  },
+  {
+   "block_vol": 0.1237,
+   "tag": "boundary",
+   "stone": "0101.obj",
+   "stone_vol": 0.167,
+   "yield": 0.7407
+  },
+  {
+   "block_vol": 0.122,
+   "tag": "boundary",
+   "stone": "0174.obj",
+   "stone_vol": 0.1685,
+   "yield": 0.7238
+  },
+  {
+   "block_vol": 0.1216,
+   "tag": "boundary",
+   "stone": "0160.obj",
+   "stone_vol": 0.1727,
+   "yield": 0.704
+  },
+  {
+   "block_vol": 0.1208,
+   "tag": "boundary",
+   "stone": "0149.obj",
+   "stone_vol": 0.1755,
+   "yield": 0.6885
+  },
+  {
+   "block_vol": 0.1208,
+   "tag": "boundary",
+   "stone": "0127.obj",
+   "stone_vol": 0.1761,
+   "yield": 0.6859
+  },
+  {
+   "block_vol": 0.1196,
+   "tag": "boundary",
+   "stone": "0196.obj",
+   "stone_vol": 0.1802,
+   "yield": 0.6633
+  },
+  {
+   "block_vol": 0.118,
+   "tag": "boundary",
+   "stone": "0140.obj",
+   "stone_vol": 0.1807,
+   "yield": 0.6532
+  },
+  {
+   "block_vol": 0.1103,
+   "tag": "boundary",
+   "stone": "0142.obj",
+   "stone_vol": 0.1819,
+   "yield": 0.6066
+  },
+  {
+   "block_vol": 0.11,
+   "tag": "boundary",
+   "stone": "0162.obj",
+   "stone_vol": 0.182,
+   "yield": 0.6042
+  },
+  {
+   "block_vol": 0.1093,
+   "tag": "boundary",
+   "stone": "0121.obj",
+   "stone_vol": 0.184,
+   "yield": 0.5937
+  },
+  {
+   "block_vol": 0.1079,
+   "tag": "boundary",
+   "stone": "0371.obj",
+   "stone_vol": 0.1878,
+   "yield": 0.5749
+  },
+  {
+   "block_vol": 0.1053,
+   "tag": "boundary",
+   "stone": "0175.obj",
+   "stone_vol": 0.1898,
+   "yield": 0.5547
+  },
+  {
+   "block_vol": 0.1049,
+   "tag": "boundary",
+   "stone": "0136.obj",
+   "stone_vol": 0.1914,
+   "yield": 0.548
+  },
+  {
+   "block_vol": 0.1042,
+   "tag": "boundary",
+   "stone": "0157.obj",
+   "stone_vol": 0.1923,
+   "yield": 0.5416
+  },
+  {
+   "block_vol": 0.1037,
+   "tag": "boundary",
+   "stone": "0357.obj",
+   "stone_vol": 0.1941,
+   "yield": 0.534
+  },
+  {
+   "block_vol": 0.0984,
+   "tag": "boundary",
+   "stone": "0155.obj",
+   "stone_vol": 0.1218,
+   "yield": 0.8081
+  },
+  {
+   "block_vol": 0.0912,
+   "tag": "boundary",
+   "stone": "0180.obj",
+   "stone_vol": 0.1953,
+   "yield": 0.4668
+  },
+  {
+   "block_vol": 0.0869,
+   "tag": "boundary",
+   "stone": "0083.obj",
+   "stone_vol": 0.1958,
+   "yield": 0.4438
+  },
+  {
+   "block_vol": 0.0857,
+   "tag": "boundary",
+   "stone": "0159.obj",
+   "stone_vol": 0.1125,
+   "yield": 0.7619
+  },
+  {
+   "block_vol": 0.0846,
+   "tag": "boundary",
+   "stone": "0169.obj",
+   "stone_vol": 0.1998,
+   "yield": 0.4232
+  },
+  {
+   "block_vol": 0.0842,
+   "tag": "boundary",
+   "stone": "0112.obj",
+   "stone_vol": 0.2017,
+   "yield": 0.4174
+  },
+  {
+   "block_vol": 0.0832,
+   "tag": "boundary",
+   "stone": "0103.obj",
+   "stone_vol": 0.2024,
+   "yield": 0.4109
+  },
+  {
+   "block_vol": 0.0824,
+   "tag": "boundary",
+   "stone": "0013.obj",
+   "stone_vol": 0.2036,
+   "yield": 0.4047
+  },
+  {
+   "block_vol": 0.0803,
+   "tag": "boundary",
+   "stone": "0003.obj",
+   "stone_vol": 0.1243,
+   "yield": 0.6458
+  },
+  {
+   "block_vol": 0.0756,
+   "tag": "boundary",
+   "stone": "0130.obj",
+   "stone_vol": 0.1316,
+   "yield": 0.5749
+  },
+  {
+   "block_vol": 0.0716,
+   "tag": "boundary",
+   "stone": "0088.obj",
+   "stone_vol": 0.2044,
+   "yield": 0.3502
+  },
+  {
+   "block_vol": 0.0708,
+   "tag": "boundary",
+   "stone": "0187.obj",
+   "stone_vol": 0.1478,
+   "yield": 0.479
+  },
+  {
+   "block_vol": 0.0689,
+   "tag": "boundary",
+   "stone": "0198.obj",
+   "stone_vol": 0.1688,
+   "yield": 0.4082
+  },
+  {
+   "block_vol": 0.0671,
+   "tag": "boundary",
+   "stone": "0008.obj",
+   "stone_vol": 0.1713,
+   "yield": 0.3914
+  },
+  {
+   "block_vol": 0.0664,
+   "tag": "boundary",
+   "stone": "0386.obj",
+   "stone_vol": 0.2085,
+   "yield": 0.3184
+  },
+  {
+   "block_vol": 0.0657,
+   "tag": "boundary",
+   "stone": "0307.obj",
+   "stone_vol": 0.2088,
+   "yield": 0.3148
+  },
+  {
+   "block_vol": 0.0655,
+   "tag": "boundary",
+   "stone": "0186.obj",
+   "stone_vol": 0.1736,
+   "yield": 0.3775
+  },
+  {
+   "block_vol": 0.064,
+   "tag": "boundary",
+   "stone": "0089.obj",
+   "stone_vol": 0.2042,
+   "yield": 0.3136
+  },
+  {
+   "block_vol": 0.0638,
+   "tag": "boundary",
+   "stone": "0154.obj",
+   "stone_vol": 0.2096,
+   "yield": 0.3043
+  },
+  {
+   "block_vol": 0.0582,
+   "tag": "boundary",
+   "stone": "0251.obj",
+   "stone_vol": 0.2113,
+   "yield": 0.2753
+  },
+  {
+   "block_vol": 0.0568,
+   "tag": "boundary",
+   "stone": "0009.obj",
+   "stone_vol": 0.2116,
+   "yield": 0.2685
+  },
+  {
+   "block_vol": 0.052,
+   "tag": "boundary",
+   "stone": "0044.obj",
+   "stone_vol": 0.2125,
+   "yield": 0.245
+  },
+  {
+   "block_vol": 0.0502,
+   "tag": "boundary",
+   "stone": "0106.obj",
+   "stone_vol": 0.2129,
+   "yield": 0.236
+  },
+  {
+   "block_vol": 0.0485,
+   "tag": "boundary",
+   "stone": "0207.obj",
+   "stone_vol": 0.214,
+   "yield": 0.2266
+  },
+  {
+   "block_vol": 0.0466,
+   "tag": "boundary",
+   "stone": "0370.obj",
+   "stone_vol": 0.1906,
+   "yield": 0.2442
+  },
+  {
+   "block_vol": 0.0433,
+   "tag": "boundary",
+   "stone": "0387.obj",
+   "stone_vol": 0.2173,
+   "yield": 0.1994
+  },
+  {
+   "block_vol": 0.0419,
+   "tag": "boundary",
+   "stone": "0018.obj",
+   "stone_vol": 0.2227,
+   "yield": 0.188
+  },
+  {
+   "block_vol": 0.0409,
+   "tag": "boundary",
+   "stone": "0080.obj",
+   "stone_vol": 0.2246,
+   "yield": 0.1823
+  },
+  {
+   "block_vol": 0.0403,
+   "tag": "boundary",
+   "stone": "0006.obj",
+   "stone_vol": 0.227,
+   "yield": 0.1776
+  },
+  {
+   "block_vol": 0.0396,
+   "tag": "boundary",
+   "stone": "0297.obj",
+   "stone_vol": 0.2277,
+   "yield": 0.174
+  },
+  {
+   "block_vol": 0.0377,
+   "tag": "boundary",
+   "stone": "0151.obj",
+   "stone_vol": 0.2291,
+   "yield": 0.1648
+  },
+  {
+   "block_vol": 0.0371,
+   "tag": "boundary",
+   "stone": "0086.obj",
+   "stone_vol": 0.2309,
+   "yield": 0.1609
+  },
+  {
+   "block_vol": 0.036,
+   "tag": "boundary",
+   "stone": "0001.obj",
+   "stone_vol": 0.2329,
+   "yield": 0.1547
+  },
+  {
+   "block_vol": 0.033,
+   "tag": "boundary",
+   "stone": "0204.obj",
+   "stone_vol": 0.2334,
+   "yield": 0.1413
+  },
+  {
+   "block_vol": 0.0325,
+   "tag": "boundary",
+   "stone": "0150.obj",
+   "stone_vol": 0.2338,
+   "yield": 0.1389
+  },
+  {
+   "block_vol": 0.0296,
+   "tag": "boundary",
+   "stone": "0179.obj",
+   "stone_vol": 0.2342,
+   "yield": 0.1264
+  },
+  {
+   "block_vol": 0.0295,
+   "tag": "boundary",
+   "stone": "0281.obj",
+   "stone_vol": 0.2349,
+   "yield": 0.1256
+  },
+  {
+   "block_vol": 0.0291,
+   "tag": "boundary",
+   "stone": "0139.obj",
+   "stone_vol": 0.2359,
+   "yield": 0.1235
+  },
+  {
+   "block_vol": 0.0271,
+   "tag": "boundary",
+   "stone": "0096.obj",
+   "stone_vol": 0.2369,
+   "yield": 0.1142
+  },
+  {
+   "block_vol": 0.0199,
+   "tag": "boundary",
+   "stone": "0167.obj",
+   "stone_vol": 0.2372,
+   "yield": 0.0837
+  },
+  {
+   "block_vol": 0.0196,
+   "tag": "boundary",
+   "stone": "0205.obj",
+   "stone_vol": 0.2396,
+   "yield": 0.0818
+  },
+  {
+   "block_vol": 0.019,
+   "tag": "boundary",
+   "stone": "0124.obj",
+   "stone_vol": 0.24,
+   "yield": 0.0791
+  },
+  {
+   "block_vol": 0.0179,
+   "tag": "boundary",
+   "stone": "0143.obj",
+   "stone_vol": 0.2405,
+   "yield": 0.0743
+  },
+  {
+   "block_vol": 0.0173,
+   "tag": "boundary",
+   "stone": "0095.obj",
+   "stone_vol": 0.2417,
+   "yield": 0.0714
+  },
+  {
+   "block_vol": 0.0171,
+   "tag": "boundary",
+   "stone": "0007.obj",
+   "stone_vol": 0.2428,
+   "yield": 0.0705
+  },
+  {
+   "block_vol": 0.0155,
+   "tag": "boundary",
+   "stone": "0053.obj",
+   "stone_vol": 0.2431,
+   "yield": 0.0636
+  },
+  {
+   "block_vol": 0.0153,
+   "tag": "boundary",
+   "stone": "0375.obj",
+   "stone_vol": 0.236,
+   "yield": 0.0648
+  },
+  {
+   "block_vol": 0.0132,
+   "tag": "boundary",
+   "stone": "0012.obj",
+   "stone_vol": 0.2435,
+   "yield": 0.0544
+  },
+  {
+   "block_vol": 0.0121,
+   "tag": "boundary",
+   "stone": "0107.obj",
+   "stone_vol": 0.2457,
+   "yield": 0.0491
+  },
+  {
+   "block_vol": 0.0113,
+   "tag": "boundary",
+   "stone": "0117.obj",
+   "stone_vol": 0.2462,
+   "yield": 0.0459
+  },
+  {
+   "block_vol": 0.0107,
+   "tag": "boundary",
+   "stone": "0188.obj",
+   "stone_vol": 0.2505,
+   "yield": 0.0428
+  },
+  {
+   "block_vol": 0.0098,
+   "tag": "boundary",
+   "stone": "0028.obj",
+   "stone_vol": 0.2514,
+   "yield": 0.0391
+  },
+  {
+   "block_vol": 0.0092,
+   "tag": "boundary",
+   "stone": "0325.obj",
+   "stone_vol": 0.2532,
+   "yield": 0.0363
+  },
+  {
+   "block_vol": 0.0087,
+   "tag": "boundary",
+   "stone": "0035.obj",
+   "stone_vol": 0.2533,
+   "yield": 0.0343
+  },
+  {
+   "block_vol": 0.0071,
+   "tag": "boundary",
+   "stone": "0192.obj",
+   "stone_vol": 0.2556,
+   "yield": 0.0277
+  },
+  {
+   "block_vol": 0.0068,
+   "tag": "boundary",
+   "stone": "0320.obj",
+   "stone_vol": 0.2562,
+   "yield": 0.0266
+  },
+  {
+   "block_vol": 0.0067,
+   "tag": "boundary",
+   "stone": "0220.obj",
+   "stone_vol": 0.2568,
+   "yield": 0.0261
+  },
+  {
+   "block_vol": 0.0059,
+   "tag": "boundary",
+   "stone": "0158.obj",
+   "stone_vol": 0.2582,
+   "yield": 0.0227
+  },
+  {
+   "block_vol": 0.0055,
+   "tag": "boundary",
+   "stone": "0059.obj",
+   "stone_vol": 0.2594,
+   "yield": 0.0212
+  },
+  {
+   "block_vol": 0.0052,
+   "tag": "boundary",
+   "stone": "0203.obj",
+   "stone_vol": 0.2595,
+   "yield": 0.0201
+  },
+  {
+   "block_vol": 0.005,
+   "tag": "boundary",
+   "stone": "0116.obj",
+   "stone_vol": 0.2595,
+   "yield": 0.0191
+  },
+  {
+   "block_vol": 0.0047,
+   "tag": "boundary",
+   "stone": "0170.obj",
+   "stone_vol": 0.2601,
+   "yield": 0.0181
+  },
+  {
+   "block_vol": 0.0046,
+   "tag": "boundary",
+   "stone": "0189.obj",
+   "stone_vol": 0.2613,
+   "yield": 0.0175
+  },
+  {
+   "block_vol": 0.004,
+   "tag": "boundary",
+   "stone": "0144.obj",
+   "stone_vol": 0.2627,
+   "yield": 0.0151
+  },
+  {
+   "block_vol": 0.004,
+   "tag": "boundary",
+   "stone": "0005.obj",
+   "stone_vol": 0.2629,
+   "yield": 0.0151
+  },
+  {
+   "block_vol": 0.0039,
+   "tag": "boundary",
+   "stone": "0111.obj",
+   "stone_vol": 0.2646,
+   "yield": 0.0146
+  },
+  {
+   "block_vol": 0.0035,
+   "tag": "boundary",
+   "stone": "0011.obj",
+   "stone_vol": 0.2647,
+   "yield": 0.0133
+  },
+  {
+   "block_vol": 0.0031,
+   "tag": "boundary",
+   "stone": "0114.obj",
+   "stone_vol": 0.2666,
+   "yield": 0.0117
+  },
+  {
+   "block_vol": 0.0031,
+   "tag": "boundary",
+   "stone": "0300.obj",
+   "stone_vol": 0.2681,
+   "yield": 0.0114
+  },
+  {
+   "block_vol": 0.0029,
+   "tag": "boundary",
+   "stone": "0360.obj",
+   "stone_vol": 0.2685,
+   "yield": 0.0108
+  },
+  {
+   "block_vol": 0.0028,
+   "tag": "boundary",
+   "stone": "0358.obj",
+   "stone_vol": 0.2702,
+   "yield": 0.0102
+  },
+  {
+   "block_vol": 0.0026,
+   "tag": "boundary",
+   "stone": "0372.obj",
+   "stone_vol": 0.2708,
+   "yield": 0.0095
+  },
+  {
+   "block_vol": 0.0024,
+   "tag": "boundary",
+   "stone": "0321.obj",
+   "stone_vol": 0.2715,
+   "yield": 0.009
+  },
+  {
+   "block_vol": 0.0024,
+   "tag": "boundary",
+   "stone": "0399.obj",
+   "stone_vol": 0.2718,
+   "yield": 0.0087
+  },
+  {
+   "block_vol": 0.0016,
+   "tag": "boundary",
+   "stone": "0206.obj",
+   "stone_vol": 0.2723,
+   "yield": 0.0058
+  },
+  {
+   "block_vol": 0.0015,
+   "tag": "boundary",
+   "stone": "0100.obj",
+   "stone_vol": 0.2753,
+   "yield": 0.0054
+  }
+ ],
+ "mode": "natural"
+}

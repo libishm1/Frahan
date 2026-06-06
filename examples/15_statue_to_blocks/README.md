@@ -90,10 +90,38 @@ guillotine, the same engine as example 11) re-nests the 100 fabricable pieces (>
 so at 100+ pieces the practical paths are: batch by region, or keep the as-carved plan above. This is a
 known packer-scaling limit, reported honestly rather than hidden.
 
-## Branch B - match to rubble (next)
-Per block -> `Block Pair Match 3D` vs each ETH1100 rubble mesh -> top-N poses + Hausdorff residual;
-refine with `Soft ICP 3D`; oversize stones trimmed by `Adaptive Block Match 3D`. Convert mm-default
-matchers to meters at the boundary.
+## Branch B - match to a rubble lot (verified)
+Each carved block is matched one-to-one to a stone from an ETH1100 rubble lot (the block is carved from
+that stone). `Block Pair Match 3D` (planar-face mating) is still a skeleton, so this uses an honest
+AABB-containment proxy: a block fits a stone iff its sorted AABB dims are all <= the stone's sorted AABB
+dims (axis-permutable). Greedy one-to-one assignment, largest block first, picks the smallest-volume
+stone that still contains the block (max carve yield). Carve yield = block true volume / stone true
+volume. `Soft ICP 3D` refines the pose post-match. Runner: `match_rubble.py` (parses the OBJ lot
+directly). Units: meters.
+
+Two framings, both verified on 400 ETH1100 stones, 100 fabricable blocks (>= 1 L):
+
+| Framing | Mean carve yield | Rubble used | Matched |
+|---|---|---|---|
+| Natural rubble (0.5-1.4 m, as scanned) | 30.3 % | 21.5 m3 | 100/100 |
+| Rubble scaled to the avg block (x0.74, mean stone 0.53 m) | 58.8 % | 8.9 m3 | 100/100 |
+
+Natural ETH stones are much larger than the <= 0.5 m blocks, so small blocks sit in oversized stone
+(low yield, lots of waste). Scaling the lot to the average block being cut (uniform x0.7355 so the mean
+stone is 1.4x the average block linearly, natural size variation preserved) more than doubles the mean
+yield and halves the rubble consumed. Both are kept for comparison.
+
+![Natural-size rubble match](15B_rubble_match_natural.png)
+*Natural ETH1100 rubble (oversized): each carved block (red) nested in its matched stone (ghosted).*
+
+![Scaled rubble match](15B_rubble_match_scaled.png)
+*Rubble scaled to the average block: snug carve fit, ~50-60 % yield.*
+
+Honest limit: AABB-containment over-promises on the highest-yield matches (block AABB approx stone
+AABB), because the irregular stone is smaller than its AABB, so a full block can pierce the real
+surface. True surface-containment (or the face-mating `Block Pair Match 3D` once built, plus
+`Adaptive Block Match 3D` to trim oversize stones) replaces the proxy. Convert mm-default matchers to
+meters at the boundary.
 
 ## Performance note (in-process vs out-of-process)
 In-process (live Rhino via MCP) is fast and stable on the res2 + remesh path: 3.6 s for 173 booleans,
