@@ -26,7 +26,7 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 | `11_pack3d/` | 3D block packing (Block Pack Tree, Kim 2025 guillotine) | quarry block subdivision, saw-cuttable | synthetic elements (in the .gh); METERS, block 3.0x1.5x1.5 m |
 | `12_trencadis/` | Trencadis mosaic (Catalog Pack, CVD-Lloyd + Hungarian) | broken-tile cladding panel | synthetic shards (in the .gh); MILLIMETERS, panel ~1100 mm |
 | `13_surface_mapping/` | twisted block -> CGAL split-by-angle -> Trencadis cladding | surfaces from a solid + surface mosaic | synthetic twisted monument (in the .gh); MILLIMETERS, 1.2x1.2x3.5 m |
-| `14_kintsugi/` | fractured-vessel reassembly (PuzzleFusion++ Port mode) | restoration on Breaking Bad parity data | `14_kintsugi/data/bb_sample_*.bin`; MILLIMETERS, vessel ~280 mm tall |
+| `14_kintsugi/` | fractured-vessel reassembly (PuzzleFusion++ Port mode) | restoration on Breaking Bad parity data | `14_kintsugi/data/bb_sample_*.bin`; natural network scale (auto-scale off), point-cloud display |
 
 ## Digital-fabrication entrypoint renders (examples 10-14)
 Built and solved live, then captured. Each is at correct per-application physical scale (meters for

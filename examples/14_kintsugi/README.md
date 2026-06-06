@@ -1,6 +1,14 @@
 # Example 14 - Kintsugi fracture reassembly (Breaking Bad parity data, Port mode)
 
-> **Scale, units, position (corrected 2026-06-06):** MILLIMETERS. Reassembled vessel ~100-220 x 280 mm (the Breaking Bad shape is slender), base on z=0, centred in XY. Geometric tolerance 0.1 mm (= scan-noise floor); seam 1-3 mm; no kerf (restoration, not cutting). The Port-mode network runs in normalized space; the shipped result is scaled to vessel size for display. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
+> **Scale, units, display (corrected 2026-06-06):** AUTO-SCALE OFF. The Port-mode network works in
+> normalized space, so the reassembly is shown at the network's NATURAL scale (~0.24 x 0.24 x 1.0 units),
+> base on z=0, centred in XY. No per-fragment rescale (rescaling made the two fragments read as stacked
+> instead of meeting at the crack). DISPLAY = the two fragment POINT CLOUDS (1000 pts each) at the assembled
+> poses, coloured per fragment (gold neck + blue body): the Breaking Bad data is point clouds, so a mesh
+> display either interpenetrates (convex hull / Mesh Style 1) or is noisy (bbox-pulled / Mesh Style 3); the
+> point clouds are the honest display and clearly show the two fragments MEETING at the fracture interface.
+> Geometric tolerance 0.1 mm-class (scan-noise floor); no kerf (restoration, not cutting). See
+> `../../wiki/research/tolerances_dimensions_slm_roses.md`.
 
 
 Reassemble fractured fragments into the original solid by matching fracture surfaces. This is the

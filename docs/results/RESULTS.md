@@ -24,7 +24,7 @@ basis in `../../wiki/research/tolerances_dimensions_slm_roses.md`.
 | Surfaces from a solid (mm) | Trencadis on the twist (mm) | Kintsugi reassembly (mm) |
 |---|---|---|
 | ![surf](../../examples/13_surface_mapping/13_surface_segments.png) | ![clad](../../examples/13_surface_mapping/13_surface_trencadis.png) | ![kintsugi](../../examples/14_kintsugi/14_kintsugi_result.png) |
-| 1.2x1.2x3.5 m monument, 6 surfaces (CGAL angle split) | 408 cladding shards, 4 mm grout | ~280 mm vessel, 2/2 placed, verifier 0.71 STRONG |
+| 1.2x1.2x3.5 m monument, 6 surfaces (CGAL angle split) | 408 cladding shards, 4 mm grout | 2 fragments meet at the crack (point-cloud display), verifier 0.71 STRONG |
 
 ## Do they work at their scales? Yes, and they are performant
 Verified live at each example's physical scale (doc units meters for site/quarry, millimetres for shop):
@@ -35,7 +35,7 @@ Verified live at each example's physical scale (doc units meters for site/quarry
 | 3D quarry block | 3.0x1.5x1.5 m | 12/12 packed | < 0.1 s |
 | Trencadis mosaic | 1100 mm | 100/100 placed | ~0.26 s |
 | Surface segmentation | 1.2x1.2x3.5 m | 6 surfaces | ~0.01 s |
-| Kintsugi (Port mode) | ~280 mm | 2/2, verifier 0.71 | ~30 s (GPU diffusion, by design) |
+| Kintsugi (Port mode) | natural (auto-scale off) | 2/2 fragments joined at crack, verifier 0.71 | ~30 s (GPU diffusion, by design) |
 
 Performance is scale-robust: the NFP / Clipper cost is driven by vertex count, not coordinate magnitude,
 and the integer scaling is int64-safe at both metre and millimetre scale near the origin. The component
