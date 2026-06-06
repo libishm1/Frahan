@@ -3,7 +3,12 @@
 The benchmarked granite-domain GPR fracture workflow. Reads a MALA GPR radargram of a granite tunnel,
 migrates + extracts fracture reflectors, and reports the picks. This is the geologist master-spine.
 
-## Data
+## Data - download from Google Drive first
+Download the GPR radargram from the shared Drive master folder and place it under
+`D:/code_ws/Data/gpr/grimsel/`:
+- MASTER FOLDER: https://drive.google.com/drive/folders/1mDj1Z20BB70SrkjQKnU6O3kDbfuA-mcS?usp=sharing
+- File to download: `gpr/grimsel/GPR_AU_N-to-S.rd3` (AU tunnel; `GPR_VE_S-to-N.rd3` is the VE tunnel).
+
 - `../../data/gpr/grimsel/` — Grimsel ISC GPR (MALA GX160, AU + VE tunnels, granite). DOI
   10.3929/ethz-b-000420930, CC-BY-4.0. See `../../data/ATTRIBUTION.md`.
 - Validated end-to-end (granite_160 preset): AU 1472 / VE 1485 fracture picks; dt = 0.4464 ns, dx = 0.0498 m.

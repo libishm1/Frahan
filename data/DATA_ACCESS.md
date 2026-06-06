@@ -5,11 +5,12 @@ hosted on Google Drive (folders created + linked below) and also have their orig
 This file, the folder structure, and all metadata/docs ARE tracked in git, so the data folder + provenance
 are never lost. Style: short sentences, no em dashes.
 
-## Google Drive (folders created 2026-06-06)
-- MASTER FOLDER: https://drive.google.com/drive/folders/1doWZsSM4Y8KyoMCgxG9flT25C4rKy8T1
-- TO PUBLISH: upload each `D:/code_ws/Data/<name>/` into its Drive subfolder below, then set the MASTER
-  folder sharing to "Anyone with the link -> Viewer" (one setting cascades to subfolders). The links work
-  once sharing is enabled. (The folders were created via API; they are private until you set sharing.)
+## Google Drive (shared 2026-06-06)
+- MASTER FOLDER (all datasets, shared): https://drive.google.com/drive/folders/1mDj1Z20BB70SrkjQKnU6O3kDbfuA-mcS?usp=sharing
+- The datasets upload into this one shared folder (upload completes within ~2 hours of 2026-06-06).
+- TO USE: open the master folder, download the dataset subfolder you need, and place it under
+  `D:/code_ws/Data/<name>/` (the path the example workflows reference). The Grasshopper scan-ingestion
+  examples carry this link and name the exact file to download.
 
 ## Datasets (size + Drive subfolder + source)
 | Dataset | Folder | Size | Google Drive | Original source |
