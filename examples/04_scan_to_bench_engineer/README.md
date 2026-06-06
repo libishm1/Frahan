@@ -27,6 +27,14 @@ on the photogrammetry cloud).
 is background-threaded with a default-false Run gate (open the file -> nothing runs; flip Run
 left-to-right).
 
+## Through the card with Poisson (Geogram)
+Run end to end on the canvas in `11_granite_scan_to_bench.gh`: Read LAS Cloud (.laz, 33,608 voxels) ->
+Estimate Cloud Normals -> Scan Reconstruct **Used Mode = Poisson** (Geogram, 34,528-tri surface) ->
+Bench From Mesh -> the green quarry bench solid (the packable volume) with the Poisson rock surface on
+top. The card was driven live (toggles flipped, async stages awaited).
+
+![Card: Poisson reconstruct + Bench From Mesh](04_card_poisson_bench.png)
+
 ## Packable volume (Poisson Geogram -> remesh -> mesh bench -> offset)
 From the same `.laz` cloud, processed through the reconstruction chain (verified via the Core engines
 the GH components call):
