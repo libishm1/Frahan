@@ -1,0 +1,15 @@
+{
+ "workflow": "3D pack -> Settle 3D (Bullet rigid-body physics)",
+ "n_stones": 12,
+ "container_base_m": [
+  1.8,
+  1.8
+ ],
+ "pile_height_m": 3.06,
+ "friction": 0.6,
+ "settle_steps": 400,
+ "tamp": 5,
+ "collision": "convex-hull",
+ "component": "Settle 3D (Physics), Bullet backend (libbulletc.dll shipped in install/plugin)",
+ "data": "real ETH1100 stones, internalized in .gh + baked in .3dm"
+}
