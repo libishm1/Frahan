@@ -24,8 +24,11 @@ are never lost. Style: short sentences, no em dashes.
 | Marble grids | `marbles/` | 13 MB | https://drive.google.com/drive/folders/1HcSuWLGBWHSi5ewkqyeO_B4TtZnfNcrw | marble GPR grids (see ATTRIBUTION.md) |
 | Granite Dells TLS | `granite_dells_tls/` | 5.4 MB | https://drive.google.com/drive/folders/1OVqu7hzPF8__vR4rX2Res1LWd5VILBFS | OpenTopography / TLS (see ATTRIBUTION.md) |
 | Research reports | `research_reports/` | 80 KB | https://drive.google.com/drive/folders/1U03dm_ZZY5_-n8fNe4uh2UhFjL8FsNwO | curated reports |
+| Loviisa fracture maps | `loviisa/` | 2.1 MB | in-git (small, LFS) | Chudasama 2022 rapakivi-granite surface fracture traces, Zenodo 10.5281/zenodo.7077494, CC-BY 4.0 |
 
-Total ~6.3 GB. Full provenance + licenses: `ATTRIBUTION.md`.
+Total ~6.3 GB on Drive plus the small in-git Loviisa shapefiles. Full provenance + licenses:
+`ATTRIBUTION.md` and `loviisa/DATASET.md`. Loviisa is small enough to live in git (LFS), so example 26
+runs with no download. Worked example: `../examples/26_loviisa_surface_fractures/`.
 
 ## Local copy
 The blobs live locally at `D:/code_ws/Data/` (outside this repo, so git operations never touch them).

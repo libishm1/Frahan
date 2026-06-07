@@ -13,3 +13,11 @@ examples/**/*.rd7        filter=lfs diff=lfs merge=lfs -text
 # Kintsugi parity samples are small; keep them as normal git blobs (no LFS)
 examples/**/*.laz        filter=lfs diff=lfs merge=lfs -text
 examples/**/*.las        filter=lfs diff=lfs merge=lfs -text
+
+# Shapefile binaries (ESRI .shp/.dbf/.shx) - keep the repo clean
+examples/**/*.shp filter=lfs diff=lfs merge=lfs -text
+examples/**/*.dbf filter=lfs diff=lfs merge=lfs -text
+examples/**/*.shx filter=lfs diff=lfs merge=lfs -text
+data/**/*.shp filter=lfs diff=lfs merge=lfs -text
+data/**/*.dbf filter=lfs diff=lfs merge=lfs -text
+data/**/*.shx filter=lfs diff=lfs merge=lfs -text

@@ -19,6 +19,12 @@
 !/data/**/*.csv
 !/data/**/*.json
 !/data/**/*.3dm
+# Loviisa fracture-map shapefiles are SMALL (~2 MB) and the in-git exception (LFS); the big blobs stay on Drive.
+!/data/loviisa/**/*.shp
+!/data/loviisa/**/*.shx
+!/data/loviisa/**/*.dbf
+!/data/loviisa/**/*.prj
+!/data/loviisa/**/*.cpg
 
 # install/ ships the deployable plugin binaries (overrides the global *.dll / *.exe ignores above).
 # Large ones (.dll/.exe/.gha/.bin) are stored via Git LFS (see .gitattributes).
