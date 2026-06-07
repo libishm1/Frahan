@@ -54,5 +54,25 @@ marking last mile.
 
 ![Flat guillotine baseline](08f_flat_guillotine.png)
 
+## Oblique guillotine cut sequence (the saw passes that free the blocks)
+The oblique guillotine is a full-span cut plan where the bed-parallel passes are TILTED to follow each
+dipping bed (that is what recovers the wedge a flat cut wastes). Staged over the balanced packing
+(bench hidden):
+
+1. The balanced oblique blocks, placed.
+   ![Placed blocks](08g_seq0_blocks.png)
+2. + 3 OBLIQUE bed-parallel cut planes (cyan), each tilted to its bed (~6 deg, ~0.9 deg, ~6 deg) -> frees
+   the 4 layers along the natural parting.
+   ![Oblique bed cuts](08h_seq1_bedcuts.png)
+3. + the vertical rip cuts that separate the blocks within each layer: one perp-Y cut (yellow, the
+   1.5 m / 1.0 m beam split) and 23 perp-X rips (magenta) at the block boundaries.
+   ![All oblique cuts](08i_seq2_allcuts.png)
+
+3 oblique bed passes + 24 vertical rips. Every block is freed by a straight full-span pass; the only
+difference from the flat plan is that the 3 horizontal passes are tilted, which is what needs the
+georeferenced marking to execute. (The flat-guillotine equivalent uses horizontal passes at the dip-safe
+envelope and leaves the wedges.) Cut planes are in the `obl_bedcut` / `obl_perpY` / `obl_perpX` layers of
+the .3dm.
+
 Full method, statistics, and limitations: `STATISTICAL_REPORT.md`. Numbers: `08_marble_cost_volume_metrics.json`.
 Geometry: `08_marble_block_layout.3dm`. Companion synthetic study: `../25_marble_gangsaw_cost/`.

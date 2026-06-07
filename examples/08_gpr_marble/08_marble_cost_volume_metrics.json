@@ -46,6 +46,11 @@
   },
   "slab_stage_oblique": {"note": "each recovered block gangsawed into 20 mm slabs + 3 mm kerf",
     "max_cost": {"slabs": 647, "face_m2": 1388.3}, "balanced": {"slabs": 777, "face_m2": 1568.7}, "max_volume": {"slabs": 1036, "face_m2": 1678.0}},
+  "oblique_guillotine_cut_plan_balanced": {
+    "description": "full-span saw passes for the balanced oblique packing, staged in 08g/08h/08i",
+    "oblique_bed_parallel_passes": 3, "bed_dips_deg": [6.1, 0.9, 6.1],
+    "vertical_perp_Y_cuts": 1, "vertical_perp_X_rips": 23, "total_passes": 27,
+    "note": "the 3 bed-parallel passes are TILTED to the beds (oblique); only these need georeferenced marking to execute. The flat-guillotine equivalent uses horizontal passes at the dip-safe envelope and leaves the wedges."},
   "limitations": [
     "Two parallel 2D profiles interpolated to a 3D fracture grid (profile1 -> y=0, profile2 -> y=2.6); a dense grid would constrain the cross-line dip directly.",
     "Block economics use each layer's mean spacing; the oblique geometry follows the true per-(x,y) bed planes, so displayed blocks never cross a bed.",

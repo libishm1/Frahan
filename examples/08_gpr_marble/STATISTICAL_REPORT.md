@@ -88,6 +88,13 @@ Until that marking and georeferencing chain exists, a quarry runs flat guillotin
 recoverable premium stone in the wedges. Localised adjustment of each mark stays with the stonemason;
 the system supplies the georeferenced plan, the mason fine-tunes at the rock.
 
+## 6b. Oblique guillotine cut plan (balanced packing)
+The balanced oblique packing is freed by 27 full-span saw passes: 3 oblique bed-parallel passes (tilted
+to the beds at 6.1, 0.9, 6.1 deg, cutting along the natural parting) plus 1 vertical perp-Y cut and 23
+vertical perp-X rips that separate the blocks within each layer. Only the 3 tilted passes differ from the
+flat plan, and only they need the georeferenced marking to execute. Staged captures: `08g_seq0_blocks`,
+`08h_seq1_bedcuts`, `08i_seq2_allcuts`.
+
 ## 7. Sensitivity and limitations
 - Velocity: depths and bed spacing scale linearly with the 0.10 m/ns assumption (+/-10% v -> +/-10%
   depth). The dip angles and the flat-vs-oblique ratio are velocity-invariant.
