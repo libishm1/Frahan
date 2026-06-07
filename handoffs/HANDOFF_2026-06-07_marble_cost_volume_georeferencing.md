@@ -100,3 +100,17 @@ Coverage ~70-75% by topic. Top remaining (validated in code_ws, no Frahan exampl
 - MEDIUM: carving-stages v2 sweep; ship ETH1100 / Stanford-bunny / Tongjiang data (16/17 + scan-ingest not self-reproducible without it).
 - LOW: tu1208 multi-format GPR; GeoCrack (reference-only, Drive); CI (net-new).
 See MIGRATION_GAP_TODO.md for sources, targets, and the per-item recipe.
+
+## NEXT SESSION ORDER (Libish directive 2026-06-07)
+RULE for every workflow: document cost/volume/flat + save .3dm example + detailed report BEFORE
+proceeding to the next one, ESPECIALLY if interrupted with another task. No half-baked workflows on
+GitHub; validate completely before pushing. Example 08 is the completeness template (report + metrics +
+layered .3dm + staged packing PNGs + the oblique guillotine cut sequence 08g/08h/08i).
+
+Order:
+1. Troubleshoot / fully validate the existing ~22 examples (no half-baked) before adding any new ones.
+2. Then work the MIGRATION_GAP_TODO.md backlog slowly, each example fully validated.
+3. Then build STARTER PACKS for digital fabrication, one curated bundle per audience:
+   geologists; general open-source community; surveyors; computational designers/architects; stone
+   masons; artists. Each = curated existing examples + the data they need + a short audience report.
+   (See memory project_starter_packs_digital_fabrication.)
