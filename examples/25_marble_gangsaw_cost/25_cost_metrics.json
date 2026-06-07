@@ -1,0 +1,51 @@
+{
+  "workflow": "Marble fractured gangsaw bench: cost-wise vs volume-wise yield optimisation (max NET value, balanced, max VOLUME)",
+  "units": "meters, USD",
+  "bench_m": [6.0, 3.0, 3.0],
+  "bench_vol_m3": 54.0,
+  "fractures": 3,
+  "fracture_model": "3 oblique planes x = a + by*y + bz*z; one cell (0.5 m) keep-out at each crossing",
+  "fracture_params": [[1.8, 0.55, 0.20], [3.4, -0.30, 0.50], [4.9, 0.35, -0.45]],
+  "intact_vol_m3": 42.5,
+  "intact_loss_pct": -21.3,
+  "grid_cell_m": 0.5,
+  "cut_usd_per_m2": 200.0,
+  "catalogue": [
+    {"size": "3x1x1 (gangsaw)", "vol": 3.0, "price_per_m3": 2500, "revenue": 7500, "cut_area_m2": 14, "cut_cost": 2800, "net": 4700, "net_per_m3": 1567},
+    {"size": "2x1x1",          "vol": 2.0, "price_per_m3": 1700, "revenue": 3400, "cut_area_m2": 10, "cut_cost": 2000, "net": 1400, "net_per_m3": 700},
+    {"size": "1.5x1x1",        "vol": 1.5, "price_per_m3": 1300, "revenue": 1950, "cut_area_m2": 8,  "cut_cost": 1600, "net": 350,  "net_per_m3": 233},
+    {"size": "1x1x1",          "vol": 1.0, "price_per_m3": 1000, "revenue": 1000, "cut_area_m2": 6,  "cut_cost": 1200, "net": -200, "net_per_m3": -200}
+  ],
+  "objective": "maximise  net_usd + W * volume_m3 ; W is a volume credit ($/m3) that sweeps the Pareto front",
+  "results": {
+    "max_cost": {
+      "W_usd_per_m3": 0,
+      "blocks": 15,
+      "vol_m3": 30.5, "recovery_intact_pct": 71.8, "recovery_bench_pct": 56.5,
+      "revenue_usd": 56050, "cut_cost_usd": 30400, "net_usd": 25650,
+      "mix": {"3x1x1": 3, "2x1x1": 7, "1.5x1x1": 5}
+    },
+    "balanced": {
+      "W_usd_per_m3": 800,
+      "blocks": 20,
+      "vol_m3": 35.5, "recovery_intact_pct": 83.5, "recovery_bench_pct": 65.7,
+      "revenue_usd": 61050, "cut_cost_usd": 36400, "net_usd": 24650,
+      "mix": {"3x1x1": 3, "2x1x1": 7, "1.5x1x1": 5, "1x1x1": 5}
+    },
+    "max_volume": {
+      "W_usd_per_m3": 1000000,
+      "blocks": 25,
+      "vol_m3": 38.0, "recovery_intact_pct": 89.4, "recovery_bench_pct": 70.4,
+      "revenue_usd": 57100, "cut_cost_usd": 40400, "net_usd": 16700,
+      "mix": {"3x1x1": 2, "2x1x1": 4, "1.5x1x1": 10, "1x1x1": 9}
+    }
+  },
+  "tradeoff": {
+    "cost_to_balanced": {"delta_vol_m3": 5.0, "delta_net_usd": -1000, "net_pct": -3.9, "marginal_cost_usd_per_m3": 200},
+    "cost_to_volume":   {"delta_vol_m3": 7.5, "delta_net_usd": -8950, "net_pct": -34.9, "marginal_cost_usd_per_m3": 1193},
+    "balanced_to_volume": {"delta_vol_m3": 2.5, "delta_net_usd": -7950, "marginal_cost_usd_per_m3": 3180}
+  },
+  "recommendation": "Cost is the more important figure (brief). BALANCED is the recommended operating point: it recovers 5.0 m3 more stone than the pure-profit cut for only $1000 (3.9%) of net, by filling the break-even 1.0 m pockets the cost-optimal cut leaves empty. Pushing to MAX-VOLUME adds only 2.5 m3 more but burns $7950 of profit, because it must restructure premium gangsaw runs into loss-making 1x1x1 offcuts.",
+  "guillotine_cuts_balanced": {"perp_Y": 2, "perp_Z": 2, "perp_X_rips": 25, "total_passes": 29,
+    "sequence": "1) two full-span cuts perpendicular to Y -> 3 slices; 2) two full-span cuts perpendicular to Z -> 9 beams (1x1x6 m); 3) 25 rip cuts perpendicular to X within each beam at the block boundaries (edge-to-edge inside the beam)."}
+}
