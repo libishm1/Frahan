@@ -197,7 +197,13 @@ namespace Frahan.GH.Masonry.Sequencing
             {
                 int cellId = kvp.Value;
                 if (!meshById.TryGetValue(cellId, out var m)) continue;
-                stoneMeshes.Add(m);
+                // Emit a CLEAN closed solid, not the raw input mesh. Voronoi /
+                // scan-derived cells often arrive with duplicate vertices,
+                // degenerate slivers, and inconsistent (inward) face normals, so
+                // they render as see-through "open" shells even when topologically
+                // closed. Sanitise here so the component's output is clean by
+                // itself and never needs a downstream cleanup pass.
+                stoneMeshes.Add(CleanCell(m));
                 orderList.Add(kvp.Key);
                 depthList.Add(plan.Depth[cellId]);
                 cellCount++;
@@ -224,6 +230,25 @@ namespace Frahan.GH.Masonry.Sequencing
         // ------------------------------------------------------------------
         // Helpers
         // ------------------------------------------------------------------
+
+        // Sanitise a cell mesh into a clean closed solid with outward normals.
+        // Combine duplicate vertices, drop degenerate faces, cap any holes, and
+        // unify + outward-orient the normals so the cell renders solid (not a
+        // see-through shell). Operates on a duplicate; the input is not mutated.
+        private static Mesh CleanCell(Mesh src)
+        {
+            if (src == null) return null;
+            var m = src.DuplicateMesh();
+            m.Vertices.CombineIdentical(true, true);
+            m.Faces.CullDegenerateFaces();
+            if (!m.IsClosed) m.FillHoles();
+            m.RebuildNormals();
+            m.UnifyNormals();
+            if (m.IsClosed && m.Volume() < 0) m.Flip(true, true, true);
+            m.RebuildNormals();
+            m.Compact();
+            return m;
+        }
 
         private static Point3d MeshCentroid(Mesh m)
         {
