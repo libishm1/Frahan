@@ -1,0 +1,55 @@
+{
+  "workflow": "Real Botticino-marble GPR fracture grid -> dimension-block layout under cost/volume/balanced optimisation; flat (orthogonal) vs oblique (bed-following) guillotine",
+  "units": "meters, USD",
+  "source_data": {
+    "files": ["gpr_data/LA010001.DT", "gpr_data/LA010002.DT"],
+    "provenance": "Bondua, Tinti et al. 2024, GPR measures from quarries, MDPI Data 9(3):42; Mendeley 10.17632/w26n6nftxs.3, site Italy-Botticino (marble). License CC-BY-NC-ND 4.0 (research/testing only).",
+    "acquisition": {"traces_profile1": 185, "traces_profile2": 183, "samples": 512, "dt_ns": 0.1562, "dx_m": 0.026, "x_span_m": 4.79, "depth_m": 4.0},
+    "velocity_m_per_ns": 0.10, "permittivity_assumed": 9.0
+  },
+  "fracture_extraction": {
+    "method": "RadargramProcessor (dewow, bg-removal, t-power, AGC, Stolt f-k migration, Hilbert energy) -> FractureExtractor (high-energy local maxima + dip-aware USGS lateral-continuity, EnergyQuantile 0.985, window 41 traces, support 12)",
+    "picks_profile1": 148, "picks_profile2": 132, "picks_total": 280,
+    "beds": [
+      {"depth_m": 0.72, "support_picks": 168, "dip_deg": 6.1, "plane_fit_rms_m": 0.015, "mean_confidence": 0.22},
+      {"depth_m": 2.10, "support_picks": 33,  "dip_deg": 0.9, "plane_fit_rms_m": 0.005, "mean_confidence": 0.13},
+      {"depth_m": 3.70, "support_picks": 52,  "dip_deg": 6.1, "plane_fit_rms_m": 0.012, "mean_confidence": 0.25}
+    ],
+    "bed_spacing_m": [0.72, 1.38, 1.59, 0.30], "spacing_mean_m": 1.00, "spacing_std_m": 0.51
+  },
+  "bench": {"size_m": [4.8, 2.6, 4.0], "volume_m3": 49.92, "usable_intact_m3": 46.05, "fracture_keepout_loss_pct": 7.8, "keepout_m": 0.05},
+  "block_catalogue": {
+    "note": "footprint x depth, height = layer thickness (cut along the beds). price/m3 falls and cut/m2 rises with smaller blocks.",
+    "A": {"footprint_m": [3.0, 1.5], "price_per_m3": 2200},
+    "B": {"footprint_m": [2.0, 1.5], "price_per_m3": 1800},
+    "C": {"footprint_m": [1.5, 1.0], "price_per_m3": 1400},
+    "D": {"footprint_m": [1.0, 1.0], "price_per_m3": 1100},
+    "cut_usd_per_m2": 200.0
+  },
+  "objective": "maximise net + W*volume ; W ($/m3) sweeps cost (W=0) -> balanced (W=500) -> volume (W=inf)",
+  "oblique_guillotine": {
+    "description": "full-span straight cuts tilted to follow each dipping bed (3 oblique bed-parallel passes + vertical rip cuts); blocks are bed-bounded hexahedra; recovers the full bed spacing. NEEDS advanced scanning + georeferenced marking to execute the sloped passes.",
+    "max_cost":   {"W": 0,   "vol_m3": 32.16, "net_usd": 28741, "blocks": 13, "mix": {"A": 4, "C": 9}, "recovery_usable_pct": 69.8},
+    "balanced":   {"W": 500, "vol_m3": 36.32, "net_usd": 27263, "blocks": 15, "mix": {"A": 2, "B": 4, "C": 9}, "recovery_usable_pct": 78.9},
+    "max_volume": {"W": 1e6, "vol_m3": 38.85, "net_usd": 25010, "blocks": 20, "mix": {"B": 8, "C": 12}, "recovery_usable_pct": 84.4}
+  },
+  "flat_guillotine": {
+    "description": "flat full-span axis-aligned cuts placed at the dip-safe envelope (top = deepest point of the upper bed, bottom = shallowest point of the lower bed, minus keep-out). The dip wedges between flat cut and dipping bed are waste. Fabricable on any gangsaw TODAY.",
+    "dip_safe_layers_m": [0.328, 1.051, 1.037, 0.161],
+    "max_cost":   {"W": 0,   "vol_m3": 20.26, "net_usd": 17454, "blocks": 9,  "mix": {"A": 3, "C": 6}},
+    "balanced":   {"W": 500, "vol_m3": 24.87, "net_usd": 15327, "blocks": 14, "mix": {"A": 1, "B": 4, "C": 9}},
+    "max_volume": {"W": 1e6, "vol_m3": 27.06, "net_usd": 12317, "blocks": 20, "mix": {"B": 8, "C": 12}}
+  },
+  "georeferencing_prize_at_max_cost": {
+    "delta_vol_m3": 11.90, "delta_vol_pct": 59.0, "delta_net_usd": 11287,
+    "meaning": "Oblique (bed-following) guillotine recovers 59% more stone and $11,287 more net per ~50 m3 bench than flat cuts, ENTIRELY because the beds dip ~6 deg. That gap is the economic justification for the scanning + georeferenced-marking last mile (see project TODO)."
+  },
+  "slab_stage_oblique": {"note": "each recovered block gangsawed into 20 mm slabs + 3 mm kerf",
+    "max_cost": {"slabs": 647, "face_m2": 1388.3}, "balanced": {"slabs": 777, "face_m2": 1568.7}, "max_volume": {"slabs": 1036, "face_m2": 1678.0}},
+  "limitations": [
+    "Two parallel 2D profiles interpolated to a 3D fracture grid (profile1 -> y=0, profile2 -> y=2.6); a dense grid would constrain the cross-line dip directly.",
+    "Block economics use each layer's mean spacing; the oblique geometry follows the true per-(x,y) bed planes, so displayed blocks never cross a bed.",
+    "Velocity 0.10 m/ns (eps_r 9) assumed for Botticino marble; depth and bed spacing scale linearly with velocity (sensitivity: +/-10% velocity -> +/-10% depths).",
+    "Marble GPR data is CC-BY-NC-ND: research/testing only, not for commercial product demos."
+  ]
+}
