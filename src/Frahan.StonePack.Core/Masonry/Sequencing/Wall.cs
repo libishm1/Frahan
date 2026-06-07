@@ -272,7 +272,9 @@ public sealed class Wall
 
     // Applies rules (5)-(8). Returns (lower, higher) or null when the
     // pair has no ordering constraint (purely vertical shared edge).
-    // Throws when rule (8) is violated.
+    // Rule (8) ambiguity (mutual above/below on different segments) is resolved
+    // by the net length-weighted vote, then centroid height, rather than thrown,
+    // so irregular Voronoi / wavy tessellations sequence (example 27).
     private (int Low, int High)? DirectEdge(
         int a, int b,
         List<((double X, double Y) P, (double X, double Y) Q)> shared,
@@ -280,8 +282,12 @@ public sealed class Wall
     {
         var ra = Regions[a].Ring;
         var rb = Regions[b].Ring;
-        int aAboveB = 0;
-        int bAboveA = 0;
+        // Length-weighted votes: posLen = total shared-segment length on which a
+        // sits above b; negLen = the reverse. Weighting by length (not a raw
+        // count) lets the dominant relation win when a wiggly shared boundary
+        // puts a above b on some sub-segments and below on others.
+        double posLen = 0.0;
+        double negLen = 0.0;
         double probeOffset = Math.Max(eps * 1000.0, 1e-4);
         foreach (var (rawP, rawQ) in shared)
         {
@@ -302,20 +308,36 @@ public sealed class Wall
             bool upB = Geom2D.PointInRing(upPt, rb);
             bool dnA = Geom2D.PointInRing(dnPt, ra);
             bool dnB = Geom2D.PointInRing(dnPt, rb);
-            if (upA && !upB) aAboveB++;
-            else if (upB && !upA) bAboveA++;
-            else if (dnA && !dnB) bAboveA++;
-            else if (dnB && !dnA) aAboveB++;
+            if (upA && !upB) posLen += length;
+            else if (upB && !upA) negLen += length;
+            else if (dnA && !dnB) negLen += length;
+            else if (dnB && !dnA) posLen += length;
         }
-        if (aAboveB > 0 && bAboveA > 0)
-        {
-            throw new InvalidOperationException(
-                $"rule (8) violated between regions {a} and {b}: " +
-                "each is above the other on different segments");
-        }
-        if (aAboveB > 0) return (b, a);
-        if (bAboveA > 0) return (a, b);
+        double net = posLen - negLen;
+        // Purely vertical shared edge (no horizontal segment voted): no ordering.
+        if (posLen <= eps && negLen <= eps) return null;
+        // Direct the edge by centroid HEIGHT: a global potential, so the DAG is
+        // acyclic by construction even for irregular Voronoi / wavy tessellations
+        // where a sits above b on some shared sub-segments and below on others
+        // (the configuration the old rule-8 guard threw on). A pure net vote can
+        // be globally inconsistent (A>B>C>A) and cycle; centroid order cannot.
+        // Fall back to the geometric net only when the two centroids sit at the
+        // same height (same course), where height cannot decide.
+        double cay = RingCentroidY(ra);
+        double cby = RingCentroidY(rb);
+        if (cay > cby + eps) return (b, a);   // a higher -> b installed first
+        if (cby > cay + eps) return (a, b);
+        if (net > eps) return (b, a);
+        if (net < -eps) return (a, b);
         return null;
+    }
+
+    private static double RingCentroidY(List<(double X, double Y)> ring)
+    {
+        if (ring == null || ring.Count == 0) return 0.0;
+        double s = 0.0;
+        for (int i = 0; i < ring.Count; i++) s += ring[i].Y;
+        return s / ring.Count;
     }
 
     public (Dictionary<int, List<int>> Graph, List<(int Low, int High)> Edges)
@@ -397,8 +419,11 @@ public sealed class Wall
             guard++;
             if (guard > nodes.Count + 2)
             {
-                throw new InvalidOperationException(
-                    "reversed Kahn's exceeded node budget; graph likely has a cycle");
+                // Cycle fallback: the DAG should be acyclic (DirectEdge orders by
+                // centroid height), but degrade gracefully rather than abort the
+                // whole sequence if an unexpected cycle slips through. Any not-yet-
+                // deepened node keeps its current depth; we stop here.
+                break;
             }
         }
         return depth;

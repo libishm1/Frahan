@@ -132,6 +132,26 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 
 ---
 
+## KB-8 — 2D Polygonal Masonry Sequence under-extracts a Voronoi ridge NETWORK (FLAGGED, not yet fixed)
+
+- **Symptom:** `Frahan Polygonal Masonry Sequence` (2D, `B4E07A3C-...`) on the example-27 Voronoi card
+  (28 seeds -> 63 ridge chains) extracts ~10 finite regions on the live canvas, not the ~26 Voronoi cells
+  the Python reference (`scipy.spatial.Voronoi`) produces. Verified live 2026-06-07: 63 chains in,
+  `Region Count` = 10. Cards 01-05 (spanning chains) and the 3D component (50 cells) are correct.
+- **Root cause:** the 2D sequencer is built for *spanning* joint chains that divide the wall into bands.
+  `Wall.FromChains` -> `Pslg.FromSegments` does not robustly build a planar arrangement from a dense ridge
+  *network* (the bounded Voronoi faces are merged / not closed). It is the arrangement face extraction, not
+  the install-order step, and not `extendToBbox` (verified: TRUE and FALSE both give 12 finite faces).
+- **Fix (not done):** a robust planar-arrangement face extraction (intersection split + endpoint snapping +
+  half-edge face traversal) for general segment soups, or a 2D-cells input path mirroring the 3D component.
+- **Action taken 2026-06-07:** card 06 (2D Voronoi) is HELD BACK from `examples/27_polygonal_masonry`
+  (not shipped as working). The 3D Voronoi (card 07) is the working Voronoi demonstrator. A related
+  robustness fix DID ship: rule (8) ambiguity (mutual above/below on different shared sub-segments) is now
+  resolved by centroid height in `Wall.DirectEdge` instead of throwing, and `ReversedKahnDepths` degrades
+  gracefully on an unexpected cycle, so the sequencer no longer aborts on irregular tessellations.
+
+---
+
 ## Standing rules distilled
 - No multi-million-vertex data internalised in a .gh (KB-1). Decimate or reference externally.
 - No `Mesh.Reduce` on multi-million meshes inline; voxel-cluster instead (KB-2).

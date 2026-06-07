@@ -24,8 +24,8 @@ the evolved NFP-BLF is the only 0-overlap packer crossing the 80% bar with holes
 `10_pack2d_util_bars.png`.
 
 ## Files
-- `10_pack2d_v506_nest.gh` - the canvas (built live): convex part curves (internalized) -> Frahan Sheet
-  Pack (Unified) V506 -> Packed Curves + Report. MCP bridge stripped, grouped.
+- `10_pack2d_nfp_nest.gh` - the canvas (built live): convex part curves (internalized) -> exact NFP-BLF
+  sheet packer -> Packed Curves + Report. MCP bridge stripped, grouped.
 - `10_pack2d_result.png` - validated nest capture (from `wiki/research/packing/figures/rhino_v506.png`).
 - `10_pack2d_result.3dm` - validated nest geometry (the oversub L+hole evolved case).
 - `10_pack2d_util_bars.png` - util_stock bar chart across packers.

@@ -17,7 +17,7 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 |---|---|---|---|
 | `01_quarry_to_wall/` | quarry block -> fracture decompose -> ashlar pack -> masonry wall | the full quarry-to-masonry spine | synthetic quarry block (in the .3dm) |
 | `02_masonry_assembly/` | masonry assembly + build-order colouring + stability | assembly + RBE stability (W4-fixed) | synthetic blocks (in the .3dm) |
-| `03_quarry_to_slabs/` | quarry block -> slab-cut-by-fractures -> slabs (block-packing in fractures) | the FractureBlockPack / slab-cut path | synthetic block + fracture planes; or `data/gpr/*` fractures |
+| `03_quarry_to_slabs/` | quarry block -> slab-cut-by-fractures -> slabs (SUPERSEDED by `23_quarry_to_slab/`, which ships README + PNGs + metrics) | the FractureBlockPack / slab-cut path | synthetic block + fracture planes; or `data/gpr/*` fractures |
 | `03_gpr_fracture_granite/` | GPR radargram -> migrate -> fracture extraction (geologist brief) | granite-domain GPR fracture mapping | `data/gpr/grimsel/` (MALA .rd3/.rad) |
 | `04_scan_to_bench_engineer/` | scan cloud -> normals -> reconstruct -> bench (engineer block-plan) | scan-to-bench reconstruction | `data/granite_dells_tls/` or `data/tongjiang/` |
 | `05_artist_pointing_machine/` | scan mesh -> carving stages -> pointing-machine guide (artist) | the carving / pointing-machine spine | a scan mesh: `data/stanford_scans/` (or your own temple scan, DECIMATED per KB-1) |
