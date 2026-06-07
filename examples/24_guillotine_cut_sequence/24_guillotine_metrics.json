@@ -1,0 +1,21 @@
+{
+ "workflow": "Guillotine cut sequence: quarry block -> dimension blocks by rip + cross-cuts",
+ "quarry_m": [
+  3.0,
+  1.5,
+  1.5
+ ],
+ "block_m": 0.5,
+ "kerf_mm": 10.0,
+ "grid": [
+  5,
+  2,
+  2
+ ],
+ "blocks": 20,
+ "cuts_total": 19,
+ "rip_perpX": 4,
+ "crossY": 5,
+ "crossZ": 10,
+ "sequence": "1 rip planes (perp X) -> slabs; 2 cross-Y planes per slab -> columns; 3 cross-Z planes per column -> blocks (guillotine: every cut edge-to-edge full-span within its sub-region)"
+}
