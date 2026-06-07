@@ -1,0 +1,31 @@
+{
+ "workflow": "Quarry -> standard dimension blocks (fracture-aware pack) -> gangsaw slabs",
+ "quarry_block_m": [
+  3.0,
+  1.5,
+  1.5
+ ],
+ "quarry_vol_m3": 6.75,
+ "fractures": 3,
+ "intact_zones": 6,
+ "intact_vol_m3": 6.05,
+ "fracture_loss_m3": 0.7,
+ "fracture_loss_pct": 10.4,
+ "std_block_m": [
+  0.5,
+  0.5,
+  0.5
+ ],
+ "block_packer": "Fracture Block Pack (voxel-dlbf-multi, kerf 8mm, 100% guillotine-separable)",
+ "blocks_recovered": 60,
+ "block_vol_m3": 2.981,
+ "block_yield_of_intact_pct": 49.3,
+ "block_yield_of_quarry_pct": 44.2,
+ "gangsaw": "20mm slabs, 3mm saw kerf",
+ "slabs": 888,
+ "slab_vol_m3": 2.523,
+ "slab_face_area_m2": 126.1,
+ "slab_yield_of_block_pct": 84.6,
+ "slab_area_per_quarry_m3": 18.7,
+ "material_flow": "quarry 6.75 m3 -> intact 6.05 (-10% fractures) -> blocks 2.98 (-51% packing) -> slabs 2.52 m3 (-15% saw kerf); 126 m2 of finished slab"
+}
