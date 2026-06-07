@@ -18,10 +18,11 @@ intersect) to the voussoir cell. Stability in stereotomy comes from the carved g
 *Right: raw ETH1100 rubble stone. Left: the voussoir trimmed from it (flat bed-joint cuts + the rubble's real surface where it falls within the cell).*
 
 ## Pipeline
-1. ARCH GEOMETRY: semicircular intrados (R = 2.0 m), ring thickness 0.55 m, width 0.6 m, N = 11
-   voussoirs -> 11 radial voussoir CELLS (8-vertex wedge solids; bed joints normal to the intrados,
-   pointing at the centre - the radial bed-joint rule). Catenary / pointed arches are a drop-in change
-   of the intrados curve (Voussoir-GH catenary reference).
+1. ARCH GEOMETRY: the **Arch Voussoirs** component (Frahan > Voussoir, GUID D5F10012) generates the 11
+   radial voussoir CELLS (8-vertex wedge solids; bed joints normal to the intrados, pointing at the
+   centre - the radial bed-joint rule) from semicircular intrados R = 2.0 m, ring thickness 0.55 m, width
+   0.6 m, N = 11. Catenary / pointed / segmental arches are a drop-in change of the Profile input on the
+   same component. Cells are outward-oriented closed solids (required for the CGAL trim below).
 2. EVOLVE-MATCH: each voussoir cell is matched to a volume-feasible ETH rubble stone, posed to envelop
    the cell (the evolved variant adds 24 rotation seeds + a (1+8)-ES driving the cell's real vertices
    inside the stone - beating the OBB-only `Voussoir Stone Matcher`).
@@ -29,12 +30,16 @@ intersect) to the voussoir cell. Stability in stereotomy comes from the carved g
    only closed results within the cell volume; otherwise a clean voussoir is used (exact fallback).
 4. ASSEMBLE: the carved voussoirs placed in the arch ring.
 
-## Measured (this run)
-- 11-voussoir semicircular arch, span 4.0 m, ring 0.55 m.
-- **9/11 voussoirs are real rubble trims**, 2 clean fallback; **coverage ~75%** (recovered / arch volume).
-- Honest finding: irregular rubble rarely FULLY contains a chunky wedge, so most voussoirs are "inside
-  the resource" (rubble keeps its real surface where it falls short) rather than exact. Larger or
-  CoACD-convex-decomposed stock raises the exact fraction. Metrics in `21_arch_metrics.json`.
+## Measured (this run, regenerated 2026-06-07)
+- 11-voussoir semicircular arch, span 4.0 m, ring 0.55 m, arch volume 2.3266 m^3.
+- **11/11 voussoirs are real rubble trims**, 0 clean fallback; **coverage 94.9%** (recovered / arch
+  volume); per-cell 0.85 to 0.99.
+- Cells from the Arch Voussoirs component; each matched to the best of 8 ETH1100 candidate stones (scaled
+  to 1.5x the cell diagonal, centroid-aligned) and CGAL-intersected to the cell.
+- **Fix (the reported bug):** every voussoir is now either a CGAL-trimmed rubble stone bounded by its
+  cell, or (if no valid trim) the CLEAN cut cell. The earlier version kept the raw un-trimmed boulder on a
+  failed trim, so oversized stones overshot the arch. No raw boulders remain. Metrics in
+  `21_arch_metrics.json`.
 
 ## Files
 - `21_rubble_arch.3dm` - the carved voussoir arch (one mesh per voussoir, coloured).

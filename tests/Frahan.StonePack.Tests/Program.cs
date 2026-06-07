@@ -1308,7 +1308,19 @@ var tests = new List<(string Name, Action Body)>
     ("NFP-BLF evolved concave pack is 0-overlap", NfpBlfEvolutionTests.Evolved_ConcaveParts_ZeroOverlap),
     ("NFP-BLF evolved is deterministic", NfpBlfEvolutionTests.Evolved_IsDeterministic),
     ("NFP-BLF legacy flags-off is deterministic", NfpBlfEvolutionTests.Legacy_FlagsOff_IsDeterministic),
-    ("NFP-BLF multi-start ran", NfpBlfEvolutionTests.Evolved_MultiStart_Ran)
+    ("NFP-BLF multi-start ran", NfpBlfEvolutionTests.Evolved_MultiStart_Ran),
+
+    // 2026-06-07 - Voussoir cell generators (arch + pendentive vault geometry front end)
+    ("VoussoirCellFactory arch semicircular 11 closed cells", VoussoirCellFactoryTests.Arch_Semicircular_Produces11ClosedCells),
+    ("VoussoirCellFactory arch semicircular total volume in band", VoussoirCellFactoryTests.Arch_Semicircular_TotalVolume_InBand),
+    ("VoussoirCellFactory arch springers on ground + X span", VoussoirCellFactoryTests.Arch_Semicircular_SpringersOnGround),
+    ("VoussoirCellFactory arch keystone index is central", VoussoirCellFactoryTests.Arch_KeystoneIndex_IsCentral),
+    ("VoussoirCellFactory arch all profiles build closed cells", VoussoirCellFactoryTests.Arch_AllProfiles_BuildClosedCells),
+    ("VoussoirCellFactory arch base point translates", VoussoirCellFactoryTests.Arch_BasePoint_Translates),
+    ("VoussoirCellFactory pendentive 36 closed cells", VoussoirCellFactoryTests.Pendentive_Produces36ClosedCells),
+    ("VoussoirCellFactory pendentive drop-to-ground min Z ~0", VoussoirCellFactoryTests.Pendentive_DropToGround_MinZ_NearZero),
+    ("VoussoirCellFactory pendentive rejects corners off sphere", VoussoirCellFactoryTests.Pendentive_RejectsCornersOffSphere),
+    ("VoussoirCellFactory assembly records ready for matcher", VoussoirCellFactoryTests.Assembly_RecordsReadyForMatcher)
 };
 
 var failed = 0;

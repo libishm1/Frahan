@@ -1,18 +1,20 @@
 {
- "workflow": "Pendentive (sail) vault voussoirs carved from ETH rubble boulders (evolve-match + CGAL trim)",
+ "workflow": "Pendentive (sail) vault: cells from the Pendentive Vault Voussoirs component (D5F10013) carved from ETH1100 rubble (best-of-candidates match + CGAL trim)",
  "vault": "pendentive dome / sail vault (sphere over square)",
  "R_m": 2.5,
  "square_half_m": 1.6,
  "thickness_m": 0.4,
- "grid": [
-  6,
-  6
- ],
+ "grid": [6, 6],
  "voussoirs": 36,
- "rubble_trim": 17,
- "exact_contained": 0,
- "arch_volume_m3": 5.6793,
- "recovered_m3": 4.8369,
- "coverage_pct": 85.2,
- "note": "sphere-over-square pendentive dome tessellated by lines of curvature (meridian/parallel patches); each voussoir cell evolve-matched (24 rot seeds + SE3 containment) to an ETH boulder then CGAL-trimmed to the voussoir geometry"
+ "cell_source": "Pendentive Vault Voussoirs component (Frahan > Voussoir, GUID D5F10013)",
+ "match": "best of 6 ETH1100 candidate stones per cell, scaled to 1.6x cell diagonal, centroid-aligned",
+ "rubble_match_scale": 1.6,
+ "real_rubble_trim": 36,
+ "clean_fallback": 0,
+ "coverage_floor": 0.40,
+ "arch_volume_m3": 5.6941,
+ "recovered_m3": 5.5996,
+ "coverage_pct": 98.3,
+ "fix_2026_06_07": "Every voussoir is now either a CGAL-trimmed rubble stone (bounded by its cell) or the CLEAN cut cell. The earlier version kept raw un-trimmed boulders on failed trims (the reported bug). 36/36 are real rubble trims here; 0 raw boulders.",
+ "note": "sphere-over-square pendentive dome tessellated by lines of curvature (Pendentive Vault Voussoirs component); each cell CGAL-trimmed to a matched ETH boulder posed over it; clean cut-cell fallback (never the raw stone)"
 }
