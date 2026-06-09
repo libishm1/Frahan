@@ -20,7 +20,7 @@ markdown is tracked so provenance travels with the repo. Style: short sentences,
 | Folder | Dataset | DOI / source | License | Workflow |
 |---|---|---|---|---|
 | `gpr/grimsel` | Grimsel ISC GPR (MALA GX160, AU+VE tunnels, granite) | DOI 10.3929/ethz-b-000420930 | CC-BY-4.0 | primary granite-domain GPR fracture extraction |
-| `gpr/bondua` | Bondua et al. 2024 quarry GPR (Botticino marble grids `.DT`) | DOI 10.17632/w26n6nftxs.3 | CC-BY-NC-ND (non-commercial, no-derivatives) | 3D viz + extraction-algorithm testing (marble, not granite) |
+| `gpr/bondua` | Bondua et al. 2024 quarry GPR (Botticino marble grids `.DT`) | DOI 10.17632/w26n6nftxs.3 | CC-BY-4.0 (verified: MDPI Data 10.3390/data9030042 + Mendeley record; earlier NC-ND label was a mislabel) | 3D viz + extraction-algorithm testing (marble, not granite) |
 | `gpr/tu1208` | TU1208 IFSTTAR multi-rock GPR (MALA .rd3/.rad + GSSI .dzt) | DOI 10.5281/zenodo.1211173 | CC-BY | GPR reader validation (gneiss/limestone/silt) |
 
 ## Reference reports
@@ -31,7 +31,7 @@ markdown is tracked so provenance travels with the repo. Style: short sentences,
 ## License notes
 - The repo is GPL-3.0 (whole-repo, because Frahan.Kintsugi.Port is a GPL-3.0 port and stays linked).
 - Datasets carry their OWN upstream licenses (above), independent of the code license. Non-commercial /
-  unknown-license sets (Granite Dells "Not Provided", Bondua CC-BY-NC-ND, Stanford research-only) are
+  unknown-license sets (Granite Dells "Not Provided", Stanford research-only) are
   bundled with attribution per the maintainer decision; downstream users must honor each upstream license.
 - At the public/open-source step, large blobs migrate to Git LFS and a download script will fetch any that
   cannot be redistributed.
