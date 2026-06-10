@@ -41,6 +41,7 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddNumberParameter("FixBelowZ", "Fz", "Blocks whose lowest vertex is within this of the global min Z are fixed (ground)", GH_ParamAccess.item, 0.01);
             p.AddNumberParameter("Density", "Rho", "Stone density (kg/m^3)", GH_ParamAccess.item, 2400.0);
             p.AddNumberParameter("ContactTol", "Ct", "Contact detection distance tolerance (model units)", GH_ParamAccess.item, 0.005);
+            p.AddNumberParameter("AngleTol", "At", "Contact detection face-angle tolerance (degrees). Raise to ~12-20 for stones on CURVED surfaces, where adjacent stones extrude along different normals and joint faces tilt apart.", GH_ParamAccess.item, 5.0);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager p)
@@ -53,11 +54,11 @@ namespace Frahan.StonePack.GH.Masonry
         protected override void SolveInstance(IGH_DataAccess da)
         {
             var stones = new List<Mesh>();
-            double mu = 0.84, fixBelowZ = 0.01, density = 2400.0, contactTol = 0.005;
+            double mu = 0.84, fixBelowZ = 0.01, density = 2400.0, contactTol = 0.005, angleTol = 5.0;
             int faces = 8;
             if (!da.GetDataList(0, stones) || stones.Count == 0) return;
             da.GetData(1, ref mu); da.GetData(2, ref faces); da.GetData(3, ref fixBelowZ);
-            da.GetData(4, ref density); da.GetData(5, ref contactTol);
+            da.GetData(4, ref density); da.GetData(5, ref contactTol); da.GetData(6, ref angleTol);
 
             var coordsList = new List<IReadOnlyList<double>>(stones.Count);
             var trisList = new List<IReadOnlyList<int>>(stones.Count);
@@ -90,6 +91,7 @@ namespace Frahan.StonePack.GH.Masonry
                     coordsList, trisList,
                     density: density,
                     contactDistanceTol: contactTol,
+                    contactAngleTolDeg: Math.Max(0.1, Math.Min(45.0, angleTol)),
                     fixBelowZ: fixBelowZ,
                     mu: mu, faceCount: Math.Max(3, faces), inscribed: true);
             }
