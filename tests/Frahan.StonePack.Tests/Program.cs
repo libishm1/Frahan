@@ -343,6 +343,8 @@ var tests = new List<(string Name, Action Body)>
     ("carve-back inflated inventory exact analytic", StoneCarveBackTests.CarveBack_InflatedInventory_ExactAnalytic),
     ("carve-back exact refines the voxel estimate", StoneCarveBackTests.CarveBack_ExactRefinesVoxelEstimate),
     ("carve-back identity placements exact analytic 1.25", StoneCarveBackTests.CarveBack_IdentityPlacements_ExactAnalytic125),
+    // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
+    ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

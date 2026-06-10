@@ -58,6 +58,29 @@ namespace Frahan.Masonry
     }
 
     /// <summary>
+    /// Settle-v2 objective weights (evolution P5, 2026-06-10). When supplied,
+    /// candidate seats that pass the COM-stability preference are ranked by the
+    /// published placement objectives instead of seat depth alone:
+    ///   Furrer et al. 2017 (ICRA): maximise the support polygon, minimise the
+    ///   COM offset from the support centroid;
+    ///   Johns et al. 2020 (Constr Robotics): minimise the volume trapped UNDER
+    ///   the stone (poor seating);
+    /// plus the legacy deep-seat preference as a weighted term. All terms are
+    /// scale-normalised, so the weights are dimensionless.
+    /// </summary>
+    public sealed class SettleV2Options
+    {
+        /// <summary>Weight on (1 - supportPolygonArea/footprintArea). Furrer w1.</summary>
+        public double WSupport = 1.0;
+        /// <summary>Weight on (COM offset from support centroid)/meanStoneWidth. Furrer w3.</summary>
+        public double WComOffset = 1.0;
+        /// <summary>Weight on the normalised under-stone void volume. Johns objective (a).</summary>
+        public double WUnderVoid = 1.0;
+        /// <summary>Weight on seat height / meanStoneWidth (the legacy deep-seat term).</summary>
+        public double WSeat = 0.5;
+    }
+
+    /// <summary>
     /// Concave-aware Z-up rubble-wall settle. See class remarks for the algorithm.
     /// </summary>
     public static class RubbleWallSettle
@@ -91,6 +114,19 @@ namespace Frahan.Masonry
             bool stabilityAware = true,
             double margin = 0.0,
             int cellsPerWidth = 20)
+            => Settle(meshes, widthMult, stabilityAware, margin, cellsPerWidth, null);
+
+        /// <summary>
+        /// Settle with the optional v2 objective (Furrer/Johns candidate ranking).
+        /// <paramref name="v2"/> = null reproduces the legacy behaviour exactly.
+        /// </summary>
+        public static IList<RubbleStonePlacement> Settle(
+            IList<Mesh> meshes,
+            double widthMult,
+            bool stabilityAware,
+            double margin,
+            int cellsPerWidth,
+            SettleV2Options v2)
         {
             if (meshes == null) throw new ArgumentNullException(nameof(meshes));
             if (cellsPerWidth < 1) throw new ArgumentOutOfRangeException(nameof(cellsPerWidth));
@@ -245,6 +281,7 @@ namespace Frahan.Masonry
                 bool haveBest = false;
                 int bestStable = 0; double bestZ = 0; int bestV = 0; int bestK = 0;
                 Dictionary<long, double[]> bestProf = null; double bestClr = -1.0;
+                double bestCost = double.MaxValue;
 
                 for (int v = 0; v < Flips.Length; v++)
                 {
@@ -266,7 +303,29 @@ namespace Frahan.Masonry
                         double clr = SupportClearance(comx0 + k * cell, comy0, pts);
                         int stableFlag = stabilityAware ? (clr >= margin ? 0 : 1) : 0;
 
-                        // Lexicographic compare on (stableFlag, zk) when aware, else (zk).
+                        // v2 objective (Furrer support/COM + Johns under-void + seat).
+                        double cost = 0;
+                        if (v2 != null)
+                        {
+                            double footArea = p.Count * cell * cell;
+                            SupportMetrics(comx0 + k * cell, comy0, pts,
+                                           out double hullArea, out double comOffset);
+                            double underVoid = 0;
+                            foreach (var kv in p)
+                            {
+                                DecodeKey(kv.Key, out int ixc, out int iyc);
+                                top.TryGetValue(CellKey(ixc + k, iyc), out double tcur); // 0 = floor
+                                double gap = (zk + kv.Value[0]) - tcur;
+                                if (gap > 0) underVoid += gap * cell * cell;
+                            }
+                            double stoneH = Math.Max(ext[i][2], 1e-9);
+                            cost = v2.WSupport * (1.0 - Math.Min(1.0, hullArea / Math.Max(footArea, 1e-12)))
+                                 + v2.WComOffset * (comOffset / meanW)
+                                 + v2.WUnderVoid * (underVoid / Math.Max(footArea * stoneH, 1e-12))
+                                 + v2.WSeat * (zk / meanW);
+                        }
+
+                        // Compare: stability preference first; then v2 cost (or seat depth).
                         bool better;
                         if (!haveBest)
                         {
@@ -275,18 +334,19 @@ namespace Frahan.Masonry
                         else if (stabilityAware)
                         {
                             better = stableFlag < bestStable ||
-                                     (stableFlag == bestStable && zk < bestZ);
+                                     (stableFlag == bestStable &&
+                                      (v2 != null ? cost < bestCost : zk < bestZ));
                         }
                         else
                         {
-                            better = zk < bestZ;
+                            better = v2 != null ? cost < bestCost : zk < bestZ;
                         }
 
                         if (better)
                         {
                             haveBest = true;
                             bestStable = stableFlag; bestZ = zk; bestV = v; bestK = k;
-                            bestProf = p; bestClr = clr;
+                            bestProf = p; bestClr = clr; bestCost = cost;
                         }
                     }
                 }
@@ -485,6 +545,28 @@ namespace Frahan.Masonry
         }
 
         // Andrew monotone chain. Returns CCW hull (>= 3 unique pts) or null.
+        /// <summary>Hull area + COM offset from the support centroid (v2 objective terms).</summary>
+        private static void SupportMetrics(double comx, double comy, List<double[]> pts,
+                                           out double hullArea, out double comOffset)
+        {
+            hullArea = 0; comOffset = 1e9;
+            if (pts == null || pts.Count < 3) return;
+            var hull = ConvexHull2D(pts);          // null for degenerate inputs
+            if (hull == null || hull.Count < 3) return;
+            double a2 = 0, cx = 0, cy = 0;
+            for (int i = 0; i < hull.Count; i++)
+            {
+                var p0 = hull[i];
+                var p1 = hull[(i + 1) % hull.Count];
+                double cr = p0[0] * p1[1] - p1[0] * p0[1];
+                a2 += cr; cx += (p0[0] + p1[0]) * cr; cy += (p0[1] + p1[1]) * cr;
+            }
+            hullArea = System.Math.Abs(a2) / 2.0;
+            if (System.Math.Abs(a2) < 1e-30) return;
+            cx /= 3 * a2; cy /= 3 * a2;
+            comOffset = System.Math.Sqrt((comx - cx) * (comx - cx) + (comy - cy) * (comy - cy));
+        }
+
         private static List<double[]> ConvexHull2D(IList<double[]> pts)
         {
             if (pts == null || pts.Count < 3) return null;
