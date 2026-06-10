@@ -50,4 +50,8 @@
          (memory bounded by occupied voxels). Authorized 2026-05-27. -->
     <PackageReference Include="Unofficial.laszip.net" Version="2.2.0" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- reuse-first: HungarianAssigner for the P4 stone-cell assignment (leaf lib, net48, Rhino-free) -->
+    <ProjectReference Include="..\Frahan.EdgeMatching.Core\Frahan.EdgeMatching.Core.csproj" />
+  </ItemGroup>
 </Project>

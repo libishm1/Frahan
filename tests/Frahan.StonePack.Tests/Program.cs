@@ -333,6 +333,11 @@ var tests = new List<(string Name, Action Body)>
     ("CRA cantilever is unstable", CraStabilityCheckerTests.Cra_Cantilever_Unstable),
     ("CRA H-model: RBE accepts, CRA rejects (Kao counterexample)", CraStabilityCheckerTests.Cra_HModel_RbeAcceptsButCraRejects),
     ("CRA generated wall is certified", CraStabilityCheckerTests.Cra_GeneratedWall_Certified),
+    // Stone-cell assignment / imposition index Lambda (P4)
+    ("Lambda identical inventory near zero", StoneCellAssignmentTests.IdenticalInventory_LambdaNearZero),
+    ("Lambda inflated inventory matches analytic + identity recovery", StoneCellAssignmentTests.InflatedInventory_AnalyticLambda_AndIdentityRecovery),
+    ("Lambda monotonic in stock coarseness", StoneCellAssignmentTests.CoarserInventory_LambdaMonotonic),
+    ("Lambda extra inventory reports unused stones", StoneCellAssignmentTests.ExtraInventory_ReportsUnusedStones),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),
