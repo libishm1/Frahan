@@ -339,6 +339,10 @@ var tests = new List<(string Name, Action Body)>
     ("Lambda monotonic in stock coarseness", StoneCellAssignmentTests.CoarserInventory_LambdaMonotonic),
     ("Lambda extra inventory reports unused stones", StoneCellAssignmentTests.ExtraInventory_ReportsUnusedStones),
     ("Lambda ETH1100 real rubble on generated wall (skips without dataset)", StoneCellAssignmentEthBenchmarkTests.Lambda_EthRubble_OnGeneratedWall),
+    // exact Cyclopean carve-back (P4c)
+    ("carve-back inflated inventory exact analytic", StoneCarveBackTests.CarveBack_InflatedInventory_ExactAnalytic),
+    ("carve-back exact refines the voxel estimate", StoneCarveBackTests.CarveBack_ExactRefinesVoxelEstimate),
+    ("carve-back identity placements exact analytic 1.25", StoneCarveBackTests.CarveBack_IdentityPlacements_ExactAnalytic125),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),
