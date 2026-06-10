@@ -65,3 +65,19 @@ pushed; awaiting HITL validation of the example-27 PNGs).
 - Every "regen" item needs the live Rhino slot (truth criterion c); the headless harness cannot init
   `rhcommon_c` here. Deploy is file-copy with Rhino CLOSED.
 - Commits to Frahan main need explicit push authorization (per task). Batch per logical unit; keep main clean.
+
+## Self-presentation audit (2026-06-10) — canvas-native rule
+New standing rule (memory `feedback_gh_cards_self_presenting`): a card's FINAL form must come from canvas
+components (Custom Preview / Gradient-by-metric / Panels), not external bake scripts — acceptance: reopening
+the .gh cold reproduces the capture.
+
+Headless audit of all 36 example .gh files: only the masonry-27 set now complies.
+- **DONE (2026-06-10):** 27_01..27_05, 27_06 (+ CRA verdict panels, exact-joint Assembly wire, mortar joints),
+  27_07_stone_match_lambda (Move/Swatch/Traffic-Gradient layer), 27_07_voronoi_3d — Custom Preview + beige
+  swatch wired to the Stones output, raw previews hidden. 27_08 intentionally panel-only (negative cases).
+- **TODO (rest of library, fold into regen passes):** every other example has prev=0 (geometry presentation
+  relies on default red GH previews; many have report Panels only): 01, 02 (0 panels too), 03_gpr (x2),
+  03_quarry_to_slabs, 04 (x2), 05 (x2), 07, 08_gpr (x3), 09, 10, 11, 12, 13, 14 (0 panels), 15C (0), 16 (0),
+  17 (0), 18 (0), 19 (0), 20 (0), 26. Retrofit recipe = the headless batch in this session's transcript
+  (CreateInstance Custom Preview + Colour Swatch, AddSource to the main geometry output, hide raw preview,
+  SaveQuiet).
