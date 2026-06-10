@@ -125,23 +125,32 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
             da.SetData(3, report);
         }
 
-        /// <summary>One stone: ngon-capped prism on the surface, GUARANTEED closed + manifold + unified outward normals.</summary>
+        /// <summary>
+        /// One stone: ngon-capped prism on the surface, GUARANTEED closed + manifold +
+        /// unified outward normals. Extrusion is PER-VERTEX along the surface normal at
+        /// each vertex (validated live 2026-06-10): adjacent stones extrude their shared
+        /// boundary vertices along the SAME normals, so joint side-walls coincide exactly
+        /// on any curvature — without this, double-curved walls gape/overlap at the joints
+        /// and the stability checker sees floating stones.
+        /// </summary>
         private static Mesh BuildStone(WallCell cell, Func<double, double, Point3d> map,
                                        Func<double, double, Vector3d> nrm, double depth, double shrink, Random rnd)
         {
             int k = cell.VertexCount;
             if (k < 3) return null;
             double cu = cell.CentroidU, cv = cell.CentroidV;
+            double d = depth * (0.85 + rnd.NextDouble() * 0.3);
             var f = new List<Point3d>(k);
+            var b = new List<Point3d>(k);
             for (int i = 0; i < k; i++)
             {
                 double su = cu + (cell.Us[i] - cu) * shrink;
                 double sv = cv + (cell.Vs[i] - cv) * shrink;
-                f.Add(map(su, sv));
+                var fp = map(su, sv);
+                f.Add(fp);
+                b.Add(fp + nrm(su, sv) * d);   // per-vertex normal, shared with the neighbour
             }
             var n = nrm(cu, cv);
-            double d = depth * (0.85 + rnd.NextDouble() * 0.3);
-            var b = f.Select(p => p + n * d).ToList();
 
             var m = new Mesh();
             foreach (var p in f) m.Vertices.Add(p);

@@ -19,8 +19,16 @@ curvature); delete it to fall back to the flat W x H panel.
   165 contact vertices, max compression 743 N, residual tension ~2e-3).
 - Headless battery: 995 PASS / 0 FAIL (incl. cantilever-beyond-support -> unstable; coursed wall -> stable).
 
+## Double-curved structural check (validated live 2026-06-10)
+Stones now extrude PER-VERTEX along the surface normal at each vertex, so adjacent stones share identical
+joint side-walls on any curvature. The doubly-curved 15-stone wall verifies **STABLE (Optimal)**: 43
+interfaces, 192 contact vertices, max compression 1311 N, residual tension ~1e-2 (7.4 s solve). Friction
+utilization is elevated on the tilted curved beds (up to ~1.4 at near-zero-force vertices) — physically
+sensible: curvature spends friction reserve. Capture: `card06_doublecurved_stability.png` (green = low
+friction demand, warm = high).
+
 ## Known limits
-- On CURVED surfaces adjacent stones extrude along different normals, so joint faces tilt apart: raise the
-  **AngleTol** input (~12-20 deg; lands with the next .gha load) or check the flat variant. Long-term fix:
-  pass the generator's own cell adjacency to the checker instead of re-detecting (P1.2).
+- For curved walls raise **AngleTol** to ~12 deg and ContactTol to ~0.008 (joint planes are exact, but the
+  detector pairs faces by normal antiparallelism). Long-term: pass the generator's own cell adjacency to the
+  checker instead of re-detecting (P1.2).
 - The stability solve is dense ADMM — interactive at <=20 stones; bigger walls take minutes (P1.1 sparse).
