@@ -179,16 +179,25 @@ public static class MasonryStabilityChecker
             }
         }
 
+        // Pass 1: force scale (needed to floor the utilization ratio — vertices
+        // carrying ~zero normal force produce meaningless ft/(mu*fn) dust).
+        double maxCompression = 0, maxTension = 0;
+        foreach (var kv in perVertex)
+        {
+            if (kv.Value[0] > maxCompression) maxCompression = kv.Value[0];
+            if (kv.Value[1] > maxTension) maxTension = kv.Value[1];
+        }
+        double fnFloor = Math.Max(1e-12, 1e-4 * maxCompression);
+
+        // Pass 2: per-interface aggregation with the floored utilization.
         var perIface = new Dictionary<int, double[]>(); // iface -> [maxUtil, minFn, maxFn, maxTension]
-        double maxCompression = 0, maxUtil = 0, maxTension = 0;
+        double maxUtil = 0;
         foreach (var kv in perVertex)
         {
             int iface = (int)(kv.Key >> 32);
             double fnPos = kv.Value[0], fnNeg = kv.Value[1];
             double ft = Math.Sqrt(kv.Value[2] * kv.Value[2] + kv.Value[3] * kv.Value[3]);
-            double util = ft / (muEff * Math.Max(fnPos, 1e-12));
-            if (fnPos > maxCompression) maxCompression = fnPos;
-            if (fnNeg > maxTension) maxTension = fnNeg;
+            double util = fnPos >= fnFloor ? ft / (muEff * fnPos) : 0.0;
             if (util > maxUtil) maxUtil = util;
             if (!perIface.TryGetValue(iface, out var agg))
             {
