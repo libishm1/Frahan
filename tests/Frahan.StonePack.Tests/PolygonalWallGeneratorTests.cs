@@ -196,6 +196,37 @@ static class MasonryStabilityCheckerTests
             throw new Exception($"40-stone stability took {sw.ElapsedMilliseconds} ms — sparse path regressed");
     }
 
+    public static void GeneratedWall_AdjacencyAssembler_StableAndLean()
+    {
+        // P1.2: exact generator-adjacency joints (one planar quad per adjacent
+        // stone pair) instead of detector-splintered contacts. Must be stable,
+        // leaner than the detector path, and tolerance-free.
+        var gen = PolygonalWallGenerator.Generate(new WallGenOptions
+        {
+            Width = 3.0, Height = 1.8, GridX = 8, GridY = 5, Coursing = 0.4,
+            LloydIterations = 2, SizeGradeCv = 0.30, Seed = 7,
+        });
+        var wall = PolygonalWallAssembler.Build(
+            gen,
+            (u, v) => new[] { u, 0.0, v },          // flat XZ panel
+            (u, v) => new[] { 0.0, 1.0, 0.0 },      // +Y normal
+            depth: 0.25);
+        int ifaces = wall.Assembly.Interfaces.Count;
+        int verts = 0;
+        foreach (var i in wall.Assembly.Interfaces) verts += i.ContactPolygon.Count;
+        if (ifaces < gen.Cells.Count - 1)
+            throw new Exception($"adjacency joints look under-extracted: {ifaces} interfaces for {gen.Cells.Count} stones");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var r = Frahan.Masonry.Solvers.MasonryStabilityChecker.Check(wall.Assembly);
+        sw.Stop();
+        Console.WriteLine($"      [bench] 40-stone wall (adjacency joints): {(r.IsStable ? "STABLE" : "NOT STABLE")} " +
+                          $"in {sw.ElapsedMilliseconds} ms ({ifaces} ifaces, {verts} verts vs detector 125/612)");
+        if (!r.IsStable)
+            throw new Exception($"the adjacency-assembled wall must be RBE-stable; got {r.Status}: {r.Message}");
+        if (verts >= 612)
+            throw new Exception($"adjacency joints must be leaner than the detector ({verts} vs 612 contact vertices)");
+    }
+
     private static void BuildPrisms(WallGenResult gen, double depth,
         out List<IReadOnlyList<double>> coordsList, out List<IReadOnlyList<int>> trisList)
     {

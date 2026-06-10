@@ -327,6 +327,7 @@ var tests = new List<(string Name, Action Body)>
     ("stability inscribed friction shrinks mu by cos(pi/K)", MasonryStabilityCheckerTests.InscribedFriction_ShrinksMuByCosPiOverK),
     ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
     ("stability 40-stone wall benchmark (sparse ADMM)", MasonryStabilityCheckerTests.GeneratedWall_40Stones_StableAndFast),
+    ("stability 40-stone wall via adjacency assembler (P1.2)", MasonryStabilityCheckerTests.GeneratedWall_AdjacencyAssembler_StableAndLean),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),
