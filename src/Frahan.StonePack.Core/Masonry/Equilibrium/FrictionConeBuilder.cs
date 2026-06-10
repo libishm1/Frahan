@@ -102,10 +102,20 @@ public static class FrictionConeBuilder
     /// K=4. Increase to 8 or 16 for tighter linearisation; row count scales
     /// linearly.
     /// </param>
+    /// <param name="inscribed">
+    /// When true, scales the coefficient to mu_eff = mu * cos(pi/K) so the
+    /// polyhedral pyramid is INSCRIBED in the true Coulomb cone — a safe
+    /// (conservative) under-approximation. The default (false) reproduces
+    /// compas_cra's circumscribed pyramid, which OVER-estimates friction
+    /// capacity by up to a factor sqrt(2) at K=4 (the V3-review correctness
+    /// blocker for published stability claims). New callers — in particular
+    /// <c>MasonryStabilityChecker</c> — should pass true.
+    /// </param>
     public static FrictionConeMatrix Build(
         EquilibriumSystem equilibrium,
         double mu = DefaultMu,
-        int faceCount = 4)
+        int faceCount = 4,
+        bool inscribed = false)
     {
         if (equilibrium == null) throw new ArgumentNullException(nameof(equilibrium));
         if (mu <= 0.0)
@@ -114,6 +124,10 @@ public static class FrictionConeBuilder
         if (faceCount < 3)
             throw new ArgumentOutOfRangeException(nameof(faceCount),
                 $"faceCount must be >= 3, got {faceCount}");
+
+        // Effective coefficient: inscribed pyramids shrink mu by cos(pi/K) so
+        // every admissible (f_t1, f_t2) satisfies the true quadratic cone.
+        double muEff = inscribed ? mu * Math.Cos(Math.PI / faceCount) : mu;
 
         int colCount = equilibrium.Aeq.ColCount;
         int shift = equilibrium.ForceComponentsPerVertex;
@@ -228,17 +242,17 @@ public static class FrictionConeBuilder
                 // column and +mu on the neg column.
                 if (shift == 3)
                 {
-                    afr.Add(row, grp.NormalCol, -mu);
+                    afr.Add(row, grp.NormalCol, -muEff);
                 }
                 else // shift == 4
                 {
-                    afr.Add(row, grp.NormalPosCol, -mu);
-                    afr.Add(row, grp.NormalNegCol, +mu);
+                    afr.Add(row, grp.NormalPosCol, -muEff);
+                    afr.Add(row, grp.NormalNegCol, +muEff);
                 }
             }
         }
 
-        return new FrictionConeMatrix(afr, faceCount, mu);
+        return new FrictionConeMatrix(afr, faceCount, muEff);
     }
 
     /// <summary>

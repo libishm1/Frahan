@@ -314,6 +314,18 @@ var tests = new List<(string Name, Action Body)>
     ("masonry QP solver scaled identity hessian still works", ManagedQpSolverTests.Solve_ScaledIdentityHessian_StillWorks),
     ("masonry QP solver null problem throws", ManagedQpSolverTests.Solve_NullProblem_Throws),
     ("masonry QP solver ctor non-positive tolerance throws", ManagedQpSolverTests.Ctor_NonPositiveTolerance_Throws),
+    // PolygonalWallGenerator (evolution P3) + MasonryStabilityChecker (evolution P1), 2026-06-10
+    ("wallgen power diagram tiles the rectangle", PolygonalWallGeneratorTests.Generate_TilesTheRectangle),
+    ("wallgen is deterministic for a fixed seed", PolygonalWallGeneratorTests.Generate_IsDeterministic),
+    ("wallgen Lloyd relaxation reduces area spread", PolygonalWallGeneratorTests.Generate_LloydReducesAreaSpread),
+    ("wallgen sliver cull off reports zero", PolygonalWallGeneratorTests.Generate_SliverCullOffReportsZero),
+    ("wallgen interlock score in range across coursing", PolygonalWallGeneratorTests.Generate_InterlockScoreInRange_AndCoursingExtremesValid),
+    ("wallgen size grading widens area distribution", PolygonalWallGeneratorTests.Generate_SizeGradingIncreasesAreaSpread),
+    ("stability two-box stack is stable", MasonryStabilityCheckerTests.TwoBoxStack_IsStable),
+    ("stability floating block is unstable", MasonryStabilityCheckerTests.FloatingBlock_IsUnstable),
+    ("stability cantilever beyond support is unstable", MasonryStabilityCheckerTests.CantileverBeyondSupport_IsUnstable),
+    ("stability inscribed friction shrinks mu by cos(pi/K)", MasonryStabilityCheckerTests.InscribedFriction_ShrinksMuByCosPiOverK),
+    ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

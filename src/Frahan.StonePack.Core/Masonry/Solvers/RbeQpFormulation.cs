@@ -55,7 +55,8 @@ public static class RbeQpFormulation
         EquilibriumSystem equilibrium,
         SparseMatrixCoo frictionAfr,
         double hessianScale = 1.0,
-        double tangentialScale = 1.0)
+        double tangentialScale = 1.0,
+        double negativeNormalScale = 1.0)
     {
         if (equilibrium == null) throw new ArgumentNullException(nameof(equilibrium));
         if (hessianScale <= 0.0)
@@ -66,6 +67,10 @@ public static class RbeQpFormulation
             throw new ArgumentOutOfRangeException(
                 nameof(tangentialScale),
                 $"tangentialScale must be > 0 to keep the QP convex; got {tangentialScale}.");
+        if (negativeNormalScale <= 0.0)
+            throw new ArgumentOutOfRangeException(
+                nameof(negativeNormalScale),
+                $"negativeNormalScale must be > 0 to keep the QP convex; got {negativeNormalScale}.");
 
         int n = equilibrium.Aeq.ColCount;
         int meq = equilibrium.Aeq.RowCount;
@@ -85,8 +90,14 @@ public static class RbeQpFormulation
             {
                 case ForceComponent.Normal:
                 case ForceComponent.NormalPositive:
-                case ForceComponent.NormalNegative:
                     diag = hessianScale;
+                    break;
+                case ForceComponent.NormalNegative:
+                    // Kao 2022 Eq. 14 penalty weight gamma: a large value makes
+                    // tensile normal forces expensive, so ||f_n-|| localises and
+                    // measures instability. Default 1.0 preserves the legacy
+                    // identity-Hessian behaviour pinned by existing tests.
+                    diag = hessianScale * negativeNormalScale;
                     break;
                 case ForceComponent.Tangent1:
                 case ForceComponent.Tangent2:
@@ -194,9 +205,10 @@ public static class RbeQpFormulation
         EquilibriumSystem equilibrium,
         SparseMatrixCoo frictionAfr,
         double hessianScale = 1.0,
-        double tangentialScale = 1.0)
+        double tangentialScale = 1.0,
+        double negativeNormalScale = 1.0)
     {
-        var qp = Build(equilibrium, frictionAfr, hessianScale, tangentialScale);
+        var qp = Build(equilibrium, frictionAfr, hessianScale, tangentialScale, negativeNormalScale);
         var newRhs = new double[qp.EqualityRhs.Length];
         for (int i = 0; i < newRhs.Length; i++) newRhs[i] = -qp.EqualityRhs[i];
         return new ConvexQpProblem(
