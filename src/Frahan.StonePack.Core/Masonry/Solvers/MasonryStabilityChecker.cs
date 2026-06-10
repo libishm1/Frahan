@@ -148,7 +148,10 @@ public static class MasonryStabilityChecker
         var qp = RbeQpFormulation.BuildPhysicsCorrected(
             equilibrium, friction.Afr, hessianScale: 1.0, tangentialScale: tangentialScale,
             negativeNormalScale: TensionPenaltyGamma);
-        var solver = new AdmmQpSolver();
+        // Tolerance note: the verdict reads max f_n- against 1e-3 * maxCompression,
+        // so the QP only needs ~1e-4 relative accuracy — OSQP-class defaults.
+        // (1e-6/1e-5 multiplies the iteration count for no verdict change.)
+        var solver = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4);
         var sol = solver.Solve(qp);
 
         int vertexCount = equilibrium.ForceColumns.Count / Math.Max(1, equilibrium.ForceComponentsPerVertex);

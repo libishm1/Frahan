@@ -83,6 +83,46 @@ public sealed class AdmmQpSolver : IConvexQpSolver
 
         // ---- Hessian: O(n) diagonal fast path when applicable. ----
         double[] pDiag = ExtractDiagonal(problem.Hessian, n);
+        double[] pDiag0 = pDiag != null ? (double[])pDiag.Clone() : null;
+
+        // ---- P1.1b: full Ruiz equilibration (rows AND columns, 3 alternating
+        // passes). Column scales fold into the objective (P <- DPD, q <- Dq) and
+        // the solution is unscaled on exit (x = D x'). The masonry QPs mix
+        // newton-scale forces, metre-scale moment arms, and the 1e3 penalty
+        // weight — without column scaling the iteration count explodes. ----
+        var dCol = new double[n];
+        for (int c = 0; c < n; c++) dCol[c] = 1.0;
+        {
+            var eTmp = new double[m];
+            var cTmp = new double[n];
+            for (int pass = 0; pass < 3; pass++)
+            {
+                a.RowInfNorms(eTmp);
+                for (int r = 0; r < m; r++)
+                    eTmp[r] = eTmp[r] > 1e-300 ? 1.0 / Math.Sqrt(eTmp[r]) : 1.0;
+                a.ScaleRows(eTmp);
+                for (int r = 0; r < m; r++) { lo[r] *= eTmp[r]; hi[r] *= eTmp[r]; }
+                a.ColInfNorms(cTmp);
+                for (int c = 0; c < n; c++)
+                {
+                    double dc = cTmp[c] > 1e-300 ? 1.0 / Math.Sqrt(cTmp[c]) : 1.0;
+                    cTmp[c] = dc; dCol[c] *= dc;
+                }
+                a.ScaleCols(cTmp);
+            }
+        }
+        for (int c = 0; c < n; c++) q[c] *= dCol[c];
+        double[,] pUse = null;
+        if (pDiag != null)
+        {
+            for (int c = 0; c < n; c++) pDiag[c] *= dCol[c] * dCol[c];
+        }
+        else if (problem.Hessian != null)
+        {
+            pUse = new double[n, n];
+            for (int i = 0; i < n; i++)
+                for (int c = 0; c < n; c++) pUse[i, c] = problem.Hessian[i, c] * dCol[i] * dCol[c];
+        }
 
         // ---- ADMM state. ----
         var x = new double[n];
@@ -102,7 +142,7 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         var isEq = new bool[m];
         for (int r = 0; r < m; r++) isEq[r] = lo[r] == hi[r] && !double.IsInfinity(lo[r]);
         UpdateRhoRows(rhoRow, isEq, rho);
-        double[,] chol = Factor(problem.Hessian, pDiag, a, n, rhoRow, _sigma);
+        double[,] chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
         if (chol == null)
             return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
                 "Cholesky factorisation failed (P + sigma*I + rho*A'A not SPD).");
@@ -137,7 +177,7 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 double v2 = Math.Abs(ax[r]); if (v2 > axN) axN = v2;
                 double v3 = Math.Abs(z[r]); if (v3 > zN) zN = v3;
             }
-            MulHessian(problem.Hessian, pDiag, x, px, n);
+            MulHessian(pUse, pDiag, x, px, n);
             a.TransposeMul(y, aty);
             double rDua = 0, pxN = 0, atyN = 0, qN = 0;
             for (int c = 0; c < n; c++)
@@ -153,8 +193,13 @@ public sealed class AdmmQpSolver : IConvexQpSolver
 
             if (rPri <= epsPri && rDua <= epsDua)
             {
-                double obj = Objective(problem.Hessian, pDiag, q, x, n);
-                return new ConvexQpResult(ConvexQpStatus.Optimal, (double[])x.Clone(), obj,
+                var xOut = new double[n];
+                for (int c = 0; c < n; c++) xOut[c] = dCol[c] * x[c];
+                var q0 = new double[n];
+                if (problem.LinearObjective != null)
+                    for (int c = 0; c < n; c++) q0[c] = problem.LinearObjective[c];
+                double obj = Objective(problem.Hessian, pDiag0, q0, xOut, n);
+                return new ConvexQpResult(ConvexQpStatus.Optimal, xOut, obj,
                     $"ADMM converged in {it} iterations (rho={rho:0.###}, refactors={refactors}, " +
                     $"r_pri={rPri:0.###e0}, r_dua={rDua:0.###e0}).");
             }
@@ -172,7 +217,7 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 {
                     rho = newRho; refactors++;
                     UpdateRhoRows(rhoRow, isEq, rho);
-                    chol = Factor(problem.Hessian, pDiag, a, n, rhoRow, _sigma);
+                    chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
                     if (chol == null)
                         return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
                             "Cholesky refactorisation failed after rho update.");
@@ -210,29 +255,23 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         for (int i = 0; i < meq; i++)
         {
             rowPtr[i] = k;
-            double rmax = 0;
-            for (int c = 0; c < n; c++) { double v = Math.Abs(problem.EqualityMatrix[i, c]); if (v > rmax) rmax = v; }
-            double e = rmax > 1e-300 ? 1.0 / rmax : 1.0;
             for (int c = 0; c < n; c++)
             {
                 double v = problem.EqualityMatrix[i, c];
-                if (v != 0) { colIdx[k] = c; vals[k] = v * e; k++; }
+                if (v != 0) { colIdx[k] = c; vals[k] = v; k++; }
             }
-            lo[i] = problem.EqualityRhs[i] * e; hi[i] = lo[i];
+            lo[i] = problem.EqualityRhs[i]; hi[i] = lo[i];
         }
         for (int i = 0; i < mineq; i++)
         {
             int r = meq + i;
             rowPtr[r] = k;
-            double rmax = 0;
-            for (int c = 0; c < n; c++) { double v = Math.Abs(problem.InequalityMatrix[i, c]); if (v > rmax) rmax = v; }
-            double e = rmax > 1e-300 ? 1.0 / rmax : 1.0;
             for (int c = 0; c < n; c++)
             {
                 double v = problem.InequalityMatrix[i, c];
-                if (v != 0) { colIdx[k] = c; vals[k] = v * e; k++; }
+                if (v != 0) { colIdx[k] = c; vals[k] = v; k++; }
             }
-            lo[r] = double.NegativeInfinity; hi[r] = problem.InequalityRhs[i] * e;
+            lo[r] = double.NegativeInfinity; hi[r] = problem.InequalityRhs[i];
         }
         for (int i = 0; i < n; i++)
         {
@@ -295,6 +334,45 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 int end = _rowPtr[r + 1];
                 for (int k = _rowPtr[r]; k < end; k++) acc[_colIdx[k]] += _vals[k] * w;
             }
+        }
+
+        /// <summary>Per-row infinity norms.</summary>
+        public void RowInfNorms(double[] result)
+        {
+            for (int r = 0; r < RowCount; r++)
+            {
+                double mx = 0;
+                int end = _rowPtr[r + 1];
+                for (int k = _rowPtr[r]; k < end; k++)
+                { double v = Math.Abs(_vals[k]); if (v > mx) mx = v; }
+                result[r] = mx;
+            }
+        }
+
+        /// <summary>Per-column infinity norms.</summary>
+        public void ColInfNorms(double[] result)
+        {
+            Array.Clear(result, 0, result.Length);
+            int nnz = _vals.Length;
+            for (int k = 0; k < nnz; k++)
+            { double v = Math.Abs(_vals[k]); int c = _colIdx[k]; if (v > result[c]) result[c] = v; }
+        }
+
+        /// <summary>vals[row k] *= e[r] for every row.</summary>
+        public void ScaleRows(double[] e)
+        {
+            for (int r = 0; r < RowCount; r++)
+            {
+                int end = _rowPtr[r + 1];
+                for (int k = _rowPtr[r]; k < end; k++) _vals[k] *= e[r];
+            }
+        }
+
+        /// <summary>vals[k] *= d[col(k)] for every entry.</summary>
+        public void ScaleCols(double[] d)
+        {
+            int nnz = _vals.Length;
+            for (int k = 0; k < nnz; k++) _vals[k] *= d[_colIdx[k]];
         }
 
         /// <summary>M += Aᵀ diag(rho) A (dense accumulator, upper triangle then mirrored by caller).</summary>
