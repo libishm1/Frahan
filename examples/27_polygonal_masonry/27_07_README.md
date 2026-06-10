@@ -19,6 +19,12 @@ Left = the inventory; middle = the target cell wall; right = the inventory stone
 cells, coloured by carve ratio (green low → amber high) — gaps show honestly where a stone under-fills its
 cell (the α·carve vs β·gap trade). Exact cut geometry comes from the Core StoneCarveBack (CGAL intersection).
 
+## Presentation is canvas-native (no external scripts)
+The final form is produced ENTIRELY by the canvas: Move components lay out inventory / cells / placed
+side-by-side, Custom Previews colour them (Colour Swatches for inventory + cells; a Gradient — Traffic
+preset, domain 0..0.5 — driven by the Carve output colours the placed stones green = cheap carve, red =
+expensive). Re-opening the .gh reproduces the capture with zero scripting.
+
 ## Notes
 - Mortar is wired 0 so cells = dry joints (the structural model and the matching both use full cells).
 - Known canvas quirk fixed in code (next .gha load): the stability check's Stones input is now Optional, so
