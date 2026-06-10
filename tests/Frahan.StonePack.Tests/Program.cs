@@ -328,6 +328,11 @@ var tests = new List<(string Name, Action Body)>
     ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
     ("stability 40-stone wall benchmark (sparse ADMM)", MasonryStabilityCheckerTests.GeneratedWall_40Stones_StableAndFast),
     ("stability 40-stone wall via adjacency assembler (P1.2)", MasonryStabilityCheckerTests.GeneratedWall_AdjacencyAssembler_StableAndLean),
+    // CRA coupling (P2): Kao 2022 Eqs 8-14 by alternating convex certificate
+    ("CRA two-box stack is certified", CraStabilityCheckerTests.Cra_TwoBoxStack_Certified),
+    ("CRA cantilever is unstable", CraStabilityCheckerTests.Cra_Cantilever_Unstable),
+    ("CRA H-model: RBE accepts, CRA rejects (Kao counterexample)", CraStabilityCheckerTests.Cra_HModel_RbeAcceptsButCraRejects),
+    ("CRA generated wall is certified", CraStabilityCheckerTests.Cra_GeneratedWall_Certified),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

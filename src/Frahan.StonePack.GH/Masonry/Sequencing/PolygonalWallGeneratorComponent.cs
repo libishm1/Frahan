@@ -61,6 +61,11 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
             p.AddIntegerParameter("Count", "N", "Number of stones", GH_ParamAccess.item);
             p.AddNumberParameter("Interlock", "J", "Interlock score in [0,1]: 1 - runningJoints/headJoints - 0.5*crossVertices/cells. Higher = better staggering.", GH_ParamAccess.item);
             p.AddTextParameter("Report", "R", "Pattern metrics (coverage, area CV, slivers culled, joints)", GH_ParamAccess.item);
+            p.AddGenericParameter("Assembly", "A",
+                "The wall as a structural assembly with EXACT joint interfaces from the generator's own cell " +
+                "adjacency (no contact re-detection; correct on any curvature). Feed straight into Masonry " +
+                "Stability Check's Assembly input. Models the dry (mortarless), uniform-depth wall.",
+                GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess da)
@@ -119,10 +124,26 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
                 $"slivers culled {result.CulledSlivers} | '+' vertices {result.CrossVertexCount} | " +
                 $"running/total head joints {result.AlignedHeadJointLength:0.00}/{result.TotalHeadJointLength:0.00} m";
 
+            // exact-joint structural assembly (P1.2): same map/nrm, uniform depth, dry joints
+            Frahan.Masonry.Sequencing.WallAssembly wallAssembly = null;
+            try
+            {
+                wallAssembly = PolygonalWallAssembler.Build(
+                    result,
+                    (u, v) => { var pt = map(u, v); return new[] { pt.X, pt.Y, pt.Z }; },
+                    (u, v) => { var nv = nrm(u, v); return new[] { nv.X, nv.Y, nv.Z }; },
+                    depth: depth);
+            }
+            catch (Exception ex)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Assembly build skipped: " + ex.Message);
+            }
+
             da.SetDataList(0, meshes);
             da.SetData(1, meshes.Count);
             da.SetData(2, result.InterlockScore);
             da.SetData(3, report);
+            if (wallAssembly != null) da.SetData(4, new Grasshopper.Kernel.Types.GH_ObjectWrapper(wallAssembly));
         }
 
         /// <summary>

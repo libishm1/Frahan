@@ -78,6 +78,36 @@ public sealed class StabilityResult
     public int ContactVertexCount { get; }
 }
 
+/// <summary>Per-contact-vertex force decode (penalty columns), for CRA and diagnostics.</summary>
+public sealed class VertexForce
+{
+    public VertexForce(int interfaceIndex, int vertexIndex,
+                       double fnPos, double fnNeg, double ft1, double ft2)
+    {
+        InterfaceIndex = interfaceIndex; VertexIndex = vertexIndex;
+        FnPos = fnPos; FnNeg = fnNeg; Ft1 = ft1; Ft2 = ft2;
+    }
+    public int InterfaceIndex { get; }
+    public int VertexIndex { get; }
+    public double FnPos { get; }
+    public double FnNeg { get; }
+    public double Ft1 { get; }
+    public double Ft2 { get; }
+}
+
+/// <summary>Result of <see cref="MasonryStabilityChecker.CheckDetailed"/> — the verdict plus
+/// the raw equilibrium system and per-vertex forces the CRA coupling consumes.</summary>
+public sealed class DetailedStabilityResult
+{
+    public DetailedStabilityResult(StabilityResult result, EquilibriumSystem equilibrium,
+                                   IReadOnlyList<VertexForce> vertexForces)
+    { Result = result; Equilibrium = equilibrium; VertexForces = vertexForces; }
+    public StabilityResult Result { get; }
+    /// <summary>The penalty-mode equilibrium system (null when the guard short-circuited).</summary>
+    public EquilibriumSystem Equilibrium { get; }
+    public IReadOnlyList<VertexForce> VertexForces { get; }
+}
+
 /// <summary>
 /// End-to-end RBE stability check for a masonry assembly. Pure managed;
 /// no Rhino dependency. The shared "does it stand?" gate of both the
@@ -99,6 +129,21 @@ public static class MasonryStabilityChecker
         bool inscribed = true,
         double tangentialScale = 1.0,
         double gravityZ = -9.80665)
+        => CheckDetailed(assembly, mu, faceCount, inscribed, tangentialScale, gravityZ).Result;
+
+    /// <summary>
+    /// Detailed variant: also returns the penalty equilibrium system and the
+    /// per-vertex force decode, and optionally forces selected force columns to
+    /// zero (the CRA coupling's complementarity restriction step).
+    /// </summary>
+    public static DetailedStabilityResult CheckDetailed(
+        MasonryAssembly assembly,
+        double mu = FrictionConeBuilder.DefaultMu,
+        int faceCount = DefaultFaceCount,
+        bool inscribed = true,
+        double tangentialScale = 1.0,
+        double gravityZ = -9.80665,
+        ISet<int> zeroForceColumns = null)
     {
         if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 
@@ -117,18 +162,18 @@ public static class MasonryStabilityChecker
             freeCount++;
             if (!touched.Contains(b.Id))
             {
-                return new StabilityResult(false, ConvexQpStatus.Infeasible,
+                return new DetailedStabilityResult(new StabilityResult(false, ConvexQpStatus.Infeasible,
                     $"Free block '{b.Id}' has no contact interface (floating).",
                     0, 0, -1, new List<InterfaceUtilization>(),
-                    freeCount, assembly.Interfaces.Count, 0);
+                    freeCount, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
             }
         }
         if (freeCount == 0)
         {
-            return new StabilityResult(true, ConvexQpStatus.Optimal,
+            return new DetailedStabilityResult(new StabilityResult(true, ConvexQpStatus.Optimal,
                 "All blocks are fixed; nothing to check.",
                 0, 0, -1, new List<InterfaceUtilization>(),
-                0, assembly.Interfaces.Count, 0);
+                0, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
         }
 
         // ---- Formulate + solve the PENALTY RBE QP (Kao 2022 Eq. 14 semantics,
@@ -148,6 +193,15 @@ public static class MasonryStabilityChecker
         var qp = RbeQpFormulation.BuildPhysicsCorrected(
             equilibrium, friction.Afr, hessianScale: 1.0, tangentialScale: tangentialScale,
             negativeNormalScale: TensionPenaltyGamma);
+        if (zeroForceColumns != null)
+        {
+            foreach (int col in zeroForceColumns)
+            {
+                if (col < 0 || col >= qp.VariableCount) continue;
+                qp.LowerBounds[col] = 0.0;
+                qp.UpperBounds[col] = 0.0;
+            }
+        }
         // Tolerance note: the verdict reads max f_n- against 1e-3 * maxCompression,
         // so the QP only needs ~1e-4 relative accuracy — OSQP-class defaults.
         // (1e-6/1e-5 multiplies the iteration count for no verdict change.)
@@ -158,10 +212,10 @@ public static class MasonryStabilityChecker
 
         if (sol.Status != ConvexQpStatus.Optimal)
         {
-            return new StabilityResult(false, sol.Status,
+            return new DetailedStabilityResult(new StabilityResult(false, sol.Status,
                 $"Penalty-RBE QP {sol.Status}: {sol.SolverMessage}",
                 0, 0, -1, new List<InterfaceUtilization>(),
-                freeCount, assembly.Interfaces.Count, vertexCount);
+                freeCount, assembly.Interfaces.Count, vertexCount), equilibrium, new List<VertexForce>());
         }
 
         // ---- Decode per-vertex forces -> tension verdict + per-interface utilization. ----
@@ -239,9 +293,16 @@ public static class MasonryStabilityChecker
               $"(max tension {maxTension:0.###} vs compression {maxCompression:0.###}; " +
               $"||f_n-|| localises the unstable region per Kao 2022 Eq. 14).";
 
-        return new StabilityResult(stable, sol.Status, verdict,
+        var vertexForces = new List<VertexForce>(perVertex.Count);
+        foreach (var kv in perVertex)
+        {
+            vertexForces.Add(new VertexForce((int)(kv.Key >> 32), (int)(uint)(kv.Key & 0xFFFFFFFF),
+                                             kv.Value[0], kv.Value[1], kv.Value[2], kv.Value[3]));
+        }
+
+        return new DetailedStabilityResult(new StabilityResult(stable, sol.Status, verdict,
             maxCompression, maxUtil, weakest, utils,
-            freeCount, assembly.Interfaces.Count, vertexCount);
+            freeCount, assembly.Interfaces.Count, vertexCount), equilibrium, vertexForces);
     }
 
     /// <summary>
@@ -300,5 +361,50 @@ public static class MasonryStabilityChecker
 
         var assembly = new MasonryAssembly(blocks, interfaces, new BoundaryConditions(fixedIds));
         return Check(assembly, mu, faceCount, inscribed);
+    }
+
+    /// <summary>
+    /// Build a MasonryAssembly from triangulated stone meshes (auto-detected
+    /// contacts; lowest course fixed) without solving — for callers that want
+    /// to run <see cref="Check"/> or <see cref="CraStabilityChecker.Check"/>
+    /// themselves.
+    /// </summary>
+    public static MasonryAssembly BuildAssemblyFromMeshes(
+        IReadOnlyList<IReadOnlyList<double>> vertexCoordsXyz,
+        IReadOnlyList<IReadOnlyList<int>> triangleIndices,
+        double density = 2400.0,
+        double contactDistanceTol = 1e-3,
+        double contactAngleTolDeg = 5.0,
+        double fixBelowZ = 1e-3)
+    {
+        if (vertexCoordsXyz == null) throw new ArgumentNullException(nameof(vertexCoordsXyz));
+        if (triangleIndices == null) throw new ArgumentNullException(nameof(triangleIndices));
+        if (vertexCoordsXyz.Count != triangleIndices.Count)
+            throw new ArgumentException("vertexCoordsXyz and triangleIndices must be parallel lists");
+        int n = vertexCoordsXyz.Count;
+        var snapshots = new List<MeshSnapshot>(n);
+        var ids = new List<string>(n);
+        var minZ = new double[n];
+        double globalMinZ = double.MaxValue;
+        for (int i = 0; i < n; i++)
+        {
+            snapshots.Add(new MeshSnapshot(vertexCoordsXyz[i], triangleIndices[i]));
+            ids.Add("stone_" + i.ToString("000"));
+            double mz = double.MaxValue;
+            var coords = vertexCoordsXyz[i];
+            for (int k = 2; k < coords.Count; k += 3)
+                if (coords[k] < mz) mz = coords[k];
+            minZ[i] = mz;
+            if (mz < globalMinZ) globalMinZ = mz;
+        }
+        var interfaces = MeshContactDetector.Detect(snapshots, ids, contactDistanceTol, contactAngleTolDeg);
+        var blocks = new List<MasonryBlock>(n);
+        var fixedIds = new List<string>();
+        for (int i = 0; i < n; i++)
+        {
+            blocks.Add(new MasonryBlock(ids[i], vertexCoordsXyz[i], triangleIndices[i], density));
+            if (minZ[i] <= globalMinZ + fixBelowZ) fixedIds.Add(ids[i]);
+        }
+        return new MasonryAssembly(blocks, interfaces, new BoundaryConditions(fixedIds));
     }
 }
