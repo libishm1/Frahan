@@ -345,6 +345,9 @@ var tests = new List<(string Name, Action Body)>
     ("carve-back identity placements exact analytic 1.25", StoneCarveBackTests.CarveBack_IdentityPlacements_ExactAnalytic125),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
+    // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
+    ("IFC export wall round-trip (xBIM)", StoneAssemblyIfcWriterTests.IfcExport_Wall_RoundTrip),
+    ("IFC export arch + cladding containers (xBIM)", StoneAssemblyIfcWriterTests.IfcExport_Arch_And_Cladding_Containers),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

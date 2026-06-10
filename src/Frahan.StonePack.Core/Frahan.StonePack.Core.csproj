@@ -51,6 +51,10 @@
     <PackageReference Include="Unofficial.laszip.net" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- P6 IFC terminal: write-only IFC4 (managed, no native engine); netstandard2.0 assets on net48 -->
+    <PackageReference Include="Xbim.Essentials" Version="6.0.587" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- reuse-first: HungarianAssigner for the P4 stone-cell assignment (leaf lib, net48, Rhino-free) -->
     <ProjectReference Include="..\Frahan.EdgeMatching.Core\Frahan.EdgeMatching.Core.csproj" />
   </ItemGroup>
