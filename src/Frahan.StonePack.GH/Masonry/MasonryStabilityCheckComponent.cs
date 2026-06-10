@@ -35,7 +35,8 @@ namespace Frahan.StonePack.GH.Masonry
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager p)
         {
-            p.AddMeshParameter("Stones", "St", "Closed stone meshes in their placed positions", GH_ParamAccess.list);
+            p.AddMeshParameter("Stones", "St", "Closed stone meshes in their placed positions (optional when an Assembly is supplied)", GH_ParamAccess.list);
+            p[0].Optional = true; // assembly-only canvases must still solve (GH skips SolveInstance when a required input is empty)
             p.AddNumberParameter("Mu", "Mu", "Coulomb friction coefficient (0.84 ~ dry stone, 40 deg)", GH_ParamAccess.item, 0.84);
             p.AddIntegerParameter("Faces", "K", "Friction pyramid face count (>= 3; 8 recommended)", GH_ParamAccess.item, 8);
             p.AddNumberParameter("FixBelowZ", "Fz", "Blocks whose lowest vertex is within this of the global min Z are fixed (ground)", GH_ParamAccess.item, 0.01);
