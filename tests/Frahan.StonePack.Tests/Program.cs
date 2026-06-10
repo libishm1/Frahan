@@ -326,6 +326,7 @@ var tests = new List<(string Name, Action Body)>
     ("stability cantilever beyond support is unstable", MasonryStabilityCheckerTests.CantileverBeyondSupport_IsUnstable),
     ("stability inscribed friction shrinks mu by cos(pi/K)", MasonryStabilityCheckerTests.InscribedFriction_ShrinksMuByCosPiOverK),
     ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
+    ("stability 40-stone wall benchmark (sparse ADMM)", MasonryStabilityCheckerTests.GeneratedWall_40Stones_StableAndFast),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

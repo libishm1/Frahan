@@ -172,6 +172,57 @@ static class MasonryStabilityCheckerTests
             throw new Exception($"inscribed K=4 must give mu*cos(pi/4) = {expected:0.000000}, got {insc.Mu:0.000000}");
     }
 
+    public static void GeneratedWall_40Stones_StableAndFast()
+    {
+        // P1.1 sparse-ADMM scale benchmark: the 8x5 wall (the live HITL case)
+        // took 284 s with the dense solver; the CSR rewrite must keep it in
+        // interactive territory. Also guards correctness at wall scale.
+        var gen = PolygonalWallGenerator.Generate(new WallGenOptions
+        {
+            Width = 3.0, Height = 1.8, GridX = 8, GridY = 5, Coursing = 0.4,
+            LloydIterations = 2, SizeGradeCv = 0.30, Seed = 7,
+        });
+        BuildPrisms(gen, 0.25, out var coordsList, out var trisList);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var r = Frahan.Masonry.Solvers.MasonryStabilityChecker.CheckMeshes(
+            coordsList, trisList,
+            contactDistanceTol: 5e-3, contactAngleTolDeg: 8.0, fixBelowZ: 0.02);
+        sw.Stop();
+        Console.WriteLine($"      [bench] 40-stone wall: {(r.IsStable ? "STABLE" : "NOT STABLE")} " +
+                          $"in {sw.ElapsedMilliseconds} ms ({r.InterfaceCount} ifaces, {r.ContactVertexCount} verts)");
+        if (!r.IsStable)
+            throw new Exception($"the 40-stone coursed wall must be RBE-stable; got {r.Status}: {r.Message}");
+        if (sw.ElapsedMilliseconds > 120_000)
+            throw new Exception($"40-stone stability took {sw.ElapsedMilliseconds} ms — sparse path regressed");
+    }
+
+    private static void BuildPrisms(WallGenResult gen, double depth,
+        out List<IReadOnlyList<double>> coordsList, out List<IReadOnlyList<int>> trisList)
+    {
+        coordsList = new List<IReadOnlyList<double>>();
+        trisList = new List<IReadOnlyList<int>>();
+        foreach (var cell in gen.Cells)
+        {
+            int m = cell.VertexCount;
+            var coords = new List<double>(m * 6);
+            for (int k = 0; k < m; k++) { coords.Add(cell.Us[k]); coords.Add(0.0); coords.Add(cell.Vs[k]); }
+            for (int k = 0; k < m; k++) { coords.Add(cell.Us[k]); coords.Add(depth); coords.Add(cell.Vs[k]); }
+            var tris = new List<int>();
+            for (int k = 1; k + 1 < m; k++)
+            {
+                tris.Add(0); tris.Add(k); tris.Add(k + 1);
+                tris.Add(m); tris.Add(m + k + 1); tris.Add(m + k);
+            }
+            for (int k = 0; k < m; k++)
+            {
+                int a = k, b = (k + 1) % m;
+                tris.Add(a); tris.Add(m + a); tris.Add(m + b);
+                tris.Add(a); tris.Add(m + b); tris.Add(b);
+            }
+            coordsList.Add(coords); trisList.Add(tris);
+        }
+    }
+
     public static void GeneratedWall_PrismStones_AreStable()
     {
         // End-to-end: generate a small coursed wall pattern, extrude each cell
