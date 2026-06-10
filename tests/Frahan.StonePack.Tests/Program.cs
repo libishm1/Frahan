@@ -338,6 +338,7 @@ var tests = new List<(string Name, Action Body)>
     ("Lambda inflated inventory matches analytic + identity recovery", StoneCellAssignmentTests.InflatedInventory_AnalyticLambda_AndIdentityRecovery),
     ("Lambda monotonic in stock coarseness", StoneCellAssignmentTests.CoarserInventory_LambdaMonotonic),
     ("Lambda extra inventory reports unused stones", StoneCellAssignmentTests.ExtraInventory_ReportsUnusedStones),
+    ("Lambda ETH1100 real rubble on generated wall (skips without dataset)", StoneCellAssignmentEthBenchmarkTests.Lambda_EthRubble_OnGeneratedWall),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),
@@ -1372,6 +1373,10 @@ foreach (var test in tests)
             Console.WriteLine($"        type:    {tle.TypeName}");
         for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
             Console.WriteLine($"        inner:   {inner.GetType().FullName}: {inner.Message}");
+    }
+    catch (Frahan.Tests.SkipTest skip)
+    {
+        Console.WriteLine($"SKIP {test.Name} ({skip.Message})");
     }
     catch (Exception ex)
     {
