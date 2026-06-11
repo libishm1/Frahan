@@ -348,6 +348,7 @@ var tests = new List<(string Name, Action Body)>
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
     ("IFC export wall round-trip (xBIM)", StoneAssemblyIfcWriterTests.IfcExport_Wall_RoundTrip),
     ("IFC export arch + cladding containers (xBIM)", StoneAssemblyIfcWriterTests.IfcExport_Arch_And_Cladding_Containers),
+    ("IFC export multi-container building round-trip (xBIM, P7)", StoneAssemblyIfcWriterTests.IfcExport_MultiContainer_Building_RoundTrip),
     // Masonry GH components (Phase D smoke tests; 1-9 SKIP without Grasshopper, 10 PASS)
     ("masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryBlockComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryBlockComponent_Metadata_IsCorrect),

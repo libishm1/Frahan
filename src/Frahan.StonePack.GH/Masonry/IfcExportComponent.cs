@@ -102,6 +102,7 @@ namespace Frahan.GH.Masonry
                 d.Weld(Math.PI);
                 d.UnifyNormals();
                 // outward orientation (the voussoir lesson: flipped solids break consumers)
+                if (d.Vertices.Count < 3 || d.Faces.Count < 1) { skipped++; continue; } // degenerate (e.g. empty boolean result)
                 var vmp = VolumeMassProperties.Compute(d);
                 if (vmp != null && vmp.Volume < 0) d.Flip(true, true, true);
 

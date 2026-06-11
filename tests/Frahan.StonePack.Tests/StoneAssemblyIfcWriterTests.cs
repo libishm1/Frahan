@@ -103,6 +103,49 @@ static class StoneAssemblyIfcWriterTests
         File.Delete(pathC);
     }
 
+    public static void IfcExport_MultiContainer_Building_RoundTrip()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "frahan_ifc_building_test.ifc");
+        var specs = new List<StoneAssemblyIfcWriter.IfcContainerSpec>
+        {
+            new StoneAssemblyIfcWriter.IfcContainerSpec
+                { Kind = StoneContainerKind.Wall, Name = "WallNorth", Stones = MakePrismStones(6) },
+            new StoneAssemblyIfcWriter.IfcContainerSpec
+                { Kind = StoneContainerKind.Wall, Name = "WallSouth", Stones = MakePrismStones(5) },
+            new StoneAssemblyIfcWriter.IfcContainerSpec
+                { Kind = StoneContainerKind.Arch, Name = "Portal", Stones = MakePrismStones(7) },
+            new StoneAssemblyIfcWriter.IfcContainerSpec
+                { Kind = StoneContainerKind.Vault, Name = "Dome", Stones = MakePrismStones(8) },
+            new StoneAssemblyIfcWriter.IfcContainerSpec
+                { Kind = StoneContainerKind.Column, Name = "Pier", Stones = MakePrismStones(4) },
+        };
+        var report = StoneAssemblyIfcWriter.Write(path, specs, "Castle");
+        if (report.StoneCount != 30) throw new Exception($"expected 30 stones total, got {report.StoneCount}");
+
+        using (var model = IfcStore.Open(path))
+        {
+            if (model.Instances.OfType<IIfcWall>().Count() != 2)
+                throw new Exception("expected 2 IfcWalls");
+            var assemblies = model.Instances.OfType<IIfcElementAssembly>().ToList();
+            if (assemblies.Count != 2) throw new Exception("expected 2 element assemblies (arch + vault)");
+            if (!assemblies.Any(a => a.PredefinedType == IfcElementAssemblyTypeEnum.ARCH))
+                throw new Exception("arch assembly missing");
+            if (!assemblies.Any(a => a.ObjectType == "PendentiveVault"))
+                throw new Exception("vault assembly missing");
+            if (model.Instances.OfType<IIfcColumn>().Count() != 1)
+                throw new Exception("expected 1 IfcColumn");
+            int parts = model.Instances.OfType<IIfcBuildingElementPart>().Count();
+            int members = model.Instances.OfType<IIfcMember>().Count();
+            if (parts + members != 30)
+                throw new Exception($"expected 30 stone parts total, got {parts}+{members}");
+            // one shared storey; all five containers contained in it
+            var rel = model.Instances.OfType<IIfcRelContainedInSpatialStructure>().Single();
+            if (rel.RelatedElements.Count < 5)
+                throw new Exception($"expected >=5 storey-contained containers, got {rel.RelatedElements.Count}");
+        }
+        File.Delete(path);
+    }
+
     // simple unit-cube stones in a row, metres
     private static List<IfcStoneDto> MakePrismStones(int n)
     {

@@ -85,6 +85,53 @@ public sealed class IfcWriteReport
 /// </summary>
 public static class StoneAssemblyIfcWriter
 {
+    /// <summary>One container of a multi-container building export (P7).</summary>
+    public sealed class IfcContainerSpec
+    {
+        public StoneContainerKind Kind;
+        public string Name;
+        public IReadOnlyList<IfcStoneDto> Stones;
+    }
+
+    /// <summary>
+    /// P7 castle composer terminal: write SEVERAL containers (walls, arches,
+    /// vaults, columns) into ONE IFC4 building — the top-down model that the
+    /// bottom-up stone workflows feed. Containers share the storey; each keeps
+    /// its own aggregated stone parts.
+    /// </summary>
+    public static IfcWriteReport Write(
+        string path,
+        IReadOnlyList<IfcContainerSpec> containers,
+        string projectName = "Frahan Stone Building")
+    {
+        if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path required", nameof(path));
+        if (containers == null || containers.Count == 0)
+            throw new ArgumentException("at least one container", nameof(containers));
+
+        int total = 0;
+        using (var model = CreateModel(projectName, out IfcBuildingStorey storey))
+        {
+            using (var txn = model.BeginTransaction("Stone building"))
+            {
+                foreach (var c in containers)
+                {
+                    if (c?.Stones == null || c.Stones.Count == 0) continue;
+                    AddContainerWithStones(model, storey, c.Name ?? c.Kind.ToString(), c.Stones, c.Kind);
+                    total += c.Stones.Count;
+                }
+                txn.Commit();
+            }
+            model.SaveAs(path, StorageType.Ifc);
+        }
+        return new IfcWriteReport
+        {
+            Path = path,
+            StoneCount = total,
+            Container = $"{containers.Count} containers",
+            FileBytes = new System.IO.FileInfo(path).Length,
+        };
+    }
+
     /// <summary>Write one container with its stones to <paramref name="path"/> (.ifc).</summary>
     public static IfcWriteReport Write(
         string path,
