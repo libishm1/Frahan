@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Text;
 using Grasshopper.Kernel;
@@ -27,6 +28,7 @@ namespace Frahan.GH.RubblePack
         { }
 
         public override Guid ComponentGuid => new Guid("b1c2d3e4-aa02-4f5e-9c10-7e60cada1501");
+        protected override Bitmap Icon => Frahan.GH.RubblePack.RubbleIconProvider.Load("RubbleEvolvedFit.png");
         public override GH_Exposure Exposure => GH_Exposure.primary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)

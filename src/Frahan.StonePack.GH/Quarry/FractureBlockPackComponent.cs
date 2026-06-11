@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Text;
 using Grasshopper.Kernel;
@@ -34,6 +35,7 @@ public sealed class FractureBlockPackComponent : GH_Component
     { }
 
     public override Guid ComponentGuid => new Guid("A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04");
+    protected override Bitmap Icon => Frahan.GH.IconProvider.Load("BlockCutOpt.png");
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterInputParams(GH_InputParamManager p)

@@ -28,6 +28,7 @@ public sealed class GprFractureSurface3DComponent : GH_Component
     { }
 
     public override Guid ComponentGuid => new Guid("A7E0B0F2-0C0F-4A16-9E3D-0FACE0FACE03");
+    protected override Bitmap Icon => Frahan.GH.IconProvider.Load("Stratigraphy.png");
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterInputParams(GH_InputParamManager p)

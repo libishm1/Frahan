@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Text;
 using Grasshopper.Kernel;
@@ -31,6 +32,7 @@ namespace Frahan.StonePack.GH.Masonry
         { }
 
         public override Guid ComponentGuid => new Guid("D5F10015-2B43-4E8A-A1C7-9D0F4B6E2A91");
+        protected override Bitmap Icon => Frahan.GH.IconProvider.Load("StabilityCheck.png");
         public override GH_Exposure Exposure => GH_Exposure.primary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager p)

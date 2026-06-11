@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper.Kernel;
@@ -34,6 +35,7 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
         { }
 
         public override Guid ComponentGuid => new Guid("D5F10014-7A11-4C0E-9B22-3F6A1E2C4D80");
+        protected override Bitmap Icon => Frahan.GH.IconProvider.Load("CourseGenerator.png");
         public override GH_Exposure Exposure => GH_Exposure.primary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager p)

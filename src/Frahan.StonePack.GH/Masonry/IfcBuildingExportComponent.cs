@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Data;
@@ -30,6 +31,7 @@ namespace Frahan.GH.Masonry
         }
 
         public override Guid ComponentGuid => new Guid("D5F10018-5C7B-4E2D-9A41-8B36F1D07C54");
+        protected override Bitmap Icon => Frahan.GH.IconProvider.Load("IfcBuilding.png");
         public override GH_Exposure Exposure => GH_Exposure.secondary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)
