@@ -28,12 +28,36 @@ path, 53-interface wall conditioning). En route we documented the fixBelowZ sema
 above the lowest vertex, not an absolute plane). Diagnostics remain as battery canaries
 (Kb9DiagnosticsTests).
 
-## Speed protocol (unfilled by design)
-We print our wall-clock in the `[bench]` lines above. The same-machine compas_cra/IPOPT timing requires
-their conda env (`environment.yml` in their repo; `cra_solve(..., timer=True)`); run on this machine and
-fill the column before quoting any "faster than" claim. We do not quote numbers we did not measure.
+## Speed — same-machine compas_cra/IPOPT timing (MEASURED 2026-06-11)
+Environment: pip venv (no conda), Python 3.9.13 win64, compas 2.15.1, compas_assembly 0.7.1,
+compas_cra 0.4.0 with its pinned pyomo==6.4.2, official COIN-OR Ipopt 3.14.19 win64 binary on PATH
+(cyipopt has no win64 PyPI wheel, but compas_cra drives IPOPT through pyomo's executable interface,
+so cyipopt is not needed). Script: `D:/code_ws/outputs/2026-06-11/cra_timing/time_examples.py` —
+fixtures reproduce their docs/examples verbatim (cra_view removed), fresh assembly per run,
+`time.perf_counter` around the solve call, best of 3 after 1 warmup. "solve" is compas_cra's own
+`timer=True` phase (pyomo NL write + ipopt.exe + parse), which is what a compas_cra user pays per call.
+
+| compas_cra example | their solver | their total (ms) | their solve (ms) | termination | ours (ms) |
+|---|---|---|---|---|---|
+| 00_simple_cube | cra_solve | 52.6 | 48.9 | optimal | ~1 (CRA cert) |
+| tutorial_cubes | cra_solve | 50.5 | 47.5 | optimal | ~1 (CRA cert) |
+| 04_stacks | cra_solve | 933.1 | 914.2 | optimal | 2 (CRA cert) |
+| 06_arch | rbe_solve | 123.4 | 101.8 | optimal | 159 (RBE) |
+| 06_arch | cra_solve | 50523.9 | 50434.9 | **maxIterations** | 261 (CRA cert) |
+
+Honest caveats, in both directions:
+- **Their RBE beats ours on the arch** (102-123 ms vs our 159 ms). No "faster than" claim for RBE.
+- CRA on the cubes/stacks fixtures: ours is ~50x (cubes) and ~470x (stacks) faster. Their per-call
+  floor (~50 ms) includes ipopt.exe process spawn + NL file I/O, inherent to their architecture.
+- **06_arch cra_solve did NOT converge here**: IPOPT 3.14.19 exits at max_iter=3000 (50.4 s) with
+  constraint violation 3.8e-8 (physically solved) but dual infeasibility stalled at 2.33 against
+  their hardcoded tol=1e-10. This is their pinned stack on win64; their docs env (conda-forge
+  ipopt) may converge. The 50.4 s figure is a time-to-exit, NOT a converged solve time. Do not
+  quote it as a speedup denominator; the honest arch-CRA comparison is "ours certifies in 261 ms,
+  theirs did not terminate optimally on this machine".
 
 ## Next (in priority order)
-1. Same-machine compas_cra/IPOPT timing -> fill the speed column (their conda env, timer=True).
+1. ~~Same-machine compas_cra/IPOPT timing~~ DONE 2026-06-11 (table above). Optional follow-up:
+   retry 06_arch cra_solve under their conda-forge ipopt build to check the maxIterations exit.
 2. Extend to their mesh-based examples (05_wedge type-a..d, 09_bridge) via their data/*.json.
 3. KB-10: exact-joint conditioning at 53 interfaces (LS-first warm start for the RBE pre-step).

@@ -37,6 +37,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Newtonsoft.Json (added 2026-06-11) — used by the CompasAssemblyJson
+         test helper to parse compas_cra sample Assembly JSON fixtures
+         (tests/data/compas_cra/). Version 13.0.1 matches what already flows
+         transitively via Xbim.Essentials 6.0.587 -> no version conflict;
+         pinned explicitly so the helper does not silently break if the Xbim
+         dependency graph changes. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- RhinoCommon needed for surface packing tests (Point2d, FaceCornerUvTable API).
          Default HintPath: Rhino 8. The Rhino 7 path is left as a fallback comment; the
          RhinoCommon API surface used by these tests (Point2d, Mesh, Point3d, LineCurve,

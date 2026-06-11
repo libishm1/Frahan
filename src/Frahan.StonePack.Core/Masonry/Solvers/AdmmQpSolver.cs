@@ -38,12 +38,16 @@ namespace Frahan.Masonry.Solvers;
 // Diagonal Hessians (all masonry formulations) get an O(n) Px fast path.
 // The 40-stone wall check drops from minutes (dense) to seconds.
 //
-// MEASURED LIMIT (2026-06-11): on penalty-RBE masonry systems the solver hits
-// a conditioning ceiling near ~50 contact interfaces (53-interface wall:
-// SolverError after 8000 iterations, rho~1e6, r_pri~1e1-1e3; 30-interface
-// wall certifies in 1 outer iteration). Workaround: verify per element
-// (walls/arches/vaults separately, see examples/27 card 10). Conditioning
-// work (per-block Ruiz, LS-first warm start, polish) is the open item.
+// MEASURED LIMIT (2026-06-11): on penalty-RBE masonry systems cold-start
+// convergence degrades steeply past ~50 contact interfaces (54-iface
+// exact-joint wall 5.4 s, 95-iface 24 s, 147-iface 86 s; the original KB-10
+// repro returned SolverError at 8000 iterations). MITIGATED same day (KB-10):
+// MasonryStabilityChecker now runs an LS-first KKT certificate + POCS cone
+// polish that decodes wall verdicts WITHOUT the ADMM (54/95/147-iface walls
+// in 0.07/0.4/1.1 s), and falls back to this solver — warm-started via the
+// appended Solve(problem, warmStartX) overload — when the certificate
+// declines. Per-element verification (examples/27 card 10) remains a valid
+// pattern for mixed assemblies.
 // =============================================================================
 
 /// <summary>
@@ -74,7 +78,16 @@ public sealed class AdmmQpSolver : IConvexQpSolver
 
     public string Name => "AdmmQpSolver";
 
-    public ConvexQpResult Solve(ConvexQpProblem problem)
+    public ConvexQpResult Solve(ConvexQpProblem problem) => Solve(problem, null);
+
+    /// <summary>
+    /// Warm-started overload (KB-10, 2026-06-11). <paramref name="warmStartX"/>
+    /// is an initial primal point in the ORIGINAL (unscaled) variable space;
+    /// it is mapped into the internally equilibrated space and seeds x and
+    /// z = clamp(Ax, l, u) with y = 0 (OSQP-style warm start). Pass null (the
+    /// default via the 1-arg overload) for the unchanged cold start.
+    /// </summary>
+    public ConvexQpResult Solve(ConvexQpProblem problem, double[] warmStartX)
     {
         if (problem == null) throw new ArgumentNullException(nameof(problem));
         int n = problem.VariableCount;
@@ -141,6 +154,16 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         var xTilde = new double[n];
         var px = new double[n];
         var aty = new double[n];
+
+        // ---- Warm start (KB-10): map the caller's point into the column-
+        // equilibrated space (xOut = dCol * x  =>  x = warm / dCol) and seed
+        // z at the clamped constraint image. y stays 0. ----
+        if (warmStartX != null && warmStartX.Length == n)
+        {
+            for (int c = 0; c < n; c++) x[c] = warmStartX[c] / dCol[c];
+            a.Mul(x, ax);
+            for (int r = 0; r < m; r++) z[r] = Clamp(ax[r], lo[r], hi[r]);
+        }
 
         // Per-row rho (OSQP sec. 5.2): equality rows (l == u) get 1e3 x the base
         // rho — they must hold exactly, and stiffening them slashes iterations.

@@ -352,6 +352,11 @@ var tests = new List<(string Name, Action Body)>
     ("kb9 diagnostics arch forensics (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_Forensics),
     ("kb9 diagnostics arch CLEAN joints (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_CleanJoints),
     ("kb9 diagnostics arch coplanar-resolver (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_CoplanarResolver),
+    // compas_cra json-data fixtures (wedge type-b, bridge)
+    ("compas_cra json wedge type-b rot90Y both stable", CraCompasJsonFixtureTests.Compas_Json_WedgeTypeB_Rotated90Y_BothStable),
+    ("compas_cra json bridge both stable", CraCompasJsonFixtureTests.Compas_Json_Bridge_BothStable),
+    // Lambda flagship study (REPORTED table; skips without ETH data)
+    ("lambda study coursing-by-assigner table (Rhino-free, skips without dataset)", LambdaStudyBenchmarkTests.LambdaStudy_CoursingByAssigner_Table),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
@@ -1364,8 +1369,19 @@ var tests = new List<(string Name, Action Body)>
     ("VoussoirCellFactory pendentive 36 closed cells", VoussoirCellFactoryTests.Pendentive_Produces36ClosedCells),
     ("VoussoirCellFactory pendentive drop-to-ground min Z ~0", VoussoirCellFactoryTests.Pendentive_DropToGround_MinZ_NearZero),
     ("VoussoirCellFactory pendentive rejects corners off sphere", VoussoirCellFactoryTests.Pendentive_RejectsCornersOffSphere),
-    ("VoussoirCellFactory assembly records ready for matcher", VoussoirCellFactoryTests.Assembly_RecordsReadyForMatcher)
+    ("VoussoirCellFactory assembly records ready for matcher", VoussoirCellFactoryTests.Assembly_RecordsReadyForMatcher),
+
+    // TEMPORARY (revert before commit) — KB-10 local registration; the
+    // orchestrator integrates the final tuples.
+    ("kb10 6x4 exact-joint wall certifies (was SolverError)", Kb10ExactJointConditioningTests.Wall6x4_ExactJoints_CertifiesWithoutSolverError),
+    ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError)
 };
+
+// TEMPORARY (revert before commit) — KB-10 dev-only name filter so the fix can
+// be iterated without running the full battery: set FRAHAN_TEST_FILTER=kb10.
+var tempFilter = Environment.GetEnvironmentVariable("FRAHAN_TEST_FILTER");
+if (!string.IsNullOrEmpty(tempFilter))
+    tests = tests.FindAll(t => t.Name.IndexOf(tempFilter, StringComparison.OrdinalIgnoreCase) >= 0);
 
 var failed = 0;
 foreach (var test in tests)

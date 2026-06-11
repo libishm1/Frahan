@@ -185,9 +185,40 @@ checker paths). compas_cra parity: 5/5, full battery 1020/0. The diagnostic prob
 vertex, not an absolute plane (docs added to CheckMeshes/BuildAssemblyFromMeshes; negative values anchor
 nothing).
 
-## KB-10 — Exact-joint ADMM conditioning at ~50+ interfaces [OPEN, 2026-06-11]
+## KB-10 — Exact-joint ADMM conditioning at ~50+ interfaces [RESOLVED, 2026-06-11]
 Distinct from KB-9 (which was detector-path-only): the 6x4 generated wall (53 interfaces, EXACT-joint
 assembly path, clean 4-vertex quads) returned SolverError during card 27_09 authoring while the 5x3 wall
 (30 ifaces) certifies in 1 iter. Repro: PolygonalWallGenerator GridX=6 GridY=4 -> Assembly -> penalty-RBE.
 Suspects: penalty conditioning / rho adaptation at scale; LS-first warm start (the CRA path trick) not
 applied to the plain RBE pre-step. Workaround stands: per-element verification (castle card 27_10).
+
+KB-10 RESOLUTION (2026-06-11, same day): two findings. (1) At post-KB-9 HEAD the literal repro (Width 6,
+Height 3.2, GridX 6, GridY 4, Coursing 0.4, SizeGrade 0.3, Seed 7, depth 0.4 -> 54 ifaces / 216 verts /
+18 free) NO LONGER returns SolverError — the cold ADMM converges, but pathologically: 5.4 s, and 24 s /
+86 s for the 8x5 (95 ifaces) / 10x6 (147 ifaces) walls; the conditioning ceiling is real. (2) FIX, in
+MasonryStabilityChecker: LS-FIRST CERTIFICATE before the ADMM. The penalty Hessian is diagonal, so the
+equality-constrained QP solves in closed form (f = H^-1(Aeq' y - c) with (Aeq H^-1 Aeq') y = beq +
+Aeq H^-1 c, one dense Cholesky on the m = 6*freeBlocks dual system), then the point is projected onto the
+complementarity split (fn+ = max(v,0), fn- = max(-v,0); the fn+/fn- columns are exact negatives in both
+Aeq and Afr, so Aeq f and Afr f are preserved EXACTLY). If the projected point passes equality (1e-6 rel),
+bounds, friction cone (1e-7 rel) and is tension-free, it is an admissible compressive state — the static
+lower-bound theorem decodes STABLE directly, no ADMM. If only the CONE blocks it, a POCS cone polish
+alternates the H-metric equality projection (cached Cholesky factor) with a closed-form projection onto
+the inscribed SOC (mu_eff cos(pi/K)), which is conservative w.r.t. the K-face pyramid; stagnation cutoff
+declines on gap cycles (RBE-unstable cases). Anything not certified falls through to the ADMM, now
+warm-started via the APPENDED AdmmQpSolver.Solve(problem, warmStartX) overload (1-arg overload unchanged,
+IConvexQpSolver untouched). The short-circuit can only certify STABLE, never declare unstable — verdict
+soundness is by exhibited feasible point, not by optimality. MEASURED (Debug): 6x4 5.4 s -> 0.06-0.08 s
+(round-0/POCS 247 it), 8x5 24 s -> ~0.4 s (POCS 1058 it), 10x6 86 s -> ~1.0 s (POCS 1399 it), all STABLE,
+no SolverError anywhere in the sweep. Side benefit: 40-stone detector wall 684 ms, adjacency wall 445 ms.
+Regression net green: compas_cra parity 5/5, H-model (RBE accepts / CRA rejects) intact, CRA wall
+certified 1 iter, ETH1100 Lambda unchanged at 0.194; full battery PASS/0 FAIL (see tests
+Kb10ExactJointConditioningTests: "kb10 6x4 exact-joint wall certifies (was SolverError)" + the
+6x4/8x5/10x6 sweep, both with [bench] lines).
+
+## KB-11 — CRA certificate QP conditioning on large fixtures (bridge) [OPEN, 2026-06-11]
+compas_cra json fixture 09_bridge: our penalty-RBE (with the KB-10 LS-first warm start) returns STABLE in
+23 ms, but CraStabilityChecker's alternating certificate fails at iteration 3 ("Certificate QP failed to
+solve") after ~14 s — the certificate's INTERNAL constrained QPs do not yet use the KB-10 warm start. Fix
+lead: thread the same LS-first/warm-start through the certificate iteration QPs. Fixture SKIPs loudly until
+then. (Wedge type-b certifies fine: 3 iter, 46 ms.)
