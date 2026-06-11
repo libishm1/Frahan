@@ -60,7 +60,8 @@ masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.
 RecoveryCascade recovers +21% over single-scale BlockCutOpt by re-cutting cracked blocks at finer scales.
 
 ## Test + build health
-983 tests pass (0 fail) from a clean clone; all projects build green. See `../INSTALL.md`.
+1012 tests pass, 0 fail, 131 skip (2026-06-11) from a clean clone; skips are Rhino-runtime +
+optional-dataset gates. All projects build green. See `../INSTALL.md`.
 
 ## Where the numbers come from
 `../../wiki/research/packing/`: PACK2D_STUDY_REPORT, PACK3D_STUDY_REPORT, ROSES_2D_PACKER_GUIDE,

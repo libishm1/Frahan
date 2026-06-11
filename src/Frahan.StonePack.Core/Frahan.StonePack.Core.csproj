@@ -7,9 +7,9 @@
     <AssemblyName>Frahan.StonePack.Core</AssemblyName>
     <RootNamespace>Frahan.Core</RootNamespace>
     <!-- R3 PR 8 transition release: 0.7.0. Adds the unified IrregularSheetFill
-         facade + IrregularSheetFillComponent. V1/V2/V3 components Obsolete;
-         V506 stays primary until async unified lands. Removal in 0.8.0 per
-         R3 plan PR 9. See CHANGELOG.md for full details. -->
+         facade + IrregularSheetFillComponent. Legacy 2D V-solvers (V1/V2/V3/
+         V506) retained hidden for old-canvas compatibility; they will not be
+         removed. See CHANGELOG.md for full details. -->
     <Version>0.7.0</Version>
     <AssemblyVersion>0.7.0.0</AssemblyVersion>
     <FileVersion>0.7.0.0</FileVersion>

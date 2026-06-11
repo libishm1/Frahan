@@ -1,93 +1,68 @@
 # Frahan.Kintsugi.Port
 
-Direct C# port of [PuzzleFusion++](https://github.com/eric-zqwang/puzzlefusion-plusplus)
-(Wang, Chen, Furukawa; ICLR 2025; arXiv:2406.00259).
+C# port of [PuzzleFusion++](https://github.com/eric-zqwang/puzzlefusion-plusplus)
+(Wang, Chen, Furukawa; ICLR 2025; arXiv:2406.00259): learned 3D
+fracture reassembly (denoise-and-verify) for the Frahan Kintsugi
+workflow.
 
-**License: GPL-3.0** (see `LICENSE.txt`). The upstream Python
-implementation is GPL-3.0; this port inherits the licence per
-viral-copyleft. Any binary distribution that links this assembly
-falls under GPL-3.0.
+## Licence (read this first)
+
+**Research-use only / non-commercial.** The upstream LICENSE
+(vendored at `Weights/puzzlefusion-plusplus/LICENSE`) states that
+the code, data and model weights are not allowed for commercial
+usage, and that for research purposes the terms follow GPLv3. The
+same terms cover this ported code AND the converted weights
+(`kintsugi.bin`). This module is therefore planned as a separately
+distributed, optional research package; it is not part of any
+commercial Frahan offering. See `LICENSE.txt` in this folder.
 
 ## Status
 
-Phase 1 of 8 — primitives layer.
+The full port ships:
 
-| Phase | Scope | Status |
-|---|---|---|
-| 1 | Primitives — FPS, KNN, Matmul, Activations, LayerNorm | **in progress** |
-| 2 | PointNet++ piece encoder | not started |
-| 3 | VQ-VAE codebook | not started |
-| 4 | SE(3) diffusion denoiser | not started |
-| 5 | Pairwise alignment verifier | not started |
-| 6 | Auto-agglomerative merge + iterate | not started |
-| 7 | Weight conversion pipeline | not started |
-| 8 | Integration into `KintsugiAssemblyComponent` | not started |
+- `Primitives/` — FPS, KNN, SIMD matmul, activations, LayerNorm.
+- `Models/` — PointNet++ encoder, VQ-VAE, SE(3) diffusion denoiser
+  (AdaLN transformer), pairwise alignment verifier.
+- `Outer/` — auto-agglomerative merge loop, weight loaders,
+  `KintsugiPortInference`, TorchSharp execution paths.
+- `Weights/` — `FRKINTSU` binary format, checkpoint conversion and
+  parity-fixture scripts.
 
-Full plan: `wiki/research/kintsugi_3d_fracture_reassembly.md`
-(section "ADDED 2026-05-22: full PyTorch → C# port roadmap").
+Layer-by-layer parity tests against upstream PyTorch fixtures pass
+on Breaking Bad data (`parity_fixtures.bin`; tests in
+`Frahan.StonePack.Tests`). Example 14 (Kintsugi reassembly)
+demonstrates the verifier scoring at 0.71 on Breaking Bad
+fragments. Parity holds on Breaking Bad data only; synthetic
+fractures are out of the verified envelope.
 
-## Module layout
+## Runtime
 
-```
-Frahan.Kintsugi.Port/
-├── Frahan.Kintsugi.Port.csproj   net48; depends on System.Numerics.Vectors only
-├── LICENSE.txt                   GPL-3.0 + upstream citation
-├── README.md                     this file
-├── Primitives/                   Phase 1
-│   ├── Fps.cs                    furthest-point sampling
-│   ├── Knn.cs                    k-nearest neighbours (brute force; KD-tree later)
-│   ├── Matmul.cs                 dense matrix-matrix multiply (SIMD-accelerated)
-│   ├── Activations.cs            GELU, SiLU, ReLU
-│   └── LayerNorm.cs              per-token layer normalisation
-├── Models/                       Phases 2-5 (not started)
-│   ├── PointNetPlusPlus.cs
-│   ├── VqVae.cs
-│   ├── Se3Denoiser.cs
-│   └── Verifier.cs
-├── Outer/                        Phase 6 (not started)
-│   └── AutoAgglomerate.cs
-└── Weights/                      Phase 7 (not started)
-    ├── WeightReader.cs           binary .pt → C# tensor
-    └── (no checkpoint files in git; downloaded at first use)
-```
+TorchSharp 0.105.0 is referenced in the csproj and loads on net48
+(Rhino 8 Grasshopper). Default backend is CPU
+(`TorchSharp-cpu`). CUDA libtorch is opt-in: build with
+`-p:KintsugiUseCuda=true` to pull `TorchSharp-cuda-windows`
+(multi-GB download; CUDA 12.x GPU + driver required). The denoiser
+path auto-selects CUDA at runtime when available. The pure-managed
+`Primitives/` path remains as a dependency-free fallback and as the
+reference for parity tests.
 
-## Design constraints
+(The earlier statement here that "TorchSharp targets .NET 6+; not
+usable" was wrong and is retired: TorchSharp 0.105.0 works under
+net48 in this project.)
 
-- **net48 only.** TorchSharp targets .NET 6+; not usable. Pure managed
-  C# with System.Numerics.Vectors SIMD for matmul. No P/Invoke to
-  native ML libraries.
-- **In-process inference.** No subprocess to Python. No GPU dependency.
-  Expect 10-60 seconds per assembly on a modern CPU (vs ~929 ms on
-  RTX 4090 in the original paper).
-- **No third-party ML packages.** No ML.NET, no TensorFlow.NET, no
-  ONNX Runtime, no LibTorch P/Invoke. Pure managed implementations of
-  every primitive.
+## Weights
 
-## Why these constraints
+`kintsugi.bin` (~267 MB) is converted from the upstream checkpoints
+with `Weights/convert_pytorch_checkpoint.py` and deployed beside the
+`.gha`. It is NOT committed to this repo. It inherits the upstream
+non-commercial / research-only terms. See `Weights/README.md` for
+the binary format and the ship workflow.
 
-Frahan ships as a Rhino 8 Grasshopper `.gha`. Rhino 8's plug-in
-runtime is net48. Anything heavier than pure managed C# either won't
-load or requires the end user to install a separate Python / CUDA /
-ML.NET environment — defeats the "drag-and-drop .gha" distribution
-model.
+## Credit
 
-## Performance expectation
-
-The original PuzzleFusion++ reports ~929 ms per assembly on an RTX
-4090. Pure managed C# matmul on CPU is realistically 10-100× slower
-than CUDA. Expected port performance: **10-60 seconds per assembly**
-on a modern desktop CPU.
-
-This is acceptable as a "Run, then check back" workflow in Grasshopper
-via `GH_TaskCapableComponent`. Not acceptable as a real-time canvas
-solver.
-
-## Verification
-
-Once Phases 2-5 land, port equivalence must be tested against the
-Python original on a held-out subset of the Breaking Bad dataset.
-Without that gate, we cannot claim parity with the paper's metrics.
-
-## Currently shipped
-
-Phase 1 primitives (this commit). Tests in `Frahan.StonePack.Tests`.
+This module is a reimplementation, not a fork: the upstream PyTorch
+code was ported to C#/.NET by hand and verified layer-by-layer
+against upstream fixtures. All algorithmic credit belongs to the
+PuzzleFusion++ authors. The vendored `Jigsaw_matching` subtree under
+`Weights/puzzlefusion-plusplus/` has its own notice
+(`Weights/puzzlefusion-plusplus/NOTICE.md`).

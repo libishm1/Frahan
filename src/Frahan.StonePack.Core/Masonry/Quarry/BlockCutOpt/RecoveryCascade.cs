@@ -31,7 +31,9 @@ namespace Frahan.Masonry.Quarry.BlockCutOpt;
 // SLM/ROSES grounding: Yarahmadi 2018 (conditional two-scale), Cherri 2009 CSUL
 // usable-leftover threshold, Gilmore-Gomory 1965 staged guillotine, wood
 // rough-mill defect-aware cut-up (Hahn 1968 / Afsharian 2014). The unified
-// 3D recursive reject-recover cascade is the novel composition.
+// 3D recursive reject-recover cascade is introduced in the companion paper
+// (Murugean 2026, submitted to Bull. Eng. Geol. Environ.; reproducibility
+// deposit DOI 10.5281/zenodo.20608279).
 // =============================================================================
 
 public static class RecoveryCascade

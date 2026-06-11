@@ -1,33 +1,61 @@
-                    GNU GENERAL PUBLIC LICENSE
-                       Version 3, 29 June 2007
+Frahan.Kintsugi.Port — licence terms
+====================================
 
- This module (Frahan.Kintsugi.Port) is a direct C# port of code from
- PuzzleFusion++ (https://github.com/eric-zqwang/puzzlefusion-plusplus),
- which is licensed under the GNU General Public License v3.0.
+This module is a C# port of PuzzleFusion++
+(https://github.com/eric-zqwang/puzzlefusion-plusplus), by
+Wang, Zhengqing; Chen, Jiacheng; Furukawa, Yasutaka.
+"PuzzleFusion++: Auto-agglomerative 3D Fracture Assembly by
+Denoise and Verify." ICLR 2025. arXiv:2406.00259.
 
- By the GPL v3.0 viral-copyleft terms, this port is also licensed
- under GPL v3.0. Any binary that links this assembly (e.g.
- Frahan.StonePack.gha when it includes this module) is distributed
- under GPL v3.0.
+Upstream terms (verbatim summary)
+---------------------------------
 
- Upstream paper citation:
-   Wang, Zhengqing; Chen, Jiacheng; Furukawa, Yasutaka.
-   "PuzzleFusion++: Auto-agglomerative 3D Fracture Assembly by
-    Denoise and Verify."
-   ICLR 2025. arXiv:2406.00259.
+The upstream LICENSE (vendored at
+Weights/puzzlefusion-plusplus/LICENSE) states:
 
- Full GPL-3.0 license text:
-   https://www.gnu.org/licenses/gpl-3.0.txt
+  "The code, data, and model weights in this repository are not
+   allowed for commercial usage. For research purposes, the terms
+   follow the GPLv3 as in the separate file LICENSE_GPL."
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+This is NOT a plain GPL-3.0 licence. It is a research-use-only /
+non-commercial licence; for research use the GPLv3 terms apply
+(vendored at Weights/puzzlefusion-plusplus/LICENSE_GPL).
 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+What the upstream terms cover here
+----------------------------------
 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+1. The ported C# code in this module (Primitives/, Models/, Outer/,
+   Weights/WeightReader.cs and the conversion scripts), as a
+   derivative work of the upstream code.
+2. The converted model weights (kintsugi.bin), as a derivative of
+   the upstream PuzzleFusion++ checkpoints. The upstream restriction
+   explicitly names model weights.
+
+Distribution
+------------
+
+Because of the non-commercial restriction, Frahan.Kintsugi.Port and
+kintsugi.bin are planned as a SEPARATELY DISTRIBUTED, optional
+research package. They are not part of any commercial Frahan
+StonePack offering. Removing this module from a build removes the
+upstream restriction from the remaining code.
+
+Research use
+------------
+
+For research purposes, the GPLv3 terms apply per upstream:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+This module is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Credit
+------
+
+The port is an independent C# reimplementation of the upstream
+PyTorch code, verified layer-by-layer against upstream fixtures.
+All algorithmic credit belongs to the PuzzleFusion++ authors. The
+Jigsaw_matching subtree vendored under
+Weights/puzzlefusion-plusplus/ carries its own notice; see the
+NOTICE.md beside it.

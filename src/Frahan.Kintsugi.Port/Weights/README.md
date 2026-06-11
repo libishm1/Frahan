@@ -1,7 +1,8 @@
 # Frahan.Kintsugi.Port / Weights
 
-GPL-3.0 module. Tools + format for the weight binary the C# port loads
-at runtime.
+Research-use-only / non-commercial module (upstream PuzzleFusion++
+terms; GPLv3 terms for research use — see `../LICENSE.txt`). Tools +
+format for the weight binary the C# port loads at runtime.
 
 ## Files
 
@@ -48,11 +49,13 @@ REPEATED count TIMES:
 
 The merged binary is ~267 MB. Three reasons we don't commit it:
 
-1. **GPL-3.0 source-distribution requirement**: the weights are
-   derivative of the upstream PuzzleFusion++ checkpoint. Distributing
-   them attaches Frahan's release to the upstream GPL terms by virtue
-   of the conversion. Easier to keep them out of git and have each
-   release pull from upstream directly.
+1. **Upstream licence**: the weights are derivative of the upstream
+   PuzzleFusion++ checkpoint, which is research-use-only /
+   non-commercial (GPLv3 terms for research use). Distributing them
+   attaches the upstream terms by virtue of the conversion. They ship
+   only in the separately distributed research package, never in a
+   commercial bundle; keeping them out of git keeps that boundary
+   clean.
 2. **Repo size**: a 267 MB binary in LFS would slow every clone.
 3. **Update cadence**: when upstream re-trains, we re-run the conversion;
    the binary changes. Better to make conversion a release-time step.
@@ -80,16 +83,12 @@ Example tensor names + shapes (from the actual ICLR 2025 release):
 ## Parity-test gate (Phase 7 validation)
 
 `export_parity_fixtures.py` captures input + reference outputs from
-the upstream PyTorch models. The matching C# parity test
-(`Frahan.Tests.KintsugiPortParityTests`, scaffold) loads the same
-binary, runs the C# port models, asserts outputs match to ~1e-3
-tolerance.
-
-Until parity passes, `KintsugiAssemblyComponent.Mode = Port` only
-verifies the weight file is loadable; it does NOT yet run end-to-end
-inference. The geometric path remains the only validated execution
-mode.
+the upstream PyTorch models. The matching C# parity tests load the
+same binary (`parity_fixtures.bin`), run the C# port models, and
+assert outputs match the upstream reference. These layer-by-layer
+parity tests pass on Breaking Bad fixtures; example 14 demonstrates
+the verifier scoring 0.71 on Breaking Bad fragments.
 
 ## Last updated
 
-2026-05-22.
+2026-06-11.

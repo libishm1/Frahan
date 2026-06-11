@@ -23,7 +23,7 @@ Style: short sentences, no em dashes. Windows + Rhino 8.
 3. Reopen Rhino + Grasshopper. The `Frahan` ribbon tab appears.
 
 ## Test + benchmark
-- Test suite (xUnit-style runner, ~983 tests): `dotnet run -c Release` in `tests/Frahan.StonePack.Tests`.
+- Test suite (xUnit-style runner, ~1012 tests): `dotnet run -c Release` in `tests/Frahan.StonePack.Tests`.
   Rhino-dependent tests skip gracefully when RhinoCommon native (rhcommon_c) cannot load (bitness); the
   pure-managed + Core tests always run.
 - Packer benches: `tools/Frahan.StonePack.Harness --packbench` (3D + masonry + fracture) and

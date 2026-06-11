@@ -28,10 +28,13 @@ namespace Frahan.Kintsugi.Port.Outer;
 /// The manual port stays the default; this is opt-in.
 ///
 /// LICENSE NOTE
-/// TorchSharp itself is MIT-licensed. Bundling libtorch (BSD-3) is
-/// compatible with the GPL-3.0 Kintsugi port path -- LGPL/BSD-3 +
-/// GPL-3.0 combination is permitted for binary linking under the
-/// GPL FAQ. The combined .gha would ship as GPL-3.0 in this case.
+/// TorchSharp itself is MIT-licensed; libtorch is BSD-3. Both are
+/// compatible with the Kintsugi port's terms. The Kintsugi port
+/// follows the upstream PuzzleFusion++ licence: research-use only /
+/// non-commercial, with GPLv3 terms for research use (see
+/// LICENSE.txt at the module root). Any binary including this module
+/// is research-only and is distributed as a separate optional
+/// research package, never as part of a commercial offering.
 /// </summary>
 public sealed class TorchSharpEncoderPath : IDisposable
 {

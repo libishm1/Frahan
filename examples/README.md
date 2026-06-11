@@ -49,6 +49,16 @@ All datasets are in `../data/` with provenance in `../data/ATTRIBUTION.md`. The 
 and move to Git LFS at the public step; until then fetch any missing set via the download links in
 ATTRIBUTION. The example data inputs reference `../data/<set>/` by the path the README lists.
 
+## Where to start
+Two navigation docs route you to the right examples and components:
+
+- [`../docs/PERSONA_MAP.md`](../docs/PERSONA_MAP.md) — entry points by persona: geologists (03/08/09),
+  surveyors (04/07/26), computational designers/architects (16/17/27, voussoirs 21/22), stone masons
+  (11/24/25), artists (05/12/14/15), OSS developers (Lab primitives).
+- [`../docs/SUPERSESSION_MAP.md`](../docs/SUPERSESSION_MAP.md) — which legacy components were superseded
+  by which evolved forms, with the benchmarks. Legacy stays loadable; use the evolved forms in new
+  canvases.
+
 ## Status + the live refresh
 Examples 01-07 are the proven last-working canvases (the baseline). Examples 10-14 were built, solved,
 captured, and saved LIVE (2026-06-06) via the official Rhino MCP + `GH_DocumentIO.SaveQuiet`, then

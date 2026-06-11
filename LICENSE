@@ -26,3 +26,33 @@ DATASETS in data/ carry their OWN upstream licenses (see data/ATTRIBUTION.md) an
 are NOT covered by this code license; honor each dataset's terms (several are
 non-commercial or research-only).
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+THIRD-PARTY AND COMPONENT LICENCES (NOTICE)
+
+(a) Frahan.Kintsugi.Port + kintsugi.bin weights — upstream PuzzleFusion++ terms.
+    The upstream licence (vendored at
+    src/Frahan.Kintsugi.Port/Weights/puzzlefusion-plusplus/LICENSE) states the
+    code, data and model weights are NOT allowed for commercial usage; for
+    research purposes the terms follow GPLv3. These terms cover the ported C#
+    code AND the converted weights (kintsugi.bin). This is stricter than plain
+    GPL-3.0; where the "WHY GPL-3.0" note above describes Kintsugi.Port as
+    GPL-3.0, the upstream non-commercial restriction additionally applies.
+    Frahan.Kintsugi.Port and kintsugi.bin are distributed SEPARATELY as an
+    optional research package and are not part of any commercial offering.
+    See src/Frahan.Kintsugi.Port/LICENSE.txt.
+
+(b) Xbim.Essentials (IFC export) — CDDL-1.0. CDDL is a file-level copyleft
+    licence with known GPL-compatibility friction. GeometryGymIFC is the
+    planned licence-clean alternative for the IFC terminal.
+
+(c) CGAL components used via frahan_cgal.dll include GPL-licensed CGAL
+    packages (notably corefinement / boolean operations). See
+    wiki/specs/20_frahan_cgal_audit.md in the orchestration workspace
+    (D:/code_ws) for the per-package audit.
+
+(d) The vendored Jigsaw_matching subtree under
+    src/Frahan.Kintsugi.Port/Weights/puzzlefusion-plusplus/ has an unaudited
+    licence; see the NOTICE.md beside it. Treated as research-only until
+    audited.
+-------------------------------------------------------------------------------

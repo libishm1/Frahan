@@ -10,11 +10,14 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <!--
-      GPL-3.0 module. Direct C# port of PuzzleFusion++ (Wang, Chen,
-      Furukawa; ICLR 2025; arXiv:2406.00259) from
+      Research-use-only / non-commercial module (upstream PuzzleFusion++
+      terms; GPLv3 terms for research use). C# port of PuzzleFusion++
+      (Wang, Chen, Furukawa; ICLR 2025; arXiv:2406.00259) from
       https://github.com/eric-zqwang/puzzlefusion-plusplus
-      Linking this assembly into Frahan.StonePack.gha makes the .gha
-      GPL-3.0 in distribution. See LICENSE.txt in this folder.
+      The upstream restriction covers the ported code AND the converted
+      weights (kintsugi.bin). Planned as a SEPARATELY DISTRIBUTED optional
+      research package; do not bundle into a commercial offering.
+      See LICENSE.txt in this folder.
     -->
   </PropertyGroup>
 

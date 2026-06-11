@@ -37,6 +37,13 @@ namespace Frahan.Masonry.Solvers;
 // each friction row touches one vertex's 3 columns; bound rows are identity).
 // Diagonal Hessians (all masonry formulations) get an O(n) Px fast path.
 // The 40-stone wall check drops from minutes (dense) to seconds.
+//
+// MEASURED LIMIT (2026-06-11): on penalty-RBE masonry systems the solver hits
+// a conditioning ceiling near ~50 contact interfaces (53-interface wall:
+// SolverError after 8000 iterations, rho~1e6, r_pri~1e1-1e3; 30-interface
+// wall certifies in 1 outer iteration). Workaround: verify per element
+// (walls/arches/vaults separately, see examples/27 card 10). Conditioning
+// work (per-block Ruiz, LS-first warm start, polish) is the open item.
 // =============================================================================
 
 /// <summary>

@@ -23,9 +23,11 @@ namespace Frahan.Masonry.Packing;
 // candidate that physically fits (slab.W <= remaining_x, slab.D <=
 // wallThickness). Falls back to first-fit if no candidate fits.
 //
-// Reference: Gramazio, F.; Kohler, M.; Eichenhofer, M. (2017). "Robotic
-// in-situ assembly of irregular stone walls." Computer-Aided Design,
-// implicitly described in the gramaziokohler/ashlar repository.
+// References: Furrer, F. et al. (2017). "Autonomous robotic stone stacking
+// with online next best object target pose planning." IEEE ICRA.
+// Johns, R.L. et al. (2020). "Autonomous dry stone." Construction
+// Robotics 4. Implementation reference: the gramaziokohler/ashlar
+// repository.
 // =============================================================================
 
 public static class BestFitInventoryPacker

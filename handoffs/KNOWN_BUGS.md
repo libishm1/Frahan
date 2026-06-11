@@ -45,19 +45,18 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
   vertex-clustering node. Transforms and bakes on multi-million meshes are fine; only Reduce is the trap.
 - **Status:** documented; voxel-cluster path used for the LIGHT file. See [[feedback_gh_carving_stages_reorder_bug]].
 
-## KB-3 — Masonry RBE stability verdict is wired to the sign-buggy formulation (FLAGGED, not yet fixed)
+## KB-3 — Masonry RBE stability verdict is wired to the sign-buggy formulation (RESOLVED 2026-06-11)
 
 - **Symptom:** the shipped masonry stability verdict can be wrong; it verifies pure equilibrium, not
   frictional stability.
-- **Root cause:** `MasonryStabilityRbeComponent` (and `BuildOrderStabilityStream`) call
+- **Root cause:** `MasonryStabilityRbeComponent` (and `BuildOrderStabilityStream`) called
   `RbeQpFormulation.Build`, which the code's own XML doc says makes f_n >= 0 infeasible for any real
-  assembly; `BuildPhysicsCorrected` is the correct overload but is unwired. The only friction-capable
+  assembly; `BuildPhysicsCorrected` is the correct overload but was unwired. The only friction-capable
   solver path (`ManagedQpSolver` Dykstra) returns NotImplemented for the non-uniform H that RBE emits.
-- **Fix (planned, W4):** test whether the sign flop was deliberate (stable + unstable wall, Build vs
-  BuildPhysicsCorrected), then make BuildPhysicsCorrected the single Build, migrate the two GH callers,
-  label the verdict equilibrium-only until the friction solver lands, add an end-to-end test.
-- **Status:** OPEN (task #29 / W4). User APPROVED the sign fix pending the intentionality test. See the
-  master-spine audit AUDIT_00/AUDIT_04.
+- **Resolution:** both GH callers (`MasonryStabilityRbeComponent`, `BuildOrderStabilityStreamComponent`)
+  now call `RbeQpFormulation.BuildPhysicsCorrected`; the legacy `Build` overload survives only in tests
+  (verified by grep 2026-06-11).
+- **Status:** RESOLVED 2026-06-11. See the master-spine audit AUDIT_00/AUDIT_04.
 
 ## KB-4 — Exact NFP-BLF admits a small overlap on CONCAVE parts (FIXED in the evolved path)
 
@@ -132,7 +131,7 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 
 ---
 
-## KB-8 — 2D Polygonal Masonry Sequence under-extracts a Voronoi ridge NETWORK (FLAGGED, not yet fixed)
+## KB-8 — 2D Polygonal Masonry Sequence under-extracts a Voronoi ridge NETWORK (SUPERSEDED 2026-06-11)
 
 - **Symptom:** `Frahan Polygonal Masonry Sequence` (2D, `B4E07A3C-...`) on the example-27 Voronoi card
   (28 seeds -> 63 ridge chains) extracts ~10 finite regions on the live canvas, not the ~26 Voronoi cells
@@ -149,6 +148,8 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
   robustness fix DID ship: rule (8) ambiguity (mutual above/below on different shared sub-segments) is now
   resolved by centroid height in `Wall.DirectEdge` instead of throwing, and `ReversedKahnDepths` degrades
   gracefully on an unexpected cycle, so the sequencer no longer aborts on irregular tessellations.
+- **Status: SUPERSEDED 2026-06-11.** The `PolygonalWallGenerator` path (card 27_06) fills the 2D-Voronoi
+  card slot. The `Pslg.FromSegments` limitation stands, but no shipped card depends on it.
 
 ---
 
