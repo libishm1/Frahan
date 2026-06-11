@@ -51,6 +51,8 @@ namespace Frahan.GH.Masonry
         public RubbleWallSettleComponent()
             : base(
                 "Rubble Wall Settle", "RubbleSettle",
+                "NOTE: the settle v2 objective reaches +97% clearance, 23/24 stable " +
+                "(see examples/27 cards); this component remains the validated v1. " +
                 "Settles stone meshes into an upright Z-up rubble wall. Each " +
                 "stone is PCA-oriented so its broad/flat face beds DOWN, then " +
                 "dropped (gravity = -Z) into the per-(x,y)-cell dimples of the " +

@@ -34,7 +34,7 @@ public sealed class EstimateCloudNormalsComponent
             "Mode = 2) or point-to-plane Cloud ICP. Runs on a background " +
             "thread (Run gate). Requires the Phase H/I rebuild of " +
             "frahan_cgal.dll; falls back to a Warning bubble if the shim " +
-            "isn't built.",
+            "isn't built. [Hoppe et al. 1992]",
             "Frahan", "Mesh")
     {
     }

@@ -41,12 +41,15 @@ namespace Frahan.GH.Registration;
 public sealed class GeoreferenceComponent : GH_Component
 {
     public GeoreferenceComponent()
-        : base("Georeference", "Georef",
+        : base("Georeference", "GeorefCRS",
             "Rigid scan→world transform from N≥3 control-point pairs in a " +
             "global coordinate system. Supports WGS84 LLH degrees, UTM, " +
             "and pre-converted ENU metres. World points are converted to " +
             "ENU about the first control point's origin before solving. " +
-            "Implements absolute orientation (Horn 1987).",
+            "Implements absolute orientation (Horn 1987). " +
+            "Sibling: GeorefCRS handles the WGS84/UTM/ENU datum; " +
+            "'GeorefPts' (Georeference (Align by Points)) is the local fit " +
+            "via Horn when both datasets share a frame.",
             "Frahan", "Mesh")
     {
     }

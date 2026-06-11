@@ -19,7 +19,7 @@ public sealed class NfpPack2DComponent : GH_Component
 {
     public NfpPack2DComponent()
         : base("2D NFP Pack", "NFP Pack",
-            "NFP-assisted 2D irregular packing with diagnostics and optional sequence optimization.",
+            "NFP-assisted 2D irregular packing with diagnostics and optional sequence optimization. [Burke et al. 2007]",
             "Frahan", "2D Packing")
     {
     }

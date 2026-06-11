@@ -38,6 +38,8 @@ namespace Frahan.GH.EdgeMatch3D;
 // for the pass criterion.
 // =============================================================================
 
+[RelatedComponent("Frahan > Masonry > Stone-Cell Match (Λ)",
+    Reason = "The practically-tested matcher: Hungarian stone-to-cell assignment, ETH1100 Lambda=0.194 (card 27_07). Use it for real stone-to-target matching today.")]
 [Algorithm("Variational Shape Approximation (face partitioning)",
     "Cohen-Steiner, Alliez, Desbrun 2004 SIGGRAPH; Frahan stub implementation",
     Note = "Stage 1 of 3D EdgeMatch pipeline; see VsaSegmenter.cs TODO before UCL-replica fidelity")]
@@ -60,13 +62,17 @@ public sealed class BlockPairMatch3DComponent : GH_Component
 {
     public BlockPairMatch3DComponent()
         : base("Block Pair Match 3D", "BlkMatch3D",
+            "SKELETON: the full face-pair search is not implemented yet; the " +
+            "current build scores candidates with an AABB-containment proxy. " +
+            "For a practically-tested matcher use Stone-Cell Match (Λ) " +
+            "(ETH1100 Lambda=0.194, card 27_07). " +
             "Atomic 3D edge-matching primitive: given two scanned stone meshes, " +
             "find the rigid 3D pose where their planar face patches mate. " +
             "VsaSegmenter -> face filtering -> per-pair PhaseCorrelator + " +
             "ConstrainedIcp3D refinement -> top-N candidates ranked by " +
             "patch-pair Hausdorff residual + match-length. Foundational " +
             "primitive for the 3D EdgeMatch family (Block Chain, Adaptive " +
-            "Block Match, Template Block Match, Cyclopean Recipe Coursing).",
+            "Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]",
             "Frahan", "EdgeMatch")
     {
     }

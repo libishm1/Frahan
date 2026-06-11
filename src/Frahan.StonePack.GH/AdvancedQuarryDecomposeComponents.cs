@@ -46,7 +46,8 @@ public sealed class CoacdQuarryDecomposeComponent : GH_Component
             "CoACD (Wei et al, SIGGRAPH 2022). Concavity-driven — block " +
             "count and shape come from the input geometry, not a user " +
             "grid. Use when the goal is approximate convex pieces for " +
-            "downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022).",
+            "downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022). " +
+            "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
             "Frahan", "Quarry")
     {
     }
@@ -372,7 +373,8 @@ public sealed class VoronoiQuarryDecomposeComponent : GH_Component
             "Lloyd-relaxed for a more uniform cell-area distribution. " +
             "Each cell is then CGAL-intersected against the quarry " +
             "for the final block geometry. Realistic stone-fracturing " +
-            "look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982).",
+            "look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982). " +
+            "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
             "Frahan", "Quarry")
     {
     }

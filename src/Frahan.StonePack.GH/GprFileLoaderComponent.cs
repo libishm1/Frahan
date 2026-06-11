@@ -48,7 +48,8 @@ public sealed class GprFileLoaderComponent : GH_Component
         : base("GPR File Loader", "GprLoad",
             "Load a ground-penetrating-radar file by extension: CSV / SEG-Y / MALA RD3 / pulseEKKO DT1. " +
             "Emits trace-start points + count + sample spacing. Sample amplitudes are not piped to the " +
-            "canvas (too large for GH data trees); use the Core reader for per-sample access.",
+            "canvas (too large for GH data trees); use the Core reader for per-sample access. " +
+            "Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.",
             "Frahan", "Ingest")
     {
     }

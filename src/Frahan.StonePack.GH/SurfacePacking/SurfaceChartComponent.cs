@@ -48,7 +48,7 @@ namespace Frahan.GH.Surface
             : base(
                 "Surface Chart", "SurfChart",
                 "Unwraps a 3D mesh to a 2D UV chart using Boundary-First Flattening (BFF). " +
-                "BFF must be downloaded separately and the exe path provided as input.",
+                "BFF must be downloaded separately and the exe path provided as input. [Sawhney & Crane 2017]",
                 "Frahan", "Surface Packing")
         {
         }

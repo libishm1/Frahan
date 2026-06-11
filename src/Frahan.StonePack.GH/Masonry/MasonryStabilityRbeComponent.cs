@@ -20,8 +20,12 @@ namespace Frahan.GH.Masonry
     //         -> EquilibriumSystem
     //     FrictionConeBuilder.Build(equilibrium, mu, faces)
     //         -> FrictionConeMatrix
-    //     RbeQpFormulation.Build(equilibrium, friction.Afr)
+    //     RbeQpFormulation.BuildPhysicsCorrected(equilibrium, friction.Afr)
     //         -> ConvexQpProblem
+    //         (NOT the legacy Build: that overload's sign convention makes
+    //         f_n >= 0 infeasible for any real assembly; BuildPhysicsCorrected
+    //         flips the sign so f_n >= 0 means compression. The legacy Build
+    //         survives only in tests. KB-3 resolved 2026-06-11.)
     //     MasonrySolverRegistry.Default.Solve(problem)
     //         -> ConvexQpResult
     //
@@ -60,6 +64,8 @@ namespace Frahan.GH.Masonry
     /// BlockResearchGroup/compas_cra, MIT). Async; runs the assemble + solve
     /// on a pool thread so Grasshopper stays responsive.
     /// </summary>
+    [RelatedComponent("Frahan > Masonry > Masonry Stability Check",
+        Reason = "Certification path: CRA (Kao 2022) rejects self-stressed states that RBE accepts (H-model); certify via Masonry Stability Check + CRA.")]
     [Algorithm("Rigid-Block Equilibrium QP", "Kao et al. 2022, Computer-Aided Design 146:103216 Coupled Rigid-Block Analysis", Doi = "10.1016/j.cad.2022.103216", WikiPath = "wiki/algorithms/masonry/rbe_kao_2022.md")]
     [Algorithm("Coulomb friction cone", "Kao 2022 section 4 contact mechanics formulation")]
     [Algorithm("Convex QP managed solver", "Kao 2022 section 5 + MIT BlockResearchGroup compas_cra reference impl", Note = "ManagedQpSolver wrapped via MasonrySolverRegistry; IpoptManagedStub for nonlinear extension")]
@@ -70,6 +76,8 @@ namespace Frahan.GH.Masonry
             : base(
                 "Masonry Stability (RBE)", "MasRBE",
                 "Convex-QP rigid-block-equilibrium stability check for a MasonryAssembly. " +
+                "NOTE: RBE is the permissive check; CRA (Kao 2022) rejects self-stressed " +
+                "states RBE accepts (H-model). Certify via Masonry Stability Check + CRA. " +
                 "Asynchronous: assembles the equilibrium + friction QP and solves on a " +
                 "pool thread.",
                 "Frahan", "Masonry")

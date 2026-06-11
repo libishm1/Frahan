@@ -19,8 +19,9 @@ namespace Frahan.GH;
 /// This is the synchronous-only version. For the non-blocking variant,
 /// see <see cref="IrregularSheetFillComponentAsync"/> (R3 PR 7 closure).
 /// All four legacy V-suffixed components (including
-/// <see cref="Pack2DIrregularSheetV506Component"/>) are now Obsolete and
-/// scheduled for deletion in 0.8.0 per R3 plan PR 9.
+/// <see cref="Pack2DIrregularSheetV506Component"/>) are Obsolete and
+/// retained hidden permanently so old canvases load; FreeNestX
+/// (exact NFP-BLF) is the evolved path.
 ///
 /// Note on V1: the unified component hard-codes V1's two extra knobs
 /// (<c>simplifyCurves=false, simplifyTolerance=tolerance</c>). Users who
@@ -42,7 +43,7 @@ public sealed class IrregularSheetFillComponent : GH_Component
             "Unified entry point for Frahan's four 2D irregular-sheet solver " +
             "variants (V1 / V2 / V3 / V506). Pick the variant with the Variant " +
             "input; default is V506. Synchronous solve only - for the async " +
-            "variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA.",
+            "variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]",
             "Frahan", "2D Packing")
     {
     }

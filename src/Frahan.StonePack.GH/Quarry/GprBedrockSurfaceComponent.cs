@@ -44,7 +44,7 @@ public sealed class GprBedrockSurfaceComponent : GH_Component
             "Build a bedrock / rock-face-top surface mesh from GPR reflector picks. Takes the " +
             "deepest continuous reflector per column as bedrock, resamples its depth onto a ground " +
             "mesh's vertices (k-NN IDW), and outputs a bedrock mesh (ground topology, z = ground z - " +
-            "depth) for Overburden To Rock Face. Wraps Core BedrockSurface + TinMerge (A9 + A3).",
+            "depth) for Overburden To Rock Face. Wraps Core BedrockSurface + TinMerge (A9 + A3). [Porsani 2006]",
             "Frahan", "Quarry")
     {
     }

@@ -26,6 +26,10 @@ namespace Frahan.GH.Quarry
     // inference step runs externally; this component picks up the result.
     // =========================================================================
 
+    [RelatedComponent("Frahan > Ingest > GPR File Loader",
+        Reason = "SUPERSEDED BY: GPR File Loader — native multi-format ingest (CSV / SEG-Y / RD3 / DT1 / DZT / IDS .dt), no external conversion needed.")]
+    [RelatedComponent("Frahan > Quarry > GPR Fracture Extract",
+        Reason = "SUPERSEDED BY: GPR Fracture Extract — full processing chain (f-k migration + Hilbert energy + continuity) with stone/frequency presets.")]
     [DesignApplication(
         "Read a Frahan-format GPR radargram (traces CSV + optional  picks CSV)",
         DesignFlow.Bridges)]
@@ -34,6 +38,9 @@ namespace Frahan.GH.Quarry
         public FrahanGprRadargramReaderComponent()
             : base(
                 "Frahan GPR Radargram Reader", "GprRead",
+                "SUPERSEDED BY: GPR File Loader + GPR Fracture Extract, which read " +
+                "vendor formats natively and run the validated processing chain. " +
+                "Kept loadable for old canvases. " +
                 "Read a Frahan-format GPR radargram (traces CSV + optional " +
                 "picks CSV). Coordinates in metres. SEG-Y / DZT / RD3 must " +
                 "be converted externally (RGPR).",

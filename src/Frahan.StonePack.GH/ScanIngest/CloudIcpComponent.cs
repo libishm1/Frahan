@@ -35,7 +35,7 @@ public sealed class CloudIcpComponent : GH_Component
             "fine trimmed ICP. Uses Geogram KD-tree + voxel downsample " +
             "(native shim, Phase I) when available; falls back to " +
             "managed brute-force / hash-grid otherwise. Scales to 10M+ " +
-            "points with the native shim.",
+            "points with the native shim. [Besl & McKay 1992]",
             "Frahan", "Mesh")
     {
     }

@@ -57,7 +57,7 @@ public sealed class PlanesToRobotTargetsComponent : GH_Component
             "kinematic simulation. This wrapper + Frahan's GCodeParser is the " +
             "only path from G-code into visose/Robots (the plugin has zero " +
             "native G-code ingest).",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 

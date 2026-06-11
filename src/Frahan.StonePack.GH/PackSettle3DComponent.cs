@@ -37,11 +37,12 @@ public sealed class PackSettle3DComponent : GH_TaskCapableComponent<PackSettle3D
 {
     public PackSettle3DComponent()
         : base("Settle 3D (Physics)", "Settle3D",
+            "The canonical Frahan volume packer (evolved path; the heightmap Pack3D components remain the validated baseline). " +
             "Physically settles an already-placed pack of stone meshes into real 3D contact " +
             "with a Bullet rigid-body simulation (convex-decomposition collision, gravity, " +
             "friction). Compose after any 3D packer to turn a heightmap/proxy placement into a " +
             "settled, stable, non-interpenetrating pile of real geometry. Bullet backend " +
-            "(better than Kangaroo for stacking); needs libbulletc.dll beside the .gha.",
+            "(better than Kangaroo for stacking); needs libbulletc.dll beside the .gha. [Zhuang et al. 2024]",
             "Frahan", "3D Packing")
     {
     }

@@ -76,7 +76,7 @@ public sealed class WireSawToolpathAdapterComponent : GH_Component
             "has KUKAprc / Robots plugin integration). v1 supports planar cuts; " +
             "v1.x adds ruled-surface decomposition + variable wire tension. " +
             "Outputs feed directly into KUKAprc / Robots downstream.",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 

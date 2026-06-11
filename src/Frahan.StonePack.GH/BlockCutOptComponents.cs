@@ -110,7 +110,7 @@ namespace Frahan.GH.Quarry
                 "BlockCutOpt Solve", "BCOSolve",
                 "Brute-force search for the optimum cutting direction + " +
                 "displacement that maximises the count of non-intersected " +
-                "blocks. All units in metres.",
+                "blocks. All units in metres. [Elkarmoty et al. 2020]",
                 "Frahan", "Quarry")
         { }
 
@@ -134,6 +134,10 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Dx Step", "DxS", "Dx step (m).", GH_ParamAccess.item, 0.5);
             p.AddNumberParameter("Dy Max", "Dy", "Half-range of dy search (m).", GH_ParamAccess.item, 1.5);
             p.AddNumberParameter("Dy Step", "DyS", "Dy step (m).", GH_ParamAccess.item, 0.5);
+            // Run gate (2026-06-11). Appended LAST so old canvases load
+            // unchanged (the new param takes its default, false). The
+            // pose-grid search is unbounded on canvas drop without it.
+            p.AddBooleanParameter("Run", "R", "Execute the solve (the search is expensive; bound it before running)", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -149,6 +153,17 @@ namespace Frahan.GH.Quarry
 
         protected override void SolveInstance(IGH_DataAccess da)
         {
+            // Run gate first (matches the IfcExportComponent pattern):
+            // the brute-force pose-grid search must not fire on canvas drop.
+            bool run = false;
+            da.GetData(11, ref run);
+            if (!run)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Set Run = true to solve.");
+                Message = "Set Run = true to solve.";
+                return;
+            }
+
             var box = Box.Empty;
             Mesh fxMesh = null;
             double Lx = 3.0, Ly = 2.0, Lz = 0.8;
@@ -322,6 +337,10 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Block Z", "Lz", "Block height (m).", GH_ParamAccess.item, 0.8);
             p.AddNumberParameter("Kerf", "K", "Material-lost-by-quarrying (m).", GH_ParamAccess.item, BlockCutOptTolerances.KerfDefaultMetres);
             p.AddNumberParameter("Psi Step (deg)", "Pdeg", "Angular search step.", GH_ParamAccess.item, 3.0);
+            // Run gate (2026-06-11). Appended LAST so old canvases load
+            // unchanged (the new param takes its default, false). The
+            // per-zone pose-grid search is unbounded on canvas drop without it.
+            p.AddBooleanParameter("Run", "R", "Execute the solve (the search is expensive; bound it before running)", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -336,6 +355,17 @@ namespace Frahan.GH.Quarry
 
         protected override void SolveInstance(IGH_DataAccess da)
         {
+            // Run gate first (matches the IfcExportComponent pattern):
+            // the per-zone pose-grid search must not fire on canvas drop.
+            bool run = false;
+            da.GetData(9, ref run);
+            if (!run)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Set Run = true to solve.");
+                Message = "Set Run = true to solve.";
+                return;
+            }
+
             var box = Box.Empty;
             Mesh fxMesh = null;
             int mx = 1, my = 1;

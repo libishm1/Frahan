@@ -11,6 +11,10 @@ using Rhino.Geometry;
 
 namespace Frahan.GH;
 
+[RelatedComponent("Frahan > 3D Packing > Settle 3D (Physics)",
+    Reason = "EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.")]
+[RelatedComponent("Frahan > Masonry > Block Pack (Tree)",
+    Reason = "EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).")]
 [Algorithm("Heightmap-greedy 3D bin packing", "Park and Han 2024 tree-packing for 3D-BPP / orthogonal-block packing", Note = "Mesh-derived top/bottom heightmap with vertical-column collision; greedy XY/orientation search", WikiPath = "wiki/papers/kim2025_tree_packing.md")]
 [DesignApplication(
     "Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume",
@@ -21,7 +25,8 @@ public sealed class Pack3DIrregularContainerComponent : GH_Component
 {
     public Pack3DIrregularContainerComponent()
         : base("Pack3D Irregular Container", "Pack3DContainer",
-            "Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume.",
+            "EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline. " +
+            "Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume. [Park & Han 2024]",
             "Frahan", "3D Packing")
     {
     }

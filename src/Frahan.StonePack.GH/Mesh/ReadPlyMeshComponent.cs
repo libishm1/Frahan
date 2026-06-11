@@ -51,7 +51,7 @@ namespace Frahan.GH.Masonry
                 "parsers (no third-party native code). PLY: ASCII + binary_LE; " +
                 "OBJ: v + f with vertex/tex/normal triplet syntax, multi-group " +
                 "files emit one mesh per group; STL: ASCII + binary, vertex " +
-                "welding at 1e-7 model units. Vertex colours preserved on PLY.",
+                "welding at 1e-7 model units. Vertex colours preserved on PLY. [Turk 1994]",
                 "Frahan", "Mesh")
         {
         }

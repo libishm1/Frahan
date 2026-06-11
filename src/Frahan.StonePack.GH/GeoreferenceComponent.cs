@@ -35,13 +35,15 @@ namespace Frahan.GH;
 public sealed class GeoreferenceComponent : GH_Component
 {
     public GeoreferenceComponent()
-        : base("Georeference (Align by Points)", "Georef",
+        : base("Georeference (Align by Points)", "GeorefPts",
             "Best-fit transform from 3+ corresponding control points (Horn's " +
             "absolute orientation). Aligns GPR / scan / quarry geometry into one " +
             "georeferenced frame: Source = control points in the frame you move, " +
             "Target = matching points in the reference frame. Rigid by default; " +
             "enable Scale for similarity. Feed the Transform into Cloud ICP's " +
-            "Initial Guess for fine registration.",
+            "Initial Guess for fine registration. " +
+            "Sibling: GeorefPts is the local fit via Horn from matched points; " +
+            "'GeorefCRS' (Georeference) handles WGS84/UTM/ENU datum conversion.",
             "Frahan", "Mesh")
     {
     }

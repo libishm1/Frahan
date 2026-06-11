@@ -29,7 +29,7 @@ public sealed class ChartFlatnessReportComponent : GH_Component
             "Classify per-face area ratios against a flatness threshold. " +
             "Threshold is interpreted as max(ratio, 1/ratio); 0.5 and 2.0 are " +
             "equally distorted from 1.0. Frahan-original method.",
-            "Frahan", "Surface")
+            "Frahan", "Surface Packing")
     {
     }
 

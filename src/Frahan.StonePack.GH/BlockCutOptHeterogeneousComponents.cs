@@ -166,7 +166,13 @@ namespace Frahan.GH.Quarry
     //             runs BenchMonumentPacker on it, returning per-monument
     //             placements with 24-rotation SO(3) sampling.
     // -------------------------------------------------------------------------
-    [Algorithm("Heterogeneous quarry extraction pipeline", "Frahan-original", Note = "Composition over Elkarmoty 2020 BlockCutOpt + Chehrazad 2025 DLBF; no new algorithm of its own.")]
+    [Algorithm("Heterogeneous quarry extraction pipeline", "Frahan-original", Note = "Composes Elkarmoty 2020 (BlockCutOpt) and Chehrazad 2025 (DLBF), both interpreted and reimplemented in managed code for this plugin; the composition and the heterogeneity model are the contribution.")]
+    [RelatedComponent("Frahan > Lab > Frahan Mixed-Size Block Pack",
+        Reason = "Standalone 2D DLBF mixed-size packer (F2D0BC17); the same engine this facade composes.")]
+    [RelatedComponent("Frahan > Quarry > Frahan Mixed-Size Block Pack 3D",
+        Reason = "Standalone 3D DLBF mixed-size packer (F2D0BC18); the same engine this facade composes.")]
+    [RelatedComponent("Frahan > Quarry > BlockCutOpt Solve",
+        Reason = "Standalone stage-1 solver: optimum cutting direction + displacement (Elkarmoty 2020).")]
     [DesignApplication(
         "Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-s...",
         DesignFlow.TopDown)]

@@ -8,6 +8,8 @@ using Frahan.GH.Attributes;
 
 namespace Frahan.GH;
 
+[RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
+    Reason = "SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap.")]
 [DesignApplication(
     "Greedy 2D irregular packing using RhinoCommon curves",
     DesignFlow.BottomUp,
@@ -24,6 +26,7 @@ public sealed class Pack2DBottomLeftComponent : GH_Component
 {
     public Pack2DBottomLeftComponent()
         : base("2D Bottom Left Pack", "BL Pack",
+            "PHASED OUT: superseded by Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap. Kept loadable for old canvases. " +
             "Greedy 2D irregular packing using RhinoCommon curves. Implements bottom-left fill (Baker, Coffman & Rivest 1980).",
             "Frahan", "2D Packing")
     {

@@ -58,7 +58,7 @@ public sealed class GCodeToPlanesComponent : GH_Component
             "Arc segments are discretised at Arc Step intervals; linear " +
             "segments emit one Plane per segment endpoint. Tool axis defaults " +
             "to -Z (downward milling).",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 

@@ -46,7 +46,7 @@ namespace Frahan.GH.Surface
             : base(
                 "Pack On Surface", "PackSurf",
                 "Packs 2D shapes onto a surface chart using freeform nesting, then lifts " +
-                "packed curves back to the 3D surface via barycentric mapping.",
+                "packed curves back to the 3D surface via barycentric mapping. [Floater 2003]",
                 "Frahan", "Surface Packing")
         {
         }

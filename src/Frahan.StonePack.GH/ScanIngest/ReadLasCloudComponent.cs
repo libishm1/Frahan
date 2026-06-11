@@ -42,7 +42,7 @@ public sealed class ReadLasCloudComponent
             "the full set. The LAS scale + offset are applied, so points are " +
             "in real-world coordinates. Runs on a background thread (Run gate); " +
             "the canvas stays responsive. Use upstream of Cloud ICP / Scale " +
-            "Calibrate.",
+            "Calibrate. [Isenburg 2013]",
             "Frahan", "Mesh")
     {
     }

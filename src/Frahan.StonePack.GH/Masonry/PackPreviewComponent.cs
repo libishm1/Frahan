@@ -42,6 +42,8 @@ namespace Frahan.GH.Masonry
         public override Guid ComponentGuid =>
             new Guid("D5E6F7A8-B9CA-4BCD-EF01-234567890123");
 
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
         protected override Bitmap Icon => IconProvider.Load("AssemblyState.png");
 
         protected override void RegisterInputParams(GH_InputParamManager p)

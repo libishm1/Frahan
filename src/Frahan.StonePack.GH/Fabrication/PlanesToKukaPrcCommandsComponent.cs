@@ -56,7 +56,7 @@ public sealed class PlanesToKukaPrcCommandsComponent : GH_Component
             "Plane->LIN/PTP/CIRC command construction + KRL code generation. " +
             "This wrapper IS the first FREE open-source G-code path into " +
             "KUKAprc (paid Generic NC Import is the only alternative).",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 

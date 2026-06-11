@@ -52,7 +52,7 @@ public sealed class TemplateBlockMatch3DComponent : GH_Component
             "mapping (stone -> cell) minimising total trim volume + post-trim " +
             "residual. Cost matrix per-cell evaluated via Component C3D in " +
             "dry-run mode. Same algorithm as Voussoir Stone Matcher (shared " +
-            "HungarianAssigner.cs).",
+            "HungarianAssigner.cs). [Kuhn 1955]",
             "Frahan", "EdgeMatch")
     {
     }

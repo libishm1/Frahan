@@ -38,7 +38,7 @@ namespace Frahan.GH.Masonry
                 "blocks sharing an interface get the same colour. Output " +
                 "is one integer per block (0-3 typically; up to 7 for " +
                 "non-planar topologies). Wire into native colour-mapping " +
-                "to drive visualization or material assignment.",
+                "to drive visualization or material assignment. [Welsh & Powell 1967]",
                 "Frahan", "Masonry")
         {
         }

@@ -91,7 +91,7 @@ public sealed class KintsugiAssemblyComponent : GH_Component
             "edge-matching pipeline used by Frahan Trencadís EdgeMatch. " +
             "Inspired by PuzzleFusion++ but no learned model; runs " +
             "entirely in-process. Best when fracture rims are clean " +
-            "and well-defined.",
+            "and well-defined. [Wang et al. 2025]",
             "Frahan", "Kintsugi")
     {
     }

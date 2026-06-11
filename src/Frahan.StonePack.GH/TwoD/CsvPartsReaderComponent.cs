@@ -52,7 +52,7 @@ public sealed class CsvPartsReaderComponent : GH_Component
             "(num,polygon rows where polygon is a JSON-ish [[x,y], ...]) " +
             "and emit one closed PolylineCurve per part (with the row's " +
             "multiplicity respected).",
-            "Frahan", "2D")
+            "Frahan", "2D Packing")
     {
     }
 

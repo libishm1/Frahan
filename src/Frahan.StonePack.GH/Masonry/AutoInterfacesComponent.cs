@@ -26,6 +26,8 @@ namespace Frahan.GH.Masonry
     /// </summary>
     [Algorithm("Interface auto-detector", "Frahan-original proximity-based pairwise contact detection")]
     [Algorithm("Power-of-10 hardening", "Holzmann NASA/JPL 2006 ten coding rules", Note = "Loop bounds + entry assertions")]
+    [RelatedComponent("Frahan > Masonry > Robust Auto Interfaces",
+        Reason = "Vertex-proximity detection for scan-derived meshes (slight gaps, non-planar contacts); use it when this polygon-based detector misses contacts.")]
         [DesignApplication(
         "Detects face-face contacts between a list of placed Slabs  and emits the corresponding MasonryInterfaces",
         DesignFlow.BottomUp,
@@ -37,7 +39,10 @@ namespace Frahan.GH.Masonry
                 "Auto Interfaces", "AutoIf",
                 "Detects face-face contacts between a list of placed Slabs " +
                 "and emits the corresponding MasonryInterfaces. Wire output " +
-                "into Masonry Assembly's Interfaces input.",
+                "into Masonry Assembly's Interfaces input. NOTE: generated " +
+                "walls carry exact joints via the Assembly output — detection " +
+                "is only needed for imported geometry; for scan-derived meshes " +
+                "use Robust Auto Interfaces.",
                 "Frahan", "Masonry")
         {
         }

@@ -72,7 +72,7 @@ public sealed class GCodeParserComponent : GH_Component
             "First production component bridging Stone-Aware Cut Export -> " +
             "KUKAprc / Robots / SprutCAM / RhinoCAM. Supports the RhinoCAM " +
             "3-axis dialect observed in the MRAC 2023 workshop.",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 

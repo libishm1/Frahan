@@ -246,7 +246,8 @@ public sealed class CgalQuarryDecomposeByMeshComponent : GH_Component
             "by intersecting it against a 3D grid of box cells via CGAL. " +
             "Empty cells are dropped automatically. Use this when the " +
             "plane-based Quarry Decompose does not apply because the " +
-            "quarry mesh is not convex. Implements CGAL PMP corefinement.",
+            "quarry mesh is not convex. Implements CGAL PMP corefinement. " +
+            "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
             "Frahan", "Quarry")
     {
     }

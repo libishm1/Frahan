@@ -40,7 +40,7 @@ namespace Frahan.GH.Masonry
                 "Computes a physically valid build order for a masonry " +
                 "assembly. A block is placed only after every block it " +
                 "rests on is already placed. Layer = course number " +
-                "(longest support path from ground).",
+                "(longest support path from ground). [Kim et al. 2024]",
                 "Frahan", "Masonry")
         {
         }

@@ -18,6 +18,8 @@ namespace Frahan.GH;
 /// Converts all inputs to polyline abstractions for robust containment on organic shapes.
 /// Non-blocking async solve.
 /// </summary>
+[RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
+    Reason = "SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap.")]
 [Algorithm("NFP-assisted bottom-left irregular nesting",
     "Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). \"Complete and robust no-fit polygon generation for the irregular stock cutting problem.\" Eur. J. Oper. Res.",
     Doi = "10.1016/j.ejor.2006.03.011",
@@ -30,6 +32,7 @@ public sealed class Pack2DIrregularSheetV506Component : GH_TaskCapableComponent<
 {
     public Pack2DIrregularSheetV506Component()
         : base("Freeform Sheet Nest", "FreeNest",
+            "PHASED OUT: superseded by Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap. Kept loadable for old canvases. " +
             "Packs closed planar parts into freeform sheet boundaries with holes using Frahan's V5.0.6 polygon-based nesting solver. " +
             "Supports organic sheet outlines, hole avoidance, spacing, rotation search, and non-blocking solve execution. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).",
             "Frahan", "2D Packing")

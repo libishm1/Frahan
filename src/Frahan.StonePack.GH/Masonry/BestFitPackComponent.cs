@@ -42,7 +42,7 @@ namespace Frahan.GH.Masonry
                 "scores every remaining stone by width / depth / height / " +
                 "aspect-ratio fit and picks the highest-scoring candidate. " +
                 "Companion to Ashlar Pack (which uses first-fit). Recommended " +
-                "for heterogeneous quarry inventories where stone sizes vary.",
+                "for heterogeneous quarry inventories where stone sizes vary. [Gramazio et al. 2017]",
                 "Frahan", "Masonry")
         {
         }

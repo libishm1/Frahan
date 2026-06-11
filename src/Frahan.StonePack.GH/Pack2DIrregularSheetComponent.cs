@@ -11,6 +11,8 @@ using Frahan.GH.Attributes;
 
 namespace Frahan.GH;
 
+[RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
+    Reason = "SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap.")]
 [DesignApplication(
     "Pack closed planar parts into irregular sheet outlines with optional per-sheet hole curves",
     DesignFlow.BottomUp,
@@ -27,6 +29,7 @@ public sealed class Pack2DIrregularSheetComponent : GH_Component
 {
     public Pack2DIrregularSheetComponent()
         : base("2D Irregular Sheet Pack", "Sheet Pack",
+            "PHASED OUT: superseded by Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap. Kept loadable for old canvases. " +
             "Pack closed planar parts into irregular sheet outlines with optional per-sheet hole curves. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).",
             "Frahan", "2D Packing")
     {

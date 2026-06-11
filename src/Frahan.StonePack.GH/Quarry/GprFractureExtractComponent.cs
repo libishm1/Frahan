@@ -57,7 +57,8 @@ public sealed class GprFractureExtractComponent : GH_Component
             "USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for " +
             "tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use " +
             "the preset). Outputs fracture picks, depths, confidence, and a depth-converted " +
-            "energy mesh. Note: Geoscanners .gsf must be exported to SEG-Y (GPRSoft) first.",
+            "energy mesh. Note: Geoscanners .gsf must be exported to SEG-Y (GPRSoft) first. " +
+            "Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.",
             "Frahan", "Quarry")
     {
     }

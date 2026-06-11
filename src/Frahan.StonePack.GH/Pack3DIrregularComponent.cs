@@ -9,6 +9,10 @@ using Frahan.GH.Attributes;
 
 namespace Frahan.GH;
 
+[RelatedComponent("Frahan > 3D Packing > Settle 3D (Physics)",
+    Reason = "EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.")]
+[RelatedComponent("Frahan > Masonry > Block Pack (Tree)",
+    Reason = "EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).")]
 [DesignApplication(
     "Deterministic heightmap packer for early irregular 3D packing workflows",
     DesignFlow.TopDown,
@@ -23,6 +27,7 @@ public sealed class Pack3DIrregularComponent : GH_Component
 {
     public Pack3DIrregularComponent()
         : base("Pack3D Irregular", "Pack3D",
+            "EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline. " +
             "Deterministic heightmap packer for early irregular 3D packing workflows. Implements deepest-left-bottom-fill packing (Chehrazad et al. 2025).",
             "Frahan", "3D Packing")
     {

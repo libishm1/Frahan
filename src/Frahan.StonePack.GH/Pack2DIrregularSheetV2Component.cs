@@ -19,6 +19,8 @@ namespace Frahan.GH;
 /// Runs the solver on a background thread via GH_TaskCapableComponent so Rhino
 /// stays responsive during long solves.
 /// </summary>
+[RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
+    Reason = "SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap.")]
 [Algorithm("NFP-assisted bottom-left irregular nesting",
     "Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). \"Complete and robust no-fit polygon generation for the irregular stock cutting problem.\" Eur. J. Oper. Res.",
     Doi = "10.1016/j.ejor.2006.03.011",
@@ -31,6 +33,7 @@ public sealed class Pack2DIrregularSheetV2Component : GH_TaskCapableComponent<Pa
 {
     public Pack2DIrregularSheetV2Component()
         : base("2D Freeform Sheet Pack", "Freeform Pack",
+            "PHASED OUT: superseded by Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap. Kept loadable for old canvases. " +
             "Pack any closed planar curves (freeform arcs, splines, polygons) into freeform " +
             "sheet outlines with optional holes. Non-blocking async solve. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).",
             "Frahan", "2D Packing")

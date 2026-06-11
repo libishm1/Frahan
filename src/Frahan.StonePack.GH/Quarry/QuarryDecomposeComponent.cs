@@ -35,7 +35,9 @@ namespace Frahan.GH.Masonry
                 "Quarry Decompose", "QuarryDc",
                 "Cuts a convex quarry Slab into a list of smaller convex Slabs " +
                 "by an orthogonal grid of fracture planes. Output flows into " +
-                "Ashlar Pack. Frahan-original method.",
+                "Ashlar Pack. Frahan-original method. Selection: convex pieces " +
+                "-> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell " +
+                "partition -> By Voronoi.",
                 "Frahan", "Quarry")
         {
         }

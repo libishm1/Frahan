@@ -64,7 +64,7 @@ public sealed class SoftIcp3DComponent : GH_Component
             "Kabsch over CPD soft correspondence + smooth penetration hinge. " +
             "The standalone primitive that EdgeMatch Solve / Kintsugi / Trencadis " +
             "/ Cyclopean Recipe / Voussoir Match all invoke internally; surface " +
-            "on the canvas to chain into any custom workflow.",
+            "on the canvas to chain into any custom workflow. [Myronenko & Song 2010]",
             "Frahan", "EdgeMatch")
     {
     }

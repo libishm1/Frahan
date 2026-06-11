@@ -17,6 +17,8 @@ namespace Frahan.GH;
 /// Converts all inputs to polyline abstractions at construction time; hot path is pure math.
 /// Fixes V2 candidate generation for non-convex and organic sheet outlines.
 /// </summary>
+[RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
+    Reason = "SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap.")]
 [Algorithm("NFP-assisted bottom-left irregular nesting",
     "Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). \"Complete and robust no-fit polygon generation for the irregular stock cutting problem.\" Eur. J. Oper. Res.",
     Doi = "10.1016/j.ejor.2006.03.011",
@@ -29,6 +31,7 @@ public sealed class Pack2DIrregularSheetV3Component : GH_TaskCapableComponent<Pa
 {
     public Pack2DIrregularSheetV3Component()
         : base("2D Freeform Sheet Pack V3", "Freeform V3",
+            "PHASED OUT: superseded by Freeform Sheet Nest (Exact NFP) 'FreeNestX' — mean 53.9% waste-cut vs V506 at strict 0-overlap. Kept loadable for old canvases. " +
             "Pack any closed planar curves into freeform sheet outlines. " +
             "Converts all inputs to polyline polygons for robust containment on organic shapes. " +
             "Non-blocking async solve. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).",
