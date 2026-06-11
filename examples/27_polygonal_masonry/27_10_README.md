@@ -3,10 +3,13 @@
 A complete stone building composed ON CANVAS and exported as ONE IFC4 file, live-validated 2026-06-11.
 
 ## Composition (architecturally explicit, no decorative filler)
-- **5 polygonal-masonry walls** from ONE Polygonal Wall (Generator) driven by LIST inputs (W/GridX/Seed
-  lists -> GH iterates the solver; one component, five walls) + one Rotate/Move (grafted) for placement.
-  Front wall = two jambs framing a 1.6 m portal.
-- **Portal arch**: 9 voussoirs (Arch Voussoirs D5F10012), springing z=2.0, embedded in the jambs.
+- **4 polygonal-masonry walls** from ONE Polygonal Wall (Generator) driven by LIST inputs (W/GridX/Seed
+  lists -> GH iterates the solver; one component, four walls) + one Rotate/Move (grafted) for placement.
+- **Integrated portal** (HITL iteration): the front wall is generated SOLID, then an arched opening is
+  CGAL-DIFFERENCED through its stones using the arch's exact profile — door box UNION extrados cylinder
+  (r = 1.15 = intrados 0.8 + ring 0.35; Cap Holes closes the stock cylinder, else CGAL corefinement fails
+  rc=-12 on open inputs). The 9-voussoir arch (D5F10012) then fills the cut exactly, bearing on the
+  trimmed stones — wall masonry continues over the extrados like a real portal.
 - **Tympanum infill**: 4 generated stone panels CGAL-INTERSECTED stone-by-stone with the dome sphere
   (Mesh CSG (CGAL), native backend, ~234 ms) — irregular trimmed blocks filling between the vault edge and
   the masonry, the Byzantine lunette practice. Empty boolean results are culled by the exporter
@@ -17,12 +20,13 @@ A complete stone building composed ON CANVAS and exported as ONE IFC4 file, live
 ## Per-element verification (sidesteps the ADMM ~50-interface ceiling)
 | Element | Verdict |
 |---|---|
-| 5 walls (exact-joint Assembly + CRA) | **5/5 STABLE** (list-driven: one checker iterates all five) |
+| 4 walls (exact-joint Assembly + CRA, pre-cut patterns) | **4/4 STABLE** (list-driven: one checker iterates all) |
 | Portal arch (9 voussoirs, local frame) | STABLE |
 | Pendentive dome (26 shells, local frame) | STABLE |
 
 ## The .ifc (STEP-verified)
-8 containers / 123 stone parts (288 KB): 6 IfcWall (5 keep walls + tympanum-infill container) +
+7 containers / 125 stone parts (309 KB): 5 IfcWall (4 keep walls incl. the portal-cut front + tympanum
+infill) +
 IfcElementAssembly(ARCH) with 9 voussoir IfcMembers + IfcElementAssembly(USERDEFINED "PendentiveVault")
 with 18+8 IfcMembers; 123 IfcTriangulatedFaceSet bodies + 123 Frahan_Stone psets; SI metres.
 
