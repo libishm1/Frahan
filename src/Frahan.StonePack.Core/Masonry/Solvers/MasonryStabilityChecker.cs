@@ -313,6 +313,12 @@ public static class MasonryStabilityChecker
     /// </summary>
     /// <param name="vertexCoordsXyz">Per stone: flat xyz triples.</param>
     /// <param name="triangleIndices">Per stone: flat triangle index triples.</param>
+    /// <summary>
+    /// Detector-path stability check. NOTE <paramref name="fixBelowZ"/> is a
+    /// TOLERANCE ABOVE THE LOWEST VERTEX of the whole assembly (blocks with
+    /// minZ &lt;= globalMinZ + fixBelowZ become supports), NOT an absolute
+    /// world-Z plane. Passing a negative value anchors nothing.
+    /// </summary>
     public static StabilityResult CheckMeshes(
         IReadOnlyList<IReadOnlyList<double>> vertexCoordsXyz,
         IReadOnlyList<IReadOnlyList<int>> triangleIndices,
@@ -369,6 +375,12 @@ public static class MasonryStabilityChecker
     /// to run <see cref="Check"/> or <see cref="CraStabilityChecker.Check"/>
     /// themselves.
     /// </summary>
+    /// <summary>
+    /// Build a MasonryAssembly via contact detection. NOTE
+    /// <paramref name="fixBelowZ"/> is a TOLERANCE ABOVE THE LOWEST VERTEX
+    /// (blocks with minZ &lt;= globalMinZ + fixBelowZ become supports), NOT an
+    /// absolute world-Z plane.
+    /// </summary>
     public static MasonryAssembly BuildAssemblyFromMeshes(
         IReadOnlyList<IReadOnlyList<double>> vertexCoordsXyz,
         IReadOnlyList<IReadOnlyList<int>> triangleIndices,
@@ -397,7 +409,8 @@ public static class MasonryStabilityChecker
             minZ[i] = mz;
             if (mz < globalMinZ) globalMinZ = mz;
         }
-        var interfaces = MeshContactDetector.Detect(snapshots, ids, contactDistanceTol, contactAngleTolDeg);
+        var interfaces = MeshContactDetector.Detect(
+            snapshots, ids, contactDistanceTol, contactAngleTolDeg); // coplanar resolver ON by default (KB-9)
         var blocks = new List<MasonryBlock>(n);
         var fixedIds = new List<string>();
         for (int i = 0; i < n; i++)

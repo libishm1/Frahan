@@ -159,7 +159,7 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 - Carving Stages must stay synchronous + cached; do not reorder its inputs (breaks saved files).
 - In-process CGAL/geogram BOOLEAN can crash Rhino; route heavy boolean/recon through the out-of-process worker.
 
-## KB-9 — Penalty-RBE ADMM fails on inclined-contact systems (compas_cra parity gap) [OPEN, 2026-06-11]
+## KB-9 — Detector under-covers exact-coplanar contacts; looked like ADMM failure [RESOLVED 2026-06-11]
 The compas_cra parity benchmark (tests/CraCompasParityTests.cs, exact ports of their doc examples) found the
 ADMM penalty path returns SolverError on systems whose contacts are all INCLINED, regardless of size or
 density: 04_stacks (3 unit cubes tilted 20 deg about Y — 2 free blocks, 2 interfaces, the smallest repro) and
@@ -171,3 +171,23 @@ solves all four. Suspects: detector-path interface frames/vertex ordering on inc
 ill-conditioned equality rows; penalty-formulation conditioning under inclined cones; missing polish/warm
 start. Fixtures are registered and SKIP loudly as "KNOWN PARITY GAP KB-9" until fixed. Fix item =
 EVOLUTION_PLAN_COLLAB_READY Block 3 item "ADMM conditioning" (now with minimal repros).
+
+KB-9 RESOLUTION (2026-06-11, same day): root cause was NOT the solver. MeshContactDetector's pure
+proximity sweep under-covers EXACT coplanar face-face contacts — the contact polygon came out as a
+pentagon of triangle centroids / edge midpoints biting INTO the true quad (unit-square cube contact
+detected as {(0,.5),(-1/6,1/6),(1/6,-1/6),(.5,0),(.5,.5)}). The shrunken, asymmetric polygons make
+statically fine assemblies geometrically infeasible, which the penalty-ADMM reports as non-convergence.
+Proof chain: equality system consistent (LS residual ~1e-9); same arch with handmade exact 4-vertex
+joints -> CRA CERTIFIED in 1 iter; same arch with the existing-but-default-off coplanar-coincidence
+resolver -> CERTIFIED. FIX: useCoplanarResolver now defaults ON in MeshContactDetector.Detect (and the
+checker paths). compas_cra parity: 5/5, full battery 1020/0. The diagnostic probes remain as canaries
+(Kb9DiagnosticsTests). ALSO fixed en route: a fixture trap — fixBelowZ is a tolerance ABOVE the lowest
+vertex, not an absolute plane (docs added to CheckMeshes/BuildAssemblyFromMeshes; negative values anchor
+nothing).
+
+## KB-10 — Exact-joint ADMM conditioning at ~50+ interfaces [OPEN, 2026-06-11]
+Distinct from KB-9 (which was detector-path-only): the 6x4 generated wall (53 interfaces, EXACT-joint
+assembly path, clean 4-vertex quads) returned SolverError during card 27_09 authoring while the 5x3 wall
+(30 ifaces) certifies in 1 iter. Repro: PolygonalWallGenerator GridX=6 GridY=4 -> Assembly -> penalty-RBE.
+Suspects: penalty conditioning / rho adaptation at scale; LS-first warm start (the CRA path trick) not
+applied to the plain RBE pre-step. Workaround stands: per-element verification (castle card 27_10).

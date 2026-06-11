@@ -33,6 +33,15 @@ namespace Frahan.Masonry.Interfaces;
 //   - Non-axis-aligned contact normals.
 //   - Mild non-planarity in the contact region (plane fit smooths it).
 //
+// KB-9 (2026-06-11, RESOLVED): on EXACT coplanar face-face contacts the pure
+// proximity sweep under-covers the true contact polygon (it reconstructs
+// centroid/edge-midpoint pentagons biting INTO the real quad), which makes
+// statically fine assemblies look infeasible to the equilibrium QP (the
+// compas_cra parity arch). The coplanar-coincidence resolver computes the
+// true 2D triangle-pair intersections and is therefore ON BY DEFAULT now;
+// disable it only for huge scan meshes where the triangle-pair sweep is too
+// expensive and contacts are never exactly coplanar anyway.
+//
 // Reference: IBOIS EPFL Cockroach digital-twin pipeline (point-cloud →
 // per-stone mesh → buffered-intersection contact → assembly graph).
 // =============================================================================
@@ -75,7 +84,7 @@ public static class MeshContactDetector
         double angleTolDeg = DefaultAngleTolDeg,
         int minContactPoints = DefaultMinContactPoints,
         double adaptiveToleranceFactor = 0.0,
-        bool useCoplanarResolver = false)
+        bool useCoplanarResolver = true)
     {
         if (meshes == null) throw new ArgumentNullException(nameof(meshes));
         if (blockIds == null) throw new ArgumentNullException(nameof(blockIds));
@@ -704,6 +713,8 @@ public static class MeshContactDetector
 
         var hull = ConvexHull2D(pts2d);
         if (hull.Count < 3) return;
+        hull = WeldHull(hull);
+        if (hull.Count < 3) return;
         if (PolygonArea2D(hull) < EpsArea) return;
 
         // Lift hull back to 3D.
@@ -856,6 +867,81 @@ public static class MeshContactDetector
 
     private static double Cross((double U, double V) o, (double U, double V) a, (double U, double V) b) =>
         (a.U - o.U) * (b.V - o.V) - (a.V - o.V) * (b.U - o.U);
+
+    /// <summary>
+    /// Hull hygiene (KB-9): the clipped triangle soup reconstructs the same
+    /// physical contact corner several times, micrometres apart; the convex
+    /// hull then keeps 5-6 vertices where the geometry has 4, and the
+    /// near-duplicate force columns ill-condition the equilibrium QP (the
+    /// penalty-ADMM diverges on systems the same physics solves instantly
+    /// with clean polygons). Weld consecutive vertices closer than 1e-3 of
+    /// the hull diameter, then cull near-collinear vertices, both RELATIVE
+    /// tolerances so the pass is scale-free.
+    /// </summary>
+    private static List<(double U, double V)> WeldHull(List<(double U, double V)> hull)
+    {
+        int n = hull.Count;
+        if (n < 3) return hull;
+        double minU = double.MaxValue, maxU = double.MinValue;
+        double minV = double.MaxValue, maxV = double.MinValue;
+        for (int i = 0; i < n; i++)
+        {
+            if (hull[i].U < minU) minU = hull[i].U;
+            if (hull[i].U > maxU) maxU = hull[i].U;
+            if (hull[i].V < minV) minV = hull[i].V;
+            if (hull[i].V > maxV) maxV = hull[i].V;
+        }
+        double du = maxU - minU, dv = maxV - minV;
+        double diam = Math.Sqrt(du * du + dv * dv);
+        if (diam < 1e-12) return hull;
+        double weld2 = (1e-3 * diam) * (1e-3 * diam);
+
+        // 1) weld consecutive near-duplicates (including the wrap-around pair)
+        var welded = new List<(double U, double V)>(n);
+        for (int i = 0; i < n; i++)
+        {
+            if (welded.Count == 0) { welded.Add(hull[i]); continue; }
+            var p = welded[welded.Count - 1];
+            double dx = hull[i].U - p.U, dy = hull[i].V - p.V;
+            if (dx * dx + dy * dy > weld2) welded.Add(hull[i]);
+        }
+        while (welded.Count >= 3)
+        {
+            var first = welded[0];
+            var last = welded[welded.Count - 1];
+            double dx = first.U - last.U, dy = first.V - last.V;
+            if (dx * dx + dy * dy > weld2) break;
+            welded.RemoveAt(welded.Count - 1);
+        }
+        if (welded.Count < 3) return welded;
+
+        // 2) cull near-collinear vertices: a vertex whose deviation from the
+        // prev->next chord is below 1e-4 of the hull diameter is clip dirt
+        // (e.g. an edge midpoint protruding by micrometres), not geometry.
+        double devTol = 1e-4 * diam;
+        bool removed = true;
+        while (removed && welded.Count > 3)
+        {
+            removed = false;
+            for (int i = 0; i < welded.Count && welded.Count > 3; i++)
+            {
+                var prev = welded[(i - 1 + welded.Count) % welded.Count];
+                var cur = welded[i];
+                var next = welded[(i + 1) % welded.Count];
+                double chordU = next.U - prev.U, chordV = next.V - prev.V;
+                double chordLen = Math.Sqrt(chordU * chordU + chordV * chordV);
+                if (chordLen < 1e-12) continue;
+                double dev = Math.Abs(Cross(prev, cur, next)) / chordLen;
+                if (dev < devTol)
+                {
+                    welded.RemoveAt(i);
+                    removed = true;
+                    i--;
+                }
+            }
+        }
+        return welded;
+    }
 
     private static double PolygonArea2D(List<(double U, double V)> poly)
     {

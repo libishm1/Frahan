@@ -348,6 +348,10 @@ var tests = new List<(string Name, Action Body)>
     ("compas_cra parity tutorial_cubes both stable", CraCompasParityTests.Compas_TutorialCubes_BothStable),
     ("compas_cra parity 04_stacks 20deg both stable", CraCompasParityTests.Compas_Stacks20Deg_BothStable),
     ("compas_cra parity 06_arch n=20 mu=0.7 both stable (timed)", CraCompasParityTests.Compas_Arch20_BothStable_Timed),
+    ("kb9 diagnostics tilt sweep (prints, never fails)", Kb9DiagnosticsTests.Kb9_TiltSweep_EqualityConsistency),
+    ("kb9 diagnostics arch forensics (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_Forensics),
+    ("kb9 diagnostics arch CLEAN joints (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_CleanJoints),
+    ("kb9 diagnostics arch coplanar-resolver (prints, never fails)", Kb9DiagnosticsTests.Kb9_Arch_CoplanarResolver),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)

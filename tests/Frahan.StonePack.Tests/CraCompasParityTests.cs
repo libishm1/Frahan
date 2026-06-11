@@ -79,13 +79,13 @@ static class CraCompasParityTests
             coords.Add(RotateY(v, 20.0 * Math.PI / 180.0));
             tris.Add(t);
         }
-        ExpectStableOrKnownGap(coords, tris, mu: 0.84, fixBelowZ: -0.1, "04_stacks (20 deg)");
+        AssertBothStable(coords, tris, mu: 0.84, fixBelowZ: 0.01, "04_stacks (20 deg)");
     }
 
     public static void Compas_Arch20_BothStable_Timed()
     {
         var (coords, tris) = CompasArch(height: 5, span: 10, thickness: 0.5, depth: 0.5, n: 20);
-        ExpectStableOrKnownGap(coords, tris, mu: 0.7, fixBelowZ: 0.01, "06_arch (n=20, mu=0.7)");
+        AssertBothStable(coords, tris, mu: 0.7, fixBelowZ: 0.01, "06_arch (n=20, mu=0.7)");
     }
 
     // ─── shared assertion + bench ────────────────────────────────────────
