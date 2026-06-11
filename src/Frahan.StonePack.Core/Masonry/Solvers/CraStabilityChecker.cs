@@ -366,8 +366,19 @@ public static class CraStabilityChecker
         }
         else
         {
+            // KB-11 (2026-06-11): warm-start the constrained ADMM at the
+            // unconstrained LS optimum (already computed, just inequality-
+            // infeasible). It is far closer to the constrained solution than a
+            // cold start, which fixes the large-fixture stall (the bridge:
+            // status was non-Optimal at iteration 3 cold). A second pass with a
+            // longer budget + looser tolerance is the robustness fallback —
+            // this is a FEASIBILITY certificate, so a coarse optimum suffices.
             var qp = new ConvexQpProblem(n, h, c, null, null, aIneq, bIneq, lb, ub);
-            var sol = new AdmmQpSolver(epsAbs: 1e-6, epsRel: 1e-5, maxIterations: 6000).Solve(qp);
+            var sol = new AdmmQpSolver(epsAbs: 1e-6, epsRel: 1e-5, maxIterations: 6000)
+                .Solve(qp, xLs);
+            if (sol.Status != ConvexQpStatus.Optimal)
+                sol = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4, maxIterations: 20000)
+                    .Solve(qp, sol.X ?? xLs);
             if (sol.Status != ConvexQpStatus.Optimal) return false;
             xSol = sol.X;
         }

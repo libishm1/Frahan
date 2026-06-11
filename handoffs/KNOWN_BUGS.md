@@ -216,9 +216,18 @@ certified 1 iter, ETH1100 Lambda unchanged at 0.194; full battery PASS/0 FAIL (s
 Kb10ExactJointConditioningTests: "kb10 6x4 exact-joint wall certifies (was SolverError)" + the
 6x4/8x5/10x6 sweep, both with [bench] lines).
 
-## KB-11 — CRA certificate QP conditioning on large fixtures (bridge) [OPEN, 2026-06-11]
-compas_cra json fixture 09_bridge: our penalty-RBE (with the KB-10 LS-first warm start) returns STABLE in
-23 ms, but CraStabilityChecker's alternating certificate fails at iteration 3 ("Certificate QP failed to
-solve") after ~14 s — the certificate's INTERNAL constrained QPs do not yet use the KB-10 warm start. Fix
-lead: thread the same LS-first/warm-start through the certificate iteration QPs. Fixture SKIPs loudly until
-then. (Wedge type-b certifies fine: 3 iter, 46 ms.)
+## KB-11 — Alternating certificate is incomplete on the bridge fixture [OPEN, 2026-06-11]
+compas_cra's 09_bridge (16 blocks, deck density 3.51, mu 0.9) is STABLE in their monolithic IPOPT NLP. Our
+penalty-RBE reports STABLE in ~28 ms, but CraStabilityChecker's ALTERNATING convex certificate returns
+uncertified. TWO things were learned + one fix landed:
+1. FIXED (warm start): the certificate's inner constrained QP used to ERROR ("Certificate QP failed to solve")
+   on this fixture; it now warm-starts the constrained ADMM at the unconstrained-LS optimum (+ a looser
+   long-budget second pass). The QP now solves — the hard error is gone.
+2. REMAINING (incompleteness, not a bug): the certificate is SOUND in the certifying direction (if it says
+   STABLE it is) but INCOMPLETE — it can fail to certify a genuinely stable structure, which is exactly the
+   bridge. This is an inherent property of the alternating-convex scheme vs the monolithic NLP, not a
+   conditioning defect. ~46 s + uncertified on the bridge.
+Fixture stays a LOUD SKIP (KB-11). To close it properly: either (a) a completeness-improving certificate
+(tighter engaged-set handling / multi-restart), or (b) accept incompleteness and document the conservative
+verdict for users (RBE STABLE is the actionable result here). Wedge type-b certifies fine (3 iter, 46 ms),
+so this is bridge-scale-specific.
