@@ -1,0 +1,1514 @@
+INFO Rhino native loader: C:\Program Files\Rhino 8\System
+PASS R3 ForV506 construction succeeds (Rhino)
+PASS R3 ForV506 null sheetOutlines throws
+PASS R3 ForV506 null sheetHoles throws
+PASS R3 ForV1 construction succeeds (Rhino)
+PASS R3 ForV1 null sheetOutlines throws
+PASS R3 ForV1 null sheetHoles throws
+PASS R3 ForV2 construction succeeds (Rhino)
+PASS R3 ForV2 null sheetOutlines throws
+PASS R3 ForV2 null sheetHoles throws
+PASS R3 ForV3 construction succeeds (Rhino)
+PASS R3 ForV3 null sheetOutlines throws
+PASS R3 ForV3 null sheetHoles throws
+PASS R3 V506 façade equals legacy on empty inputs (Rhino)
+PASS R3 V1 façade equals legacy on empty inputs (Rhino)
+PASS R3 V2 façade equals legacy on empty inputs (Rhino)
+PASS R3 V3 façade equals legacy on empty inputs (Rhino)
+PASS R3 ForVariant V1 routes to V1 façade (Rhino)
+PASS R3 ForVariant V2 routes to V2 façade (Rhino)
+PASS R3 ForVariant V3 routes to V3 façade (Rhino)
+PASS R3 ForVariant V506 routes to V506 façade (Rhino)
+PASS R3 ForVariant invalid enum throws
+PASS R3 unified component ComponentGuid is expected value
+PASS R3 unified component metadata (name/nick/category)
+PASS R3 unified component has 16 inputs and 11 outputs
+PASS Boundary-aware unified component inputs 12/13/14 are BMode/BAff/DTol
+PASS R3 unified component last input is Variant
+PASS R3 unified component last output is Variant Used
+PASS R3 async unified component ComponentGuid is expected value
+PASS R3 async unified component has 12 inputs and 9 outputs
+PASS R3 async unified component NickName is FreeNestUA
+SKIP SheetHolesUtil per-sheet branches routes by path (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil flat list routes by PIP (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil mismatched path PIP overrides (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil out-of-range path PIP recovers (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil disjoint hole falls back to path (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil empty tree returns empty buckets (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP SheetHolesUtil single sheet any branch falls through (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=0 preserves geometric order (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=1 boundary-worthy part placed first (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=1 no affinity falls back to area sort (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=1 construction does not throw (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=2 construction does not throw (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=2 boundary-worthy lands on edge (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=2 falls back when boundary saturated (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Boundary-aware mode=1 auto-tunes to part scale (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS plan report Build null metrics throws
+PASS plan report Build all null except metrics empty
+PASS plan report Build sums residual void areas
+PASS plan report Build flattens per-fragment edge scores and averages
+PASS plan report Build tolerant to null void entries
+PASS plan report ToString is human readable
+PASS recon cleanup drops isolated spike, keeps largest component
+PASS recon cleanup drops degenerate + duplicate triangles
+PASS recon cleanup Translate adds centroid back
+PASS recon recenter+translate round-trips at quarry scale
+PASS recon cleanup null/empty is safe
+PASS overburden constant depth = area*depth
+PASS overburden sloped all-positive uses mean depth
+PASS overburden sign change splits cut/fill exactly
+PASS overburden net = mean*area invariant
+PASS overburden quarry-scale recenter keeps area exact
+PASS overburden two-triangle square sums both
+PASS overburden null/bad inputs throw
+PASS Overburden To Rock Face component metadata
+PASS plan report component ComponentGuid is expected value
+PASS plan report component metadata (name/category)
+PASS plan report component has 4 inputs and 4 outputs
+PASS plan report component fourth input is Edge Match Tree
+PASS plan report component third input still item-access
+PASS matcher MatchEdge null index throws
+PASS matcher MatchEdge null query throws
+PASS matcher MatchEdge null options throws
+PASS matcher MatchEdge null converter throws
+PASS matcher MatchEdge empty index returns empty
+PASS matcher MatchEdge perfect match scores highest
+PASS matcher MatchEdge results sorted descending
+PASS matcher MatchEdge preserveZone=true excludes other zones
+PASS matcher MatchEdge preserveZone=false includes other zones
+PASS matcher MatchEdge length radius 0 excludes far length
+PASS matcher MatchEdge MinAffinityScore filters low matches
+PASS matcher MatchEdge TopK limits results
+PASS matcher MatchEdge TopK=0 returns all
+PASS matcher MatchEdge converter throws skips candidate
+PASS matcher MatchFragment null fragment throws
+PASS matcher MatchFragment returns one list per edge
+PASS descriptors EdgeDescriptor negative length throws
+PASS descriptors EdgeDescriptor ToEdgeKey quantises all four
+PASS descriptors EdgeDescriptor negative angle wraps to 360
+PASS descriptors FragmentDescriptor null id throws
+PASS descriptors FragmentDescriptor null edges becomes empty
+PASS descriptors Scorer identical edges is 1
+PASS descriptors Scorer opposite angle is 0
+PASS descriptors Scorer different zones preserveZone=true is 0
+PASS descriptors Scorer different zones preserveZone=false is non-zero
+PASS descriptors Scorer null argument throws
+PASS descriptors AngleDistance 350 vs 10 is 20
+PASS metrics Compute null throws
+PASS metrics Compute empty result returns zero metrics
+PASS metrics Compute mixed result computes all fields
+PASS metrics Report ToString is human readable
+PASS flatness Classify null list throws
+PASS flatness Classify non-positive threshold throws
+PASS flatness Classify empty list has zero faces
+PASS flatness Classify all inside threshold none flagged
+PASS flatness Classify one above threshold flagged correctly
+PASS flatness Classify low ratio treated as distorted too
+PASS flatness Classify worst face is highest normalised distortion
+PASS flatness Classify zero ratio treated as infinitely distorted
+PASS mesh diag VertexCount null returns zero
+PASS mesh diag FaceCount null returns zero
+PASS mesh diag IsClosed null returns false
+PASS mesh diag IsManifold null returns false
+PASS mesh diag AverageEdgeLength null returns zero
+PASS mesh diag BoundingBoxVolume null returns zero
+SKIP mesh diag Counts single triangle returns expected (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP mesh diag IsClosed single triangle is false (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP mesh diag BoundingBoxVolume flat triangle is zero (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP mesh diag AverageEdgeLength unit triangle is expected (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS rail builder ctor non-positive window throws
+PASS rail builder ctor non-positive step throws
+PASS rail builder ctor non-positive length bucket throws
+PASS rail builder ctor non-positive angle bucket throws
+PASS rail builder IntervalInfo null curve throws
+SKIP rail builder BucketInterval length bucket quantises (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP rail builder BucketInterval angle horizontal is bucket 0 (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP rail builder BucketInterval angle vertical is expected bucket (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP rail builder BucketInterval negative angle wraps to 360 (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS rail builder BucketInterval null interval throws
+SKIP rail builder BucketInterval deterministic for same input (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP rail builder BuildInterval populates fields (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS rail builder BuildInterval null curve throws
+SKIP rail builder AddCurve populates index (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS rail builder AddCurve null boundary throws
+SKIP rail builder AddCurve null index throws (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS residual voids ctor non-positive cell size throws
+PASS residual voids ctor negative min area throws
+PASS residual voids empty sheet returns one full void
+PASS residual voids fully covered sheet returns zero voids
+PASS residual voids single corner hole returns one void
+PASS residual voids two separated voids returns two
+PASS residual voids min area filter removes small voids
+PASS residual voids L-shape sheet respects concave outline
+PASS residual voids null sheet throws
+PASS residual voids null placed-parts list throws
+PASS residual voids degenerate sheet throws
+PASS native bridge BackendDiagnostic stores level and message
+PASS native bridge BackendDiagnostic null message throws
+PASS native bridge BackendOperationResult basic construction
+PASS native bridge BackendOperationResult null diagnostics gives empty list
+PASS native bridge ManagedGeometry is always available
+PASS native bridge ManagedGeometry Repair round-trips input
+PASS native bridge ManagedGeometry Simplify round-trips input
+PASS native bridge ManagedGeometry Simplify ratio out-of-range throws
+PASS native bridge ManagedPacking BuildCollisionProxy returns input
+PASS native bridge ManagedPacking null input throws
+PASS native bridge Loader never throws on missing native
+PASS native bridge Loader GetSearchPaths returns at least one
+PASS native bridge Loader caches geometry backend
+PASS native bridge Loader forceReload produces new instance
+PASS native bridge Loader preference managed returns managed and skips probe
+PASS native bridge Loader geometry probe report populated after Choose
+PASS native bridge Loader packing probe report populated after Choose
+PASS native bridge Loader bogus DLL in search path does not throw and records LoadFailed
+PASS native bridge Loader FRAHAN_BACKEND managed keyword returns managed
+PASS masonry block null id throws
+PASS masonry block null vertex coords throws
+PASS masonry block negative density throws
+PASS masonry block vertex and triangle counts are consistent
+PASS masonry block bad triangle index throws
+PASS masonry block vertex coords length not multiple of 3 throws
+PASS masonry contact vertex stores coordinates
+PASS masonry contact vertex equality and hash are consistent
+PASS masonry interface null polygon throws
+PASS masonry interface polygon too small throws
+PASS masonry interface same block ids throws
+PASS masonry interface stores frame vectors
+PASS masonry boundary conditions IsFixed false for unknown id
+PASS masonry boundary conditions IsFixed true for known id
+PASS masonry boundary conditions null enumerable throws
+PASS masonry assembly stores blocks and interfaces
+PASS masonry assembly duplicate block id throws
+PASS masonry assembly interface referencing unknown block throws
+PASS masonry assembly null boundary conditions throws
+PASS masonry assembly FreeBlocks excludes fixed
+PASS masonry sparse COO ToDense round-trips triples
+PASS masonry sparse COO Add zero does not increment nnz
+PASS masonry sparse COO out-of-bounds row throws
+PASS masonry block COM unit cube volume-weighted is center
+PASS masonry block COM unit cube vertex-mean is center
+PASS masonry block COM degenerate falls back to vertex mean
+PASS masonry equilibrium one free block on ground Aeq shape
+PASS masonry equilibrium penalty shift doubles normal columns
+PASS masonry equilibrium gravity populates Z-force row
+PASS masonry equilibrium normal forces only contribute to Z-force for flat horizontal interface
+PASS masonry equilibrium tangent moment arm is correct
+PASS masonry equilibrium two stacked blocks both free has two block rows
+PASS masonry friction cone null equilibrium throws
+PASS masonry friction cone non-positive mu throws
+PASS masonry friction cone face count below 3 throws
+PASS masonry friction cone one free block 4 faces has 16 rows
+PASS masonry friction cone one free block 8 faces has 32 rows
+PASS masonry friction cone 4-face coefficients are exact integer
+PASS masonry friction cone penalty mode splits normal into pair
+PASS masonry friction cone default mu is 0.84
+PASS masonry RBE QP null equilibrium throws
+PASS masonry RBE QP variable count matches Aeq col count
+PASS masonry RBE QP Hessian is scaled identity
+PASS masonry RBE QP linear objective is zero
+PASS masonry RBE QP equality RHS is -B
+PASS masonry RBE QP normal columns LB=0 tangents unbounded
+PASS masonry RBE QP no friction inequality is null
+PASS masonry QP solver equality only two vars finds midpoint
+PASS masonry QP solver bounds only one active gives active corner
+PASS masonry QP solver equality and bounds projects on simplex edge
+PASS masonry QP solver equality clamps bound active
+PASS masonry QP solver inequality half-space projection
+PASS masonry QP solver non-diagonal hessian returns NotImplemented
+PASS masonry QP solver non-zero linear objective returns NotImplemented
+PASS masonry QP solver scaled identity hessian still works
+PASS masonry QP solver null problem throws
+PASS masonry QP solver ctor non-positive tolerance throws
+PASS wallgen power diagram tiles the rectangle
+PASS wallgen is deterministic for a fixed seed
+PASS wallgen Lloyd relaxation reduces area spread
+PASS wallgen sliver cull off reports zero
+PASS wallgen interlock score in range across coursing
+PASS wallgen size grading widens area distribution
+PASS stability two-box stack is stable
+PASS stability floating block is unstable
+PASS stability cantilever beyond support is unstable
+PASS stability inscribed friction shrinks mu by cos(pi/K)
+PASS stability generated coursed wall prisms are stable
+      [bench] 40-stone wall: STABLE in 714 ms (125 ifaces, 547 verts)
+PASS stability 40-stone wall benchmark (sparse ADMM)
+      [bench] 40-stone wall (adjacency joints): STABLE in 454 ms (95 ifaces, 380 verts vs detector 125/612)
+PASS stability 40-stone wall via adjacency assembler (P1.2)
+PASS CRA two-box stack is certified
+PASS CRA cantilever is unstable
+PASS CRA H-model: RBE accepts, CRA rejects (Kao counterexample)
+      [bench] CRA wall (15 stones): certified=True residual=0.37e iters=1 in 49 ms
+PASS CRA generated wall is certified
+PASS Lambda identical inventory near zero
+PASS Lambda inflated inventory matches analytic + identity recovery
+PASS Lambda monotonic in stock coarseness
+PASS Lambda extra inventory reports unused stones
+      [bench] ETH1100 rubble -> 15-cell wall: Lambda=0.194 meanGap=0.222 placed=15 unused=30 (45 stones, 2239 ms) [Cyclopean carve-back datum: 0.27]
+PASS Lambda ETH1100 real rubble on generated wall (skips without dataset)
+PASS carve-back inflated inventory exact analytic
+PASS carve-back exact refines the voxel estimate
+PASS carve-back identity placements exact analytic 1.25
+      [bench] compas_cra parity 00_simple_cube: RBE STABLE 0 ms | CRA STABLE CERTIFIED 0 ms (1 iter)
+PASS compas_cra parity 00_simple_cube both stable
+      [bench] compas_cra parity tutorial_cubes: RBE STABLE 0 ms | CRA STABLE CERTIFIED 0 ms (1 iter)
+PASS compas_cra parity tutorial_cubes both stable
+      [bench] compas_cra parity 04_stacks (20 deg): RBE STABLE 1 ms | CRA STABLE CERTIFIED 0 ms (1 iter)
+PASS compas_cra parity 04_stacks 20deg both stable
+      [bench] compas_cra parity 06_arch (n=20, mu=0.7): RBE STABLE 70 ms | CRA STABLE CERTIFIED 327 ms (1 iter)
+PASS compas_cra parity 06_arch n=20 mu=0.7 both stable (timed)
+      [kb9] tilt    0 deg: free 2, A 12x30, LSresidual(rel) 6.163e-10, verdict STABLE | v5 n=(0.00,0.00,1.00) ; v5 n=(0.00,0.00,1.00)
+      [kb9] tilt    5 deg: free 2, A 12x30, LSresidual(rel) 5.097e-10, verdict STABLE | v5 n=(0.09,0.00,1.00) ; v5 n=(0.09,0.00,1.00)
+      [kb9] tilt   10 deg: free 2, A 12x30, LSresidual(rel) 2.393e-10, verdict STABLE | v5 n=(0.17,0.00,0.98) ; v5 n=(0.17,0.00,0.98)
+      [kb9] tilt   15 deg: free 2, A 12x30, LSresidual(rel) 4.335e-10, verdict STABLE | v5 n=(0.26,0.00,0.97) ; v5 n=(0.26,0.00,0.97)
+      [kb9] tilt   20 deg: free 2, A 12x30, LSresidual(rel) 3.318e-10, verdict STABLE | v5 n=(0.34,0.00,0.94) ; v5 n=(0.34,0.00,0.94)
+PASS kb9 diagnostics tilt sweep (prints, never fails)
+      [kb9] arch: free 18/20, ifaces 19, A 108x267, LSresidual(rel) 8.359e-9, polyverts [5,5,4,4,4,4,5,5,5,5,5,5,4,5,5,5,4,5,5]
+PASS kb9 diagnostics arch forensics (prints, never fails)
+      [kb9] arch CLEAN joints: RBE STABLE 20 ms | CRA STABLE CERTIFIED 38 ms (1 iter) | RBE-stable: admissible compressive force state (max compression 7.865, worst friction utilization 0.92, residual tension 0e0).
+PASS kb9 diagnostics arch CLEAN joints (prints, never fails)
+      [kb9] arch RESOLVER on: ifaces 19 polyverts [5,5,4,4,4,4,5,5,5,5,5,5,4,5,5,5,4,5,5] | RBE STABLE 60 ms | CRA STABLE CERTIFIED 331 ms (1 iter)
+PASS kb9 diagnostics arch coplanar-resolver (prints, never fails)
+SKIP settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS IFC export wall round-trip (xBIM)
+PASS IFC export arch + cladding containers (xBIM)
+PASS IFC export multi-container building round-trip (xBIM, P7)
+PASS masonry GH MasonryBlockComponent ComponentGuid is expected (Rhino)
+PASS masonry GH MasonryBlockComponent metadata is correct (Rhino)
+PASS masonry GH MasonryBlockComponent has expected input/output count (Rhino)
+PASS masonry GH MasonryBlockComponent second output is Id text (Rhino)
+PASS masonry GH AssemblyPreviewComponent ComponentGuid (Rhino)
+PASS masonry GH AssemblyPreviewComponent metadata (Rhino)
+PASS masonry GH AssemblyPreviewComponent has expected input/output count (Rhino)
+PASS RigidTransform identity recovers identity
+PASS RigidTransform pure translation recovers t
+PASS RigidTransform pure rotation Z recovers 90deg
+PASS RigidTransform rotation+translation round trips
+PASS RigidTransform null source throws
+PASS RigidTransform mismatched lengths throws
+PASS RigidTransform fewer than 3 pairs throws
+PASS GH BlockGroundTransforms metadata (Rhino)
+PASS GH BlockGroundTransforms optional inputs (Rhino)
+PASS Registration SolveFromPoints identity recovers identity
+PASS Registration SolveFromPoints translation recovers t
+SKIP Registration SolveFromPoints rotation+translation round trips (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS Registration SolveFromPoints noisy markers non-zero rms
+PASS Registration SolveFromPoints mismatched counts throws
+PASS Registration SolveFromPoints fewer than 3 pairs throws
+PASS Georef LLH ECEF round-trip preserves position
+PASS Georef ENU ECEF round-trip preserves position
+PASS Georef UTM LLH round-trip preserves position
+PASS ScanIngest OBJ single triangle parses one mesh
+PASS ScanIngest OBJ quad fan-triangulates to two tris
+PASS ScanIngest OBJ triplet face syntax keeps vertex index
+PASS ScanIngest OBJ two groups produces two meshes
+PASS ScanIngest OBJ negative face index resolves
+PASS ScanIngest OBJ no faces throws
+PASS ScanIngest STL ASCII tetra produces welded mesh
+PASS ScanIngest STL binary single triangle parses
+PASS ScanIngest dispatcher detects by extension
+PASS ScanIngest dispatcher forced format overrides extension
+PASS ScanIngest dispatcher missing file throws
+SKIP ScaleCal identity factor one (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP ScaleCal mm-to-m factor thousand (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP ScaleCal km-to-m factor tenth (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP ScaleCal transform is uniform and origin-centred (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS ScaleCal negative measured throws
+PASS ScaleCal zero reference throws
+PASS ScaleCal null curve throws
+SKIP ScaleCal line curve length matches (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS StonePrep null mesh throws
+SKIP StonePrep box mesh produces descriptor (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP StonePrep repair disabled trace says so (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP StonePrep decimate drops triangle count (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP StonePrep batch with nulls preserves positions (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS PackOverlap null input throws
+SKIP PackOverlap single stone zero fraction (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackOverlap disjoint stones zero fraction (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackOverlap contained stone high fraction (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS PackComCheck null container throws
+SKIP PackComCheck stone inside passes (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackComCheck stone outside fails (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackStability grounded stone stable (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackStability supported stone stable (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP PackStability floating stone falling (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS BlockPackTree null elements throws
+PASS BlockPackTree mismatched value count throws
+PASS BlockPackTree empty elements throws
+SKIP BlockPackTree single element fits container (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS BlockPackTree oversized element unpacked (Rhino)
+SKIP BlockPackTree cheap container preferred (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree same seed reproduces (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree different seeds explore (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree kerf reduces packed count (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS BlockPackTree forbidden box blocks placement (Rhino)
+SKIP BlockPackTree forbidden lets second container win (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree 3-axis rotation fits elongated (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree all-packed score has bonus (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree parallel matches serial (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree cut surface weight lowers score (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree memory budget reduces forests (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BlockPackTree cut surface invariant fixed layout (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.AggregateException
+        message: One or more errors occurred.
+        inner:   System.DllNotFoundException: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS BenchBoundary FromMesh null throws
+PASS BenchBoundary FromBox preserves AABB (Rhino)
+SKIP BenchBoundary FromMesh derives AABB (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BenchBoundary ContainsBoxCentre inside (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BenchBoundary ContainsBoxCentre outside (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BenchBoundary ContainsBox all corners (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP BenchBoundary ContainsBox no corners (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS BenchBoundary FromBoxAndMesh null fallback (Rhino)
+PASS PointCloudIcp null source throws
+PASS PointCloudIcp too few points throws (Rhino)
+PASS PointCloudIcp identical clouds RMS zero (Rhino)
+PASS PointCloudIcp known translation recovers (Rhino)
+PASS PointCloudIcp trim drops outliers (Rhino)
+PASS PointCloudIcp voxel downsample reduces (Rhino)
+PASS BuildOrder single column orders bottom to top
+PASS BuildOrder two courses bottom before top
+PASS BuildOrder side by side both layer 0
+PASS BuildOrder custom up axis orders along +X
+PASS BuildOrder cycle throws
+PASS BuildOrder null assembly throws
+PASS BuildOrder degenerate up throws
+PASS GH BlockBuildOrder metadata (Rhino)
+PASS masonry GH PickPlaceFrames ComponentGuid (Rhino)
+PASS masonry GH PickPlaceFrames metadata (Rhino)
+PASS masonry GH PickPlaceFrames input/output count (Rhino)
+PASS masonry GH PickPlaceFrames optional inputs (Rhino)
+PASS masonry GH BuildStepPreview ComponentGuid (Rhino)
+PASS masonry GH BuildStepPreview metadata (Rhino)
+PASS masonry GH BuildStepPreview input/output count (Rhino)
+PASS masonry GH BuildSequenceJson ComponentGuid (Rhino)
+PASS masonry GH BuildSequenceJson metadata (Rhino)
+PASS masonry GH BuildSequenceJson input/output count (Rhino)
+PASS PLY ascii unit cube parses verts and tris
+PASS PLY ascii quad face fan-triangulates
+PASS PLY ascii with vertex colors preserves rgb
+PASS PLY binary LE unit cube parses verts and tris
+PASS PLY missing magic throws
+PASS PLY binary big endian parses
+PASS PLY no vertex element throws
+PASS PLY missing xyz throws
+PASS BlockCutOpt empty fractures: grid is full coverage
+PASS BlockCutOpt vertical plane across centre kills one row
+PASS BlockCutOpt LimestoneStratumA defaults parse
+PASS BlockCutOpt TraceVerticalExtruder two traces
+PASS BlockCutOpt CuttingGrid psi=0 axis-aligned
+PASS BlockCutOpt CuttingGrid psi=90 deg rotation
+PASS BlockCutOpt Phase1D synthetic-DFN pipeline reduces count
+PASS BlockCutOpt Phase1D seed determinism
+PASS BlockCutOpt JointSetDfnPlyEmitter vertical plane through bench
+PASS BlockCutOpt Phase2 BVH single triangle finds hit
+PASS BlockCutOpt Phase2 BVH far triangle no hit
+PASS BlockCutOpt Phase2 BVH deterministic same result
+PASS BlockCutOpt Phase2 BVH vs brute-force vertical plane
+PASS BlockCutOpt Phase3 sub-division 2x3 covers area
+PASS BlockCutOpt Phase3 SolveSubdivided 2x2 valid results
+PASS BlockCutOpt Phase4 coarse-to-fine runs cleanly
+PASS BlockCutOpt Phase4 coarse-to-fine fewer evals than uniform
+PASS BlockCutOpt Phase6 Pareto front insert and prune
+PASS BlockCutOpt Phase6 Pareto solver full pipeline
+PASS BlockCutOpt Phase6 Pareto recovery matches scalar solver
+PASS BlockCutOpt Phase8 Fisher-robust aggregate statistics
+PASS BlockCutOpt Phase8 Fisher-robust deterministic seed
+PASS BlockCutOpt Tolerances default kerf 50 mm
+PASS BlockCutOpt Tolerances Rhino unit converts to mm model
+PASS BlockCutOpt I12 SharedEdgeSlicer unit cube 5 z-slices
+PASS BlockCutOpt Phase9 AmrrPlanner cube->sphere removes volume
+PASS BlockCutOpt Phase9 AmrrPlanner defaults mm-converted
+PASS BlockCutOpt Phase9 ConvexPolyhedron half-space clip
+PASS BlockCutOpt Phase7 density-watershed two clusters
+PASS BlockCutOpt I7 DLBF single size packs many copies
+PASS BlockCutOpt I7 DLBF mixed sizes prefer higher revenue per area
+PASS BlockCutOpt Phase11.5 ImageToWorldMap flip Y
+PASS BlockCutOpt Phase11.5 CsvFractureTraceSource round-trip
+PASS BlockCutOpt ConvexPolyhedron.ToPlyMesh fan-triangulates
+PASS BlockCutOpt AmrrPlanner with slicer still reduces volume
+PASS BlockCutOpt VtuWriter round-trips hex cells
+PASS BlockCutOpt VtuWriter from grid + BVH splits correctly
+PASS BlockCutOpt OmniSolver uniform 2x2 end-to-end
+PASS BlockCutOpt OmniSolver density-watershed end-to-end
+PASS BlockCutOpt VtuWriter AMRR sequence round-trips
+PASS BlockCutOpt PythonDetector parse traces from CSV
+PASS BlockCutOpt Demo synthetic DFN end-to-end writes VTU
+PASS BlockCutOpt Demo couple to AMRR at best block
+PASS BlockCutOpt Phase1D regression synthetic reaches limestone order
+PASS BlockCutOpt I1 OBB Phase 1 ctor defaults vertical W
+PASS BlockCutOpt I1 OBB full ctor accepts tilted axes
+PASS BlockCutOpt I1 CuttingGrid theta=30 deg tilts UZ/VZ
+PASS BlockCutOpt I1 solver theta=0 matches Phase 1
+PASS BlockCutOpt I1 solver tilted search runs cleanly
+PASS BlockCutOpt I4 edge-triangle agrees with SAT vertical plane
+PASS BlockCutOpt I4 edge-triangle agrees with SAT far triangle
+PASS BlockCutOpt FractureInputReader CSV vertical extrude
+PASS BlockCutOpt FractureInputReader lines space-separated
+PASS BlockCutOpt FractureInputReader PLY raw mesh
+PASS BlockCutOpt SyntheticTnGraniteGenerator writes both formats
+PASS BlockCutOpt SyntheticTnGraniteGenerator deterministic seed
+PASS BlockCutOpt SyntheticTnGraniteGenerator regenerate canonical samples
+PASS BlockCutOpt I14 ToInequalities unit cube has 6 faces
+PASS BlockCutOpt I14 FromInequalities round-trips unit cube
+PASS BlockCutOpt I14 ContainsPoint inside/outside
+PASS BlockCutOpt I14 SignedGap negative inside positive outside
+PASS BlockCutOpt I14 ClipBothSides unit cube two halves
+PASS BlockCutOpt I14 CompositeBlock two cubes total volume
+        cascade baseline: tier0=34 blk (== BlockCutOpt 34)
+PASS Cascade reduces to BlockCutOpt at a single scale
+        cascade recover-fine: tier1=97 slabs, total 163.2->202 m^3
+PASS Cascade finer scale recovers cracked-block value
+        cascade monotone: recovered 163.2<= 202<= 204.5 m^3
+PASS Cascade recovery is monotone in depth
+        cascade threshold: hi tier1=0, lo tier1=97
+PASS Cascade marketable-volume threshold gates recursion
+PASS Cascade is deterministic across runs
+        cascade zero-fracture: tier0=217 blk, cracked=0, residual=0
+PASS Cascade zero-fracture: full recovery, no recursion
+PASS masonry GH ReadPlyMesh ComponentGuid (Rhino)
+PASS masonry GH ReadPlyMesh metadata (Rhino)
+PASS masonry GH ReadPlyMesh input/output count (Rhino)
+PASS masonry GH MatchBlockTransform ComponentGuid (Rhino)
+PASS masonry GH MatchBlockTransform metadata (Rhino)
+PASS masonry GH MatchBlockTransform input/output count (Rhino)
+PASS MeshSanitizer unit cube is clean solid
+PASS MeshSanitizer open cube not closed
+PASS MeshSanitizer duplicate vertices counted
+PASS MeshSanitizer degenerate triangle counted
+PASS MeshSanitizer flipped triangle inconsistent
+PASS MeshSanitizer dedup vertices remaps tris
+PASS MeshSanitizer drop degenerate removes zero area
+PASS MeshSanitizer unify normals flips to consistent
+PASS GH MeshQualityReport metadata (Rhino)
+PASS Adaptive tol fails statically but adaptive succeeds on large blocks
+PASS Adaptive tol backward compat with default 0 factor
+PASS Partial assembler single column grows step by step
+PASS Partial assembler keeps fixed blocks at step 0
+PASS Partial assembler unknown id throws
+PASS Partial assembler duplicate id throws
+PASS GH BuildOrderStabilityStream metadata (Rhino)
+PASS Polygon signed area unit square is one
+PASS Polygon sanitize drops adjacent duplicates
+PASS Polygon sanitize drops collinear midpoint
+PASS Clip full inside returns subject
+PASS Clip partial overlap returns intersection
+PASS Clip disjoint returns empty
+PASS Extract simple quad finds outer loop
+PASS Extract annulus mesh finds outer and one hole
+PASS GH PolygonSanitize metadata (Rhino)
+PASS GH MeshPlanarPolygonExtractor metadata (Rhino)
+PASS CutValidator perfect split conserves
+PASS CutValidator leaky cut not conserved
+PASS CutValidator sliver detected
+PASS CutValidator enumerate slivers
+PASS CutValidator drop slivers removes
+PASS CutValidator null inputs throw
+PASS GH CutValidation metadata (Rhino)
+PASS BlockSize uniform pieces low CV
+PASS BlockSize huge outlier flagged
+PASS BlockSize histogram covers data
+PASS BlockSize empty input safe
+PASS Merger small shard → large neighbour
+PASS Merger isolated sliver keeps itself
+PASS Merger chain accretes to largest
+PASS Merger null adjacency throws
+PASS GH BlockSizeDistribution metadata (Rhino)
+PASS GH FragmentMerger metadata (Rhino)
+PASS GH-clip intersection of overlapping squares
+PASS GH-clip intersection disjoint empty
+PASS GH-clip intersection contained returns subject
+PASS GH-clip union of overlapping squares
+PASS GH-clip union disjoint returns both
+PASS GH-clip difference of overlapping squares
+PASS GH-clip difference subject inside clip empty
+PASS GH-clip non-convex L-shape vs square
+PASS GH-clip null subject throws
+PASS GH-clip too few verts returns empty
+PASS CSG union disjoint cubes preserves volumes
+PASS CSG union overlapping inclusion-exclusion
+PASS CSG intersection overlapping returns overlap
+PASS CSG intersection disjoint returns empty
+PASS CSG difference overlapping returns A minus overlap
+PASS CSG difference B fully inside A returns A with cavity
+PASS CSG difference disjoint returns A unchanged
+PASS CSG null args throw
+PASS Coplanar perfectly coincident squares find contact
+PASS Coplanar partial overlap finds intersection contact
+PASS Coplanar side-by-side cubes still resolved
+PASS Coplanar disjoint returns zero
+PASS Coplanar default false unchanged behaviour
+PASS Clipper2 intersect two squares returns overlap
+PASS Clipper2 union overlapping returns area 7
+PASS Clipper2 difference overlapping returns area 3
+PASS Clipper2 xor overlapping returns area 6
+PASS Clipper2 fully coincident edges robust
+PASS Clipper2 vertex on edge robust
+PASS Clipper2 polygon with hole difference correct
+PASS Clipper2 null subject throws
+PASS CGAL IsAvailable does not throw when DLL absent
+PASS CGAL Version non-null regardless of availability
+PASS CGAL union fallback matches BSP when DLL absent
+PASS CGAL intersection fallback correct volume
+PASS CGAL difference fallback correct volume
+PASS CGAL null args throw
+PASS masonry GH MasonryAssemblyComponent ComponentGuid is expected (Rhino)
+PASS masonry GH MasonryAssemblyComponent metadata is correct (Rhino)
+PASS masonry GH MasonryAssemblyComponent has expected input/output count (Rhino)
+PASS masonry GH MasonryStabilityRbeComponent ComponentGuid is expected (Rhino)
+PASS masonry GH MasonryStabilityRbeComponent metadata is correct (Rhino)
+PASS masonry GH MasonryStabilityRbeComponent has expected input/output count (Rhino)
+PASS masonry solver registry default is null by default
+PASS masonry solver registry EnsureDefaultSolver assigns managed when empty
+PASS masonry solver registry EnsureDefaultSolver preserves existing
+PASS masonry solver registry EnsureDefaultSolver is idempotent
+PASS slab cutter plane misses slab returns single passthrough
+PASS slab cutter axis-aligned bisecting plane produces two equal halves
+PASS slab cutter diagonal bisecting plane produces two equal volumes
+PASS slab cutter plane on face does not produce degenerate sliver
+PASS slab cutter three orthogonal bisectors produces eight octants
+PASS slab cutter null slab throws
+PASS slab cutter null plane throws
+PASS slab cutter null plane list throws
+PASS slab cutter negative eps throws
+PASS slab cutter multi-slab single-plane parent indices recorded
+PASS slab cutter output slab vertex pool integrity
+PASS slab cutter output slab ToMasonryBlock round-trips
+PASS slab cut GH SlabFromMeshComponent ComponentGuid is expected (Rhino)
+PASS slab cut GH SlabFromMeshComponent metadata is correct (Rhino)
+PASS slab cut GH SlabFromMeshComponent has expected input/output count (Rhino)
+PASS slab cut GH SlabCutByFracturesComponent ComponentGuid is expected (Rhino)
+PASS slab cut GH SlabCutByFracturesComponent metadata is correct (Rhino)
+PASS slab cut GH SlabCutByFracturesComponent has expected input/output count (Rhino)
+PASS fracture polygon null boundary throws
+PASS fracture polygon too few vertices throws
+PASS fracture polygon length not multiple of 3 throws
+PASS fracture polygon non-coplanar throws
+PASS fracture polygon non-convex throws
+PASS fracture polygon valid rectangle stores plane and verts
+PASS slab cross-section plane misses returns empty
+PASS slab cross-section axis-aligned bisector returns unit square
+PASS slab cross-section diagonal bisector returns valid polygon
+PASS slab cross-section negative eps throws
+PASS fracture cut rectangle larger than slab outcome is Spans and produces two halves
+PASS fracture cut rectangle exactly matching cross-section outcome is Spans
+PASS fracture cut diagonal large polygon outcome is Spans
+PASS fracture cut Spans result volume conserved
+PASS fracture cut plane above slab outcome is Miss and passthrough
+PASS fracture cut Miss result preserves slab
+PASS fracture cut plane below slab outcome is Miss
+PASS fracture cut small rectangle outcome is Partial and passthrough
+PASS fracture cut Partial result preserves slab volume
+PASS fracture cut offset rectangle outcome is Partial
+PASS fracture cut PartialExtended outcome and produces two halves
+PASS fracture cut null slab throws
+PASS fracture cut null polygon throws
+PASS fracture cut null options uses default
+PASS fracture cut many two orthogonal rectangles produces four pieces
+PASS fracture cut many null slabs list throws
+PASS fracture cut GH FracturePolygonFromCurveComponent ComponentGuid is expected (Rhino)
+PASS fracture cut GH FracturePolygonFromCurveComponent metadata is correct (Rhino)
+PASS fracture cut GH FracturePolygonFromCurveComponent has expected input/output count (Rhino)
+PASS fracture cut GH SlabCutByFracturePolygonsComponent ComponentGuid is expected (Rhino)
+PASS fracture cut GH SlabCutByFracturePolygonsComponent metadata is correct (Rhino)
+PASS fracture cut GH SlabCutByFracturePolygonsComponent has expected input/output count (Rhino)
+PASS rail index EdgeKey equal 4 buckets
+PASS rail index EdgeKey unequal different buckets
+PASS rail index EdgeKey hash stable across instances
+PASS rail index Add stores interval Query returns it
+PASS rail index Query missing key returns empty
+PASS rail index Add null interval throws
+PASS rail index Add two intervals same key both returned
+PASS rail index KnownZones tracks distinct zone buckets
+PASS rail index QueryNeighbors length radius finds adjacent
+PASS rail index QueryNeighbors angle radius finds adjacent
+PASS rail index QueryNeighbors preserveZone=true narrows
+PASS rail index QueryNeighbors preserveZone=false widens (B1 fix)
+PASS rail index QueryNeighbors curvature bucket must match
+PASS rail index QueryNeighbors negative radius throws
+PASS rail index QueryNeighbors radius 0 returns exact only
+PASS surface UV table stores and retrieves
+PASS surface UV table overwrites duplicate key
+PASS surface UV table key equality and hash
+PASS surface OBJ parses valid BFF output
+PASS surface OBJ rejects face without UV indices
+PASS surface OBJ rejects missing file
+PASS surface OBJ rejects face count mismatch
+PASS surface OBJ ignores comments and blank lines
+SKIP barycentric mapper identity triangle maps to self (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP barycentric mapper scaled triangle maps correctly (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP barycentric mapper point outside mesh returns null (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP barycentric mapper null curve returns null (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS trencadís component ComponentGuid is expected (Rhino)
+PASS trencadís component metadata is correct (Rhino)
+PASS trencadís component has 17 inputs and 10 outputs (Rhino)
+PASS trencadís component new inputs 13–16 named correctly (Rhino)
+PASS CvdLloyd GenerateSeeds square domain all inside
+PASS CvdLloyd GenerateSeeds deterministic for same seed
+PASS CvdLloyd GenerateSeeds Lloyd moves to uniform quadrant centres
+PASS CvdLloyd GenerateSeeds excludes points inside hole
+PASS Gvf Compute degenerate input returns empty field
+PASS Gvf Sample outside bbox returns zero
+PASS Gvf Sample inside domain has non-zero magnitude somewhere
+PASS Gvf OrientationDeg in [0, 180) inside, null outside
+SKIP trencadís boundary mode 1 ctor does not throw (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP trencadís boundary mode 2 ctor does not throw (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP trencadís boundary mode 3 ctor does not throw (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP trencadís boundary mode 2 packs without crash (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP trencadís boundary mode 3 packs on ring (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS hungarian 2x2 optimal assignment
+PASS hungarian 3x3 known optimum
+PASS hungarian 4x4 identity permutation
+PASS packs simple blocks
+PASS reports failures
+PASS tries yaw rotation
+PASS mesh heightmap fits into irregular footprint void
+PASS mesh heightmap reports vertical collision failure
+PASS irregular mesh container rejects missing footprint cells
+PASS irregular mesh container uses triangular footprint
+PASS irregular mesh container supports separated vertical cavities
+PASS mesh pack seed can explore alternatives
+PASS ashlar Stage1 coursed ashlar all uniform boxes full coverage
+PASS ashlar Stage1 boundary conditions bottom course fixed
+PASS ashlar Stage1 leftover when no fit records gap
+PASS ashlar Stage1 running bond stagger offsets odd courses
+PASS ashlar Stage1 loop guard trips on pathological input
+PASS ashlar Stage2 options constructed from WallFrame round-trips
+PASS ashlar Stage2 coursed rubble variable heights bins by tolerance
+PASS ashlar Stage2 coursed rubble across bins never mixes in one course
+PASS ashlar Stage2 options invalid negative stagger throws
+PASS ashlar Stage3 diagnostics round trips result
+PASS ashlar Stage3 diagnostics handles empty leftovers
+PASS ashlar Stage3 diagnostics placed blocks match assembly
+PASS ashlar StageA rotation disabled stays translation only
+PASS ashlar StageA rotation enabled packs oversized slabs by yawing
+PASS ashlar StageA trim disabled still records gap
+PASS ashlar StageA trim enabled fills gap with trimmed piece
+PASS StageB RBE tangential scale applies to tangents only
+PASS StageB RBE tangential scale non-positive throws
+PASS StageB ManagedQp closed-form two vars finds midpoint
+PASS StageB ManagedQp closed-form non-uniform diagonal still solves
+PASS StageB ManagedQp closed-form bounds violated falls through
+PASS StageB E2E one free on ground RBE solver returns Optimal
+PASS StageB E2E packed stack feeds RBE solver returns Optimal
+PASS StageC shell one closed tetrahedron returns one shell
+PASS StageC shell two separated tetrahedra returns two shells
+PASS StageC shell empty triangles returns empty
+PASS StageC shell bad index throws
+PASS StageC hull unit cube 8 vertices returns closed hull
+PASS StageC hull non-convex input bounds convex shape
+PASS StageC hull coplanar throws
+PASS StageC hull collinear throws
+PASS StageC hull too few points throws
+PASS StageC hull null points throws
+PASS StageD ipopt stub IsAvailable is false
+PASS StageD ipopt stub Name is expected
+PASS StageD ipopt stub Solve returns NotImplemented
+PASS StageD ipopt stub null problem throws
+PASS StageD registry UseIpoptIfAvailable falls back to managed
+PASS StageD registry UseIpoptIfAvailable preserves existing
+PASS StageC GH MeshShellSplit ComponentGuid (Rhino)
+PASS StageC GH MeshShellSplit metadata (Rhino)
+PASS StageC GH ConvexHullSlab ComponentGuid (Rhino)
+PASS StageC GH ConvexHullSlab metadata (Rhino)
+PASS StageE Layered axisX returns expected count
+PASS StageE Layered axis out of range throws
+PASS StageE Radial four planes are orthogonal to axis
+PASS StageE Radial zero axis throws
+PASS StageE Radial count zero returns empty
+PASS StageE BrickPattern only horizontals returns Z parallel only
+PASS StageE BrickPattern has both orientations
+PASS StageE BrickPattern negative count throws
+PASS StageE JitteredGrid deterministic for seed
+PASS StageE JitteredGrid jitter out of range throws
+PASS StageE Filter keeps intersecting drops outside
+PASS StageE Filter on face keeps plane
+PASS StageE Filter null planes throws
+PASS StageE GH Layered metadata (Rhino)
+PASS StageE GH Radial metadata (Rhino)
+PASS StageE GH BrickPattern metadata (Rhino)
+PASS StageE GH JitteredGrid metadata (Rhino)
+PASS StageE GH FracturePlaneFilter metadata (Rhino)
+PASS StageE GH all GUIDs unique
+PASS Phase1 SlabCutByFractures Plane input is generic (not Param_Plane)
+PASS Phase1 GhInterop UnwrapPlane accepts FracturePlane DTO
+SKIP Phase1 GhInterop UnwrapPlane accepts Rhino Plane (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS Phase1 GhInterop UnwrapPlane rejects nonsense
+PASS Phase2 SlabFromMesh has Mesh output
+PASS Phase2 SlabCutByFractures has Mesh output
+PASS Phase2 SlabCutByFracturePolygons has Mesh output
+PASS Phase2 QuarryDecompose has Mesh output
+PASS Phase2 MeshShellSplit has Mesh output
+PASS Phase2 ConvexHullSlab has Mesh output
+SKIP Phase2 GhInterop SlabToMesh round trips (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP Phase3 GhInterop UnwrapSlab accepts Rhino Mesh (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS Phase3 GhInterop UnwrapSlab accepts Slab DTO
+PASS Phase4 FracturePolygonFromCurve has ForceProject input
+PASS Phase5 all 24 components share Frahan category
+PASS JointSet vertical north dip normal is north
+PASS JointSet horizontal dip normal is up
+PASS JointSet vertical east dip normal is east
+PASS JointSet negative spacing throws
+PASS JointSet out of range dip direction throws
+PASS JointSet out of range dip throws
+PASS Dfn one vertical set spacing matches grid count
+PASS Dfn two orthogonal sets accumulates planes
+PASS Dfn deterministic for seed
+PASS Dfn null jointSets throws
+PASS Dfn decompose by joint sets cuts the quarry
+PASS GH JointSet metadata (Rhino)
+PASS GH QuarryDfn metadata (Rhino)
+PASS GH MeshAabb metadata (Rhino)
+PASS GH MeshPca metadata (Rhino)
+PASS GH MeshDiagnostics metadata (Rhino)
+PASS BlockGraphColorer two stacked blocks get two colours
+PASS BlockGraphColorer no interfaces all zero
+PASS BlockGraphColorer triangle graph requires three
+PASS BlockGraphColorer null assembly throws
+PASS GH BlockGraphColoring metadata (Rhino)
+PASS MeshContact two stacked cubes finds one contact
+PASS MeshContact two cubes side by side finds one contact
+PASS MeshContact gap within tolerance still finds contact
+PASS MeshContact gap beyond tolerance finds nothing
+PASS MeshContact no overlap finds nothing
+PASS MeshContact partial overlap detects correct area
+PASS MeshContact null meshes throws
+PASS MeshContact mismatched ids count throws
+PASS MeshContact negative tolerance throws
+PASS MeshContact many stacked cubes chains contacts (broad-phase)
+PASS MeshContact distant clusters broad-phase skips cleanly
+PASS Grid two overlapping cubes yields one pair
+PASS Grid distant cubes yield no pair
+PASS Grid chain of cubes yields consecutive pairs once
+PASS Grid bad cell size throws
+PASS Detect over threshold returns correct contacts via grid
+PASS GH RobustAutoInterfaces metadata (Rhino)
+PASS BVH unit cube query inside returns zero
+PASS BVH unit cube query outside returns nearest face
+PASS BVH respects max distance
+PASS BVH matches brute force on random points
+PASS BVH contact detector still finds stacked contact
+PASS BestFit inventory prefers exact match
+PASS BestFit pack full coverage on uniform inventory
+PASS BestFit null slabs throws
+PASS GH BestFitPack metadata (Rhino)
+PASS GH MeshRepair metadata (Rhino)
+PASS ashlar GH AshlarPack ComponentGuid (Rhino)
+PASS ashlar GH AshlarPack metadata (Rhino)
+PASS ashlar GH AshlarPack input/output counts (Rhino)
+PASS ashlar GH AshlarPack optional inputs (Rhino)
+PASS ashlar GH WallFrame ComponentGuid (Rhino)
+PASS ashlar GH WallFrame metadata (Rhino)
+PASS ashlar GH WallFrame input/output counts (Rhino)
+PASS ashlar GH AshlarPackOptions ComponentGuid (Rhino)
+PASS ashlar GH AshlarPackOptions input/output counts (Rhino)
+PASS ashlar GH PackDiagnostics ComponentGuid (Rhino)
+PASS ashlar GH PackDiagnostics input/output counts (Rhino)
+PASS ashlar GH PackPreview ComponentGuid (Rhino)
+PASS ashlar GH PackPreview input/output counts (Rhino)
+PASS ashlar GH new GUIDs are unique
+PASS ashlar E2E packed wall feeds RBE solver produces well-formed QP
+PASS ashlar E2E packed wall one course has zero bed joints
+PASS bbox from slab unit cube has unit extents
+PASS bbox degenerate axis throws
+PASS grid generator nX nY nZ returns expected count
+PASS grid generator planes are evenly spaced
+PASS random generator deterministic for seed
+PASS random generator different seeds give different planes
+PASS voronoi bisectors two seeds returns one plane
+PASS voronoi bisectors four seeds returns six planes
+PASS voronoi bisectors single seed throws
+PASS quarry decompose by grid unit cube produces 8 octants
+PASS quarry decompose by grid splits conserves volume
+PASS quarry decompose by voronoi two seeds produces two cells
+PASS quarry decompose zero fractures passes through original slab
+PASS auto interfaces two stacked cubes finds one bed joint
+PASS auto interfaces two cubes side by side finds one head joint
+PASS auto interfaces non-contacting finds zero
+PASS auto interfaces partial overlap respects clipping
+PASS auto interfaces null slabs throws
+PASS auto interfaces mismatched ids count throws
+PASS auto interfaces packed wall matches ashlar engine count
+PASS quarry GH GridFracturePlanes ComponentGuid (Rhino)
+PASS quarry GH GridFracturePlanes metadata (Rhino)
+PASS quarry GH RandomFracturePlanes ComponentGuid (Rhino)
+PASS quarry GH RandomFracturePlanes metadata (Rhino)
+PASS quarry GH VoronoiFracturePlanes ComponentGuid (Rhino)
+PASS quarry GH VoronoiFracturePlanes metadata (Rhino)
+PASS quarry GH QuarryDecompose ComponentGuid (Rhino)
+PASS quarry GH QuarryDecompose metadata (Rhino)
+PASS quarry GH AutoInterfaces ComponentGuid (Rhino)
+PASS quarry GH AutoInterfaces metadata (Rhino)
+PASS quarry GH new GUIDs are unique
+PASS edgematch PhaseCorrelator perfect complement scores 1.0
+PASS edgematch PhaseCorrelator unrelated signals score below 0.95
+PASS edgematch PhaseCorrelator empty signatures return (0,0)
+PASS edgematch PhaseCorrelator mismatched length throws
+PASS edgematch SegmentHashIndex complement finds mirror
+PASS edgematch SegmentHashIndex deterministic order
+PASS edgematch SegmentHashKey equality + hash round-trip
+PASS edgematch SegmentHashIndex 3D complement round-trip
+PASS edgematch SegmentHashIndex 3D query ignores 2D buckets
+PASS edgematch SegmentHashIndex 2D query ignores 3D buckets
+PASS edgematch SegmentHashIndex Count2D/Count3D reflect adds
+SKIP edgematch PlanarityTester planar square has zero RMS (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch PlanarityTester helix has non-zero RMS (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Panel planar contour classifies Planar2D (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Panel warped contour classifies Spatial3D (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Panel non-frame open contour throws (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch BoundarySegmenter irregular polygon produces segments (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch BoundarySegmenter smooth circle has no breaks (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Partial off identical to base (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Partial on adds shorter sub-segments (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Partial on is deterministic (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Partial empty fractions adds nothing (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch PartialWindows deterministic ranges + order
+SKIP edgematch ICP2D identity on same polyline → zero residual (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ICP2D perturbed transform recovers truth (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ICP3D identity on same polyline → zero residual (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ICP3D known 6-DoF transform recovered (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Dispatch planar panel → null torsion (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Dispatch spatial panel → populated torsion (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Dispatch mixed assembly splits 2D/3D buckets (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Dispatch mixed solver runs without crash (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Determinism two runs same input → same output (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Determinism hash identical across runs (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch component EdgeMatchSolve GUID parses
+PASS edgematch component EdgeMatchSegments GUID parses
+PASS edgematch component TrencadisEdgeMatch GUID parses
+PASS edgematch component EdgeMatchOptions GUID parses
+PASS edgematch component GUIDs are unique
+PASS edgematch Options empty equals Core defaults
+PASS edgematch Options advanced merge round-trips, basics preserved
+PASS edgematch Options no-merge leaves simple options untouched
+PASS edgematch OrderedMatcher MatchOpen is monotone (non-crossing)
+PASS edgematch OrderedMatcher beats nearest-neighbour on wiggly rim
+PASS edgematch OrderedMatcher MatchClosed picks reversed orientation on complementary rim
+PASS edgematch OrderedMatcher empty/single-point no throw
+PASS edgematch OrderedMatcher MatchClosed is deterministic
+SKIP edgematch Agglomerative compose-relatives along chain matches product (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Agglomerative reversed edge uses inverse (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch Agglomerative default mode is FrameAnchored
+SKIP edgematch Agglomerative two halves place both (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch Agglomerative is deterministic (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch R2 default knobs are off
+PASS edgematch R2 resolve tuning has sane values
+SKIP edgematch R2 depenetration reduces synthetic overlap (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch R2 depenetration is deterministic (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch R2 depenetration no-overlap no-movement (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch SoftIcp default refine is off
+PASS edgematch SoftIcp SE2 Exp translation+rotation
+PASS edgematch SoftIcp SE2 Exp is proper rotation
+SKIP edgematch SoftIcp so3 Exp matches Rhino rotation (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch SoftIcp SE3 Exp small twist valid
+SKIP edgematch SoftIcp EM recovers known 2D alignment (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch SoftIcp EM recovers known 3D alignment (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch SoftIcp EM is deterministic (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS edgematch ProjectionBootstrap default is off
+SKIP edgematch ProjectionBootstrap PCA fits known planar loop (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ProjectionBootstrap PCA non-planar has residual (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ProjectionBootstrap lift composes antiparallel contact (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP edgematch ProjectionBootstrap lift respects in-plane match (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS QuarryCutOpt Inventory builds and aggregates
+PASS QuarryCutOpt Inventory rejects duplicate ids
+PASS QuarryCutOpt Yield estimator empty fractures
+PASS QuarryCutOpt Extraction order greedy sort
+PASS QuarryCutOpt Extraction skips low yield
+PASS QuarryCutOpt SawBedScheduler LPT balances two beds
+PASS QuarryCutOpt Report Markdown contains aggregates
+PASS QuarryCutOpt Gpr radargram CSV round-trip
+PASS QuarryCutOpt GeoFractNet mask reader parses predictions
+PASS Ingest Shapefile fracture reader loads Loviisa if present
+PASS Ingest GeoJSON parses LineString
+PASS Ingest GeoJSON handles MultiLineString
+PASS Ingest VectorFractureReader dispatches by extension
+PASS Ingest VectorFractureReader rejects unknown extension
+PASS Ingest SEG-Y IEEE float32 round-trip
+PASS Ingest SEG-Y IBM float32 decode
+PASS Ingest MALA RD3 round-trip
+PASS Ingest MALA RD3 rejects missing .rad
+PASS Ingest DT1 pulseEKKO round-trip
+PASS Ingest GprFileReader dispatches by extension
+PASS Kintsugi-port Fps picks corners of a square
+PASS Kintsugi-port Fps second pick is opposite
+PASS Kintsugi-port Knn returns closest points
+PASS Kintsugi-port Matmul identity vs known product
+PASS Kintsugi-port Matmul large shapes vs naive loop
+PASS Kintsugi-port MatVec matches MatMul N=1
+PASS Kintsugi-port Gelu at zero is zero
+PASS Kintsugi-port Gelu at positive tends to input
+PASS Kintsugi-port Silu at zero is zero
+PASS Kintsugi-port Relu clamps negatives
+PASS Kintsugi-port Softmax row sums to one
+PASS Kintsugi-port LayerNorm zero mean unit var
+PASS Kintsugi-port LayerNorm gamma+beta scale and shift
+PASS Kintsugi-port TimeEmbedding length and t=0 symmetry
+PASS Kintsugi-port MultiHeadAttention identity weights pass through
+PASS Kintsugi-port VqVae replaces with nearest codebook entry
+        info: kintsugi.bin loaded ok (353 tensors)
+PASS Kintsugi-port WeightReader loads kintsugi.bin if present
+PASS Kintsugi-port BatchNorm1d identity with unit gamma zero beta
+PASS Kintsugi-port BatchNorm1d applies gamma shift beta
+PASS Kintsugi-port BatchNorm1d subtracts running mean
+PASS Kintsugi-port AdaLN identity when emb projects to zero
+PASS Kintsugi-port AdaLN gate is broadcasted across tokens
+PASS Kintsugi-port MultiHeadAttention split-QKV via separate weights
+PASS Kintsugi-port BallQuery picks all in radius
+PASS Kintsugi-port BallQuery caps at nsample
+PASS Kintsugi-port BallQuery no-neighbours padding safe
+PASS Kintsugi-port encoder loads weights for all three SA layers
+PASS Kintsugi-port encoder SA1 output shape matches reference
+PASS Kintsugi-port encoder SA2 output shape matches reference
+PASS Kintsugi-port encoder SA3 output shape matches reference
+PASS Kintsugi-port encoder SA1 no NaN or Inf
+PASS Kintsugi-port encoder final features no NaN or Inf
+        SA1 parity: max|diff|=4.649E-06 at 24321, ref max|x|=2.211, port max|x|=2.211
+PASS Kintsugi-port encoder SA1 L-inf deviation report
+        SA2 parity: max|diff|=5.364E-07 at 20467, ref max|x|=0.6587, port max|x|=0.6587
+PASS Kintsugi-port encoder SA2 L-inf deviation report
+        SA3 parity: max|diff|=3.719E-05 at 10647, ref max|x|=7.019, port max|x|=7.019
+PASS Kintsugi-port encoder SA3 L-inf deviation report
+        final_features parity: max|diff|=2.527E-05 at 1575, ref max|x|=19, port max|x|=19
+PASS Kintsugi-port encoder final_features L-inf deviation report
+        Encoder full chain (N=1000) took 212ms
+PASS Kintsugi-port encoder full chain under 10s
+        denoiser weight audit: present=105, missing=0
+PASS Kintsugi-port denoiser audit weight coverage
+        denoiser load: 6 layers + 3 heads + 2 MLPs all OK
+PASS Kintsugi-port denoiser loads all weights
+        denoiser smoke: 6 layers + residual [20,7]; nan=0, inf=0
+PASS Kintsugi-port denoiser forward smoke runs without error
+        denoiser layer0: max|diff|=192.2 at 152793, ref max|x|=382.3, port max|x|=290.2
+PASS Kintsugi-port denoiser layer0 L-inf deviation report
+        Denoiser single forward (N=20, 6 layers, D=512): 12796ms
+        Projected T=20 diffusion loop: 255920ms (~255.9s)
+PASS Kintsugi-port denoiser single forward time
+        GPU diagnostic: OK: Cuda 'Quadro RTX 4000' (8191MB)
+        GPU available: True
+PASS Kintsugi-port GPU availability report
+        GPU vs CPU max|diff|=3.338E-06 for 64x96x80
+PASS Kintsugi-port GPU matmul matches CPU to tolerance
+        512^3 matmul: CPU(SIMD)=159ms, GPU=10ms, speedup=15.90x
+PASS Kintsugi-port GPU matmul speed report 512^3
+        TorchSharp libtorch: OK (allocated 1 elements)
+PASS Kintsugi-port TorchSharp libtorch available report
+        TorchSharp encoder loaded 63 ae.* parameters
+PASS Kintsugi-port TorchSharp encoder path loads weights
+        verifier weight audit: present=38, missing=0
+PASS Kintsugi-port verifier audit weight coverage
+        verifier load: 6 transformer layers + emb + head OK
+PASS Kintsugi-port verifier loads all weights
+        verifier smoke: 3 edges -> logits [-1.2631,0.9688,0.2788]; nan=0
+PASS Kintsugi-port verifier forward smoke
+        scheduler: alpha_bar(0)=1.0000, alpha_bar(699)=0.9001, alpha_bar(999)=0.0000
+PASS Kintsugi-port scheduler alpha_bar monotone decreasing
+PASS Kintsugi-port scheduler set_timesteps 20 is descending
+PASS Kintsugi-port scheduler step produces finite output
+        end-to-end inference: 3 fragments, 1 steps, verifier scores: [0.37,0.08,0.06]
+PASS Kintsugi-port inference end-to-end runs without error
+        VQ candidate: ae.vector_quantization.embedding.weight  shape=[1024,16]
+        VQ candidate: encoder.vector_quantization.embedding.weight  shape=[1024,16]
+        total VQ-related tensor matches: 2
+PASS Kintsugi-port VQ find codebook tensor
+        BB sample 00697: point_clouds shape=[2,1000,3], first values=[0.0074,-0.0380,-0.4999]
+PASS Kintsugi-port Breaking Bad loads sample
+        denoiser_v2 PRE-LAYER0 input: max|diff|=7.629E-06 ref|x|_max=79.3 port|x|_max=79.3
+        denoiser_v2 layer-by-layer L_inf parity (t=500):
+          layer0: max|diff|=100.3 @ idx 14716  rmsd=4.217  ref|x|_max=372.7  port|x|_max=383.3
+          layer1: max|diff|=139 @ idx 14716  rmsd=5.051  ref|x|_max=510  port|x|_max=545
+          layer2: max|diff|=141.5 @ idx 20348  rmsd=7.314  ref|x|_max=616.4  port|x|_max=634.8
+          layer3: max|diff|=114.1 @ idx 7548  rmsd=9.475  ref|x|_max=689  port|x|_max=673.6
+          layer4: max|diff|=94.27 @ idx 7548  rmsd=11.34  ref|x|_max=734.9  port|x|_max=703.1
+          layer5: max|diff|=111.3 @ idx 3452  rmsd=13.95  ref|x|_max=678.4  port|x|_max=648.8
+          final_residual: max|diff|=1.962
+PASS Kintsugi-port denoiser_v2 all layers L-inf deviation report
+        L0 input length=256000, expected=256000
+        Layer 0 sub-block L_inf (t=500):
+          L0_pre              : max|diff|=0  ref|x|_max=79.3  port|x|_max=79.3
+          after_norm1         : max|diff|=2.861E-06  ref|x|_max=6.424  port|x|_max=6.424
+          after_self_attn NO_MSK: max|diff|=12.84  ref|x|_max=13.28  port|x|_max=6.809
+          after_self_attn MASK : max|diff|=12.39  ref|x|_max=13.28  port|x|_max=7.423
+          after_resid1        : max|diff|=12.39  ref|x|_max=83.59  port|x|_max=81.34
+          after_norm2         : max|diff|=4.316  ref|x|_max=19.54  port|x|_max=20.4
+          after_global_attn   : max|diff|=11.74  ref|x|_max=18.88  port|x|_max=12.28
+          after_resid2        : max|diff|=15.93  ref|x|_max=83.97  port|x|_max=88.35
+          after_norm3         : max|diff|=0.6325  ref|x|_max=2.361  port|x|_max=2.368
+          after_ff            : max|diff|=106.7  ref|x|_max=295.3  port|x|_max=336.4
+PASS Kintsugi-port denoiser layer 0 sub-block L-inf
+        verifier_v2 (E=3 edges):
+          logits: max|diff|=0.0006301  ref|x|_max=2.82  port|x|_max=2.82
+            edge 0: ref=-1.0106, port=-1.0107
+            edge 1: ref=-1.4860, port=-1.4862
+            edge 2: ref=2.8196, port=2.8202
+          layer0 (shape [1,3,256]): ref|x|_max=2.595
+          layer1 (shape [1,3,256]): ref|x|_max=3.303
+          layer2 (shape [1,3,256]): ref|x|_max=2.991
+          layer3 (shape [1,3,256]): ref|x|_max=3.356
+          layer4 (shape [1,3,256]): ref|x|_max=3.538
+          layer5 (shape [1,3,256]): ref|x|_max=3.772
+PASS Kintsugi-port verifier_v2 all layers L-inf
+PASS Kintsugi-port parity input point cloud roundtrips through fixture
+PASS Kintsugi-port parity noisy poses have unit quaternions
+PASS Kintsugi-port parity encoder SA1 output present and shaped
+PASS Kintsugi-port parity encoder SA2 output present and shaped
+PASS Kintsugi-port parity encoder SA3 output present and shaped
+PASS Kintsugi-port parity denoiser layer 0 present and shaped
+PASS Kintsugi-port parity denoiser layer 5 present and shaped
+        info: reference tensor 'parity.denoiser.final_residual' not in fixture (likely upstream env was not run);
+PASS Kintsugi-port parity denoiser final residual present and shaped
+PASS Kintsugi-port parity verifier logit and score consistent
+PASS Kintsugi-port parity encoder SA1 shape matches upstream
+PASS Kintsugi-port parity encoder SA2 shape matches upstream
+PASS Kintsugi-port parity encoder SA3 shape matches upstream
+PASS Kintsugi-port parity encoder SA1 magnitude regression
+PASS Kintsugi-port parity encoder final features shape
+PASS Kintsugi-port parity denoiser all layers consistent shape
+PASS Kintsugi-port parity denoiser output dim is embed_dim
+PASS Kintsugi-port parity denoiser token count matches N*L
+PASS Kintsugi-port perf FPS N=1000 K=256 under 200ms
+PASS Kintsugi-port perf Matmul 512^3 under 500ms
+PASS Kintsugi-port perf LayerNorm 500x512 under 100ms
+PASS Kintsugi-port stability Matmul deterministic across runs
+PASS Kintsugi-port stability FPS deterministic with fixed seed
+PASS Kintsugi-port stability LayerNorm deterministic across runs
+PASS Kintsugi-port stability LayerNorm no NaN on typical input
+PASS Kintsugi-port stability LayerNorm handles zero variance
+PASS Kintsugi-port stability Gelu no NaN on large magnitudes
+PASS Kintsugi-port stability FFN chain deterministic and bounded
+PASS Bridge BlockCutOpt SolveAndExtract returns all blocks
+PASS Bridge BenchBlockSlabBuilder one block produces slabs
+PASS Bridge SlabYieldOptimizer picks longest axis
+PASS Bridge BilletCutter 10cm splits one meter into ten
+PASS Bridge GeoPack crack graph from fracture planes
+PASS Bridge GeoPack block graph splits bench in two
+PASS Bridge GeoPack candidates to inventory roundtrip
+PASS Bridge BestFit rubble places varied-height slabs
+PASS Integration Quarry → Masonry full pipeline ends in packed assembly
+PASS Monument sampler has 24 rotations
+PASS Monument sampler rotations are proper (det=+1)
+PASS Monument sampler rotated AABB of cube is cube
+PASS Monument sampler rotated AABB of 1x2x3 box has 6 permutations
+PASS Monument packer one-cell one-monument places it
+PASS Monument packer monument too large stays unplaced
+PASS Monument packer fracture splits bench monument respects it
+PASS DLBF 3D single-size floor-only fills floor
+PASS DLBF 3D single-size stacked fills volume
+PASS DLBF 3D heterogeneous heights all placed
+PASS DLBF 3D prefers higher revenue per volume
+PASS DLBF 3D forbidden column leaves hole
+PASS DLBF 3D oversized piece stays unplaced
+PASS sequencing Geom Orient basic cases
+PASS sequencing Geom SignedArea CCW positive
+PASS sequencing Geom PointInRing inside and outside
+PASS sequencing Geom ChainIsMonotone accepts x and vertical y
+PASS sequencing Geom RingCentroid of unit square is centre
+PASS sequencing PSLG unit square has one bounded face
+PASS sequencing PSLG two squares sharing edge T-junction split
+PASS sequencing Kahn linear chain assigns descending depth
+PASS sequencing Kahn transitive edge invariance
+PASS sequencing Kahn diamond graph max depth at source
+PASS sequencing Wall two chains three band has one stone
+PASS sequencing Wall chains with vertical connectors is acyclic
+PASS sequencing Wall RemoveRegions excludes from plan
+PASS sequencing Wall rule (8) basic horizontal does not throw
+PASS GH PolygonalMasonrySequence metadata (Rhino)
+PASS Wall3D tower four stacked orders bottom to top
+PASS Wall3D side by side same z produces no edge
+PASS Wall3D pyramid one on four installs top last
+PASS Wall3D RemoveCells skips removed from plan
+PASS Wall3D NormaliseAdjacency dedups and drops self-loops
+PASS Wall3D unbounded cell not installable
+PASS Wall3D duplicate cell id throws
+PASS GH PolygonalMasonrySequence3D metadata (Rhino)
+PASS GH BoxToMesh metadata (Rhino)
+PASS GH CSV Parts Reader metadata (Rhino)
+SKIP RubbleWallSettle all stones placed order preserved (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP RubbleWallSettle no two placed stones interpenetrate (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP RubbleWallSettle stability flags match clearance (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP RubbleWallSettle deterministic two runs identical (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP RubbleWallSettle stability-aware places all and is safer (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS RubbleWallSettle empty input returns empty
+PASS all GH component GUIDs are globally unique (Rhino)
+PASS new output-branch component GUIDs parse + unique (Rhino)
+PASS Lab-gating preserves source/icon/GUID round-trip (Rhino)
+PASS SculptureFitter factor mode is uniform
+PASS SculptureFitter target-longest scales by longest axis
+PASS SculptureFitter target-height scales by Z
+PASS SculptureFitter non-uniform per-axis factors
+PASS SculptureFitter small piece fits with clearance
+PASS SculptureFitter oversized piece does not fit
+PASS SculptureFitter margin can push out of fit
+PASS SculptureFitter matches best axis orientation
+PASS StoneCutMetadata always emits schema
+PASS StoneCutMetadata skips unset fields
+PASS StoneCutMetadata emits populated fields
+PASS StaggeredBlockLayout produces two courses
+PASS StaggeredBlockLayout odd course is staggered
+PASS StaggeredBlockLayout cells stay within box
+PASS StaggeredBlockLayout depth axis spans full
+PASS StaggeredBlockLayout invalid course height throws
+PASS MarkerFileReader world-only 4 columns
+PASS MarkerFileReader world+model 7 columns
+PASS MarkerFileReader numeric-first auto labels
+PASS MarkerFileReader skips comments and blanks
+PASS MarkerFileReader too-few-columns skipped
+PASS MarkerFileReader semicolon and tab separators
+PASS CarvingStages schedule descends max->finish
+PASS CarvingStages single stage is finish
+PASS CarvingStages respects finish allowance
+PASS CarvingStages invalid stages throws
+PASS CarvingStages max below finish throws
+PASS FabricationReport weight = volume x density
+PASS FabricationReport lift-class thresholds
+PASS FabricationReport lift-class boundaries
+PASS FabricationReport default granite density
+PASS Hungarian empty matrix → empty
+PASS Hungarian 1×1 → row 0 → col 0
+PASS Hungarian identity 3×3 → diagonal
+PASS Hungarian anti-diagonal 3×3
+PASS Hungarian 2×4 (more supply)
+PASS Hungarian 4×2 leaves 2 unassigned
+PASS Hungarian all-infeasible → all unassigned
+PASS Hungarian partial feasibility routing
+PASS Hungarian null cost throws
+PASS Hungarian bad dimensions throws
+PASS Hungarian deterministic
+PASS ConstraintDictionary numeric >= ops
+PASS ConstraintDictionary categorical == ops
+PASS ConstraintDictionary unknown op throws
+PASS IncidenceMatrix tabulates feasibility
+PASS WeightMatrix NaN where infeasible
+PASS MatcherRegistry register + run
+PASS MatcherRegistry unknown solver throws
+PASS End-to-end voussoir-shape Hungarian
+SKIP NFP-BLF places parts with zero overlap (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP NFP-BLF respects holes with zero overlap (Rhino) (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS NFP-BLF Minkowski NFP of two unit squares is [-1,1]^2 area 4
+PASS NFP-BLF place-at-BL-vertex is overlap-free by construction
+PASS NFP-BLF InflateLoops grows and shrinks area
+PASS GeometryNumerics recenter far-from-origin -> centroid ~0
+PASS GeometryNumerics scale-relative epsilon scales
+PASS GeometryNumerics safe integer scale avoids int64 overflow
+PASS GeometryNumerics tolerance budget from one source
+PASS Hungarian rectangular optimal with big-M padding
+PASS Hungarian dense-infeasible large-cost finds unique feasible
+PASS Hungarian all-infeasible row is Unassigned
+PASS SpatialHash3D radius query matches brute force (sorted)
+        BlockCutOpt parallel: serial=1.23s parallel=0.26s speedup=4.66x cores=16 count=55 psiDeg=58.0
+PASS BlockCutOpt parallel matches serial and is faster (DFN)
+PASS GPR Fft forward/inverse round-trips
+PASS GPR Hilbert energy of cosine is flat
+PASS GPR chain extracts planted reflector at depth
+PASS GPR Stolt migration concentrates diffraction
+    real marble: 265 traces, 185 fracture picks
+PASS GPR real marble end-to-end (if present)
+PASS TinPeel removes cap spike
+PASS TinPeel drops tiny component
+PASS TinMerge IDW recovers a plane
+PASS TinMerge flags out-of-range targets
+PASS Bedrock deepest-per-column + datum shift
+PASS Bedrock to common TIN end-to-end
+PASS Tracer single planted line
+PASS Tracer short reflector dropped
+PASS Tracer two separated lines (both modes)
+PASS Tracer dip recovered
+PASS Tracer crossing connected-vs-orientation
+PASS Surface loft horizontal -> flat
+PASS Surface loft across grid
+PASS AudienceReport engineer refuses without CRS
+PASS AudienceReport engineer with CRS releases
+PASS AudienceReport artist flags grain/vein unknown
+PASS AudienceReport geologist flags rock-mass worksheet
+PASS AudienceReport sections route by audience
+PASS AudienceReport FrahanReport numerics become rows
+PASS AudienceReport CSV is well-formed
+SKIP NFP-BLF evolved concave pack is 0-overlap (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP NFP-BLF evolved is deterministic (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP NFP-BLF legacy flags-off is deterministic (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP NFP-BLF multi-start ran (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch semicircular 11 closed cells (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch semicircular total volume in band (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch springers on ground + X span (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch keystone index is central (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch all profiles build closed cells (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory arch base point translates (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory pendentive 36 closed cells (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+SKIP VoussoirCellFactory pendentive drop-to-ground min Z ~0 (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+PASS VoussoirCellFactory pendentive rejects corners off sphere
+SKIP VoussoirCellFactory assembly records ready for matcher (requires Rhino/Grasshopper runtime)
+        type:    System.DllNotFoundException
+        message: Unable to load DLL 'rhcommon_c': A dynamic link library (DLL) initialization routine failed. (Exception from HRESULT: 0x8007045A)
+      [bench] kb10 6x4 exact-joint wall: STABLE (status=Optimal) in 56 ms (54 ifaces, 216 verts, 18 free)
+PASS kb10 6x4 exact-joint wall certifies (was SolverError)
+      [bench] kb10 sweep 6x4: STABLE (status=Optimal) in 56 ms (54 ifaces, 216 verts, 18 free)
+      [bench] kb10 sweep 8x5: STABLE (status=Optimal) in 441 ms (95 ifaces, 380 verts, 32 free)
+      [bench] kb10 sweep 10x6: STABLE (status=Optimal) in 1038 ms (147 ifaces, 588 verts, 49 free)
+PASS kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms
