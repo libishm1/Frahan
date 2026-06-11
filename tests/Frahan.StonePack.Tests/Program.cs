@@ -357,6 +357,7 @@ var tests = new List<(string Name, Action Body)>
     ("compas_cra json bridge both stable", CraCompasJsonFixtureTests.Compas_Json_Bridge_BothStable),
     // Lambda flagship study (REPORTED table; skips without ETH data)
     ("lambda study coursing-by-assigner table (Rhino-free, skips without dataset)", LambdaStudyBenchmarkTests.LambdaStudy_CoursingByAssigner_Table),
+    ("CNH hole nester true-hole bench (Rhino-free, valid+timed)", ContactNfpHoleNesterBenchTests.Cnh_TrueHole_ValidAndTimed),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
