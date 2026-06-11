@@ -158,3 +158,16 @@ Each entry: Symptom / Trigger / Root cause / Fix / Status.
 - No `Mesh.Reduce` on multi-million meshes inline; voxel-cluster instead (KB-2).
 - Carving Stages must stay synchronous + cached; do not reorder its inputs (breaks saved files).
 - In-process CGAL/geogram BOOLEAN can crash Rhino; route heavy boolean/recon through the out-of-process worker.
+
+## KB-9 — Penalty-RBE ADMM fails on inclined-contact systems (compas_cra parity gap) [OPEN, 2026-06-11]
+The compas_cra parity benchmark (tests/CraCompasParityTests.cs, exact ports of their doc examples) found the
+ADMM penalty path returns SolverError on systems whose contacts are all INCLINED, regardless of size or
+density: 04_stacks (3 unit cubes tilted 20 deg about Y — 2 free blocks, 2 interfaces, the smallest repro) and
+06_arch (their Arch template, 20 voussoirs, mu=0.7) both fail with "ADMM did not converge in 8000 iterations"
+(r_pri stuck orders above eps), while the horizontal-bed fixtures (00_simple_cube, tutorial_cubes) certify in
+1 iteration. Density 1 vs 2400 makes no difference (scaling ruled out). This SUBSUMES the earlier
+"~50-interface ceiling" diagnosis (the 53-iface wall also has many inclined head joints). compas_cra/IPOPT
+solves all four. Suspects: detector-path interface frames/vertex ordering on inclined planes feeding
+ill-conditioned equality rows; penalty-formulation conditioning under inclined cones; missing polish/warm
+start. Fixtures are registered and SKIP loudly as "KNOWN PARITY GAP KB-9" until fixed. Fix item =
+EVOLUTION_PLAN_COLLAB_READY Block 3 item "ADMM conditioning" (now with minimal repros).

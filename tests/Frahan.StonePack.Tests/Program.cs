@@ -343,6 +343,11 @@ var tests = new List<(string Name, Action Body)>
     ("carve-back inflated inventory exact analytic", StoneCarveBackTests.CarveBack_InflatedInventory_ExactAnalytic),
     ("carve-back exact refines the voxel estimate", StoneCarveBackTests.CarveBack_ExactRefinesVoxelEstimate),
     ("carve-back identity placements exact analytic 1.25", StoneCarveBackTests.CarveBack_IdentityPlacements_ExactAnalytic125),
+    // compas_cra parity (Block 3 item 1): exact ports of their parametric doc examples
+    ("compas_cra parity 00_simple_cube both stable", CraCompasParityTests.Compas_SimpleCube_BothStable),
+    ("compas_cra parity tutorial_cubes both stable", CraCompasParityTests.Compas_TutorialCubes_BothStable),
+    ("compas_cra parity 04_stacks 20deg both stable", CraCompasParityTests.Compas_Stacks20Deg_BothStable),
+    ("compas_cra parity 06_arch n=20 mu=0.7 both stable (timed)", CraCompasParityTests.Compas_Arch20_BothStable_Timed),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
