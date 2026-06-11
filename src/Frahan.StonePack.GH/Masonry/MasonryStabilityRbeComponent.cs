@@ -29,11 +29,11 @@ namespace Frahan.GH.Masonry
     //     MasonrySolverRegistry.Default.Solve(problem)
     //         -> ConvexQpResult
     //
-    // The solver lookup is intentionally a STUB at this stage: until Phase B
-    // lands a managed convex-QP solver (or Phase C wires up an IPOPT
-    // P/Invoke), MasonrySolverRegistry.Default returns null and this
-    // component reports Verdict = "no solver registered". The parent agent
-    // wires the actual solver assignment in plugin OnLoad after Phase B.
+    // Solver lookup (updated 2026-06-11): MasonrySolverRegistry resolves to
+    // the managed AdmmQpSolver (OSQP-style ADMM; see its header for the
+    // ~50-interface conditioning ceiling) wired in plugin OnLoad; the IPOPT
+    // P/Invoke seam remains an honest stub (IpoptManagedStub). If no solver
+    // is registered the component reports Verdict = "no solver registered".
     //
     // ComponentGuid: F6BAC3D4-4E5F-4071-BC3D-5E6F7A8B9CAD
     //

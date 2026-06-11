@@ -69,7 +69,7 @@ public sealed class VsaSegmenter
     /// <summary>DEPRECATED: legacy parameter from the greedy stub. The Lloyd
     /// iteration is metric-driven, not angle-thresholded. Retained for ABI
     /// compatibility; ignored at runtime.</summary>
-    [Obsolete("Lloyd iteration uses the L^{2,1} metric directly; angle threshold is ignored. Will be removed v2.")]
+    [Obsolete("Lloyd iteration uses the L^{2,1} metric directly; angle threshold is ignored. Retained for source compatibility; ignored by the solver.")]
     public double NormalMergeAngle { get; set; } = 0.35;
 
     /// <summary>Random seed for the spread initial seeding step. Set to a
