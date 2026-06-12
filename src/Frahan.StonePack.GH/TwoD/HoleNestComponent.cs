@@ -38,7 +38,7 @@ namespace Frahan.GH.TwoD;
 public sealed class HoleNestComponent : GH_Component
 {
     private const int MaxVerts = 200;          // hard cap for explicit polylines (drawn as-is)
-    private const int SmoothSampleVerts = 48;  // uniform-by-length samples for smooth curves (NFP cost scales with verts)
+    private int _smoothSampleVerts = 48;       // uniform-by-length samples for smooth curves (Resolution input; NFP cost scales with verts)
 
     public HoleNestComponent()
         : base("Sheet Nest (Hole-Aware)", "HoleNest",
@@ -84,12 +84,22 @@ public sealed class HoleNestComponent : GH_Component
         pManager.AddIntegerParameter("ContactRotations", "CR",
             "Longest-edge count per polygon used to build contact (edge-alignment) rotation angles.",
             GH_ParamAccess.item, 6);
+        pManager.AddIntegerParameter("Resolution", "Res",
+            "SOLVER sampling resolution for smooth curves: uniform-by-length vertices per closed curve " +
+            "(16..200, default 48). This only controls the collision proxies — the Placed output is " +
+            "always the ORIGINAL full-resolution curve, transformed. Raise it when parts must seat into " +
+            "tight concave features; solve time grows roughly quadratically. At 48 verts the proxy chord " +
+            "error is ~0.3% of part size (~0.5 mm on a 300 mm part) — keep Spacing above that for " +
+            "fabrication.", GH_ParamAccess.item, 48);
+        pManager[7].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddCurveParameter("Placed", "C",
-            "Transformed part outers as closed polyline curves (placement order).", GH_ParamAccess.list);
+            "The ORIGINAL part curves at full resolution, moved to their placed positions (placement " +
+            "order). The solver works on coarse collision proxies internally; output geometry stays " +
+            "exact for fabrication.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Source", "I",
             "For each placed curve, the index of the source curve in the Parts input (labeling/etching map).",
             GH_ParamAccess.list);
@@ -127,6 +137,9 @@ public sealed class HoleNestComponent : GH_Component
         da.GetData(4, ref spacing);
         da.GetData(5, ref baseRotations);
         da.GetData(6, ref contactRotations);
+        int resolution = 48;
+        da.GetData(7, ref resolution);
+        _smoothSampleVerts = Math.Max(16, Math.Min(MaxVerts, resolution));
 
         spacing = Math.Max(0.0, spacing);
         baseRotations = Math.Max(1, baseRotations);
@@ -238,7 +251,6 @@ public sealed class HoleNestComponent : GH_Component
         var nestedFlags = new List<bool>(res.Placements.Count);
         foreach (var pl in res.Placements)
         {
-            placedCurves.Add(LoopToCurve(pl.PlacedOuter, _outZ));
             int src = pl.PartIndex >= 0 && pl.PartIndex < inputIndexOf.Count ? inputIndexOf[pl.PartIndex] : -1;
             sourceIndices.Add(src);
             // Core placement = rotate about the world Z origin, then translate.
@@ -247,6 +259,17 @@ public sealed class HoleNestComponent : GH_Component
             var xf = Transform.Translation(pl.Tx, pl.Ty, dz) *
                      Transform.Rotation(pl.AngleRad, Vector3d.ZAxis, Point3d.Origin);
             transforms.Add(xf);
+            // Placed output = the ORIGINAL curve transformed (full resolution).
+            // The sampled loop is only the solver's collision proxy; emitting
+            // the true geometry costs nothing and keeps fabrication curves
+            // exact. Fall back to the proxy loop if the duplicate fails.
+            Curve placedCurve = null;
+            if (src >= 0 && src < partCurves.Count && partCurves[src] != null)
+            {
+                placedCurve = partCurves[src].DuplicateCurve();
+                if (placedCurve != null && !placedCurve.Transform(xf)) placedCurve = null;
+            }
+            placedCurves.Add(placedCurve ?? LoopToCurve(pl.PlacedOuter, _outZ));
             nestedFlags.Add(pl.NestedInHost);
         }
 
@@ -315,7 +338,7 @@ public sealed class HoleNestComponent : GH_Component
             // placement VALIDITY independent of sampling density — only
             // boundary fidelity (~0.3% of size at 48 verts) is traded, well
             // inside nesting spacing/kerf budgets.
-            var seg = curve.GetLength() / SmoothSampleVerts;
+            var seg = curve.GetLength() / _smoothSampleVerts;
             var div = seg > Rhino.RhinoMath.ZeroTolerance ? curve.DivideEquidistant(seg) : null;
             if (div != null && div.Length >= 3)
             {
@@ -323,7 +346,7 @@ public sealed class HoleNestComponent : GH_Component
             }
             else
             {
-                var divPar = curve.DivideByCount(SmoothSampleVerts, false);
+                var divPar = curve.DivideByCount(_smoothSampleVerts, false);
                 if (divPar == null || divPar.Length < 3) return null;
                 var tmp = new List<Point3d>(divPar.Length);
                 foreach (var t in divPar) tmp.Add(curve.PointAt(t));
