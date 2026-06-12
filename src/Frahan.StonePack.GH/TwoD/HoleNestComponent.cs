@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
 using Frahan.GH.Attributes;
 using Frahan.Packing.TwoD;
 using Grasshopper.Kernel;
@@ -120,7 +122,128 @@ public sealed class HoleNestComponent : GH_Component
             GH_ParamAccess.item);
     }
 
+    // ─── async solve (the Geogram-Remesh / Kintsugi house pattern, adapted) ──
+    // The solver runs on a background Task so the canvas NEVER freezes; while a
+    // new layout computes, the PREVIOUS layout stays visible ("updating...") and
+    // the finished result pops in via ScheduleSolution — the instant-feel
+    // pattern. Unlike the scan-ingest nodes there is no Run gate (a mid-graph
+    // nester must auto-solve; async alone removes the freeze risk), and an
+    // input-hash cache prevents redundant recomputes on benign re-expires.
+    private readonly object _gate = new object();
+    private Task _task;
+    private CancellationTokenSource _cts;
+    private ulong _taskHash;
+    private volatile string _progress = "";
+    private Payload _readyPayload;
+    private string _readyError;
+    private bool _hasReady;
+    private Payload _last;
+
+    private sealed class Snapshot
+    {
+        public IReadOnlyList<(double X, double Y)> SheetOuter;
+        public List<IReadOnlyList<(double X, double Y)>> SheetHoles;
+        public List<HoleNestPart> Parts;
+        public double UserSpacing, EngineSpacing, MaxDev;
+        public int BaseRotations, ContactRotations;
+        public List<int> InputIndexOf;
+        public List<double> PartZOf;
+        public List<Curve> Originals;   // duplicated on the UI thread (owned)
+        public double OutZ;
+        public ulong Hash;
+    }
+
+    private sealed class Payload
+    {
+        public Snapshot Snap;
+        public HoleNestResult Res;
+    }
+
     protected override void SolveInstance(IGH_DataAccess da)
+    {
+        var snap = BuildSnapshot(da);
+        if (snap == null) return; // validation error already reported
+
+        Payload ready = null; string readyError = null; bool taskRunning; ulong taskHash;
+        lock (_gate)
+        {
+            if (_hasReady)
+            {
+                ready = _readyPayload; readyError = _readyError;
+                _readyPayload = null; _readyError = null; _hasReady = false;
+                if (readyError == null && ready != null) _last = ready;
+            }
+            taskRunning = _task != null && !_task.IsCompleted;
+            taskHash = _taskHash;
+        }
+        if (readyError != null)
+        {
+            Message = "error";
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, readyError);
+            EmitEmpty(da, readyError);
+            return;
+        }
+
+        // cache hit: same inputs as the last completed solve -> instant emit
+        if (_last != null && _last.Snap.Hash == snap.Hash && !taskRunning)
+        {
+            Message = null;
+            EmitPayload(da, _last, null);
+            return;
+        }
+
+        if (taskRunning && taskHash == snap.Hash)
+        {
+            Message = _progress;
+            if (_last != null) EmitPayload(da, _last, "updating...");
+            else EmitEmpty(da, "Nesting in the background — canvas stays live; the result pops in when ready.");
+            return;
+        }
+
+        StartCompute(snap);
+        Message = "nesting...";
+        if (_last != null) EmitPayload(da, _last, "updating...");
+        else EmitEmpty(da, "Nesting in the background — canvas stays live; the result pops in when ready.");
+    }
+
+    private void StartCompute(Snapshot snap)
+    {
+        var doc = OnPingDocument();
+        var iguid = InstanceGuid;
+        lock (_gate)
+        {
+            try { _cts?.Cancel(); } catch { }
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+            _taskHash = snap.Hash;
+            _progress = $"nesting {snap.Parts.Count} parts...";
+            _task = Task.Run(() =>
+            {
+                Payload payload = null; string error = null;
+                try
+                {
+                    var res = ContactNfpHoleNester.Pack(snap.SheetOuter, snap.SheetHoles, snap.Parts,
+                        snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations);
+                    payload = new Payload { Snap = snap, Res = res };
+                }
+                catch (Exception ex) { error = "Hole-aware nesting failed: " + ex.Message; }
+                bool cancelled = token.IsCancellationRequested;
+                if (cancelled) return; // stale job: discard silently
+                lock (_gate) { _readyPayload = payload; _readyError = error; _hasReady = true; }
+                try
+                {
+                    doc?.ScheduleSolution(10, d =>
+                    {
+                        if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true);
+                    });
+                }
+                catch { }
+            }, token);
+        }
+    }
+
+    /// <summary>Inputs -> owned snapshot (conversion + proxy-deviation measurement + hash). UI thread only.</summary>
+    private Snapshot BuildSnapshot(IGH_DataAccess da)
     {
         Curve sheetCurve = null;
         var sheetHoleCurves = new List<Curve>();
@@ -130,9 +253,9 @@ public sealed class HoleNestComponent : GH_Component
         int baseRotations = 4;
         int contactRotations = 6;
 
-        if (!da.GetData(0, ref sheetCurve)) return;
+        if (!da.GetData(0, ref sheetCurve)) return null;
         da.GetDataList(1, sheetHoleCurves);
-        if (!da.GetDataList(2, partCurves)) return;
+        if (!da.GetDataList(2, partCurves)) return null;
         da.GetDataTree(3, out partHolesTree);
         da.GetData(4, ref spacing);
         da.GetData(5, ref baseRotations);
@@ -145,21 +268,23 @@ public sealed class HoleNestComponent : GH_Component
         baseRotations = Math.Max(1, baseRotations);
         contactRotations = Math.Max(0, contactRotations);
 
-        var sheetOuter = CurveToLoop(sheetCurve, "Sheet", out var sheetZ);
+        double maxDev = 0.0;
+        var sheetOuter = CurveToLoop(sheetCurve, "Sheet", out var sheetZ, out var devSheet);
         if (sheetOuter == null)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
                 "Sheet must be a valid closed curve in a WorldXY-parallel plane.");
-            return;
+            return null;
         }
-        _outZ = sheetZ;   // placed curves are emitted at the sheet's elevation
+        if (devSheet > maxDev) maxDev = devSheet;
+        _outZ = sheetZ;
 
         var sheetHoles = new List<IReadOnlyList<(double X, double Y)>>();
         var droppedSheetHoles = 0;
         foreach (var hc in sheetHoleCurves)
         {
-            var loop = CurveToLoop(hc, null, out _);
-            if (loop != null) sheetHoles.Add(loop);
+            var loop = CurveToLoop(hc, null, out _, out var devH);
+            if (loop != null) { sheetHoles.Add(loop); if (devH > maxDev) maxDev = devH; }
             else droppedSheetHoles++;
         }
         if (droppedSheetHoles > 0)
@@ -192,18 +317,17 @@ public sealed class HoleNestComponent : GH_Component
                 $"{unmatchedBranches} Part Holes branch(es) have no matching Parts index (path {{i}} must " +
                 "address Parts[i]); they were ignored.");
 
-        // Build the part set. Track the map from the prepared (filtered) CNH
-        // index back to the input index so skipped invalid parts never shift
-        // another part's holes onto it, and so Source can report input indices.
         var parts = new List<HoleNestPart>();
         var inputIndexOf = new List<int>();
         var partZOf = new List<double>();
+        var originals = new List<Curve>();
         var droppedParts = 0;
         var droppedPartHoles = 0;
         for (int i = 0; i < partCurves.Count; i++)
         {
-            var outer = CurveToLoop(partCurves[i], null, out var partZ);
+            var outer = CurveToLoop(partCurves[i], null, out var partZ, out var devP);
             if (outer == null) { droppedParts++; continue; }
+            if (devP > maxDev) maxDev = devP;
 
             List<IReadOnlyList<(double X, double Y)>> holes = null;
             if (holesByPartIndex != null && holesByPartIndex.TryGetValue(i, out var branch))
@@ -211,8 +335,9 @@ public sealed class HoleNestComponent : GH_Component
                 foreach (var gc in branch)
                 {
                     if (gc == null || gc.Value == null) continue;
-                    var hl = CurveToLoop(gc.Value, null, out _);
+                    var hl = CurveToLoop(gc.Value, null, out _, out var devHl);
                     if (hl == null) { droppedPartHoles++; continue; }
+                    if (devHl > maxDev) maxDev = devHl;
                     if (holes == null) holes = new List<IReadOnlyList<(double X, double Y)>>();
                     holes.Add(hl);
                 }
@@ -220,6 +345,7 @@ public sealed class HoleNestComponent : GH_Component
             parts.Add(new HoleNestPart { Outer = outer, Holes = holes });
             inputIndexOf.Add(i);
             partZOf.Add(partZ);
+            originals.Add(partCurves[i] != null ? partCurves[i].DuplicateCurve() : null);
         }
         if (droppedParts > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
@@ -230,50 +356,76 @@ public sealed class HoleNestComponent : GH_Component
         if (parts.Count == 0)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No valid part curves.");
-            return;
+            return null;
         }
 
-        HoleNestResult res;
-        try
+        // PROXY-DEVIATION COMPENSATION (overlap fix, 2026-06-12): the solver
+        // sees sampled proxies whose chords cut INSIDE the true curve, so
+        // touching proxies let the true full-resolution curves cross by up to
+        // the sampling deviation on each side. Inflating the engine spacing by
+        // 2x the measured worst deviation makes every proxy guarantee transfer
+        // to the true geometry (placed originals can touch but never overlap).
+        // Drawn polylines measure zero deviation, so pure-polyline instances
+        // (and the rect fast-path) are unaffected.
+        double engineSpacing = spacing + 2.0 * maxDev;
+
+        ulong h = 1469598103934665603UL;
+        void HD(double v) { h ^= (ulong)BitConverter.DoubleToInt64Bits(v); h *= 1099511628211UL; }
+        void HL(IReadOnlyList<(double X, double Y)> lp) { HD(lp.Count); foreach (var q in lp) { HD(q.X); HD(q.Y); } }
+        HD(engineSpacing); HD(baseRotations); HD(contactRotations); HD(_smoothSampleVerts);
+        HL(sheetOuter); HD(sheetHoles.Count);
+        foreach (var q in sheetHoles) HL(q);
+        HD(parts.Count);
+        for (int i = 0; i < parts.Count; i++)
         {
-            res = ContactNfpHoleNester.Pack(
-                sheetOuter, sheetHoles, parts, spacing, baseRotations, contactRotations);
-        }
-        catch (Exception ex)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Hole-aware nesting failed: " + ex.Message);
-            return;
+            HL(parts[i].Outer); HD(partZOf[i]); HD(inputIndexOf[i]);
+            if (parts[i].Holes != null) foreach (var q in parts[i].Holes) HL(q);
         }
 
+        return new Snapshot
+        {
+            SheetOuter = sheetOuter, SheetHoles = sheetHoles, Parts = parts,
+            UserSpacing = spacing, EngineSpacing = engineSpacing, MaxDev = maxDev,
+            BaseRotations = baseRotations, ContactRotations = contactRotations,
+            InputIndexOf = inputIndexOf, PartZOf = partZOf, Originals = originals,
+            OutZ = sheetZ, Hash = h,
+        };
+    }
+
+    private void EmitPayload(IGH_DataAccess da, Payload payload, string staleNote)
+    {
+        var res = payload.Res;
+        var snap = payload.Snap;
         var placedCurves = new List<Curve>(res.Placements.Count);
         var sourceIndices = new List<int>(res.Placements.Count);
         var transforms = new List<Transform>(res.Placements.Count);
         var nestedFlags = new List<bool>(res.Placements.Count);
         foreach (var pl in res.Placements)
         {
-            int src = pl.PartIndex >= 0 && pl.PartIndex < inputIndexOf.Count ? inputIndexOf[pl.PartIndex] : -1;
+            int src = pl.PartIndex >= 0 && pl.PartIndex < snap.InputIndexOf.Count ? snap.InputIndexOf[pl.PartIndex] : -1;
             sourceIndices.Add(src);
             // Core placement = rotate about the world Z origin, then translate.
             // The Z term lifts a part from its own input plane to the sheet's.
-            double dz = pl.PartIndex >= 0 && pl.PartIndex < partZOf.Count ? _outZ - partZOf[pl.PartIndex] : 0.0;
+            double dz = pl.PartIndex >= 0 && pl.PartIndex < snap.PartZOf.Count ? snap.OutZ - snap.PartZOf[pl.PartIndex] : 0.0;
             var xf = Transform.Translation(pl.Tx, pl.Ty, dz) *
                      Transform.Rotation(pl.AngleRad, Vector3d.ZAxis, Point3d.Origin);
             transforms.Add(xf);
             // Placed output = the ORIGINAL curve transformed (full resolution).
-            // The sampled loop is only the solver's collision proxy; emitting
-            // the true geometry costs nothing and keeps fabrication curves
-            // exact. Fall back to the proxy loop if the duplicate fails.
+            // The sampled loop is only the solver's collision proxy; the
+            // deviation-compensated spacing guarantees the true curves never
+            // overlap. Fall back to the proxy loop if the duplicate fails.
             Curve placedCurve = null;
-            if (src >= 0 && src < partCurves.Count && partCurves[src] != null)
+            int prep = pl.PartIndex;
+            if (prep >= 0 && prep < snap.Originals.Count && snap.Originals[prep] != null)
             {
-                placedCurve = partCurves[src].DuplicateCurve();
+                placedCurve = snap.Originals[prep].DuplicateCurve();
                 if (placedCurve != null && !placedCurve.Transform(xf)) placedCurve = null;
             }
-            placedCurves.Add(placedCurve ?? LoopToCurve(pl.PlacedOuter, _outZ));
+            placedCurves.Add(placedCurve != null ? placedCurve : LoopToCurve(pl.PlacedOuter, snap.OutZ));
             nestedFlags.Add(pl.NestedInHost);
         }
 
-        var unplaced = parts.Count - res.PlacedCount;
+        var unplaced = snap.Parts.Count - res.PlacedCount;
         if (unplaced > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 $"{unplaced} part(s) could not be placed.");
@@ -282,10 +434,12 @@ public sealed class HoleNestComponent : GH_Component
                 "Layout failed independent boolean validation: " + res.Note);
 
         var note = string.IsNullOrEmpty(res.Note) ? "ok" : res.Note;
+        var devNote = snap.MaxDev > 0 ? $", ProxyDevComp: +{2.0 * snap.MaxDev:0.####}" : "";
+        var stale = staleNote != null ? $" [{staleNote}]" : "";
         var report =
-            $"Sheet Nest (Hole-Aware) — Placed: {res.PlacedCount}/{parts.Count}, " +
+            $"Sheet Nest (Hole-Aware){stale} — Placed: {res.PlacedCount}/{snap.Parts.Count}, " +
             $"PartHolesFilled: {res.PartHolesFilled}, Density: {res.Density:0.000}, " +
-            $"Valid: {res.Valid}, Elapsed: {res.ElapsedMs:0.0} ms, Note: {note}";
+            $"Valid: {res.Valid}, Elapsed: {res.ElapsedMs:0.0} ms, Note: {note}{devNote}";
 
         da.SetDataList(0, placedCurves);
         da.SetDataList(1, sourceIndices);
@@ -294,6 +448,17 @@ public sealed class HoleNestComponent : GH_Component
         da.SetData(4, report);
         da.SetData(5, res.Density);
         da.SetData(6, res.Valid);
+    }
+
+    private void EmitEmpty(IGH_DataAccess da, string message)
+    {
+        da.SetDataList(0, new List<Curve>());
+        da.SetDataList(1, new List<int>());
+        da.SetDataList(2, new List<Transform>());
+        da.SetDataList(3, new List<bool>());
+        da.SetData(4, message);
+        da.SetData(5, 0.0);
+        da.SetData(6, false);
     }
 
     // ─── Curve <-> loop conversion (mirrors IrregularSheetFillNfpBlf.CurveToLoop) ─
@@ -307,9 +472,10 @@ public sealed class HoleNestComponent : GH_Component
 
     private double _outZ;
 
-    private List<(double X, double Y)> CurveToLoop(Curve curve, string label, out double planeZ)
+    private List<(double X, double Y)> CurveToLoop(Curve curve, string label, out double planeZ, out double maxDev)
     {
         planeZ = 0.0;
+        maxDev = 0.0;
         if (curve == null) return null;
         if (!curve.IsClosed)
         {
@@ -319,6 +485,7 @@ public sealed class HoleNestComponent : GH_Component
         }
 
         IList<Point3d> pts = null;
+        bool measureDeviation = false;
         if (curve.TryGetPolyline(out var pl))
         {
             pts = pl;
@@ -338,6 +505,7 @@ public sealed class HoleNestComponent : GH_Component
             // placement VALIDITY independent of sampling density — only
             // boundary fidelity (~0.3% of size at 48 verts) is traded, well
             // inside nesting spacing/kerf budgets.
+            measureDeviation = true;
             var seg = curve.GetLength() / _smoothSampleVerts;
             var div = seg > Rhino.RhinoMath.ZeroTolerance ? curve.DivideEquidistant(seg) : null;
             if (div != null && div.Length >= 3)
@@ -357,6 +525,24 @@ public sealed class HoleNestComponent : GH_Component
         var n = pts.Count;
         if (n > 1 && pts[0].DistanceTo(pts[n - 1]) < 1e-9) n--;
         if (n < 3) return null;
+
+        // measured proxy deviation (sampled smooth curves only): max distance
+        // from each chord midpoint back to the true curve — feeds the
+        // deviation-compensated engine spacing so full-resolution outputs
+        // can never overlap even though the solver sees coarse proxies
+        if (measureDeviation)
+        {
+            for (var i = 0; i < n; i++)
+            {
+                var a = pts[i]; var b = pts[(i + 1) % n];
+                var mid = new Point3d((a.X + b.X) * 0.5, (a.Y + b.Y) * 0.5, (a.Z + b.Z) * 0.5);
+                if (curve.ClosestPoint(mid, out var tcp))
+                {
+                    var d = curve.PointAt(tcp).DistanceTo(mid);
+                    if (d > maxDev) maxDev = d;
+                }
+            }
+        }
 
         // WorldXY-parallel plane guard: a tilted curve would project
         // foreshortened and nest silently with distorted geometry.
