@@ -157,11 +157,13 @@ public static class Clipper2Adapter
     {
         if (pattern == null || path == null) return new List<List<(double X, double Y)>>();
         if (pattern.Count < 3 || path.Count < 3) return new List<List<(double X, double Y)>>();
+        // Clipper2's PathsD MinkowskiSum already NonZero-unions the swept quads
+        // internally (verified behaviorally on 2.0.0: a re-union is a no-op on
+        // loop count and area), so no second union here — it doubled the cost
+        // of every NFP build (2026-06-12 profiling: Minkowski was 95% of the
+        // hole-nester's general-engine solve time).
         PathsD raw = Clipper.MinkowskiSum(ToPathD(pattern), ToPathD(path), true);
-        // MinkowskiSum can emit several overlapping contours for non-convex
-        // inputs; self-union under NonZero merges them into the true outer sum.
-        PathsD merged = Clipper.BooleanOp(ClipType.Union, raw, new PathsD(), FillRule.NonZero);
-        return FromPathsD(merged);
+        return FromPathsD(raw);
     }
 
     /// <summary>Difference (subject minus clip) over multi-loop polygons; tuple-only.</summary>

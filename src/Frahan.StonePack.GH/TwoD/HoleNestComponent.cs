@@ -37,7 +37,8 @@ namespace Frahan.GH.TwoD;
     ComponentGuid = "2d351646-2cb0-402a-bbd8-3950b5bb1fbc")]
 public sealed class HoleNestComponent : GH_Component
 {
-    private const int MaxVerts = 200;
+    private const int MaxVerts = 200;          // hard cap for explicit polylines (drawn as-is)
+    private const int SmoothSampleVerts = 48;  // uniform-by-length samples for smooth curves (NFP cost scales with verts)
 
     public HoleNestComponent()
         : base("Sheet Nest (Hole-Aware)", "HoleNest",
@@ -301,12 +302,28 @@ public sealed class HoleNestComponent : GH_Component
         }
         else
         {
-            var poly = curve.ToPolyline(1e-3, Math.PI / 90.0, 0, 0);
-            if (poly != null && poly.TryGetPolyline(out var pl2) && pl2.Count >= 4)
-                pts = pl2;
+            // UNIFORM-BY-LENGTH sampling (perf, 2026-06-12, measured): the old
+            // absolute 1e-3 chord + 2-degree turn sampled smooth NURBS to ~200
+            // curvature-adaptive vertices and the canvas solve took 6.3 s. The
+            // engine's cost is dominated by Minkowski NFP builds, which scale
+            // with vertex count AND suffer from the tiny edges that
+            // curvature-adaptive sampling concentrates at high-curvature spots
+            // (measured: 53 adaptive verts 4.2 s vs 48 uniform verts 2.8 s on
+            // the same shields). Equidistant points at SmoothSampleVerts per
+            // closed curve give the same boundary fidelity budget with none of
+            // the degenerate edges. The engine's exact verification gate makes
+            // placement VALIDITY independent of sampling density — only
+            // boundary fidelity (~0.3% of size at 48 verts) is traded, well
+            // inside nesting spacing/kerf budgets.
+            var seg = curve.GetLength() / SmoothSampleVerts;
+            var div = seg > Rhino.RhinoMath.ZeroTolerance ? curve.DivideEquidistant(seg) : null;
+            if (div != null && div.Length >= 3)
+            {
+                pts = div;
+            }
             else
             {
-                var divPar = curve.DivideByCount(Math.Min(MaxVerts, 128), false);
+                var divPar = curve.DivideByCount(SmoothSampleVerts, false);
                 if (divPar == null || divPar.Length < 3) return null;
                 var tmp = new List<Point3d>(divPar.Length);
                 foreach (var t in divPar) tmp.Add(curve.PointAt(t));
