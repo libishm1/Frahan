@@ -84,6 +84,92 @@ static class ContactNfpHoleNesterBenchTests
             throw new Exception($"CNH {label} ran engine '{r.Note}', expected '{expectedEngine}'");
     }
 
+    // REGRESSION (user report 2026-06-12): irregular shield-shaped sampled parts
+    // overlapped on canvas ("general-nfp | part 0 overlaps another part").
+    // Root cause: the general path trusted the Minkowski NFP blindly; concave /
+    // sampled shapes have NFP coverage gaps, so placement needs an exact
+    // boolean verification per candidate (the sibling nester's safety net).
+    public static void Cnh_Irregular_Shields_GeneralValid()
+    {
+        var sheet = Rect(0, 0, 160, 110);
+        var parts = new List<HoleNestPart>();
+        for (int k = 0; k < 7; k++)
+            parts.Add(new HoleNestPart { Outer = Shield(0.85 + 0.07 * k) });
+
+        var r = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts);
+        Console.WriteLine($"      [bench] CNH shields: engine={r.Note}, placed {r.PlacedCount}/7, valid={r.Valid}, {r.ElapsedMs:0.0} ms");
+        if (!r.Note.StartsWith("general-nfp")) throw new Exception("shields must route to the general engine, got " + r.Note);
+        if (!r.Valid) throw new Exception("INVALID layout on irregular shields: " + r.Note);
+        if (r.PlacedCount < 6) throw new Exception($"only {r.PlacedCount}/7 shields placed");
+    }
+
+    // REGRESSION: small part vs much larger obstacle, general engine forced.
+    // The boundary-sweep NFP has an interior hole (part fully inside obstacle)
+    // that must never be selectable as a placement.
+    public static void Cnh_FullyInside_GeneralValid()
+    {
+        var sheet = Rect(0, 0, 200, 120);
+        var parts = new List<HoleNestPart>
+        {
+            new HoleNestPart { Outer = Rect(0, 0, 90, 90) },  // big solid square
+            new HoleNestPart { Outer = Rect(0, 0, 8, 8) },     // small square
+            new HoleNestPart { Outer = Rect(0, 0, 8, 8) },
+        };
+        var r = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts,
+            enableRectFastPath: false);
+        Console.WriteLine($"      [bench] CNH fully-inside: engine={r.Note}, placed {r.PlacedCount}/3, valid={r.Valid}");
+        if (!r.Valid) throw new Exception("INVALID layout on fully-inside case: " + r.Note);
+        if (r.PlacedCount != 3) throw new Exception($"placed {r.PlacedCount}/3");
+    }
+
+    // REGRESSION (the actual canvas trigger): the same shields drawn at
+    // arbitrary WORLD positions. Before the normalization + t-space cull fix,
+    // a part whose coordinate origin sat far from the part itself made the
+    // obstacle cull compare translation space against world space, silently
+    // dropping live obstacles -> stacked, overlapping parts.
+    public static void Cnh_Irregular_Shields_WorldOffset_GeneralValid()
+    {
+        var sheet = Rect(0, 0, 160, 110);
+        var parts = new List<HoleNestPart>();
+        for (int k = 0; k < 7; k++)
+        {
+            var loop = Shield(0.85 + 0.07 * k);
+            var moved = new List<(double X, double Y)>(loop.Count);
+            foreach (var v in loop) moved.Add((v.X + 37.0 + 11.0 * k, v.Y + 18.0 + 3.0 * k));
+            parts.Add(new HoleNestPart { Outer = moved });
+        }
+        var r = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts);
+        Console.WriteLine($"      [bench] CNH shields@world-offset: engine={r.Note}, placed {r.PlacedCount}/7, valid={r.Valid}, {r.ElapsedMs:0.0} ms");
+        if (!r.Valid) throw new Exception("INVALID layout on world-offset shields: " + r.Note);
+        if (r.PlacedCount < 6) throw new Exception($"only {r.PlacedCount}/7 placed");
+    }
+
+    // Shield-ish sampled polygon: convex top arc, concave flanks, bottom point —
+    // mimics curve-sampled GH input (the reported failure class).
+    private static List<(double X, double Y)> Shield(double s)
+    {
+        var pts = new List<(double X, double Y)>();
+        for (int i = 0; i <= 8; i++)        // top arc (convex bulge)
+        {
+            double u = i / 8.0;
+            pts.Add(((-10 + 20 * u) * s, (24 + 2.2 * Math.Sin(Math.PI * u)) * s));
+        }
+        for (int i = 1; i <= 9; i++)        // right flank, curving inward (concave)
+        {
+            double u = i / 9.0;
+            pts.Add(((10 * (1 - u) + 2.5 * Math.Sin(Math.PI * u)) * s, (24 * (1 - u) * (1 - u)) * s));
+        }
+        for (int i = 1; i < 9; i++)         // left flank back up (concave)
+        {
+            double u = i / 9.0;
+            pts.Add(((-10 * u - 2.5 * Math.Sin(Math.PI * u)) * s, (24 * u * u) * s));
+        }
+        return pts;
+    }
+
     private static List<(double X, double Y)> Rect(double x0, double y0, double x1, double y1) =>
         new List<(double X, double Y)> { (x0, y0), (x1, y0), (x1, y1), (x0, y1) };
 }

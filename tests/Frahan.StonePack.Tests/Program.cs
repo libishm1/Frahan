@@ -358,6 +358,9 @@ var tests = new List<(string Name, Action Body)>
     // Lambda flagship study (REPORTED table; skips without ETH data)
     ("lambda study coursing-by-assigner table (Rhino-free, skips without dataset)", LambdaStudyBenchmarkTests.LambdaStudy_CoursingByAssigner_Table),
     ("CNH hole nester true-hole bench (Rhino-free, valid+timed)", ContactNfpHoleNesterBenchTests.Cnh_TrueHole_ValidAndTimed),
+    ("CNH irregular shields stay valid on the general engine (regression)", ContactNfpHoleNesterBenchTests.Cnh_Irregular_Shields_GeneralValid),
+    ("CNH world-offset shields stay valid (canvas overlap regression)", ContactNfpHoleNesterBenchTests.Cnh_Irregular_Shields_WorldOffset_GeneralValid),
+    ("CNH fully-inside obstacle case stays valid (general engine, regression)", ContactNfpHoleNesterBenchTests.Cnh_FullyInside_GeneralValid),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)

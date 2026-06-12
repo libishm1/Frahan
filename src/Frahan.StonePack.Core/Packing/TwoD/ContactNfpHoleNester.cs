@@ -76,6 +76,41 @@ namespace Frahan.Packing.TwoD
             var res = new HoleNestResult();
             sheetHoles = sheetHoles ?? Array.Empty<IReadOnlyList<(double X, double Y)>>();
 
+            // ---- conditioning (2026-06-12 canvas-overlap fix) ----------------
+            // (a) SCALE everything up: Clipper's floating ops snap to a fixed
+            //     decimal precision, so small-unit geometry (metres) builds
+            //     sliver-noisy NFPs. All engine math runs in scaled space.
+            // (b) NORMALIZE each part to its own bbox-min: GH curves arrive at
+            //     arbitrary world positions, and a part whose coordinate origin
+            //     sits far from the part itself breaks the NFP reach cull
+            //     (translation space vs world space drift apart) and degrades
+            //     rotation conditioning. Outputs are mapped back below.
+            sheetOuter = ScaleLoop(sheetOuter, Scale);
+            var scaledHoles = new List<IReadOnlyList<(double X, double Y)>>(sheetHoles.Count);
+            foreach (var q in sheetHoles) scaledHoles.Add(ScaleLoop(q, Scale));
+            sheetHoles = scaledHoles;
+            spacing *= Scale;
+
+            var normParts = new List<HoleNestPart>(parts.Count);
+            var normOffset = new List<(double BX, double BY)>(parts.Count);
+            for (int i = 0; i < parts.Count; i++)
+            {
+                var src = parts[i];
+                var so = ScaleLoop(src.Outer, Scale);
+                BBox(so, out double bx, out double by, out _, out _);
+                var no = Translate(so, -bx, -by);
+                List<IReadOnlyList<(double X, double Y)>> nh = null;
+                if (src.Holes != null && src.Holes.Count > 0)
+                {
+                    nh = new List<IReadOnlyList<(double X, double Y)>>(src.Holes.Count);
+                    foreach (var hLoop in src.Holes)
+                        nh.Add(Translate(ScaleLoop(hLoop, Scale), -bx, -by));
+                }
+                normParts.Add(new HoleNestPart { Outer = no, Holes = nh });
+                normOffset.Add((bx, by));
+            }
+            parts = normParts;
+
             double sheetArea = Math.Abs(SignedArea(sheetOuter));
             double sheetHoleArea = sheetHoles.Sum(h => Math.Abs(SignedArea(h)));
             double sheetNet = Math.Max(Eps, sheetArea - sheetHoleArea);
@@ -118,6 +153,25 @@ namespace Frahan.Packing.TwoD
             res.Density = res.UsedArea / sheetNet;
             res.PlacedCount = res.Placements.Count;
             res.Note = string.IsNullOrEmpty(res.Note) ? engine : engine + " | " + res.Note;
+
+            // ---- map results back to the caller's space ----------------------
+            // Express each placement against the ORIGINAL (un-normalized,
+            // un-scaled) part loop: placed = R(ang)*(p - b) + t = R(ang)*p + t'
+            // with t' = t - R(ang)*b, so AngleRad+Tx/Ty applied to the caller's
+            // input geometry reproduces PlacedOuter exactly.
+            foreach (var pl in res.Placements)
+            {
+                var (bx, by) = pl.PartIndex >= 0 && pl.PartIndex < normOffset.Count
+                    ? normOffset[pl.PartIndex] : (0.0, 0.0);
+                double c = Math.Cos(pl.AngleRad), s = Math.Sin(pl.AngleRad);
+                double tx = pl.Tx - (c * bx - s * by);
+                double ty = pl.Ty - (s * bx + c * by);
+                pl.Tx = tx / Scale;
+                pl.Ty = ty / Scale;
+                pl.PlacedOuter = ScaleLoop(pl.PlacedOuter, 1.0 / Scale);
+            }
+            res.UsedArea /= Scale * Scale;
+
             sw.Stop();
             res.ElapsedMs = sw.Elapsed.TotalMilliseconds;
             return res;
@@ -497,34 +551,51 @@ namespace Frahan.Packing.TwoD
                 if (feasible.Count == 0) continue;
 
                 // accumulate obstacle NFPs, then subtract in ONE boolean (cheaper
-                // than N sequential differences); cull placed parts whose bbox is
-                // out of reach of the IFP (the FreeNestX reach test)
+                // than N sequential differences). The cull works entirely in
+                // TRANSLATION space: an obstacle's NFP occupies the t-interval
+                // [m.min - rot.max, m.max - rot.min] per axis, which only
+                // coincides with the obstacle's own bbox when the part's origin
+                // sits at the part (the 2026-06-12 canvas bug: world-positioned
+                // parts made the old world-space cull drop live obstacles, so
+                // their NFPs were never subtracted and parts stacked).
                 BBoxLoops(feasible, out double fminx, out double fminy, out double fmaxx, out double fmaxy);
                 BBox(rot, out double rminx, out double rminy, out double rmaxx, out double rmaxy);
-                double reach = Math.Max(rmaxx - rminx, rmaxy - rminy);
+                var reflSimp = SimplifyLoop(refl, NfpSimplifyTol(rot));
                 var obstacles = new List<List<(double X, double Y)>>();
                 foreach (var q in sheetHoles)
-                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(ToList(q), refl));
+                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(SimplifyLoop(ToList(q), NfpSimplifyTol(q)), reflSimp));
                 foreach (var m in placedMaterial)
                 {
                     BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
-                    if (mmaxx + reach < fminx || fmaxx < mminx - reach ||
-                        mmaxy + reach < fminy || fmaxy < mminy - reach) continue;
-                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(m, refl));
+                    double tminx = mminx - rmaxx, tmaxx = mmaxx - rminx;
+                    double tminy = mminy - rmaxy, tmaxy = mmaxy - rminy;
+                    if (tmaxx < fminx - Eps || tminx > fmaxx + Eps ||
+                        tmaxy < fminy - Eps || tminy > fmaxy + Eps) continue;
+                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(SimplifyLoop(m, NfpSimplifyTol(m)), reflSimp));
                 }
                 if (obstacles.Count > 0)
                     feasible = SubtractLoops(feasible, UnionAll(obstacles));
                 if (feasible.Count == 0) continue;
 
-                if (!BottomLeftVertex(feasible, out double tx, out double ty)) continue;
-                if (ty < bestY - Eps || (Math.Abs(ty - bestY) <= Eps && tx < bestX - Eps))
+                // walk the feasible-region vertices bottom-left first and take
+                // the FIRST candidate that survives the exact boolean check.
+                // The NFP is a pruning device, not the safety guarantee: the
+                // Minkowski construction has coverage gaps for concave/sampled
+                // shapes (and was simplified above), so every placement is
+                // verified against the true geometry before it can win.
+                foreach (var (tx, ty) in OrderedVertices(feasible, MaxCandidateVerts))
                 {
+                    if (ty > bestY + Eps) break; // sorted by (y,x): cannot beat best
+                    if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
+                    var placedLoop = Translate(rot, tx, ty);
+                    if (!CandidateOk(placedLoop, sheetOuter, sheetHoles, placedMaterial)) continue;
                     bestY = ty; bestX = tx;
                     best = new HoleNestPlacement
                     {
                         PartIndex = pi, AngleRad = ang, Tx = tx, Ty = ty,
                         PlacedOuter = Translate(Rotate(part.Outer, ang), tx, ty)
                     };
+                    break;
                 }
             }
             return best != null;
@@ -570,15 +641,24 @@ namespace Frahan.Packing.TwoD
                         foreach (var cn in coNested)
                             feasible = SubtractLoops(feasible, Clipper2Adapter.MinkowskiSum(cn, refl));
                         if (feasible.Count == 0) continue;
-                        if (!BottomLeftVertex(feasible, out double tx, out double ty)) continue;
-                        if (ty < bestY - Eps || (Math.Abs(ty - bestY) <= Eps && tx < bestX - Eps))
+
+                        // verified bottom-left candidate: the hull-based IFP is
+                        // anti-conservative for CONCAVE holes (vertices-inside
+                        // does not imply containment), so every nesting is
+                        // re-checked by exact booleans before it can win.
+                        foreach (var (tx, ty) in OrderedVertices(feasible, MaxCandidateVerts))
                         {
+                            if (ty > bestY + Eps) break;
+                            if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
+                            var placedLoop = Translate(rot, tx, ty);
+                            if (!NestOk(placedLoop, hole, coNested)) continue;
                             bestY = ty; bestX = tx; hostIdx = placements[h].PartIndex; holeIdx = k;
                             best = new HoleNestPlacement
                             {
                                 PartIndex = si, AngleRad = ang, Tx = tx, Ty = ty,
                                 PlacedOuter = Translate(Rotate(small.Outer, ang), tx, ty)
                             };
+                            break;
                         }
                     }
                 }
@@ -587,19 +667,32 @@ namespace Frahan.Packing.TwoD
         }
 
         // ── rotation sets ───────────────────────────────────────────────────
+        // ORDERED and BUDGETED (2026-06-12): base rotations first, then contact
+        // angles in priority order, deduped, capped. On sampled curve input the
+        // unbounded cross product (host edges x part edges x 2) exploded to
+        // ~80 angles per part and each angle costs a full NFP build — 8.5 s for
+        // 7 parts. The cap keeps the strongest candidates and bounds the cost.
         private static IEnumerable<double> RotationSet(
             IReadOnlyList<(double X, double Y)> part,
             IReadOnlyList<(double X, double Y)> sheet,
             List<List<(double X, double Y)>> placed,
             int baseCount, int contactCount)
         {
-            var set = new SortedSet<double>(new AngleCmp());
-            for (int r = 0; r < Math.Max(1, baseCount); r++) set.Add(2 * Math.PI * r / Math.Max(1, baseCount));
+            int budget = Math.Max(4, Math.Max(1, baseCount) + 4 + 2 * Math.Max(0, contactCount));
+            var list = new List<double>(budget);
+            void Add(double a)
+            {
+                if (list.Count >= budget) return;
+                a = Norm(a);
+                for (int i = 0; i < list.Count; i++) if (Math.Abs(list[i] - a) < 1e-4) return;
+                list.Add(a);
+            }
+            for (int r = 0; r < Math.Max(1, baseCount); r++) Add(2 * Math.PI * r / Math.Max(1, baseCount));
             // contact angles vs the sheet's longest edges + the most recent placed neighbour
-            foreach (var a in ContactAngles(part, sheet, contactCount)) set.Add(Norm(a));
+            foreach (var a in ContactAngles(part, sheet, contactCount)) { if (list.Count >= budget) break; Add(a); }
             if (placed.Count > 0)
-                foreach (var a in ContactAngles(part, placed[placed.Count - 1], contactCount)) set.Add(Norm(a));
-            return set;
+                foreach (var a in ContactAngles(part, placed[placed.Count - 1], contactCount)) { if (list.Count >= budget) break; Add(a); }
+            return list;
         }
 
         // edge-alignment angles: a(host_edge) - a(part_edge) over longest edges
@@ -813,9 +906,123 @@ namespace Frahan.Packing.TwoD
         private static List<List<(double X, double Y)>> UnionAll(List<List<(double X, double Y)>> loops)
         {
             if (loops.Count <= 1) return loops;
-            var acc = new List<List<(double X, double Y)>> { loops[0] };
-            for (int i = 1; i < loops.Count; i++) acc = UnionLoops(acc, new List<List<(double X, double Y)>> { loops[i] });
-            return acc;
+            // single NonZero union over ALL loops at once: outer/hole loop
+            // orientations are resolved by winding, unlike a pairwise fold that
+            // treats each CW hole loop as a filled region
+            return Clipper2Adapter.Boolean(
+                loops.Select(x => (IReadOnlyList<(double X, double Y)>)x).ToList(),
+                new List<IReadOnlyList<(double X, double Y)>>(),
+                ClipType.Union);
+        }
+
+        // ── conditioning + verification helpers (2026-06-12) ─────────────────
+        private const double Scale = 1000.0;          // internal Clipper-space scale
+        private const int MaxCandidateVerts = 32;     // verified BLF candidates per rotation
+        private const double VerifyRelTol = 1e-4;     // exact-check tolerance, relative to part area
+
+        private static List<(double X, double Y)> ScaleLoop(IReadOnlyList<(double X, double Y)> p, double s)
+        {
+            var r = new List<(double X, double Y)>(p.Count);
+            foreach (var v in p) r.Add((v.X * s, v.Y * s));
+            return r;
+        }
+
+        // Ramer-Douglas-Peucker, closed-loop variant: NFP INPUTS only (the
+        // verification below always runs on the exact loops). Sampled curves
+        // arrive with up to 200 vertices; Minkowski cost is |pattern|x|path|.
+        private static List<(double X, double Y)> SimplifyLoop(List<(double X, double Y)> p, double tol)
+        {
+            if (p.Count <= 8 || tol <= 0) return p;
+            var keep = new bool[p.Count];
+            keep[0] = true; keep[p.Count / 2] = true; // two anchors on a closed loop
+            RdpMark(p, 0, p.Count / 2, tol, keep);
+            RdpMark(p, p.Count / 2, p.Count, tol, keep); // wraps to index 0
+            var r = new List<(double X, double Y)>();
+            for (int i = 0; i < p.Count; i++) if (keep[i]) r.Add(p[i]);
+            return r.Count >= 3 ? r : p;
+        }
+
+        private static void RdpMark(List<(double X, double Y)> p, int a, int b, double tol, bool[] keep)
+        {
+            if (b - a < 2) return;
+            var pa = p[a]; var pb = p[b % p.Count];
+            double dx = pb.X - pa.X, dy = pb.Y - pa.Y;
+            double len = Math.Sqrt(dx * dx + dy * dy);
+            int worst = -1; double worstD = tol;
+            for (int i = a + 1; i < b; i++)
+            {
+                double d = len < Eps
+                    ? Math.Sqrt(Sq2(p[i].X - pa.X) + Sq2(p[i].Y - pa.Y))
+                    : Math.Abs(dx * (pa.Y - p[i].Y) - (pa.X - p[i].X) * dy) / len;
+                if (d > worstD) { worstD = d; worst = i; }
+            }
+            if (worst < 0) return;
+            keep[worst] = true;
+            RdpMark(p, a, worst, tol, keep);
+            RdpMark(p, worst, b, tol, keep);
+        }
+
+        private static double Sq2(double v) => v * v;
+
+        private static double NfpSimplifyTol(IReadOnlyList<(double X, double Y)> p)
+        {
+            BBox(p, out double mnx, out double mny, out double mxx, out double mxy);
+            return 2e-3 * Math.Sqrt(Sq2(mxx - mnx) + Sq2(mxy - mny));
+        }
+
+        // all loop vertices sorted bottom-left first ((y,x) lexicographic), capped
+        private static IEnumerable<(double X, double Y)> OrderedVertices(
+            List<List<(double X, double Y)>> loops, int cap)
+        {
+            var all = new List<(double X, double Y)>();
+            foreach (var loop in loops) all.AddRange(loop);
+            all.Sort((u, v) => u.Y != v.Y ? u.Y.CompareTo(v.Y) : u.X.CompareTo(v.X));
+            int n = Math.Min(cap, all.Count);
+            for (int i = 0; i < n; i++) yield return all[i];
+        }
+
+        // exact boolean verification of an outer placement: inside the sheet,
+        // clear of sheet-holes, clear of every placed part (bbox prechecked)
+        private static bool CandidateOk(
+            List<(double X, double Y)> placedLoop,
+            IReadOnlyList<(double X, double Y)> sheetOuter,
+            IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
+            List<List<(double X, double Y)>> placedMaterial)
+        {
+            double a = Math.Abs(SignedArea(placedLoop));
+            double tol = VerifyRelTol * a + Eps;
+            double inSheet = Clipper2Adapter.Intersect(placedLoop, sheetOuter).Sum(l => Math.Abs(SignedArea(l)));
+            if (inSheet < a - tol) return false;
+            BBox(placedLoop, out double pminx, out double pminy, out double pmaxx, out double pmaxy);
+            foreach (var q in sheetHoles)
+            {
+                BBox(q, out double qminx, out double qminy, out double qmaxx, out double qmaxy);
+                if (qmaxx < pminx || qminx > pmaxx || qmaxy < pminy || qminy > pmaxy) continue;
+                if (Clipper2Adapter.Intersect(placedLoop, q).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+            }
+            foreach (var m in placedMaterial)
+            {
+                BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
+                if (mmaxx < pminx || mminx > pmaxx || mmaxy < pminy || mminy > pmaxy) continue;
+                if (Clipper2Adapter.Intersect(placedLoop, m).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+            }
+            return true;
+        }
+
+        // exact boolean verification of a nested placement: contained in the
+        // host hole, clear of parts already nested in the same hole
+        private static bool NestOk(
+            List<(double X, double Y)> placedLoop,
+            IReadOnlyList<(double X, double Y)> hole,
+            List<List<(double X, double Y)>> coNested)
+        {
+            double a = Math.Abs(SignedArea(placedLoop));
+            double tol = VerifyRelTol * a + Eps;
+            double inHole = Clipper2Adapter.Intersect(placedLoop, hole).Sum(l => Math.Abs(SignedArea(l)));
+            if (inHole < a - tol) return false;
+            foreach (var cn in coNested)
+                if (Clipper2Adapter.Intersect(placedLoop, cn).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+            return true;
         }
         private static double Norm(double a) { a %= 2 * Math.PI; if (a < 0) a += 2 * Math.PI; return a; }
 
