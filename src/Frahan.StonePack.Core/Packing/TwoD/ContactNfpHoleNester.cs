@@ -70,7 +70,8 @@ namespace Frahan.Packing.TwoD
             double spacing = 0.0,
             int baseRotationCount = 4,
             int contactRotations = 6,
-            bool enableRectFastPath = true) // append-only (2026-06-12): opt-out for the exact rect shelf fast-path
+            bool enableRectFastPath = true, // append-only (2026-06-12): opt-out for the exact rect shelf fast-path
+            Action<HoleNestResult> onPlacement = null) // append-only: progressive snapshot after each placement (caller-space copies)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
             var res = new HoleNestResult();
@@ -145,7 +146,21 @@ namespace Frahan.Packing.TwoD
                     res.Note = "";
                 }
                 engine = fastTried ? "general-nfp (fast path left parts unplaced)" : "general-nfp";
-                PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res);
+                // progressive snapshots: after each committed placement hand the
+                // caller a CALLER-SPACE copy of the layout so far (the engine
+                // runs in scaled+normalized space; copies are mapped back)
+                Action progressTick = onPlacement == null ? (Action)null : () =>
+                {
+                    var snap = new HoleNestResult
+                    {
+                        Placements = MapPlacementsToCallerSpace(res.Placements, normOffset, inPlace: false),
+                        PlacedCount = res.Placements.Count,
+                        PartHolesFilled = res.PartHolesFilled,
+                        Note = "progress",
+                    };
+                    onPlacement(snap);
+                };
+                PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res, progressTick);
             }
 
             // ---- final validation (boolean, independent of the placement path)
@@ -159,22 +174,45 @@ namespace Frahan.Packing.TwoD
             // un-scaled) part loop: placed = R(ang)*(p - b) + t = R(ang)*p + t'
             // with t' = t - R(ang)*b, so AngleRad+Tx/Ty applied to the caller's
             // input geometry reproduces PlacedOuter exactly.
-            foreach (var pl in res.Placements)
-            {
-                var (bx, by) = pl.PartIndex >= 0 && pl.PartIndex < normOffset.Count
-                    ? normOffset[pl.PartIndex] : (0.0, 0.0);
-                double c = Math.Cos(pl.AngleRad), s = Math.Sin(pl.AngleRad);
-                double tx = pl.Tx - (c * bx - s * by);
-                double ty = pl.Ty - (s * bx + c * by);
-                pl.Tx = tx / Scale;
-                pl.Ty = ty / Scale;
-                pl.PlacedOuter = ScaleLoop(pl.PlacedOuter, 1.0 / Scale);
-            }
+            MapPlacementsToCallerSpace(res.Placements, normOffset, inPlace: true);
             res.UsedArea /= Scale * Scale;
 
             sw.Stop();
             res.ElapsedMs = sw.Elapsed.TotalMilliseconds;
             return res;
+        }
+
+        /// <summary>
+        /// Express placements against the caller's original (un-normalized,
+        /// un-scaled) geometry. inPlace=true mutates; otherwise returns fresh
+        /// copies so progressive snapshots never expose engine-space state.
+        /// </summary>
+        private static List<HoleNestPlacement> MapPlacementsToCallerSpace(
+            List<HoleNestPlacement> placements,
+            List<(double BX, double BY)> normOffset, bool inPlace)
+        {
+            var outList = inPlace ? placements : new List<HoleNestPlacement>(placements.Count);
+            for (int i = 0; i < placements.Count; i++)
+            {
+                var src = placements[i];
+                var pl = inPlace ? src : new HoleNestPlacement
+                {
+                    PartIndex = src.PartIndex, AngleRad = src.AngleRad,
+                    Tx = src.Tx, Ty = src.Ty, NestedInHost = src.NestedInHost,
+                    HostIndex = src.HostIndex, HostHole = src.HostHole,
+                    PlacedOuter = src.PlacedOuter,
+                };
+                var (bx, by) = pl.PartIndex >= 0 && pl.PartIndex < normOffset.Count
+                    ? normOffset[pl.PartIndex] : (0.0, 0.0);
+                double c = Math.Cos(pl.AngleRad), sn = Math.Sin(pl.AngleRad);
+                double tx = pl.Tx - (c * bx - sn * by);
+                double ty = pl.Ty - (sn * bx + c * by);
+                pl.Tx = tx / Scale;
+                pl.Ty = ty / Scale;
+                pl.PlacedOuter = ScaleLoop(pl.PlacedOuter, 1.0 / Scale);
+                if (!inPlace) outList.Add(pl);
+            }
+            return outList;
         }
 
         // ---- general exact-NFP engine (the contract; unchanged behaviour) ----
@@ -183,13 +221,14 @@ namespace Frahan.Packing.TwoD
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
             IReadOnlyList<HoleNestPart> parts,
             double spacing, int baseRotationCount, int contactRotations,
-            List<int> order, HoleNestResult res)
+            List<int> order, HoleNestResult res, Action progressTick = null)
         {
             // placed material (outer minus its own holes), as transformed loops,
             // kept for NFP obstacles + overlap re-checks
             var placedMaterial = new List<List<(double X, double Y)>>();   // each: just the outer (material upper bound)
             var placedHoles = new List<List<List<(double X, double Y)>>>(); // per placed part: its transformed holes
             var placedIndex = new List<int>();
+            bool usedNativeNfp = false; // any TryPlaceOuter ran the native NFP lane
 
             // ---- Phase A: holes-first part-in-part-hole nesting -------------
             // try to seat the SMALLEST parts into the holes of already-chosen
@@ -207,10 +246,11 @@ namespace Frahan.Packing.TwoD
             foreach (int pi in hostsFirst)
             {
                 if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl))
+                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp))
                 {
                     Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
+                    progressTick?.Invoke();
                 }
             }
 
@@ -225,6 +265,7 @@ namespace Frahan.Packing.TwoD
                     Commit(pl, parts[si], placedMaterial, placedHoles, placedIndex, res);
                     res.PartHolesFilled++;
                     consumed[si] = true;
+                    progressTick?.Invoke();
                 }
             }
 
@@ -233,12 +274,18 @@ namespace Frahan.Packing.TwoD
             {
                 if (consumed[pi]) continue;
                 if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl))
+                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp))
                 {
                     Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
+                    progressTick?.Invoke();
                 }
             }
+
+            // tag the result when the native batched-NFP kernel did the
+            // Minkowski work (Pack() prefixes the engine name afterwards;
+            // a failed Validate overwrites this with its failure reason)
+            if (usedNativeNfp) res.Note = "+native-nfp";
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -533,10 +580,29 @@ namespace Frahan.Packing.TwoD
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
             List<List<(double X, double Y)>> placedMaterial,
             double spacing, int baseRotationCount, int contactRotations,
-            out HoleNestPlacement best)
+            out HoleNestPlacement best, ref bool usedNativeNfp)
         {
             best = null;
             double bestY = double.MaxValue, bestX = double.MaxValue;
+
+            // ── native batched-NFP lane (2026-06-12) ──────────────────────────
+            // Profiling: managed Minkowski NFP builds were ~95% of the general-
+            // engine solve. When nfp_kernel.dll is loadable, ALL (budgeted
+            // rotation x current obstacle) NFPs for this part are built in ONE
+            // P/Invoke on Clipper2's exact Int64 lane, then consumed per angle
+            // exactly like the managed loop below (same rotation set, same
+            // translation-space cull, same boolean subtract, same verified
+            // bottom-left candidate walk — CandidateOk still runs managed).
+            // spacing > 0 keeps the managed lane: per-rotation inflation is not
+            // batched. On ANY native failure the managed path runs verbatim.
+            if (NativeNfpKernel.IsAvailable &&
+                TryPlaceOuterNativeNfp(pi, part, sheetOuter, sheetHoles, placedMaterial, spacing,
+                    baseRotationCount, contactRotations, out best))
+            {
+                usedNativeNfp = true;
+                return best != null;
+            }
+
             var seenRot = new HashSet<string>();   // collapse symmetric rotations
 
             foreach (double ang in RotationSet(part.Outer, sheetOuter, placedMaterial, baseRotationCount, contactRotations))
@@ -583,7 +649,7 @@ namespace Frahan.Packing.TwoD
                 // Minkowski construction has coverage gaps for concave/sampled
                 // shapes (and was simplified above), so every placement is
                 // verified against the true geometry before it can win.
-                foreach (var (tx, ty) in OrderedVertices(feasible, MaxCandidateVerts))
+                foreach (var (tx, ty) in OrderedVertices(feasible, AdaptiveCandidateCap(placedMaterial.Count)))
                 {
                     if (ty > bestY + Eps) break; // sorted by (y,x): cannot beat best
                     if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
@@ -599,6 +665,130 @@ namespace Frahan.Packing.TwoD
                 }
             }
             return best != null;
+        }
+
+        // ---- native batched-NFP variant of TryPlaceOuter ---------------------
+        // Returns TRUE iff the native kernel ran (one batch per part); then
+        // `best` is the placement result (possibly null = part does not fit).
+        // Returns FALSE when there is nothing to batch or the kernel failed,
+        // and the caller must run the managed loop verbatim.
+        private static bool TryPlaceOuterNativeNfp(
+            int pi, HoleNestPart part,
+            IReadOnlyList<(double X, double Y)> sheetOuter,
+            IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
+            List<List<(double X, double Y)>> placedMaterial,
+            double spacing, int baseRotationCount, int contactRotations,
+            out HoleNestPlacement best)
+        {
+            best = null;
+            int holeCount = sheetHoles.Count;
+            if (holeCount + placedMaterial.Count == 0) return false; // no NFPs to build
+
+            // spacing support (2026-06-12): mirror the managed rotate-then-
+            // inflate by inflating the UN-rotated part once — inflation
+            // commutes with rotation, and the kernel rotates internally. The
+            // deviation-compensated spacing on smooth instances made every
+            // curved-sheet solve spacing>0, which the old spacing==0 gate
+            // silently excluded from the native lane.
+            var baseOuter = spacing > 0
+                ? (IReadOnlyList<(double X, double Y)>)InflateOuter(ToList(part.Outer), spacing)
+                : part.Outer;
+
+            // resolve the budgeted rotation list with the SAME symmetric-shape
+            // dedup the managed loop applies lazily
+            var angles = new List<double>();
+            var rots = new List<List<(double X, double Y)>>();
+            var seenRot = new HashSet<string>();
+            foreach (double ang in RotationSet(part.Outer, sheetOuter, placedMaterial, baseRotationCount, contactRotations))
+            {
+                var rotRaw = Rotate(part.Outer, ang);
+                if (!seenRot.Add(RotSignature(rotRaw))) continue;
+                angles.Add(ang);
+                rots.Add(spacing > 0 ? Rotate(baseOuter, ang) : rotRaw);
+            }
+            if (angles.Count == 0) return false;
+
+            // obstacles in the managed order: sheet-holes first, then placed parts
+            var obst = new List<IReadOnlyList<(double X, double Y)>>(holeCount + placedMaterial.Count);
+            foreach (var q in sheetHoles) obst.Add(q);
+            foreach (var m in placedMaterial) obst.Add(m);
+
+            // ONE batched P/Invoke: all rotations x all obstacles. scale 100 =
+            // the managed Clipper2 PathD lane's decimal precision 2; -2e-3 =
+            // the relative RDP tolerance NfpSimplifyTol uses (2e-3 x bbox-diag).
+            var nfps = NativeNfpKernel.BatchNfp(baseOuter, angles, obst, 100.0, -2e-3);
+            if (nfps == null) return false; // kernel failed -> managed fallback
+
+            var byAngle = new List<List<(double X, double Y)>>[angles.Count];
+            var byAngleObst = new List<int>[angles.Count];
+            for (int i = 0; i < angles.Count; i++)
+            {
+                byAngle[i] = new List<List<(double X, double Y)>>();
+                byAngleObst[i] = new List<int>();
+            }
+            foreach (var l in nfps)
+            {
+                if (l.AngleIdx < 0 || l.AngleIdx >= angles.Count) continue;
+                byAngle[l.AngleIdx].Add(l.Loop);
+                byAngleObst[l.AngleIdx].Add(l.ObstIdx);
+            }
+
+            double bestY = double.MaxValue, bestX = double.MaxValue;
+            for (int i = 0; i < angles.Count; i++)
+            {
+                double ang = angles[i];
+                var rot = rots[i];
+
+                var feasible = InnerFit(rot, sheetOuter);
+                if (feasible.Count == 0) continue;
+
+                BBoxLoops(feasible, out double fminx, out double fminy, out double fmaxx, out double fmaxy);
+                BBox(rot, out double rminx, out double rminy, out double rmaxx, out double rmaxy);
+
+                // same translation-space cull as the managed loop: a placed
+                // obstacle's NFP occupies [m.min - rot.max, m.max - rot.min]
+                // per axis; sheet-hole NFPs are never culled (managed parity)
+                var obstacles = new List<List<(double X, double Y)>>();
+                var loopsI = byAngle[i];
+                var obstI = byAngleObst[i];
+                for (int k = 0; k < loopsI.Count; k++)
+                {
+                    int oi = obstI[k];
+                    if (oi >= holeCount)
+                    {
+                        var m = placedMaterial[oi - holeCount];
+                        BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
+                        double tminx = mminx - rmaxx, tmaxx = mmaxx - rminx;
+                        double tminy = mminy - rmaxy, tmaxy = mmaxy - rminy;
+                        if (tmaxx < fminx - Eps || tminx > fmaxx + Eps ||
+                            tmaxy < fminy - Eps || tminy > fmaxy + Eps) continue;
+                    }
+                    obstacles.Add(loopsI[k]);
+                }
+                if (obstacles.Count > 0)
+                    feasible = SubtractLoops(feasible, UnionAll(obstacles));
+                if (feasible.Count == 0) continue;
+
+                // identical verified bottom-left candidate walk: the native NFP
+                // is a pruning device exactly like the managed one; every
+                // placement is re-checked by exact managed booleans before it
+                // can win (CandidateOk unchanged)
+                foreach (var (tx, ty) in OrderedVertices(feasible, AdaptiveCandidateCap(placedMaterial.Count)))
+                {
+                    if (ty > bestY + Eps) break;
+                    if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
+                    var placedLoop = Translate(rot, tx, ty);
+                    if (!CandidateOk(placedLoop, sheetOuter, sheetHoles, placedMaterial)) continue;
+                    bestY = ty; bestX = tx;
+                    best = new HoleNestPlacement
+                    {
+                        PartIndex = pi, AngleRad = ang, Tx = tx, Ty = ty,
+                        PlacedOuter = Translate(Rotate(part.Outer, ang), tx, ty)
+                    };
+                    break;
+                }
+            }
+            return true; // native lane ran (best may still be null = no fit)
         }
 
         // ---- nest a small part into some host's hole ------------------------
@@ -917,7 +1107,18 @@ namespace Frahan.Packing.TwoD
 
         // ── conditioning + verification helpers (2026-06-12) ─────────────────
         private const double Scale = 1000.0;          // internal Clipper-space scale
-        private const int MaxCandidateVerts = 32;     // verified BLF candidates per rotation
+        private const int MaxCandidateVerts = 32;     // verified BLF candidates per rotation (small instances / hole nesting)
+
+        // CANDIDATE STARVATION FIX (2026-06-12, curved-sheet underfill): on
+        // dense instances (100+ placed obstacles) the feasible region's
+        // bottom-left vertices cluster in the congested zone as sliver
+        // candidates that fail exact verification; a fixed 32-candidate walk
+        // exhausted there and declared parts unplaceable while open area
+        // remained higher up. The cap now grows with congestion so the walk
+        // can climb past the junk zone; cost stays bounded (verification is
+        // bbox-pruned and the walk still exits on the first verified vertex).
+        private static int AdaptiveCandidateCap(int placedCount)
+            => Math.Max(MaxCandidateVerts, 16 + 4 * placedCount);
         private const double VerifyRelTol = 1e-4;     // exact-check tolerance, relative to part area
 
         private static List<(double X, double Y)> ScaleLoop(IReadOnlyList<(double X, double Y)> p, double s)

@@ -1,6 +1,6 @@
 # native/ — C ABI shims for the Frahan StonePack plugin
 
-This folder holds the full C++ source for the three native shims that
+This folder holds the full C++ source for the native shims that
 the managed plugin calls via P/Invoke. It exists for two reasons:
 
 1. **GPL corresponding source.** The repo ships prebuilt shim binaries
@@ -23,6 +23,7 @@ respective authors and are credited below.
 | `cgal_shim/` | `frahan_cgal.dll` | CGAL, primarily Polygon Mesh Processing (PMP) corefinement booleans (union / intersection / difference), plus repair, edge-collapse decimation, OBB, 2D straight skeleton, polygon partition, SDF and angle segmentation, geodesic Voronoi, alpha shape, advancing front, Poisson reconstruction, normal estimation. | CGAL open-source distribution. The packages this shim uses (PMP, `Surface_mesh`, surface-mesh simplification, reconstruction) are **GPL** in that distribution. |
 | `geogram_shim/` | `frahan_geogram.dll` | Bruno Levy's Geogram (Inria / ALICE): vertex-clustering decimation, repair, hole filling, OBB, uniform remeshing, tetrahedralisation, CVT / Lloyd, restricted Voronoi diagrams (RVD), volumetric Voronoi blocks, voxel downsampling, kd-tree queries, and **Poisson surface reconstruction via the Kazhdan PoissonRecon code that Geogram bundles** (`GEO::PoissonReconstruction`). | Geogram core is BSD-3. The bundled PoissonRecon is MIT (Kazhdan). TetGen, which the volumetric-blocks entry point needs, is **AGPL**; the CMakeLists enables it by default and documents `-DFRAHAN_WITH_TETGEN=OFF` for an AGPL-free build. Triangle is kept OFF. |
 | `coacd_shim/` | `frahan_coacd.dll` | SarahWeiii/CoACD approximate convex decomposition (Wei et al., SIGGRAPH 2022), tag pin `1.0.11`. One decompose entry point with the full tunable set (threshold, MCTS, merge, real_metric, ...). | CoACD is MIT. CoACD internally vendors some CGAL components (GPL) plus boost / openvdb / spdlog / zlib under its `3rd/` folder. |
+| `nfp_kernel/` | `nfp_kernel.dll` | Batched No-Fit-Polygon builds (Minkowski sum + NonZero union on the exact Int64 lane) for the 2D hole-aware nester (`ContactNfpHoleNester`); one P/Invoke per part covers all rotations x all obstacles. Vendors official Clipper2 C++ at tag `Clipper2_2.0.1` unmodified. Builds with llvm-mingw or MSVC, no vcpkg (see `nfp_kernel/README.md`). | Clipper2 is BSL-1.0 (no copyleft). |
 
 All three shims share the same Frahan flat-array contract: vertices as
 `3*N` doubles, triangles as `3*T` int32s, outputs `malloc`'d by the

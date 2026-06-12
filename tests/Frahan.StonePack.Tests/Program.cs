@@ -361,6 +361,7 @@ var tests = new List<(string Name, Action Body)>
     ("CNH irregular shields stay valid on the general engine (regression)", ContactNfpHoleNesterBenchTests.Cnh_Irregular_Shields_GeneralValid),
     ("CNH world-offset shields stay valid (canvas overlap regression)", ContactNfpHoleNesterBenchTests.Cnh_Irregular_Shields_WorldOffset_GeneralValid),
     ("CNH fully-inside obstacle case stays valid (general engine, regression)", ContactNfpHoleNesterBenchTests.Cnh_FullyInside_GeneralValid),
+    ("CNH shields native-kernel interleaved bench (7 shields x5, lane-tagged)", ContactNfpHoleNesterBenchTests.Cnh_Shields_NativeKernel_Bench),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
@@ -1381,8 +1382,9 @@ var tests = new List<(string Name, Action Body)>
     ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError)
 };
 
-// TEMPORARY (revert before commit) — KB-10 dev-only name filter so the fix can
-// be iterated without running the full battery: set FRAHAN_TEST_FILTER=kb10.
+// Dev hook (permanent, documented): FRAHAN_TEST_FILTER=<substring> narrows the
+// battery to matching test names — used for fix iteration and for interleaved
+// A/B benchmark processes (e.g. FRAHAN_TEST_FILTER=CNH). Unset = full battery.
 var tempFilter = Environment.GetEnvironmentVariable("FRAHAN_TEST_FILTER");
 if (!string.IsNullOrEmpty(tempFilter))
     tests = tests.FindAll(t => t.Name.IndexOf(tempFilter, StringComparison.OrdinalIgnoreCase) >= 0);

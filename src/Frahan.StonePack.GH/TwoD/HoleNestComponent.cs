@@ -157,6 +157,7 @@ public sealed class HoleNestComponent : GH_Component
     {
         public Snapshot Snap;
         public HoleNestResult Res;
+        public bool Partial;   // progressive snapshot (mid-solve), not a final result
     }
 
     protected override void SolveInstance(IGH_DataAccess da)
@@ -185,7 +186,7 @@ public sealed class HoleNestComponent : GH_Component
         }
 
         // cache hit: same inputs as the last completed solve -> instant emit
-        if (_last != null && _last.Snap.Hash == snap.Hash && !taskRunning)
+        if (_last != null && !_last.Partial && _last.Snap.Hash == snap.Hash && !taskRunning)
         {
             Message = null;
             EmitPayload(da, _last, null);
@@ -195,7 +196,7 @@ public sealed class HoleNestComponent : GH_Component
         if (taskRunning && taskHash == snap.Hash)
         {
             Message = _progress;
-            if (_last != null) EmitPayload(da, _last, "updating...");
+            if (_last != null) EmitPayload(da, _last, _last.Partial ? _progress : "updating...");
             else EmitEmpty(da, "Nesting in the background — canvas stays live; the result pops in when ready.");
             return;
         }
@@ -220,10 +221,32 @@ public sealed class HoleNestComponent : GH_Component
             _task = Task.Run(() =>
             {
                 Payload payload = null; string error = null;
+                // progressive steps (the instant-feel pattern): every ~300 ms a
+                // caller-space snapshot of the partial layout replaces _last and
+                // a re-solve is scheduled, so the nest visibly grows on canvas
+                var tick = System.Diagnostics.Stopwatch.StartNew();
+                Action<HoleNestResult> onPlacement = partial =>
+                {
+                    if (token.IsCancellationRequested) return;
+                    if (tick.ElapsedMilliseconds < 300) return;
+                    tick.Restart();
+                    var pp = new Payload { Snap = snap, Res = partial, Partial = true };
+                    lock (_gate) { _last = pp; }
+                    _progress = $"nesting {partial.PlacedCount}/{snap.Parts.Count}...";
+                    try
+                    {
+                        doc?.ScheduleSolution(10, d =>
+                        {
+                            if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true);
+                        });
+                    }
+                    catch { }
+                };
                 try
                 {
                     var res = ContactNfpHoleNester.Pack(snap.SheetOuter, snap.SheetHoles, snap.Parts,
-                        snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations);
+                        snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
+                        onPlacement: onPlacement);
                     payload = new Payload { Snap = snap, Res = res };
                 }
                 catch (Exception ex) { error = "Hole-aware nesting failed: " + ex.Message; }
@@ -426,10 +449,10 @@ public sealed class HoleNestComponent : GH_Component
         }
 
         var unplaced = snap.Parts.Count - res.PlacedCount;
-        if (unplaced > 0)
+        if (staleNote == null && unplaced > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 $"{unplaced} part(s) could not be placed.");
-        if (!res.Valid)
+        if (staleNote == null && !res.Valid)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 "Layout failed independent boolean validation: " + res.Note);
 

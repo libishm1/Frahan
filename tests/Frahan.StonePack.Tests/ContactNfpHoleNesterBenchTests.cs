@@ -147,6 +147,43 @@ static class ContactNfpHoleNesterBenchTests
         if (r.PlacedCount < 6) throw new Exception($"only {r.PlacedCount}/7 placed");
     }
 
+    // NATIVE NFP KERNEL BENCH (2026-06-12): the 7-shield instance is the
+    // profiled case where managed Minkowski NFP builds were ~95% of solve
+    // time. Runs the SAME pack 5x in-process and prints every time + median,
+    // tagged with the lane that ran (Note carries "+native-nfp" when the
+    // batched native kernel did the Minkowski work). Drive the A/B from the
+    // shell: FRAHAN_NFP_NATIVE=0 forces the managed lane in a process where
+    // nfp_kernel.dll is present; alternate processes >=3x and compare medians
+    // (machine drifts +-12% thermally — only interleaved medians count).
+    public static void Cnh_Shields_NativeKernel_Bench()
+    {
+        var sheet = Rect(0, 0, 160, 110);
+        var parts = new List<HoleNestPart>();
+        for (int k = 0; k < 7; k++)
+            parts.Add(new HoleNestPart { Outer = Shield(0.85 + 0.07 * k) });
+
+        // warm-up (JIT + native probe), then 5 measured runs
+        var warm = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts);
+        var times = new List<double>(5);
+        HoleNestResult last = null;
+        for (int t = 0; t < 5; t++)
+        {
+            last = ContactNfpHoleNester.Pack(sheet,
+                new List<IReadOnlyList<(double X, double Y)>>(), parts);
+            times.Add(last.ElapsedMs);
+        }
+        var sorted = times.OrderBy(x => x).ToList();
+        double median = sorted[2];
+        string lane = last.Note != null && last.Note.Contains("+native-nfp") ? "native" : "managed";
+        Console.WriteLine($"      [bench] CNH shields x5 lane={lane} engine=[{last.Note}]");
+        Console.WriteLine($"      [bench]   times ms: {string.Join(", ", times.Select(x => x.ToString("0.0")))}");
+        Console.WriteLine($"      [bench]   MEDIAN_MS={median:0.0} LANE={lane} placed={last.PlacedCount}/7 valid={last.Valid}");
+        if (!last.Valid) throw new Exception("INVALID layout in native-kernel bench: " + last.Note);
+        if (last.PlacedCount != warm.PlacedCount)
+            throw new Exception($"placement drift across runs: {last.PlacedCount} vs warm {warm.PlacedCount}");
+    }
+
     // Shield-ish sampled polygon: convex top arc, concave flanks, bottom point —
     // mimics curve-sampled GH input (the reported failure class).
     private static List<(double X, double Y)> Shield(double s)
