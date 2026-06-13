@@ -31,6 +31,45 @@ namespace Frahan.Packing.TwoD
     //                                    \ U_l NFP(part, sheetHole_l)
     // Placement is the bottom-left vertex of the feasible region. 0-overlap by
     // construction; every accepted move is re-checked by boolean area.
+    //
+    // ── FINAL VERIFICATION GATE (2026-06-12, adversarial-fuzz depth fix) ──
+    // Area-relative gates alone pass NEEDLE overlaps: tiny intersection AREA
+    // (1e-5..1e-4 of part area, under VerifyRelTol) but penetration DEPTH up
+    // to ~0.2 caller units, sourced from (i) RDP-simplified NFP inputs
+    // (NfpSimplifyTol = 2e-3 x bbox-diag carves the no-fit region inward),
+    // (ii) the hull-based IFP being anti-conservative on CONCAVE sheets and
+    // holes, and (iii) per-hole area tolerances letting split overlaps
+    // through. The RDP/IFP constructions are PRUNING devices only; final
+    // feasibility is certified by a compound gate on the TRUE geometry:
+    //
+    //   1. AREA  — boolean intersection, summed across sheet-holes, must stay
+    //      under VerifyRelTol(1e-4) x part-area (gross-overlap net).
+    //   2. DEPTH — exact distance-based penetration measured like the
+    //      independent verification protocol: probes (vertices + edge
+    //      midpoints + area centroid) of each loop against the other loop's
+    //      boundary, plus proper edge-crossing perpendicular depth. A
+    //      candidate is rejected when depth > eps_depth.
+    //   3. MICRO-RETREAT — a rejected candidate is nudged ONCE along the
+    //      measured penetration vector by depth + one snap-grid cell and
+    //      re-verified; this rescues contact-tight candidates that only
+    //      violate through NFP simplification, so placements are not starved.
+    //
+    // Tolerance budget (RELATIVE to geometry scale; mm and m callers both
+    // exist). All engine math runs in scaled space (Scale = 1000) where the
+    // Clipper PathD lane snaps to decimal precision 2:
+    //
+    //   SnapGrid  = 0.01 scaled            (= 1e-5 caller units)
+    //   eps_depth = max(floor, 1e-6 * L),  L = sqrt(part area)
+    //   floor     = 2 x SnapGrid           (= 2e-5 caller units)
+    //
+    // This instantiates the project budget eps_geo = max(floor, 1e-3*L) at
+    // the verification-protocol level: the relative coefficient is 1e-6
+    // (matching the independent checker's relative tolerance) and the floor
+    // is the snap-grid resolution limit, far inside any fabrication budget.
+    // Residual risk after the gate: penetrations inside the snap band
+    // (<= floor + grid rounding of candidate vertices, i.e. <= ~2e-5 caller
+    // units); deeper penetrations cannot be accepted on any path because
+    // Validate() applies the same compound gate path-independently.
     public sealed class HoleNestPart
     {
         public IReadOnlyList<(double X, double Y)> Outer;
@@ -44,6 +83,7 @@ namespace Frahan.Packing.TwoD
         public double Tx, Ty;
         public bool NestedInHost;
         public int HostIndex = -1, HostHole = -1;
+        public int SheetIndex;          // multi-sheet: which sheet this placement landed on (0 single-sheet)
         public IReadOnlyList<(double X, double Y)> PlacedOuter; // transformed, for preview/validation
     }
 
@@ -180,6 +220,93 @@ namespace Frahan.Packing.TwoD
             sw.Stop();
             res.ElapsedMs = sw.Elapsed.TotalMilliseconds;
             return res;
+        }
+
+        /// <summary>
+        /// MULTI-SHEET nesting (append-only API, 2026-06-12): greedy overflow —
+        /// fill sheet 0, carry the unplaced parts to sheet 1, and so on. Each
+        /// sheet is solved and boolean-validated by the SAME single-sheet
+        /// engine. Placements come back with PartIndex remapped to the ORIGINAL
+        /// parts list and SheetIndex set; onPlacement receives the CUMULATIVE
+        /// caller-space layout across sheets (progressive display friendly).
+        /// </summary>
+        public static List<HoleNestResult> PackSheets(
+            IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheets,
+            IReadOnlyList<IReadOnlyList<IReadOnlyList<(double X, double Y)>>> sheetHolesPerSheet,
+            IReadOnlyList<HoleNestPart> parts,
+            double spacing = 0.0,
+            int baseRotationCount = 4,
+            int contactRotations = 6,
+            bool enableRectFastPath = true,
+            Action<HoleNestResult> onPlacement = null)
+        {
+            var results = new List<HoleNestResult>();
+            if (sheets == null || sheets.Count == 0) return results;
+            var remaining = new List<HoleNestPart>(parts ?? new List<HoleNestPart>());
+            var remainingIdx = new List<int>();
+            for (int i = 0; i < remaining.Count; i++) remainingIdx.Add(i);
+            var done = new List<HoleNestPlacement>();
+            int holesFilledDone = 0;
+
+            for (int si = 0; si < sheets.Count; si++)
+            {
+                if (remaining.Count == 0)
+                {
+                    results.Add(new HoleNestResult { Valid = true, Note = "empty (no parts left)" });
+                    continue;
+                }
+                var idxSnapshot = new List<int>(remainingIdx);
+                int sheetIdx = si;
+                int doneHoles = holesFilledDone;
+                var doneSnapshot = done; // grows only between sheets
+                Action<HoleNestResult> tick = onPlacement == null ? (Action<HoleNestResult>)null : partial =>
+                {
+                    var agg = new HoleNestResult
+                    {
+                        Placements = new List<HoleNestPlacement>(doneSnapshot),
+                        PartHolesFilled = doneHoles + partial.PartHolesFilled,
+                        Note = "progress",
+                    };
+                    foreach (var pl in partial.Placements)
+                        agg.Placements.Add(RemapPlacement(pl, idxSnapshot, sheetIdx));
+                    agg.PlacedCount = agg.Placements.Count;
+                    onPlacement(agg);
+                };
+
+                var holes = sheetHolesPerSheet != null && si < sheetHolesPerSheet.Count
+                    ? sheetHolesPerSheet[si] : null;
+                var res = Pack(sheets[si], holes, remaining, spacing,
+                    baseRotationCount, contactRotations, enableRectFastPath, tick);
+
+                var placedLocal = new HashSet<int>();
+                foreach (var pl in res.Placements)
+                {
+                    placedLocal.Add(pl.PartIndex);
+                    RemapPlacement(pl, idxSnapshot, sheetIdx);
+                }
+                done.AddRange(res.Placements);
+                holesFilledDone += res.PartHolesFilled;
+                results.Add(res);
+
+                var nextRemaining = new List<HoleNestPart>();
+                var nextIdx = new List<int>();
+                for (int i = 0; i < remaining.Count; i++)
+                    if (!placedLocal.Contains(i)) { nextRemaining.Add(remaining[i]); nextIdx.Add(remainingIdx[i]); }
+                remaining = nextRemaining;
+                remainingIdx = nextIdx;
+            }
+            return results;
+        }
+
+        // remap a placement from sheet-local part indices to the caller's
+        // original parts list + tag the sheet (mutates and returns the instance;
+        // progressive partials are fresh copies, finals are owned by the result)
+        private static HoleNestPlacement RemapPlacement(HoleNestPlacement pl, List<int> idxMap, int sheetIdx)
+        {
+            pl.SheetIndex = sheetIdx;
+            if (pl.PartIndex >= 0 && pl.PartIndex < idxMap.Count) pl.PartIndex = idxMap[pl.PartIndex];
+            if (pl.HostIndex >= 0 && pl.HostIndex < idxMap.Count) pl.HostIndex = idxMap[pl.HostIndex];
+            return pl;
         }
 
         /// <summary>
@@ -593,8 +720,10 @@ namespace Frahan.Packing.TwoD
             // exactly like the managed loop below (same rotation set, same
             // translation-space cull, same boolean subtract, same verified
             // bottom-left candidate walk — CandidateOk still runs managed).
-            // spacing > 0 keeps the managed lane: per-rotation inflation is not
-            // batched. On ANY native failure the managed path runs verbatim.
+            // spacing > 0 rides the native lane too: the un-rotated part is
+            // inflated ONCE (inflation commutes with rotation) and the kernel
+            // rotates internally. On ANY native failure the managed path runs
+            // verbatim.
             if (NativeNfpKernel.IsAvailable &&
                 TryPlaceOuterNativeNfp(pi, part, sheetOuter, sheetHoles, placedMaterial, spacing,
                     baseRotationCount, contactRotations, out best))
@@ -644,22 +773,25 @@ namespace Frahan.Packing.TwoD
                 if (feasible.Count == 0) continue;
 
                 // walk the feasible-region vertices bottom-left first and take
-                // the FIRST candidate that survives the exact boolean check.
-                // The NFP is a pruning device, not the safety guarantee: the
-                // Minkowski construction has coverage gaps for concave/sampled
-                // shapes (and was simplified above), so every placement is
-                // verified against the true geometry before it can win.
+                // the FIRST candidate that survives the exact compound check
+                // (area + distance depth + one micro-retreat). The NFP is a
+                // pruning device, not the safety guarantee: the Minkowski
+                // construction has coverage gaps for concave/sampled shapes
+                // (and was simplified above), so every placement is verified
+                // against the true geometry before it can win.
                 foreach (var (tx, ty) in OrderedVertices(feasible, AdaptiveCandidateCap(placedMaterial.Count)))
                 {
                     if (ty > bestY + Eps) break; // sorted by (y,x): cannot beat best
                     if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
-                    var placedLoop = Translate(rot, tx, ty);
-                    if (!CandidateOk(placedLoop, sheetOuter, sheetHoles, placedMaterial)) continue;
-                    bestY = ty; bestX = tx;
+                    if (!TryVerifiedCandidate(rot, tx, ty, sheetOuter, sheetHoles, placedMaterial,
+                            out double atx, out double aty)) continue;
+                    if (aty > bestY + Eps ||
+                        (Math.Abs(aty - bestY) <= Eps && atx >= bestX - Eps)) continue; // retreat moved it past best
+                    bestY = aty; bestX = atx;
                     best = new HoleNestPlacement
                     {
-                        PartIndex = pi, AngleRad = ang, Tx = tx, Ty = ty,
-                        PlacedOuter = Translate(Rotate(part.Outer, ang), tx, ty)
+                        PartIndex = pi, AngleRad = ang, Tx = atx, Ty = aty,
+                        PlacedOuter = Translate(Rotate(part.Outer, ang), atx, aty)
                     };
                     break;
                 }
@@ -729,6 +861,7 @@ namespace Frahan.Packing.TwoD
             foreach (var l in nfps)
             {
                 if (l.AngleIdx < 0 || l.AngleIdx >= angles.Count) continue;
+                if (l.ObstIdx < 0 || l.ObstIdx >= obst.Count) continue; // defensive symmetry (review)
                 byAngle[l.AngleIdx].Add(l.Loop);
                 byAngleObst[l.AngleIdx].Add(l.ObstIdx);
             }
@@ -771,19 +904,21 @@ namespace Frahan.Packing.TwoD
 
                 // identical verified bottom-left candidate walk: the native NFP
                 // is a pruning device exactly like the managed one; every
-                // placement is re-checked by exact managed booleans before it
-                // can win (CandidateOk unchanged)
+                // placement is re-checked by the exact managed compound gate
+                // (area + distance depth + one micro-retreat) before it can win
                 foreach (var (tx, ty) in OrderedVertices(feasible, AdaptiveCandidateCap(placedMaterial.Count)))
                 {
                     if (ty > bestY + Eps) break;
                     if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
-                    var placedLoop = Translate(rot, tx, ty);
-                    if (!CandidateOk(placedLoop, sheetOuter, sheetHoles, placedMaterial)) continue;
-                    bestY = ty; bestX = tx;
+                    if (!TryVerifiedCandidate(rot, tx, ty, sheetOuter, sheetHoles, placedMaterial,
+                            out double atx, out double aty)) continue;
+                    if (aty > bestY + Eps ||
+                        (Math.Abs(aty - bestY) <= Eps && atx >= bestX - Eps)) continue;
+                    bestY = aty; bestX = atx;
                     best = new HoleNestPlacement
                     {
-                        PartIndex = pi, AngleRad = ang, Tx = tx, Ty = ty,
-                        PlacedOuter = Translate(Rotate(part.Outer, ang), tx, ty)
+                        PartIndex = pi, AngleRad = ang, Tx = atx, Ty = aty,
+                        PlacedOuter = Translate(Rotate(part.Outer, ang), atx, aty)
                     };
                     break;
                 }
@@ -835,18 +970,21 @@ namespace Frahan.Packing.TwoD
                         // verified bottom-left candidate: the hull-based IFP is
                         // anti-conservative for CONCAVE holes (vertices-inside
                         // does not imply containment), so every nesting is
-                        // re-checked by exact booleans before it can win.
+                        // re-checked by the exact compound gate (area +
+                        // distance depth + one micro-retreat) before it can win.
                         foreach (var (tx, ty) in OrderedVertices(feasible, MaxCandidateVerts))
                         {
                             if (ty > bestY + Eps) break;
                             if (Math.Abs(ty - bestY) <= Eps && tx >= bestX - Eps) continue;
-                            var placedLoop = Translate(rot, tx, ty);
-                            if (!NestOk(placedLoop, hole, coNested)) continue;
-                            bestY = ty; bestX = tx; hostIdx = placements[h].PartIndex; holeIdx = k;
+                            if (!TryVerifiedNest(rot, tx, ty, hole, coNested,
+                                    out double atx, out double aty)) continue;
+                            if (aty > bestY + Eps ||
+                                (Math.Abs(aty - bestY) <= Eps && atx >= bestX - Eps)) continue;
+                            bestY = aty; bestX = atx; hostIdx = placements[h].PartIndex; holeIdx = k;
                             best = new HoleNestPlacement
                             {
-                                PartIndex = si, AngleRad = ang, Tx = tx, Ty = ty,
-                                PlacedOuter = Translate(Rotate(small.Outer, ang), tx, ty)
+                                PartIndex = si, AngleRad = ang, Tx = atx, Ty = aty,
+                                PlacedOuter = Translate(Rotate(small.Outer, ang), atx, aty)
                             };
                             break;
                         }
@@ -951,7 +1089,9 @@ namespace Frahan.Packing.TwoD
             return lo;
         }
 
-        // ── validation (boolean, path-independent) ───────────────────────────
+        // ── validation (path-independent): boolean AREA gates plus the same
+        // distance-based DEPTH gates the candidate walks use, so Valid==true
+        // certifies the layout against needle overlaps on EVERY engine path ──
         private static bool Validate(HoleNestResult res, IReadOnlyList<HoleNestPart> parts,
             IReadOnlyList<(double X, double Y)> sheetOuter,
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles)
@@ -963,32 +1103,62 @@ namespace Frahan.Packing.TwoD
             {
                 var outer = pl.PlacedOuter;
                 double a = Math.Abs(SignedArea(outer));
-                // inside the sheet
+                double tolArea = 1e-3 * a + Eps;
+                double depthTol = DepthTolFor(a);
+                // inside the sheet: area gate + exact distance depth
                 double inSheet = Clipper2Adapter.Intersect(outer, sheetOuter).Sum(l => Math.Abs(SignedArea(l)));
-                if (inSheet < a - 1e-3 * a - Eps)
+                if (inSheet < a - tolArea)
                 { res.Note = $"part {pl.PartIndex} outside sheet (in={inSheet:0.0}/{a:0.0}, nested={pl.NestedInHost})"; return false; }
+                if (OutsideDepth(outer, sheetOuter, out _, out _) > depthTol)
+                { res.Note = $"part {pl.PartIndex} pierces the sheet boundary"; return false; }
 
                 if (pl.NestedInHost)
                 {
-                    // a nested filler is contained in its host's HOLE (Phase-A IFP
-                    // guarantees host containment + host material is hole-free);
-                    // it only needs to be clear of OTHER nested parts.
+                    // a nested filler must sit inside its ASSIGNED host hole
+                    // (distance-checked; concave-safe) and clear of OTHER
+                    // nested parts.
+                    HoleNestPlacement host = null;
+                    foreach (var q in res.Placements)
+                        if (q.PartIndex == pl.HostIndex) { host = q; break; }
+                    if (host == null || pl.HostIndex < 0 || pl.HostIndex >= parts.Count ||
+                        parts[pl.HostIndex].Holes == null ||
+                        pl.HostHole < 0 || pl.HostHole >= parts[pl.HostIndex].Holes.Count)
+                    { res.Note = $"nested part {pl.PartIndex} has no resolvable host hole"; return false; }
+                    var holeWorld = Translate(Rotate(parts[pl.HostIndex].Holes[pl.HostHole], host.AngleRad), host.Tx, host.Ty);
+                    if (OutsideDepth(outer, holeWorld, out _, out _) > depthTol)
+                    { res.Note = $"nested part {pl.PartIndex} pierces its host hole"; return false; }
                     foreach (var m in nestedMats)
-                        if (Clipper2Adapter.Intersect(outer, m).Sum(l => Math.Abs(SignedArea(l))) > 1e-3 * a + Eps)
+                    {
+                        if (Clipper2Adapter.Intersect(outer, m).Sum(l => Math.Abs(SignedArea(l))) > tolArea)
                         { res.Note = $"nested part {pl.PartIndex} overlaps another nested part"; return false; }
+                        if (PenetrationDepth(outer, m, out _, out _) > depthTol)
+                        { res.Note = $"nested part {pl.PartIndex} pierces another nested part"; return false; }
+                    }
                     nestedMats.Add(ToList(outer));
                 }
                 else
                 {
-                    // non-nested parts clear the sheet-defects and every other
-                    // non-nested part (Phase-B NFP avoids full host outers, so a
-                    // host's own hole is never invaded from outside).
+                    // non-nested parts clear the sheet-defects (overlap area
+                    // summed ACROSS defects: per-hole tolerances let split
+                    // overlaps through) and every other non-nested part
+                    // (Phase-B NFP avoids full host outers, so a host's own
+                    // hole is never invaded from outside).
+                    double holeAreaSum = 0;
                     foreach (var q in sheetHoles)
-                        if (Clipper2Adapter.Intersect(outer, q).Sum(l => Math.Abs(SignedArea(l))) > 1e-3 * a + Eps)
+                    {
+                        holeAreaSum += Clipper2Adapter.Intersect(outer, q).Sum(l => Math.Abs(SignedArea(l)));
+                        if (holeAreaSum > tolArea)
                         { res.Note = $"part {pl.PartIndex} overlaps a sheet-defect"; return false; }
+                        if (PenetrationDepth(outer, q, out _, out _) > depthTol)
+                        { res.Note = $"part {pl.PartIndex} pierces a sheet-defect"; return false; }
+                    }
                     foreach (var m in outerMats)
-                        if (Clipper2Adapter.Intersect(outer, m).Sum(l => Math.Abs(SignedArea(l))) > 1e-3 * a + Eps)
+                    {
+                        if (Clipper2Adapter.Intersect(outer, m).Sum(l => Math.Abs(SignedArea(l))) > tolArea)
                         { res.Note = $"part {pl.PartIndex} overlaps another part"; return false; }
+                        if (PenetrationDepth(outer, m, out _, out _) > depthTol)
+                        { res.Note = $"part {pl.PartIndex} pierces another part"; return false; }
+                    }
                     outerMats.Add(ToList(outer));
                 }
                 used += a;
@@ -1182,49 +1352,282 @@ namespace Frahan.Packing.TwoD
             for (int i = 0; i < n; i++) yield return all[i];
         }
 
-        // exact boolean verification of an outer placement: inside the sheet,
-        // clear of sheet-holes, clear of every placed part (bbox prechecked)
+        // ── compound verification gate (2026-06-12 depth fix; header doc) ───
+        // Scaled-space constants. The Clipper PathD lane snaps to decimal
+        // precision 2, so 0.01 scaled (= 1e-5 caller units at Scale = 1000)
+        // is the hard resolution limit of every boolean this engine runs.
+        private const double SnapGrid = 0.01;            // scaled units
+        private const double DepthFloor = 2 * SnapGrid;  // = 2e-5 caller units
+        private const double DepthRelTol = 1e-6;         // x sqrt(part area)
+        private const double RetreatSlack = SnapGrid;    // micro-retreat clearance
+
+        // eps_depth = max(floor, 1e-6 * L), L = sqrt(part area), scaled space.
+        private static double DepthTolFor(double areaScaled)
+            => Math.Max(DepthFloor, DepthRelTol * Math.Sqrt(Math.Max(areaScaled, 0.0)));
+
+        // exact verification of an outer placement: inside the sheet, clear of
+        // sheet-holes (area summed ACROSS holes) and of every placed part.
+        // Area gates catch gross overlap; the distance-based depth gate
+        // catches needle/spike overlaps whose area is tiny. On a depth
+        // failure, (pushX,pushY) is the measured penetration vector (length =
+        // violDepth) that moves the part out of its deepest violation.
         private static bool CandidateOk(
             List<(double X, double Y)> placedLoop,
             IReadOnlyList<(double X, double Y)> sheetOuter,
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
-            List<List<(double X, double Y)>> placedMaterial)
+            List<List<(double X, double Y)>> placedMaterial,
+            out double violDepth, out double pushX, out double pushY)
         {
+            violDepth = 0; pushX = 0; pushY = 0;
             double a = Math.Abs(SignedArea(placedLoop));
-            double tol = VerifyRelTol * a + Eps;
+            double tolArea = VerifyRelTol * a + Eps;
+            double depthTol = DepthTolFor(a);
+
+            // (1) sheet containment: gross area gate, then exact distance depth
             double inSheet = Clipper2Adapter.Intersect(placedLoop, sheetOuter).Sum(l => Math.Abs(SignedArea(l)));
-            if (inSheet < a - tol) return false;
+            if (inSheet < a - tolArea) return false;
+            double dOut = OutsideDepth(placedLoop, sheetOuter, out double sx, out double sy);
+            if (dOut > depthTol) { violDepth = dOut; pushX = sx; pushY = sy; return false; }
+
             BBox(placedLoop, out double pminx, out double pminy, out double pmaxx, out double pmaxy);
+
+            // (2) sheet-holes: summed area (split-overlap fix) + per-hole depth
+            double holeAreaSum = 0;
             foreach (var q in sheetHoles)
             {
                 BBox(q, out double qminx, out double qminy, out double qmaxx, out double qmaxy);
                 if (qmaxx < pminx || qminx > pmaxx || qmaxy < pminy || qminy > pmaxy) continue;
-                if (Clipper2Adapter.Intersect(placedLoop, q).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+                holeAreaSum += Clipper2Adapter.Intersect(placedLoop, q).Sum(l => Math.Abs(SignedArea(l)));
+                if (holeAreaSum > tolArea) return false;
+                double d = PenetrationDepth(placedLoop, q, out double hx, out double hy);
+                if (d > depthTol) { violDepth = d; pushX = hx; pushY = hy; return false; }
             }
+
+            // (3) placed parts: exact distance depth (probes + crossings +
+            // centroid nets subsume the old boolean area pair gate)
             foreach (var m in placedMaterial)
             {
                 BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
                 if (mmaxx < pminx || mminx > pmaxx || mmaxy < pminy || mminy > pmaxy) continue;
-                if (Clipper2Adapter.Intersect(placedLoop, m).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+                double d = PenetrationDepth(placedLoop, m, out double ox, out double oy);
+                if (d > depthTol) { violDepth = d; pushX = ox; pushY = oy; return false; }
             }
             return true;
         }
 
-        // exact boolean verification of a nested placement: contained in the
-        // host hole, clear of parts already nested in the same hole
+        // exact verification of a nested placement: contained in the host
+        // hole (distance depth, concave-safe), clear of co-nested parts.
         private static bool NestOk(
             List<(double X, double Y)> placedLoop,
             IReadOnlyList<(double X, double Y)> hole,
-            List<List<(double X, double Y)>> coNested)
+            List<List<(double X, double Y)>> coNested,
+            out double violDepth, out double pushX, out double pushY)
         {
+            violDepth = 0; pushX = 0; pushY = 0;
             double a = Math.Abs(SignedArea(placedLoop));
-            double tol = VerifyRelTol * a + Eps;
+            double tolArea = VerifyRelTol * a + Eps;
+            double depthTol = DepthTolFor(a);
             double inHole = Clipper2Adapter.Intersect(placedLoop, hole).Sum(l => Math.Abs(SignedArea(l)));
-            if (inHole < a - tol) return false;
+            if (inHole < a - tolArea) return false;
+            double dOut = OutsideDepth(placedLoop, hole, out double sx, out double sy);
+            if (dOut > depthTol) { violDepth = dOut; pushX = sx; pushY = sy; return false; }
             foreach (var cn in coNested)
-                if (Clipper2Adapter.Intersect(placedLoop, cn).Sum(l => Math.Abs(SignedArea(l))) > tol) return false;
+            {
+                if (Clipper2Adapter.Intersect(placedLoop, cn).Sum(l => Math.Abs(SignedArea(l))) > tolArea) return false;
+                double d = PenetrationDepth(placedLoop, cn, out double ox, out double oy);
+                if (d > depthTol) { violDepth = d; pushX = ox; pushY = oy; return false; }
+            }
             return true;
         }
+
+        // ── micro-retreat wrappers: verify, and on a depth failure nudge ONCE
+        // along the measured penetration vector by (depth + RetreatSlack),
+        // then re-verify. Rescues contact-tight candidates that only violate
+        // through NFP/IFP construction error instead of discarding them.
+        private static bool TryVerifiedCandidate(
+            List<(double X, double Y)> rot, double tx, double ty,
+            IReadOnlyList<(double X, double Y)> sheetOuter,
+            IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
+            List<List<(double X, double Y)>> placedMaterial,
+            out double atx, out double aty)
+        {
+            atx = tx; aty = ty;
+            var placedLoop = Translate(rot, tx, ty);
+            if (CandidateOk(placedLoop, sheetOuter, sheetHoles, placedMaterial,
+                    out double depth, out double px, out double py)) return true;
+            if (depth <= 0) return false;                  // area-gate failure: no direction to retreat
+            double len = Math.Sqrt(px * px + py * py);
+            if (len < Eps) return false;                   // crossing-only violation: no probe direction
+            double k = (len + RetreatSlack) / len;
+            double ntx = tx + px * k, nty = ty + py * k;
+            var nudged = Translate(rot, ntx, nty);
+            if (!CandidateOk(nudged, sheetOuter, sheetHoles, placedMaterial, out _, out _, out _)) return false;
+            atx = ntx; aty = nty;
+            return true;
+        }
+
+        private static bool TryVerifiedNest(
+            List<(double X, double Y)> rot, double tx, double ty,
+            IReadOnlyList<(double X, double Y)> hole,
+            List<List<(double X, double Y)>> coNested,
+            out double atx, out double aty)
+        {
+            atx = tx; aty = ty;
+            var placedLoop = Translate(rot, tx, ty);
+            if (NestOk(placedLoop, hole, coNested, out double depth, out double px, out double py)) return true;
+            if (depth <= 0) return false;
+            double len = Math.Sqrt(px * px + py * py);
+            if (len < Eps) return false;
+            double k = (len + RetreatSlack) / len;
+            double ntx = tx + px * k, nty = ty + py * k;
+            var nudged = Translate(rot, ntx, nty);
+            if (!NestOk(nudged, hole, coNested, out _, out _, out _)) return false;
+            atx = ntx; aty = nty;
+            return true;
+        }
+
+        // ── distance-based depth measurement (mirrors the independent
+        // verification protocol: probes = vertices + edge midpoints + area
+        // centroid; plus proper edge-crossing perpendicular depth) ───────────
+
+        // penetration of A into B (and B into A): max distance of a probe of
+        // one loop strictly inside the other to that other loop's boundary.
+        // push = vector that moves A out of the deepest violation.
+        private static double PenetrationDepth(
+            IReadOnlyList<(double X, double Y)> A, IReadOnlyList<(double X, double Y)> B,
+            out double pushX, out double pushY)
+        {
+            pushX = 0; pushY = 0;
+            double depth = 0;
+            foreach (var (px, py) in DepthProbes(A))
+            {
+                if (!PointInLoop(px, py, B)) continue;
+                double d = DistToBoundary(px, py, B, out double qx, out double qy);
+                if (d > depth) { depth = d; pushX = qx - px; pushY = qy - py; }
+            }
+            foreach (var (ux, uy) in DepthProbes(B))
+            {
+                if (!PointInLoop(ux, uy, A)) continue;
+                double d = DistToBoundary(ux, uy, A, out double rx, out double ry);
+                if (d > depth) { depth = d; pushX = ux - rx; pushY = uy - ry; }
+            }
+            double cpd = MaxProperCross(A, B);
+            if (cpd > depth) depth = cpd; // keep the probe-based push direction
+            return depth;
+        }
+
+        // how far A sticks OUT of a container: max distance of a probe of A
+        // outside the container to the container boundary, plus crossings.
+        // push = vector that pulls A back toward the container.
+        private static double OutsideDepth(
+            IReadOnlyList<(double X, double Y)> A, IReadOnlyList<(double X, double Y)> container,
+            out double pushX, out double pushY)
+        {
+            pushX = 0; pushY = 0;
+            double depth = 0;
+            foreach (var (px, py) in DepthProbes(A))
+            {
+                if (PointInLoop(px, py, container)) continue;
+                double d = DistToBoundary(px, py, container, out double qx, out double qy);
+                if (d > depth) { depth = d; pushX = qx - px; pushY = qy - py; }
+            }
+            double cpd = MaxProperCross(A, container);
+            if (cpd > depth) depth = cpd;
+            return depth;
+        }
+
+        // probes: vertices, edge midpoints, and the area centroid (the
+        // centroid closes the exact-duplicate / full-containment blind spot)
+        private static IEnumerable<(double X, double Y)> DepthProbes(IReadOnlyList<(double X, double Y)> p)
+        {
+            int n = p.Count;
+            for (int i = 0; i < n; i++)
+            {
+                yield return p[i];
+                var q = p[(i + 1) % n];
+                yield return ((p[i].X + q.X) / 2, (p[i].Y + q.Y) / 2);
+            }
+            double sa = 0, cx = 0, cy = 0;
+            for (int i = 0; i < n; i++)
+            {
+                var u = p[i]; var v = p[(i + 1) % n];
+                double w = u.X * v.Y - v.X * u.Y;
+                sa += w; cx += (u.X + v.X) * w; cy += (u.Y + v.Y) * w;
+            }
+            if (Math.Abs(sa) > Eps) yield return (cx / (3 * sa), cy / (3 * sa));
+        }
+
+        // even-odd point-in-polygon (concave-safe)
+        private static bool PointInLoop(double x, double y, IReadOnlyList<(double X, double Y)> poly)
+        {
+            bool inside = false; int n = poly.Count;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                var pi = poly[i]; var pj = poly[j];
+                if ((pi.Y > y) != (pj.Y > y))
+                {
+                    double xc = pj.X + (y - pj.Y) * (pi.X - pj.X) / (pi.Y - pj.Y);
+                    if (x < xc) inside = !inside;
+                }
+            }
+            return inside;
+        }
+
+        // distance to the polygon boundary + the nearest boundary point
+        private static double DistToBoundary(double x, double y,
+            IReadOnlyList<(double X, double Y)> poly, out double qx, out double qy)
+        {
+            double best = double.MaxValue; qx = x; qy = y;
+            int n = poly.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var a = poly[i]; var b = poly[(i + 1) % n];
+                double dx = b.X - a.X, dy = b.Y - a.Y;
+                double l2 = dx * dx + dy * dy;
+                double t = l2 < 1e-24 ? 0 : ((x - a.X) * dx + (y - a.Y) * dy) / l2;
+                if (t < 0) t = 0; else if (t > 1) t = 1;
+                double cx = a.X + t * dx, cy = a.Y + t * dy;
+                double d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+                if (d2 < best * best) { best = Math.Sqrt(d2); qx = cx; qy = cy; }
+            }
+            return best;
+        }
+
+        // max proper-crossing depth proxy over all edge pairs (min
+        // perpendicular endpoint distance), 0 when no edges properly cross
+        private static double MaxProperCross(
+            IReadOnlyList<(double X, double Y)> A, IReadOnlyList<(double X, double Y)> B)
+        {
+            double bestCross = 0;
+            int na = A.Count, nb = B.Count;
+            for (int i = 0; i < na; i++)
+            {
+                var a1 = A[i]; var a2 = A[(i + 1) % na];
+                double aminx = Math.Min(a1.X, a2.X), amaxx = Math.Max(a1.X, a2.X);
+                double aminy = Math.Min(a1.Y, a2.Y), amaxy = Math.Max(a1.Y, a2.Y);
+                for (int j = 0; j < nb; j++)
+                {
+                    var b1 = B[j]; var b2 = B[(j + 1) % nb];
+                    if (Math.Max(b1.X, b2.X) < aminx || Math.Min(b1.X, b2.X) > amaxx ||
+                        Math.Max(b1.Y, b2.Y) < aminy || Math.Min(b1.Y, b2.Y) > amaxy) continue;
+                    double d1 = CrossZ(b1, b2, a1), d2 = CrossZ(b1, b2, a2);
+                    if (!((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0))) continue;
+                    double d3 = CrossZ(a1, a2, b1), d4 = CrossZ(a1, a2, b2);
+                    if (!((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) continue;
+                    double la = Math.Sqrt(Sq2(a2.X - a1.X) + Sq2(a2.Y - a1.Y));
+                    double lb = Math.Sqrt(Sq2(b2.X - b1.X) + Sq2(b2.Y - b1.Y));
+                    if (la < 1e-12 || lb < 1e-12) continue;
+                    double m = Math.Min(
+                        Math.Min(Math.Abs(d1), Math.Abs(d2)) / lb,
+                        Math.Min(Math.Abs(d3), Math.Abs(d4)) / la);
+                    if (m > bestCross) bestCross = m;
+                }
+            }
+            return bestCross;
+        }
+
+        private static double CrossZ((double X, double Y) o, (double X, double Y) a, (double X, double Y) b) =>
+            (a.X - o.X) * (b.Y - o.Y) - (a.Y - o.Y) * (b.X - o.X);
         private static double Norm(double a) { a %= 2 * Math.PI; if (a < 0) a += 2 * Math.PI; return a; }
 
         // Translation-invariant shape signature: vertices relative to bbox-min,

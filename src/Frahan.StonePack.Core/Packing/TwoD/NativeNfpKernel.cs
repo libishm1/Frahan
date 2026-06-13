@@ -149,20 +149,28 @@ namespace Frahan.Packing.TwoD
             // NFP loop size is O(|obstacle| + |part|) for typical inputs; the
             // kernel reports exact requirements on rc == 1, so the retry is a
             // single precise re-allocation.
-            int capDoubles = 2 * anglesRad.Count * (totalObstVerts + obstacles.Count * (part.Count + 8)) * 2;
-            if (capDoubles < 4096) capDoubles = 4096;
-            int capLoops = anglesRad.Count * obstacles.Count * 4 + 64;
+            // long math (review finding): the product can overflow int for
+            // extreme angle x obstacle-vertex counts; clamp to a sane ceiling
+            long capDoublesL = 4L * anglesRad.Count * (totalObstVerts + (long)obstacles.Count * (part.Count + 8));
+            int capDoubles = (int)Math.Min(Math.Max(capDoublesL, 4096L), 64_000_000L);
+            long capLoopsL = (long)anglesRad.Count * obstacles.Count * 4 + 64;
+            int capLoops = (int)Math.Min(capLoopsL, 4_000_000L);
 
             for (int attempt = 0; attempt < 3; attempt++)
             {
-                var outXY = new double[capDoubles];
-                var loopVerts = new int[capLoops];
-                var loopAngle = new int[capLoops];
-                var loopObst = new int[capLoops];
                 int rc;
                 int loopCount;
+                double[] outXY;
+                int[] loopVerts, loopAngle, loopObst;
                 try
                 {
+                    // allocations INSIDE the try (review finding): an
+                    // OutOfMemoryException from a hostile capacity report must
+                    // fall back to the managed lane, not escape the solve
+                    outXY = new double[capDoubles];
+                    loopVerts = new int[capLoops];
+                    loopAngle = new int[capLoops];
+                    loopObst = new int[capLoops];
                     rc = nfp_batch(partXY, part.Count, angles, angles.Length,
                         obstXY, obstVerts, obstacles.Count, scale, simplifyTol,
                         outXY, capDoubles, loopVerts, loopAngle, loopObst,

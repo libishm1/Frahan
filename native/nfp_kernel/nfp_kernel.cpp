@@ -137,6 +137,25 @@ extern "C" NFP_API int nfp_batch(
     if (outCapacityDoubles < 0 || loopCapacity < 0) return NFP_ERR_BAD_ARGS;
     if (!(scale > 0.0) || !std::isfinite(scale)) return NFP_ERR_BAD_ARGS;
 
+    // finiteness gate (review finding): NaN/Inf coordinates reach llround UB
+    // and can wedge the boolean engine for minutes; reject loudly instead
+    {
+        const long long pn = 2LL * partVerts;
+        for (long long i = 0; i < pn; ++i)
+            if (!std::isfinite(partXY[i])) return NFP_ERR_BAD_ARGS;
+        for (int a = 0; a < angleCount; ++a)
+            if (!std::isfinite(anglesRad[a])) return NFP_ERR_BAD_ARGS;
+        long long total = 0;
+        for (int oi = 0; oi < obstCount; ++oi)
+        {
+            if (obstVerts[oi] < 0) return NFP_ERR_BAD_ARGS;
+            total += obstVerts[oi];
+        }
+        const long long on = 2LL * total;
+        for (long long i = 0; i < on; ++i)
+            if (!std::isfinite(obstXY[i])) return NFP_ERR_BAD_ARGS;
+    }
+
     try
     {
         // ── obstacles: read, simplify, snap to Int64 ONCE (angle-invariant) ──

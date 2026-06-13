@@ -70,11 +70,14 @@ public sealed class HoleNestComponent : GH_Component
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddCurveParameter("Sheet", "S",
-            "Closed planar sheet boundary curve.", GH_ParamAccess.item);
+        pManager.AddCurveParameter("Sheets", "S",
+            "Closed planar sheet boundary curve(s). Multiple sheets nest by greedy overflow: sheet 0 " +
+            "fills first, unplaced parts carry to sheet 1, and so on. Sheets stay at their drawn " +
+            "positions.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Sheet Holes", "SH",
-            "Closed sheet defect/hole curves inside the sheet boundary. Parts never overlap them.",
-            GH_ParamAccess.list);
+            "Closed sheet defect/hole curves as a TREE: branch path {s} holds the holes of Sheets[s] " +
+            "(a flat list addresses Sheets[0]). Parts never overlap them.",
+            GH_ParamAccess.tree);
         pManager[1].Optional = true;
         pManager.AddCurveParameter("Parts", "P",
             "Closed planar part outline curves to nest.", GH_ParamAccess.list);
@@ -130,6 +133,9 @@ public sealed class HoleNestComponent : GH_Component
             "The placed parts' own hole curves at full resolution, moved with their parts: branch path " +
             "{i} holds the hole curves of Placed[i]. Subtract them from Placed[i] for the true cut profile.",
             GH_ParamAccess.tree);
+        pManager.AddIntegerParameter("Sheet", "Sh",
+            "For each placed curve, the index of the sheet it landed on (greedy overflow order).",
+            GH_ParamAccess.list);
     }
 
     // ─── async solve (the Geogram-Remesh / Kintsugi house pattern, adapted) ──
@@ -151,8 +157,10 @@ public sealed class HoleNestComponent : GH_Component
 
     private sealed class Snapshot
     {
-        public IReadOnlyList<(double X, double Y)> SheetOuter;
-        public List<IReadOnlyList<(double X, double Y)>> SheetHoles;
+        public List<IReadOnlyList<(double X, double Y)>> Sheets;
+        public List<IReadOnlyList<IReadOnlyList<(double X, double Y)>>> SheetHolesPerSheet;
+        public List<double> SheetZ;          // per sheet (placed parts land at their sheet's elevation)
+        public List<double> SheetNetArea;    // per sheet: |outer| - sum|holes| (for the aggregate density)
         public List<HoleNestPart> Parts;
         public double UserSpacing, EngineSpacing, MaxDev;
         public int BaseRotations, ContactRotations;
@@ -160,14 +168,14 @@ public sealed class HoleNestComponent : GH_Component
         public List<double> PartZOf;
         public List<Curve> Originals;   // duplicated on the UI thread (owned)
         public List<List<Curve>> OriginalHoles; // per prepared part, duplicated (may be null per part)
-        public double OutZ;
         public ulong Hash;
     }
 
     private sealed class Payload
     {
         public Snapshot Snap;
-        public HoleNestResult Res;
+        public HoleNestResult Res;          // aggregate across sheets
+        public List<HoleNestResult> PerSheet; // per-sheet engine results (null for partials)
         public bool Partial;   // progressive snapshot (mid-solve), not a final result
     }
 
@@ -255,10 +263,31 @@ public sealed class HoleNestComponent : GH_Component
                 };
                 try
                 {
-                    var res = ContactNfpHoleNester.Pack(snap.SheetOuter, snap.SheetHoles, snap.Parts,
-                        snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
+                    var perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
+                        snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
                         onPlacement: onPlacement);
-                    payload = new Payload { Snap = snap, Res = res };
+                    var agg = new HoleNestResult { Note = "" };
+                    double usedArea = 0, netArea = 0;
+                    var notes = new System.Collections.Generic.List<string>();
+                    bool allValid = true;
+                    for (int si = 0; si < perSheet.Count; si++)
+                    {
+                        var r = perSheet[si];
+                        agg.Placements.AddRange(r.Placements);
+                        agg.PartHolesFilled += r.PartHolesFilled;
+                        agg.ElapsedMs += r.ElapsedMs;
+                        usedArea += r.UsedArea;
+                        if (si < snap.SheetNetArea.Count) netArea += Math.Max(1e-9, snap.SheetNetArea[si]);
+                        if (r.Placements.Count > 0 || !r.Note.StartsWith("empty"))
+                            allValid &= r.Valid;
+                        if (!string.IsNullOrEmpty(r.Note) && !notes.Contains(r.Note)) notes.Add(r.Note);
+                    }
+                    agg.PlacedCount = agg.Placements.Count;
+                    agg.UsedArea = usedArea;
+                    agg.Density = netArea > 1e-9 ? usedArea / netArea : 0.0;
+                    agg.Valid = allValid;
+                    agg.Note = string.Join(" ; ", notes);
+                    payload = new Payload { Snap = snap, Res = agg, PerSheet = perSheet };
                 }
                 catch (Exception ex) { error = "Hole-aware nesting failed: " + ex.Message; }
                 bool cancelled = token.IsCancellationRequested;
@@ -279,16 +308,16 @@ public sealed class HoleNestComponent : GH_Component
     /// <summary>Inputs -> owned snapshot (conversion + proxy-deviation measurement + hash). UI thread only.</summary>
     private Snapshot BuildSnapshot(IGH_DataAccess da)
     {
-        Curve sheetCurve = null;
-        var sheetHoleCurves = new List<Curve>();
+        var sheetCurves = new List<Curve>();
+        GH_Structure<GH_Curve> sheetHolesTree = null;
         var partCurves = new List<Curve>();
         GH_Structure<GH_Curve> partHolesTree = null;
         double spacing = 0.0;
         int baseRotations = 4;
         int contactRotations = 6;
 
-        if (!da.GetData(0, ref sheetCurve)) return null;
-        da.GetDataList(1, sheetHoleCurves);
+        if (!da.GetDataList(0, sheetCurves) || sheetCurves.Count == 0) return null;
+        da.GetDataTree(1, out sheetHolesTree);
         if (!da.GetDataList(2, partCurves)) return null;
         da.GetDataTree(3, out partHolesTree);
         da.GetData(4, ref spacing);
@@ -303,23 +332,55 @@ public sealed class HoleNestComponent : GH_Component
         contactRotations = Math.Max(0, contactRotations);
 
         double partDev = 0.0, sheetDev = 0.0;
-        var sheetOuter = CurveToLoop(sheetCurve, "Sheet", out var sheetZ, out var devSheet, SheetSampleVerts);
-        if (sheetOuter == null)
+        var sheets = new List<IReadOnlyList<(double X, double Y)>>();
+        var sheetZs = new List<double>();
+        var sheetNet = new List<double>();
+        foreach (var sc in sheetCurves)
+        {
+            var loop = CurveToLoop(sc, "Sheet", out var sz, out var devS, SheetSampleVerts);
+            if (loop == null) continue;
+            sheets.Add(loop); sheetZs.Add(sz);
+            sheetNet.Add(Math.Abs(SignedArea((List<(double X, double Y)>)loop)));
+            if (devS > sheetDev) sheetDev = devS;
+        }
+        if (sheets.Count == 0)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                "Sheet must be a valid closed curve in a WorldXY-parallel plane.");
+                "At least one Sheet must be a valid closed curve in a WorldXY-parallel plane.");
             return null;
         }
-        if (devSheet > sheetDev) sheetDev = devSheet;
-        _outZ = sheetZ;
+        if (sheets.Count < sheetCurves.Count)
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                $"{sheetCurves.Count - sheets.Count} sheet curve(s) ignored (must be closed and WorldXY-parallel).");
+        _outZ = sheetZs[0];
 
-        var sheetHoles = new List<IReadOnlyList<(double X, double Y)>>();
+        // per-sheet holes: branch path {s} addresses Sheets[s] (flat list -> sheet 0)
+        var sheetHolesPerSheet = new List<IReadOnlyList<IReadOnlyList<(double X, double Y)>>>();
+        for (int si = 0; si < sheets.Count; si++) sheetHolesPerSheet.Add(new List<IReadOnlyList<(double X, double Y)>>());
         var droppedSheetHoles = 0;
-        foreach (var hc in sheetHoleCurves)
+        if (sheetHolesTree != null && !sheetHolesTree.IsEmpty)
         {
-            var loop = CurveToLoop(hc, null, out _, out var devH, SheetSampleVerts);
-            if (loop != null) { sheetHoles.Add(loop); if (devH > sheetDev) sheetDev = devH; }
-            else droppedSheetHoles++;
+            for (int b = 0; b < sheetHolesTree.PathCount; b++)
+            {
+                var path = sheetHolesTree.Paths[b];
+                var branch = sheetHolesTree.Branches[b];
+                if (branch == null || branch.Count == 0) continue;
+                int key = path.Indices.Length > 0 ? path.Indices[path.Indices.Length - 1] : 0;
+                if (key < 0 || key >= sheets.Count) key = 0;
+                var target = (List<IReadOnlyList<(double X, double Y)>>)sheetHolesPerSheet[key];
+                foreach (var gc in branch)
+                {
+                    if (gc == null || gc.Value == null) continue;
+                    var loop = CurveToLoop(gc.Value, null, out _, out var devH, SheetSampleVerts);
+                    if (loop != null)
+                    {
+                        target.Add(loop);
+                        sheetNet[key] -= Math.Abs(SignedArea((List<(double X, double Y)>)loop));
+                        if (devH > sheetDev) sheetDev = devH;
+                    }
+                    else droppedSheetHoles++;
+                }
+            }
         }
         if (droppedSheetHoles > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
@@ -419,8 +480,13 @@ public sealed class HoleNestComponent : GH_Component
         void HD(double v) { h ^= (ulong)BitConverter.DoubleToInt64Bits(v); h *= 1099511628211UL; }
         void HL(IReadOnlyList<(double X, double Y)> lp) { HD(lp.Count); foreach (var q in lp) { HD(q.X); HD(q.Y); } }
         HD(engineSpacing); HD(baseRotations); HD(contactRotations); HD(_smoothSampleVerts);
-        HL(sheetOuter); HD(sheetHoles.Count);
-        foreach (var q in sheetHoles) HL(q);
+        HD(sheets.Count);
+        for (int si = 0; si < sheets.Count; si++)
+        {
+            HL(sheets[si]); HD(sheetZs[si]);
+            HD(sheetHolesPerSheet[si].Count);
+            foreach (var q in sheetHolesPerSheet[si]) HL(q);
+        }
         HD(parts.Count);
         for (int i = 0; i < parts.Count; i++)
         {
@@ -430,12 +496,13 @@ public sealed class HoleNestComponent : GH_Component
 
         return new Snapshot
         {
-            SheetOuter = sheetOuter, SheetHoles = sheetHoles, Parts = parts,
+            Sheets = sheets, SheetHolesPerSheet = sheetHolesPerSheet,
+            SheetZ = sheetZs, SheetNetArea = sheetNet, Parts = parts,
             UserSpacing = spacing, EngineSpacing = engineSpacing, MaxDev = maxDev,
             BaseRotations = baseRotations, ContactRotations = contactRotations,
             InputIndexOf = inputIndexOf, PartZOf = partZOf, Originals = originals,
             OriginalHoles = originalHoles,
-            OutZ = sheetZ, Hash = h,
+            Hash = h,
         };
     }
 
@@ -447,6 +514,7 @@ public sealed class HoleNestComponent : GH_Component
         var sourceIndices = new List<int>(res.Placements.Count);
         var transforms = new List<Transform>(res.Placements.Count);
         var nestedFlags = new List<bool>(res.Placements.Count);
+        var sheetIndices = new List<int>(res.Placements.Count);
         var placedHoles = new GH_Structure<GH_Curve>();
         int placedIdx = 0;
         foreach (var pl in res.Placements)
@@ -454,8 +522,9 @@ public sealed class HoleNestComponent : GH_Component
             int src = pl.PartIndex >= 0 && pl.PartIndex < snap.InputIndexOf.Count ? snap.InputIndexOf[pl.PartIndex] : -1;
             sourceIndices.Add(src);
             // Core placement = rotate about the world Z origin, then translate.
-            // The Z term lifts a part from its own input plane to the sheet's.
-            double dz = pl.PartIndex >= 0 && pl.PartIndex < snap.PartZOf.Count ? snap.OutZ - snap.PartZOf[pl.PartIndex] : 0.0;
+            // The Z term lifts a part from its own input plane to ITS sheet's.
+            double sheetZ = pl.SheetIndex >= 0 && pl.SheetIndex < snap.SheetZ.Count ? snap.SheetZ[pl.SheetIndex] : snap.SheetZ[0];
+            double dz = pl.PartIndex >= 0 && pl.PartIndex < snap.PartZOf.Count ? sheetZ - snap.PartZOf[pl.PartIndex] : 0.0;
             var xf = Transform.Translation(pl.Tx, pl.Ty, dz) *
                      Transform.Rotation(pl.AngleRad, Vector3d.ZAxis, Point3d.Origin);
             transforms.Add(xf);
@@ -470,7 +539,7 @@ public sealed class HoleNestComponent : GH_Component
                 placedCurve = snap.Originals[prep].DuplicateCurve();
                 if (placedCurve != null && !placedCurve.Transform(xf)) placedCurve = null;
             }
-            placedCurves.Add(placedCurve != null ? placedCurve : LoopToCurve(pl.PlacedOuter, snap.OutZ));
+            placedCurves.Add(placedCurve != null ? placedCurve : LoopToCurve(pl.PlacedOuter, sheetZ));
             // the part's own holes travel with it (full resolution, same xf)
             var holePath = new GH_Path(placedIdx);
             placedHoles.EnsurePath(holePath);
@@ -486,6 +555,7 @@ public sealed class HoleNestComponent : GH_Component
             }
             placedIdx++;
             nestedFlags.Add(pl.NestedInHost);
+            sheetIndices.Add(pl.SheetIndex);
         }
 
         var unplaced = snap.Parts.Count - res.PlacedCount;
@@ -499,8 +569,16 @@ public sealed class HoleNestComponent : GH_Component
         var note = string.IsNullOrEmpty(res.Note) ? "ok" : res.Note;
         var devNote = snap.MaxDev > 0 ? $", ProxyDevComp: +{2.0 * snap.MaxDev:0.####}" : "";
         var stale = staleNote != null ? $" [{staleNote}]" : "";
+        var perSheetNote = "";
+        if (payload.PerSheet != null && payload.PerSheet.Count > 1)
+        {
+            var counts = new List<string>();
+            for (int si = 0; si < payload.PerSheet.Count; si++)
+                counts.Add($"s{si}:{payload.PerSheet[si].Placements.Count}");
+            perSheetNote = $", Sheets: [{string.Join(" ", counts)}]";
+        }
         var report =
-            $"Sheet Nest (Hole-Aware){stale} — Placed: {res.PlacedCount}/{snap.Parts.Count}, " +
+            $"Sheet Nest (Hole-Aware){stale} — Placed: {res.PlacedCount}/{snap.Parts.Count}{perSheetNote}, " +
             $"PartHolesFilled: {res.PartHolesFilled}, Density: {res.Density:0.000}, " +
             $"Valid: {res.Valid}, Elapsed: {res.ElapsedMs:0.0} ms, Note: {note}{devNote}";
 
@@ -512,6 +590,7 @@ public sealed class HoleNestComponent : GH_Component
         da.SetData(5, res.Density);
         da.SetData(6, res.Valid);
         da.SetDataTree(7, placedHoles);
+        da.SetDataList(8, sheetIndices);
     }
 
     private void EmitEmpty(IGH_DataAccess da, string message)
@@ -524,6 +603,7 @@ public sealed class HoleNestComponent : GH_Component
         da.SetData(5, 0.0);
         da.SetData(6, false);
         da.SetDataTree(7, new GH_Structure<GH_Curve>());
+        da.SetDataList(8, new List<int>());
     }
 
     // ─── Curve <-> loop conversion (mirrors IrregularSheetFillNfpBlf.CurveToLoop) ─
