@@ -1,7 +1,9 @@
-# Example 10 - 2D irregular nesting (exact NFP, evolved V506)
+# Example 10 - 2D irregular nesting (Sheet Nest, Hole-Aware)
 
-> **Scale, units, position (corrected 2026-06-06):** METERS. Slab 3.2 x 2.0 m (jumbo gangsaw), cut parts 0.3-1.2 m. Lies flat on the XY plane at z=0, sheet lower-left at the origin. Tolerance 1 mm, Spacing = saw kerf 5 mm. Packer switched to **FreeNestX (exact NFP-BLF)** which is strictly 0-overlap by construction (verified 0.0 overlap live in the rebuilt .gha). V506's apparent overlap was the default Trim Tolerance 0.1 (overlap-then-trim by design), not a fault. See `../../wiki/research/tolerances_dimensions_slm_roses.md`.
-
+> **Scale, units, position:** METERS. Slab 3.2 x 2.0 m (jumbo gangsaw), cut parts 0.3-1.2 m. Lies flat on
+> the XY plane at z=0, sheet lower-left at the origin. Spacing = saw kerf. Packer is **Sheet Nest
+> (Hole-Aware) / HoleNest** (contact-NFP, hole-aware, multi-start), strictly valid by boolean check. See
+> `../../wiki/research/tolerances_dimensions_slm_roses.md`.
 
 Nest closed planar parts into a sheet (with optional holes), zero overlap, maximising stock utilisation.
 This is the slab/sheet-cutting entrypoint: cut the most parts from the least stone. Style: short sentences,
@@ -9,52 +11,45 @@ no em dashes.
 
 ![2D nest result](10_pack2d_result.png)
 
-*Validated evolved-packer output: ~22 varied parts (rectangles + L-shapes) nested around a hole (red),
-zero overlap. Captured from the headless harness (current source). See the caveat below.*
+*Live-validated Sheet Nest (Hole-Aware) output: 18/18 parts placed (rectangles + a pentagon + triangles),
+wood-coloured by part, density 0.563, Valid=True, 256 ms (general-NFP + multi-start K=4 + native-NFP
+fast-path). Captured from the live canvas solve.*
 
 ## What it shows
-The evolved exact No-Fit-Polygon Bottom-Left-Fill nester. The feasible region for each part is the
-inner-fit polygon minus the union of the no-fit polygons of already-placed parts and holes, so parts never
-overlap by construction. Parts route around sheet holes. Honest yield is measured as
-`util_stock = placed part area / (sheet area - hole area)`.
-
-Headless-validated result (`tools/Frahan.StonePack.Harness --pack2dstudy`, current source):
-the evolved NFP-BLF is the only 0-overlap packer crossing the 80% bar with holes: 82.0% oversub,
-84.7% L+hole, 89.6% on a hard 3-hole fixture. See `wiki/research/packing/PACK2D_STUDY_REPORT.md` and
-`10_pack2d_util_bars.png`.
+The hole-aware contact-NFP nester. Each part is placed by a no-fit-polygon bottom-left fill with
+contact-adaptive rotations; parts route around sheet holes and part-in-part-hole nesting is supported, and
+the layout is boolean-validated (no overlap by construction, confirmed by the `Valid` output). A
+multi-start keep-best pass (K=4 part orders) takes the densest valid layout. Yield is the `Density` output
+(placed part area / sheet area).
 
 ## Files
-- `10_pack2d_nfp_nest.gh` - the canvas (built live): convex part curves (internalized) -> exact NFP-BLF
-  sheet packer -> Packed Curves + Report. MCP bridge stripped, grouped.
-- `10_pack2d_result.png` - validated nest capture (from `wiki/research/packing/figures/rhino_v506.png`).
-- `10_pack2d_result.3dm` - validated nest geometry (the oversub L+hole evolved case).
-- `10_pack2d_util_bars.png` - util_stock bar chart across packers.
+- `10_pack2d_nfp_nest.gh` - the canvas: internalized part curves + sheet rectangle -> Sheet Nest
+  (Hole-Aware) -> Placed curves + Report, with a coloured Custom Preview. MCP bridge stripped, grouped.
+- `10_pack2d_result.png` - the live nest capture (this swap).
+- `10_pack2d_result.3dm` - baked nest geometry.
+- `10_pack2d_util_bars.png` - util_stock bar chart across packers (historical).
 
 ## Component
-`Frahan Sheet Pack (Unified)` / FreeNestU (Frahan > 2D Packing), Variant 0 = V506. Bottom-left-fill
-(Burke et al. 2006) over Minkowski-sum NFP/IFP (Bennell & Oliveira 2009) on a Clipper2 back-end. The
-sibling `Freeform Sheet Nest (Exact NFP)` / FreeNestX is the pure exact-NFP engine. Inputs of note:
-`Variant` (0 V506), `Boundary Mode` (0 off; 1 bias; 2 ring; 3 curve-division), `Trim Tolerance`
-(0 = strict no-overlap; >0 boolean-trims part-to-part contacts), `Rotations` (default 0/90/180/270).
+`Sheet Nest (Hole-Aware)` / HoleNest (Frahan > 2D Packing, GUID `d5f10019-8a3c-4d17-b5e2-6c90f2a47d31`).
+Contact-NFP bottom-left fill (Burke et al. 2006 BLF over Bennell & Oliveira 2009 Minkowski NFP/IFP) on a
+Clipper2 back-end, with part-in-part-hole IFP and a boolean validity gate. Inputs: `Sheets` (S), `Sheet
+Holes` (SH), `Parts` (P), `Part Holes` (PH), `Spacing` (Gap), `BaseRotations` (BR), `ContactRotations`
+(CR), `Resolution` (Res), `MultiStart` (MS). Outputs: `Placed` (C), `Source` (I), `Transform` (X),
+`Nested` (N), `Report` (R), `Density` (D), `Valid` (V), `Placed Holes` (CH), `Sheet` (Sh). The component is
+async: it nests in the background and the result pops in when ready (no Run toggle).
 
-## IMPORTANT caveat (read this)
-The `result.png` / `result.3dm` here are from the HEADLESS harness (current source), which is validated
-0-overlap. The `.gha` currently deployed in a given Rhino may be an OLDER build whose 2D NFP packers
-overlap parts (see `handoffs/KNOWN_BUGS.md` KB-7). Rebuild + redeploy the `.gha` from current source
-(`docs/INSTALL.md`, Rhino closed) before trusting a live 2D solve. The `.gh` wiring is correct; only the
-deployed binary can lag.
+The sibling `Freeform Sheet Nest (Exact NFP)` / FreeNestX is the pure exact-NFP engine for the no-holes
+case; use HoleNest when parts or sheets carry holes, or for the multi-start densest-valid layout.
 
 ## Data
-Synthetic varied parts (internalized convex polygons in the `.gh`; the validated capture uses the study's
-oversub L+hole part set). For a real job, replace the parts with your cut-list curves and the sheet with
-your slab outline; add hole curves for defects/veins to route around.
+Internalized varied parts (rectangles + a pentagon + triangles) in the `.gh`. For a real job, replace the
+parts with your cut-list curves and the sheet with your slab outline; add `Sheet Holes` for defects/veins
+to route around, and `Part Holes` for parts that themselves carry voids to nest into.
 
 ## Run
-1. Build + deploy the CURRENT `.gha` (Rhino closed). Open the `.gh`.
-2. Toggle `Run` true. Read the `Report` panel (Placed / Unplaced / Invalid).
-3. For maximum density use spacing 0 with `Freeform Sheet Nest (Exact NFP)`; use V506 for holes + boundary
-   modes (V506 has a 0.1 spacing floor, KB-6).
+Open the `.gh` (deploy the current `.gha` first, Rhino closed). HoleNest solves on open and the result
+appears when the background nest finishes; read the `Report` / `Density` / `Valid` outputs.
 
 ## Best practices
-Per `../GRASSHOPPER_BEST_PRACTICES.md`: coloured Group, default-false Run gate, deterministic Seed.
-Results pre-baked so reviewers see the outcome without Grasshopper.
+Per `../GRASSHOPPER_BEST_PRACTICES.md`: coloured Group, deterministic, results pre-baked so reviewers see
+the outcome without Grasshopper.

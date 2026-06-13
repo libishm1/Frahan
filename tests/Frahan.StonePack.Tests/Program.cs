@@ -1030,6 +1030,10 @@ var tests = new List<(string Name, Action Body)>
     ("edgematch component TrencadisEdgeMatch GUID parses", EdgeMatchingComponentGuidTests.TrencadisEdgeMatchComponent_GuidParses),
     ("edgematch component EdgeMatchOptions GUID parses", EdgeMatchingComponentGuidTests.EdgeMatchOptionsComponent_GuidParses),
     ("edgematch component GUIDs are unique", EdgeMatchingComponentGuidTests.AllFourComponents_HaveUniqueGuids),
+    ("liveedge classify 16/16 irregular outlines 2 live + 2 sawn", LiveEdgeTests.Classify_IrregularOutlines_TwoLiveTwoSawnAlternating),
+    ("liveedge extract produces a valid oriented board", LiveEdgeTests.Extract_IrregularOutline_ProducesValidBoard),
+    ("liveedge layup greedy deterministic + trim bounded", LiveEdgeTests.Layup_Greedy_DeterministicAndTrimBounded),
+    ("liveedge layup hungarian total trim <= greedy", LiveEdgeTests.Layup_Hungarian_TotalTrimNotWorseThanGreedy),
     // EdgeMatch Options DTO surfacing (2026-05-25): the EdgeMatch Options
     // component bundles the advanced AssemblyOptions flags; EdgeMatch Solve
     // consumes them on its optional Opt input. Pure-managed value semantics:
