@@ -328,7 +328,7 @@ enum (`OutOfProcessReconstructor.cs:25`):
   **Mode 0 Auto**, which tries alpha-shape then falls back to advancing-front
   (`ScanReconstructComponent.cs:268-285`).
 
-![Poisson-reconstructed quarry bench from a LAS LiDAR cloud (example 04)](../examples/04_scan_to_bench_engineer/04_card_poisson_bench.png)
+![Poisson-reconstructed quarry bench from a LAS LiDAR cloud (example 04)](../../../examples/04_scan_to_bench_engineer/04_card_poisson_bench.png)
 
 ### 10.4.1 Screened Poisson reconstruction (original derivation)
 
@@ -397,7 +397,7 @@ never triggers a reconstruction and the canvas never freezes
 cleaned: the largest edge-connected component is kept and dangling alpha-shape
 facets dropped (`ScanReconstructComponent.cs:318-322`).
 
-![Photogrammetric scan reconstructed to a closed mesh (example 07)](../examples/07_scan_ingest_full/07_scan_to_mesh.png)
+![Photogrammetric scan reconstructed to a closed mesh (example 07)](../../../examples/07_scan_ingest_full/07_scan_to_mesh.png)
 
 > **Originality.** Scan Reconstruct and `ReconstructionNative` are
 > **wrapper-of-native** over **vendored-library** backends: CGAL (alpha-shape,
@@ -490,7 +490,7 @@ Geogram and managed paths only.
   (`CgalGeometry.cs:14-16`). A user without the shim cannot segment or skeleton
   a mesh at all. Severity: medium.
 
-![Raw scan cleaned and uniformly remeshed before block decomposition (example 15)](../examples/15_statue_to_blocks/15_step1_clean_bunny_remesh.png)
+![Raw scan cleaned and uniformly remeshed before block decomposition (example 15)](../../../examples/15_statue_to_blocks/15_step1_clean_bunny_remesh.png)
 
 ---
 

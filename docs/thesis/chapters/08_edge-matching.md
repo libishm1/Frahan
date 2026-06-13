@@ -428,7 +428,7 @@ refiner a reassembler rather than a registrar. A measured delta is recorded in
 the roadmap: the refiner is the +97% clearance / open-rim-contact stage of the
 settle pipeline. Tier B with a B-level delta.
 
-![Kintsugi fracture reassembly, Breaking Bad parity, pair score 0.71 STRONG](../examples/14_kintsugi/14_kintsugi_result.png)
+![Kintsugi fracture reassembly, Breaking Bad parity, pair score 0.71 STRONG](../../../examples/14_kintsugi/14_kintsugi_result.png)
 
 ---
 
@@ -584,7 +584,7 @@ implementation`, `:43-45`), and the component's own `[RelatedComponent]` points
 users at the practically-tested Hungarian Stone-Cell Match for real stone-to-cell
 work today (`:41`).
 
-![Trencadís mosaic, 28 shards into 28 Voronoi cells, each used once](../examples/12_trencadis/12_trencadis_result.png)
+![Trencadís mosaic, 28 shards into 28 Voronoi cells, each used once](../../../examples/12_trencadis/12_trencadis_result.png)
 
 ---
 

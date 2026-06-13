@@ -229,7 +229,7 @@ fractures, 0.5 m keep-out) reports the measured frontier
 | Balanced | 800 | 20 | 35.5 m3 | 83.5% | $24,650 |
 | Max volume | $10^6$ | 25 | 38.0 m3 | 89.4% | $16,700 |
 
-![Balanced gangsaw packing on a fractured marble bench](../examples/25_marble_gangsaw_cost/25c_balanced.png)
+![Balanced gangsaw packing on a fractured marble bench](../../../examples/25_marble_gangsaw_cost/25c_balanced.png)
 
 The economics are non-trivial: per the catalogue, price per $m^3$ falls and cut
 cost per $m^3$ rises as blocks shrink, so the smallest 1x1x1 block has negative
@@ -249,7 +249,7 @@ Example 08 packs real Botticino marble: a 600 MHz GPR grid yields 280 fracture
 picks clustered into three dipping beds (0.72 m / 6.1 deg, 2.10 m / 0.9 deg,
 3.70 m / 6.1 deg, sub-cm plane-fit RMS) (`08_marble_cost_volume_metrics.json`).
 
-![GPR-extracted three-bed grid, Botticino marble](../examples/08_gpr_marble/08b_bench_beds.png)
+![GPR-extracted three-bed grid, Botticino marble](../../../examples/08_gpr_marble/08b_bench_beds.png)
 
 The original layout placed axis-aligned blocks at the *mean* bed depth. Because
 the beds dip ~6 deg, a flat box centred at the mean depth **crosses** the dipping
@@ -274,7 +274,7 @@ between the flat cut and the dipping bed are waste. This is fabricable on any
 gangsaw today. The **oblique** plan tilts each bed-parallel pass to follow the
 dipping bed, recovering the wedge.
 
-![Flat (orthogonal) guillotine baseline, the dip wedges are waste](../examples/08_gpr_marble/08f_flat_guillotine.png)
+![Flat (orthogonal) guillotine baseline, the dip wedges are waste](../../../examples/08_gpr_marble/08f_flat_guillotine.png)
 
 The dip-safe flat layer thicknesses collapse the nominal bed spacing
 $[0.72,1.38,1.59,0.30]$ m down to $[0.328,1.051,1.037,0.161]$ m
@@ -286,7 +286,7 @@ frontier (oblique vs flat, at max-cost):
 | Oblique (bed-following) | 32.16 m3 | $28,741 |
 | Flat (orthogonal) | 20.26 m3 | $17,454 |
 
-![Oblique max-cost block layout](../examples/08_gpr_marble/08c_maxcost.png)
+![Oblique max-cost block layout](../../../examples/08_gpr_marble/08c_maxcost.png)
 
 The **georeferencing prize** is the gap: oblique recovers +11.90 m3 (+59%) and
 +$11,287 net per ~50 m3 bench, entirely because the beds dip ~6 deg. That delta is
@@ -318,7 +318,7 @@ directly fabricable. Example 24 renders the literal saw passes that turn a
 That is **19 guillotine cuts** for 20 blocks: each plane spans only its current
 sub-region, which is the defining property of a guillotine cut.
 
-![All guillotine cut planes, accumulated, 3-stage rip and cross](../examples/24_guillotine_cut_sequence/24_stage3_crossZ_allcuts.png)
+![All guillotine cut planes, accumulated, 3-stage rip and cross](../../../examples/24_guillotine_cut_sequence/24_stage3_crossZ_allcuts.png)
 
 The same hierarchy resolves the balanced packing of example 25 into a saw plan:
 two perp-Y cuts (3 slices), two perp-Z cuts (9 beams of 1 x 1 x 6 m), then 25

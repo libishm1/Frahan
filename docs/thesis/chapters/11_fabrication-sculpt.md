@@ -563,13 +563,13 @@ georeferenced marking step that this section's math enables and that no GH
 component yet automates (`examples/08_gpr_marble/README.md`; the cost study is
 documented in Chapter 3).
 
-![Flat guillotine plan on the marble bench (fabricable today; the oblique bed-following recovery needs the georeferenced marking last-mile)](../examples/08_gpr_marble/08f_flat_guillotine.png)
+![Flat guillotine plan on the marble bench (fabricable today; the oblique bed-following recovery needs the georeferenced marking last-mile)](../../../examples/08_gpr_marble/08f_flat_guillotine.png)
 
-![Balanced gangsaw block packing on a fracture-prone marble bench, the cut input to the guillotine sequence](../examples/25_marble_gangsaw_cost/25c_balanced.png)
+![Balanced gangsaw block packing on a fracture-prone marble bench, the cut input to the guillotine sequence](../../../examples/25_marble_gangsaw_cost/25c_balanced.png)
 
-![Guillotine cut sequence: rip, then cross, then cross, every pass edge-to-edge and directly fabricable](../examples/24_guillotine_cut_sequence/24_stage3_crossZ_allcuts.png)
+![Guillotine cut sequence: rip, then cross, then cross, every pass edge-to-edge and directly fabricable](../../../examples/24_guillotine_cut_sequence/24_stage3_crossZ_allcuts.png)
 
-![Engineer scan-to-bench: a real granite LiDAR cloud reconstructed to a packable quarry-bench volume, the upstream of the fabrication spine](../examples/04_scan_to_bench_engineer/04_packable_volume.png)
+![Engineer scan-to-bench: a real granite LiDAR cloud reconstructed to a packable quarry-bench volume, the upstream of the fabrication spine](../../../examples/04_scan_to_bench_engineer/04_packable_volume.png)
 
 ---
 

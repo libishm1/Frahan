@@ -21,9 +21,9 @@ The Core lives at `src/Frahan.StonePack.Core/SurfacePacking` (Rhino-free where i
 can be: the inverse map and the chart record still use `Rhino.Geometry`). The
 Grasshopper front end lives at `src/Frahan.StonePack.GH/SurfacePacking`.
 
-![Twisted block split into surfaces by dihedral angle](../examples/13_surface_mapping/13_surface_segments.png)
+![Twisted block split into surfaces by dihedral angle](../../../examples/13_surface_mapping/13_surface_segments.png)
 
-![Trencadis mosaic draped on the twisted surface via a BFF chart](../examples/13_surface_mapping/13_surface_trencadis.png)
+![Trencadis mosaic draped on the twisted surface via a BFF chart](../../../examples/13_surface_mapping/13_surface_trencadis.png)
 
 *Example 13: a twisted monument (130 deg over its height) is split by CGAL dihedral
 segmentation into 6 regions, then a 176-shard Trencadis mosaic is mapped onto the

@@ -190,7 +190,7 @@ fracture-intersected cells can be passed in as keep-out regions
 full pack, 12/12 elements into one container, score 65.11, deterministic at
 seed 0 (`examples/11_pack3d/README.md`).
 
-![3D guillotine block packing: 12 element cuboids saw-cut into one container](../examples/11_pack3d/11_pack3d_result.png)
+![3D guillotine block packing: 12 element cuboids saw-cut into one container](../../../examples/11_pack3d/11_pack3d_result.png)
 
 > **Originality.** **evolved-fork** of Kim (2025) (Computation 13:211, CC BY
 > 4.0). The tree-forest growth and score are the paper's; the deterministic
@@ -307,7 +307,7 @@ the piece centroid $\mathbf{c}$ (`BulletSettleService.cs:62-70`, `:152-164`).
 Example 18 settles 12 ETH1100 dry-stone scans into a roughly 1.95 m cluster
 (`examples/18_pack_settle_bullet/README.md`).
 
-![Bullet rigid-body settle of 12 ETH1100 dry-stone scans into a stable pile](../examples/18_pack_settle_bullet/18_settle_bullet.png)
+![Bullet rigid-body settle of 12 ETH1100 dry-stone scans into a stable pile](../../../examples/18_pack_settle_bullet/18_settle_bullet.png)
 
 ### 2.4.2 COM-over-support stability (Heyman limit state)
 
@@ -392,7 +392,7 @@ rock, fracture-aware block packing recovers 2.98 m3 (60 blocks, 49.3% of intact,
 mm slab, a 37.3% overall volume yield and 126 m2 of slab face
 (`examples/23_quarry_to_slab/README.md`).
 
-![Quarry-to-slab: fracture-prone block split into slabs](../examples/23_quarry_to_slab/23c_slabs.png)
+![Quarry-to-slab: fracture-prone block split into slabs](../../../examples/23_quarry_to_slab/23c_slabs.png)
 
 > **Originality.** The slab cutter is **clean-room** convex-polyhedron
 > half-space clipping (Sutherland-Hodgman family), labelled "Frahan-original"
@@ -423,7 +423,7 @@ clean 2-manifold so both the interior point test and the CGAL corefinement work.
 These closed blocks are exactly the input the Block Pack (Tree) and DLBF packers
 of this chapter consume.
 
-![Exploded real-face block decomposition of a scanned form](../examples/15_statue_to_blocks/15_step2_blocks_exploded.png)
+![Exploded real-face block decomposition of a scanned form](../../../examples/15_statue_to_blocks/15_step2_blocks_exploded.png)
 
 ---
 

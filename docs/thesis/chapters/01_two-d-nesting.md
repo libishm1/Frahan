@@ -125,7 +125,7 @@ verification (`ContactNfpHoleNester.cs:980-1002`,
 > Tier B (faithful implementation of published work), with the V506 to
 > NFP-BLF delta and the CNH increments below carrying the research weight.
 
-![2D nest result: 22 parts nested around a sheet hole, zero overlap](../examples/10_pack2d/10_pack2d_result.png)
+![2D nest result: 22 parts nested around a sheet hole, zero overlap](../../../examples/10_pack2d/10_pack2d_result.png)
 
 ### 1.4 V506 to NFP-BLF: the measured delta
 
@@ -404,7 +404,7 @@ placed shard is moved to its cell centroid and inset by the grout offset to
 leave the mortar gap. Example 12 places 28 shards into 28 cells in 53 ms with
 zero warnings (`examples/12_trencadis/README.md`).
 
-![Trencadis catalog mosaic: 28 shards in 28 CVD-Lloyd cells with grout](../examples/12_trencadis/12_trencadis_result.png)
+![Trencadis catalog mosaic: 28 shards in 28 CVD-Lloyd cells with grout](../../../examples/12_trencadis/12_trencadis_result.png)
 
 > **Originality.** CVD-Lloyd is **clean-room** from Lloyd (1982) centroidal
 > Voronoi relaxation (`CvdLloyd2d.cs:14-22`, `[Algorithm]` at

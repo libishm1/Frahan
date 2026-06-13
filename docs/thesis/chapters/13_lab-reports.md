@@ -191,7 +191,7 @@ keeps the file I/O off until requested.
 > production solvers, each carrying the `[RelatedComponent]` redirect required
 > by the lab-not-an-island rule.
 
-![Uncertainty-safe quarry yield: blocks packed only in fracture-clean rock, the production output the Lab inspectors instrument](../examples/09_uncertainty_safe_yield/uncertainty_safe_yield_3d.png)
+![Uncertainty-safe quarry yield: blocks packed only in fracture-clean rock, the production output the Lab inspectors instrument](../../../examples/09_uncertainty_safe_yield/uncertainty_safe_yield_3d.png)
 
 ### 13.1.4 The bonus mixed-size packer and the monster-vs-primitive balance
 

@@ -239,7 +239,7 @@ and a normalised-energy confidence (`:132-143`), then convert to
 world-coordinate `GprReflectorPick` records using the trace positions
 (`:146-159`).
 
-![Migrated GPR radargram, Grimsel granite (AU tunnel, MALA GX160 160 MHz)](../examples/03_gpr_fracture_granite/03_gpr_radargram_AU.png)
+![Migrated GPR radargram, Grimsel granite (AU tunnel, MALA GX160 160 MHz)](../../../examples/03_gpr_fracture_granite/03_gpr_radargram_AU.png)
 
 The granite spine (example 3) runs this chain end-to-end on the real Grimsel ISC
 data (MALA GX160, AU and VE tunnels, CC-BY-4.0): with the `granite_160` preset it
@@ -395,7 +395,7 @@ $C_{\text{eff}}=P_{\text{det}}\cdot\textsf{confidence}$, so a low detection
 probability limits trust however precisely the seen fractures are located
 (`EffectiveConfidence`, `:152-160`; `Summarise`, `:191-220`).
 
-![Uncertainty-safe quarry yield: blocks packed only into intact rock, with an inward clearance set to the GPR position sigma](../examples/09_uncertainty_safe_yield/uncertainty_safe_yield_3d.png)
+![Uncertainty-safe quarry yield: blocks packed only into intact rock, with an inward clearance set to the GPR position sigma](../../../examples/09_uncertainty_safe_yield/uncertainty_safe_yield_3d.png)
 
 Example 9 is the full quarry decision. The GPR fracture surfaces (from the granite
 spine) bound the intact zones; **Fracture Block Pack** (GUID
@@ -516,7 +516,7 @@ network, the cheapest fracture data a quarry has (drone photo plus tracing).
 Example 26 reads a real ESRI Shapefile of Loviisa rapakivi-granite fracture traces
 through the `Frahan > Quarry > Ingestion` vector reader and renders the strike map.
 
-![Loviisa KB11 surface fracture map: 708 traces over a ~54 x 45 m outcrop, coloured by strike set](../examples/26_loviisa_surface_fractures/26_surface_fracture_map.png)
+![Loviisa KB11 surface fracture map: 708 traces over a ~54 x 45 m outcrop, coloured by strike set](../../../examples/26_loviisa_surface_fractures/26_surface_fracture_map.png)
 
 The reader returns 708 traces / 6483 vertices, total length 1593.5 m, CRS
 EUREF_FIN_TM35FIN (EPSG:3067), with two conjugate sets peaking at $\approx15^\circ$

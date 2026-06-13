@@ -371,14 +371,14 @@ The verified results on real data (2026-06-06) are recorded honestly in the
 README. Photogrammetry point-cloud ingestion **works**: the Tongjiang quarry
 `detail_cloudAB.ply` imports as a 6,857,772-point cloud.
 
-![Photogrammetry point cloud, Tongjiang quarry, 6.86M points](../examples/07_scan_ingest_full/07_photogrammetry_ingest.png)
+![Photogrammetry point cloud, Tongjiang quarry, 6.86M points](../../../examples/07_scan_ingest_full/07_photogrammetry_ingest.png)
 
 Scan-to-mesh reconstruction **works** on the subsampled cloud: it reconstructs
 to a closed surface via the Advancing-Front backend (out-of-process worker),
 59,971 verts / 111,973 tris in 3.9 s, with the long spanning triangles being cap
 artifacts that the cleanup node peels (reconstruction is chapter 10).
 
-![Scan-to-mesh reconstruction via the out-of-process Advancing-Front worker](../examples/07_scan_ingest_full/07_scan_to_mesh.png)
+![Scan-to-mesh reconstruction via the out-of-process Advancing-Front worker](../../../examples/07_scan_ingest_full/07_scan_to_mesh.png)
 
 Two limitations are documented rather than hidden. LiDAR `.laz` **needs laszip,
 not Rhino import**: a plain Rhino `-Import` of `ot_GD_TLS_data_UTM.laz` produces

@@ -101,8 +101,8 @@ visually validated forms.
 > register; the Roadmap consolidates every chapter's open items by severity; and
 > the Bibliography returns every cited work, citation-normalised.
 
-![Marble bench max-cost block yield from GPR-mapped beds](../examples/08_gpr_marble/08c_maxcost.png)
+![Marble bench max-cost block yield from GPR-mapped beds](../../examples/08_gpr_marble/08c_maxcost.png)
 
-![NFP bottom-left-fill 2D nesting result](../examples/10_pack2d/10_pack2d_result.png)
+![NFP bottom-left-fill 2D nesting result](../../examples/10_pack2d/10_pack2d_result.png)
 
-![Polygonal-masonry castle keep, contact-stable at building scale](../examples/27_polygonal_masonry/27_10_castle_keep.png)
+![Polygonal-masonry castle keep, contact-stable at building scale](../../examples/27_polygonal_masonry/27_10_castle_keep.png)

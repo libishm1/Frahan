@@ -163,7 +163,7 @@ with its GUID preserved. The older V1/V2/V3/V506 standalones are already hidden
 collaborator-readiness plan mandated (`EVOLUTION_PLAN_COLLAB_READY.md`, HITL
 ruling row 2).
 
-![2D nest result: parts nested around a sheet hole, zero overlap](../examples/10_pack2d/10_pack2d_result.png)
+![2D nest result: parts nested around a sheet hole, zero overlap](../../../examples/10_pack2d/10_pack2d_result.png)
 
 ---
 
@@ -226,7 +226,7 @@ the rest" ruling (`PackSettle3DComponent.cs:29-46`; `EVOLUTION_PLAN_COLLAB_READY
 > CoACD path are **wrapper-of-native** / **vendored-library** at the engine
 > boundary; the seed-and-compose orchestration is ours.
 
-![Bullet-settled pile of real ETH1100 stones](../examples/18_pack_settle_bullet/18_settle_bullet.png)
+![Bullet-settled pile of real ETH1100 stones](../../../examples/18_pack_settle_bullet/18_settle_bullet.png)
 
 ---
 
@@ -345,9 +345,9 @@ the three numbers every masonry example reports from P4 onward.
 > fabricated 2017 NCCR paper whose real lineage is Furrer (2017) / Johns (2020)
 > (E5).
 
-![Generated polygonal wall, three-band layout](../examples/27_polygonal_masonry/27_01_three_band_wall.png)
+![Generated polygonal wall, three-band layout](../../../examples/27_polygonal_masonry/27_01_three_band_wall.png)
 
-![Stone-to-cell match with Lambda readout](../examples/27_polygonal_masonry/27_07_stone_match_lambda.png)
+![Stone-to-cell match with Lambda readout](../../../examples/27_polygonal_masonry/27_07_stone_match_lambda.png)
 
 ---
 
@@ -409,7 +409,7 @@ exactly on surface; commit `d1b5c5b`).
 > packaging change, not an algorithm change, and still owes a `THIRD_PARTY_NOTICES`
 > row per the licensing register.
 
-![Surface chart segments, BFF-flattened and packed](../examples/13_surface_mapping/13_surface_segments.png)
+![Surface chart segments, BFF-flattened and packed](../../../examples/13_surface_mapping/13_surface_segments.png)
 
 ---
 

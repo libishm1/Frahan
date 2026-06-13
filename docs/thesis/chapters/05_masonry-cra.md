@@ -345,9 +345,9 @@ closest). The GH hover credits Kim 2024 as the sequencing substrate, Clifford
 and McGee 2018 for the interlock reading, and Lloyd 1982 for relaxation
 (`PolygonalWallGeneratorComponent.cs:31-33`).
 
-![Generated polygonal wall, three-band layout](../examples/27_polygonal_masonry/27_01_three_band_wall.png)
+![Generated polygonal wall, three-band layout](../../../examples/27_polygonal_masonry/27_01_three_band_wall.png)
 
-![Wall-generator stability and interlock readout](../examples/27_polygonal_masonry/27_06_wall_generator_stability.png)
+![Wall-generator stability and interlock readout](../../../examples/27_polygonal_masonry/27_06_wall_generator_stability.png)
 
 ---
 
@@ -428,7 +428,7 @@ Bukauskas 2019). The carve-back is **facade-over-primitives** over
 Hungarian solver and voxel kernel. Fronted by Stone Cell Match (GUID
 `D5F10016-6C2D-4F1B-B3E8-7A95D0C41F62`, `StoneCellMatchComponent.cs:34`).
 
-![Stone-to-cell match with Lambda readout](../examples/27_polygonal_masonry/27_07_stone_match_lambda.png)
+![Stone-to-cell match with Lambda readout](../../../examples/27_polygonal_masonry/27_07_stone_match_lambda.png)
 
 ---
 
@@ -445,7 +445,7 @@ convex hull of the contact footprint with margin
 vertices, no RNG). **Clean-room (tier B)** from Furrer et al. (2017) and Johns
 et al. (2020); GUID `6514A1BB-FE82-4919-9419-141A07D2358A`.
 
-![Rubble masonry wall, ETH1100 dry-stone](../examples/16_rubble_masonry/16_rubble_wall.png)
+![Rubble masonry wall, ETH1100 dry-stone](../../../examples/16_rubble_masonry/16_rubble_wall.png)
 
 **Ashlar and best-fit.** `AshlarPackComponent` is a 3D running-bond grid
 stacking, AABB-first, translation-only, credited to the Gramazio/Kohler/
@@ -461,7 +461,7 @@ flag:* the GH facade `BestFitPackComponent.cs:30` carries an
 likely-fabricated citation (E5); the real lineage is Furrer/Johns/`gramaziokohler-ashlar`,
 and the attribute should be corrected.
 
-![Ashlar coursed wall](../examples/17_ashlar_masonry/17_ashlar_wall.png)
+![Ashlar coursed wall](../../../examples/17_ashlar_masonry/17_ashlar_wall.png)
 
 ---
 

@@ -226,7 +226,7 @@ axial compression by construction (the safe theorem, Heyman 1966).
 > parameter solve and the concentric-extrados construction are the small
 > clean-room deltas over a naive radial sweep.
 
-![Stereotomic voussoir arch carved from ETH1100 rubble, eleven radial cells](../examples/21_stereotomy_rubble_arch/21_rubble_arch.png)
+![Stereotomic voussoir arch carved from ETH1100 rubble, eleven radial cells](../../../examples/21_stereotomy_rubble_arch/21_rubble_arch.png)
 
 ---
 
@@ -302,7 +302,7 @@ single keystone, so `KeystoneIndex` is left at $-1$ (`:294`).
 > closed-form special case; a general form-found funicular shell would arrive
 > through the compas-RV reference pipeline noted in 6.5.
 
-![Pendentive sail vault, thirty-six lines-of-curvature cells carved from rubble boulders](../examples/22_pendentive_vault_rubble/22_pendentive_vault.png)
+![Pendentive sail vault, thirty-six lines-of-curvature cells carved from rubble boulders](../../../examples/22_pendentive_vault_rubble/22_pendentive_vault.png)
 
 ---
 
@@ -366,7 +366,7 @@ surfaced as a component warning if any cell is open
 > this tab; this chapter owns only the generator that produces a correctly
 > oriented input to it.
 
-![ETH1100 rubble stone (right) trimmed to a radial voussoir cell (left) by CGAL intersect](../examples/21_stereotomy_rubble_arch/21_stone_to_voussoir.png)
+![ETH1100 rubble stone (right) trimmed to a radial voussoir cell (left) by CGAL intersect](../../../examples/21_stereotomy_rubble_arch/21_stone_to_voussoir.png)
 
 ---
 

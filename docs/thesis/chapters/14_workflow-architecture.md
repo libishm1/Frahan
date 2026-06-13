@@ -402,22 +402,22 @@ was 1012 PASS / 0 FAIL / 131 SKIP.
 
 ### Figures
 
-![GPR radargram, granite AU tunnel](../examples/03_gpr_fracture_granite/03_gpr_radargram_AU.png)
+![GPR radargram, granite AU tunnel](../../../examples/03_gpr_fracture_granite/03_gpr_radargram_AU.png)
 
-![Granite scan to packable bench volume](../examples/04_scan_to_bench_engineer/04_packable_volume.png)
+![Granite scan to packable bench volume](../../../examples/04_scan_to_bench_engineer/04_packable_volume.png)
 
-![Botticino marble bench beds from GPR](../examples/08_gpr_marble/08b_bench_beds.png)
+![Botticino marble bench beds from GPR](../../../examples/08_gpr_marble/08b_bench_beds.png)
 
-![3D block packing, saw-cuttable guillotine](../examples/11_pack3d/11_pack3d_result.png)
+![3D block packing, saw-cuttable guillotine](../../../examples/11_pack3d/11_pack3d_result.png)
 
-![Trencadis mosaic from a shard catalog](../examples/12_trencadis/12_trencadis_result.png)
+![Trencadis mosaic from a shard catalog](../../../examples/12_trencadis/12_trencadis_result.png)
 
-![Twisted block split into surfaces (CGAL)](../examples/13_surface_mapping/13_surface_segments.png)
+![Twisted block split into surfaces (CGAL)](../../../examples/13_surface_mapping/13_surface_segments.png)
 
-![Statue decomposed into real-face blocks](../examples/15_statue_to_blocks/15_step2_blocks_exploded.png)
+![Statue decomposed into real-face blocks](../../../examples/15_statue_to_blocks/15_step2_blocks_exploded.png)
 
-![Rubble masonry wall, settled ETH1100 stones](../examples/16_rubble_masonry/16_rubble_wall.png)
+![Rubble masonry wall, settled ETH1100 stones](../../../examples/16_rubble_masonry/16_rubble_wall.png)
 
-![Voussoir arch carved from rubble](../examples/21_stereotomy_rubble_arch/21_rubble_arch.png)
+![Voussoir arch carved from rubble](../../../examples/21_stereotomy_rubble_arch/21_rubble_arch.png)
 
-![3D Voronoi block wall coloured by install order](../examples/27_polygonal_masonry/27_07_voronoi_3d.png)
+![3D Voronoi block wall coloured by install order](../../../examples/27_polygonal_masonry/27_07_voronoi_3d.png)

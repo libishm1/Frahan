@@ -317,23 +317,23 @@ on the canvas, not by an external bake script.
 
 Top-down cutting and yield (process → segment → pack/cut → fabricate):
 
-![Marble bench max-cost block yield from GPR-mapped beds](../examples/08_gpr_marble/08c_maxcost.png)
+![Marble bench max-cost block yield from GPR-mapped beds](../../examples/08_gpr_marble/08c_maxcost.png)
 
 2D and 3D packing (pack/cut):
 
-![NFP bottom-left-fill 2D nesting result](../examples/10_pack2d/10_pack2d_result.png)
+![NFP bottom-left-fill 2D nesting result](../../examples/10_pack2d/10_pack2d_result.png)
 
-![Mesh-accurate 3D block-pack with drop-settle](../examples/11_pack3d/11_pack3d_result.png)
+![Mesh-accurate 3D block-pack with drop-settle](../../examples/11_pack3d/11_pack3d_result.png)
 
 Bottom-up masonry assembly (segment → pack/cut → stabilise):
 
-![Random rubble wall](../examples/16_rubble_masonry/16_rubble_wall.png)
+![Random rubble wall](../../examples/16_rubble_masonry/16_rubble_wall.png)
 
-![Ashlar wall](../examples/17_ashlar_masonry/17_ashlar_wall.png)
+![Ashlar wall](../../examples/17_ashlar_masonry/17_ashlar_wall.png)
 
 Polygonal masonry at building scale (top-down form, contact-stable):
 
-![Polygonal-masonry castle keep](../examples/27_polygonal_masonry/27_10_castle_keep.png)
+![Polygonal-masonry castle keep](../../examples/27_polygonal_masonry/27_10_castle_keep.png)
 
 ---
 

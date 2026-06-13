@@ -300,7 +300,7 @@ reading the verifier score distribution before the poses distinguishes a
 pose-composition fault from a network-drift or a mesh-style fault
 (`examples/14_kintsugi/README.md`, the "read scores first" rule).
 
-![Two Breaking Bad fragments reassembled by the learned Kintsugi port: the gold neck cloud and the blue body cloud meet at the fracture interface, pair score 0.71 STRONG, zero unplaced.](../examples/14_kintsugi/14_kintsugi_result.png)
+![Two Breaking Bad fragments reassembled by the learned Kintsugi port: the gold neck cloud and the blue body cloud meet at the fracture interface, pair score 0.71 STRONG, zero unplaced.](../../../examples/14_kintsugi/14_kintsugi_result.png)
 
 > **Originality.** The verifier is a **direct port** of the PuzzleFusion++
 > learned binary classifier (`Verifier.cs:7-22`,
