@@ -124,3 +124,42 @@ boundary is preserved, not because the code is wrong.
 4. **Hold the line on the two 3D-path boundaries (high).** CRA equilibrium does not converge interactively past ~50 contact interfaces (warm-start / per-element verification needed); the geometric 3D reassembler only assembles via the projection bootstrap because independent tessellation kills cross-panel hashes (the learned Kintsugi Port is the production 3D path). Both must be stated, not papered over.
 5. **Remove the ghost greedy Trencadis box and rebuild/redeploy the `.gha` (medium).** Two §6 canvas-honesty fixes: no empty-output node on the primary ribbon, no stale build overlapping live parts.
 6. **Correct the fabricated and mislabelled citations (E5 / Floater / FFT / stale Kintsugi attribute, medium).** Fix the BestFit "Gramazio 2017" attribute to Furrer/Johns, soften the Floater-2003 MVC credit on the barycentric lift to the mean-value-coordinate family, reword the "Phase correlator FFT" attribute to direct cross-correlation, and correct the pre-port Kintsugi attribute; all required before any external review under §9.
+
+---
+
+## Research-led future directions (added 2026-06-14)
+
+From the field-to-factory site-visit package and the computational-gemology
+synthesis (research wiki: `krishnagiri_granite_field_to_factory/` and
+`computational_gemology_robotic_granite_fabrication.md`). These are new
+capability directions, not defects in shipped code.
+
+### Near-term — the photogrammetry-cloud -> discontinuity bridge
+
+Frahan already has the Load E57/LAS/PLY cloud readers, the NTS vector reader, and
+the GPR `FractureExtractor`. The gap is turning a UAV/TLS point cloud into joint
+sets. The field report's pipeline is Metashape/DJI Terra/Pix4D -> CloudCompare +
+FACETS/Compass/DSE -> fracture traces (DXF/GeoJSON/CSV) -> Frahan.
+
+| Subsystem | Item | Action |
+|---|---|---|
+| Ingestion | No reader for CloudCompare structural output (FACETS facets, Compass traces/planes, DSE sets). Cheapest win. | Add a fracture-trace ingest that reads DXF/GeoJSON/CSV planes + traces into the fracture model, beside the Shapefile reader + GPR picks. |
+| GPR / Mesh | No in-Frahan facet extraction: a cloud cannot become joint-set planes without round-tripping to CloudCompare. | Add a FACETS-style planar segmentation + dip/dip-direction estimator (RANSAC / region-grow on normals) on an ingested cloud, reusing the CGAL normals/segmentation stack. |
+| Quarry | No discontinuity-set + spacing summary from a cloud. | Add a DSE-style set clustering (pole density) + spacing -> Jv / wJd block-size proxy (the field report's recovery-risk metric). |
+| Reports / Analysis | No structural-geology summary card. | Add a stereonet + joint-set / spacing report card (Lab/Reports tab). |
+| Ingestion | The manual-mapping-calibrates-the-cloud audit step is unmodelled. | Add a scale/registration QA that aligns scanline measurements to the cloud (manual-vs-digital audit). |
+
+Prerequisite already tracked in **Low**: the LAS/LAZ canvas reader live-in-Rhino
+validation on the large tile.
+
+### Frontier — robotic granite fabrication (diamond-planning analogue)
+
+Scientifically grounded but production-unproven; treat as R&D, not v1.x.
+
+| Theme | Item | Evidence posture |
+|---|---|---|
+| Sensing | Nonlinear-ultrasonic cleavage-plane (rift / grain / hardway) mapping — augment linear US with the acoustic nonlinearity parameter beta. | Granite study shows beta more sensitive than velocity/attenuation; production-scale tomography not yet routine. |
+| Closed loop | AE + spindle power/current + force supervisory control for wire-saw / robotic cutting (feed-speed adaptation, workpiece protection). | Strong in machining; ready for supervisory use before autonomous interior-defect avoidance. |
+| Closed loop | Live ahead-of-tool tomographic replan (cut-as-acoustic-probe). | Speculative; enabling pieces (sonic tomography, scan-plan-rescan) exist separately, integration not found in production. |
+| End-effector | Laser-spalling / laser-preconditioned hybrid saw-or-waterjet granite end-effector. | Laser rock-spallation is real; a closed-loop stone-production cell is unproven. |
+| Optimisation | Structural-aesthetic co-optimisation: predict 3D vein trajectories through the block and co-optimise against the fracture field. | Today's vein matching is 2D slab-image + nesting only; the volumetric solver is a genuine research opportunity. |
