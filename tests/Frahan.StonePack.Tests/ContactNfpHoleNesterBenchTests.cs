@@ -184,6 +184,170 @@ static class ContactNfpHoleNesterBenchTests
             throw new Exception($"placement drift across runs: {last.PlacedCount} vs warm {warm.PlacedCount}");
     }
 
+    // MULTI-START (2026-06-13): the density lever HoleNest lacked vs the
+    // reference physics nester. Pack() now wraps the general engine in a loop
+    // over K deterministic part orders (area / max-dim / width / height desc) and
+    // keeps the densest valid layout. This test asserts the three contract
+    // properties on an irregular instance that does NOT route to the rect
+    // fast-path (so multi-start is actually exercised):
+    //   1. K>1 places >= the single-pass count (never loses placements),
+    //   2. the multi-start layout stays VALID (depth-gate certified),
+    //   3. the result is DETERMINISTIC — the same K>1 inputs reproduce the
+    //      EXACT same placements across 3 independent solves.
+    public static void Cnh_MultiStart_DenserOrEqual_Valid_Deterministic()
+    {
+        var sheet = Rect(0, 0, 150, 110);
+        var parts = MultiStartBlobs(25);
+
+        var single = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts, multiStartOrders: 1);
+        var multi = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts, multiStartOrders: 4);
+
+        Console.WriteLine("      [bench] CNH multi-start (25 irregular blobs, general engine):");
+        Console.WriteLine($"      [bench]   single K=1: engine=[{single.Note}], placed {single.PlacedCount}/{parts.Count}, " +
+                          $"valid={single.Valid}, density={single.Density:0.0000}, {single.ElapsedMs:0.0} ms");
+        Console.WriteLine($"      [bench]   multi  K=4: engine=[{multi.Note}], placed {multi.PlacedCount}/{parts.Count}, " +
+                          $"valid={multi.Valid}, density={multi.Density:0.0000}, {multi.ElapsedMs:0.0} ms");
+        double densityGainPct = single.Density > 1e-9 ? 100.0 * (multi.Density - single.Density) / single.Density : 0.0;
+        double timeMult = single.ElapsedMs > 1e-6 ? multi.ElapsedMs / single.ElapsedMs : 0.0;
+        Console.WriteLine($"      [bench]   => density gain {densityGainPct:+0.00;-0.00}% , time multiplier {timeMult:0.0}x");
+
+        if (single.Note == null || !single.Note.StartsWith("general-nfp"))
+            throw new Exception("multi-start test must run the general engine (rect fast-path is exact), got " + single.Note);
+        if (!single.Valid) throw new Exception("single-pass baseline INVALID: " + single.Note);
+        if (!multi.Valid) throw new Exception("multi-start layout INVALID: " + multi.Note);
+        if (multi.PlacedCount < single.PlacedCount)
+            throw new Exception($"multi-start lost placements: {multi.PlacedCount} < single {single.PlacedCount}");
+        if (multi.Note == null || !multi.Note.Contains("multi-start"))
+            throw new Exception("multi-start engine note missing: " + multi.Note);
+
+        // determinism: 3 independent K=4 solves must be byte-identical in
+        // placements (part index, angle, translation) — keep-best is total-order.
+        var a = ContactNfpHoleNester.Pack(sheet, new List<IReadOnlyList<(double X, double Y)>>(), parts, multiStartOrders: 4);
+        var b = ContactNfpHoleNester.Pack(sheet, new List<IReadOnlyList<(double X, double Y)>>(), parts, multiStartOrders: 4);
+        var c = ContactNfpHoleNester.Pack(sheet, new List<IReadOnlyList<(double X, double Y)>>(), parts, multiStartOrders: 4);
+        AssertSamePlacements(a, b, "run1 vs run2");
+        AssertSamePlacements(b, c, "run2 vs run3");
+        Console.WriteLine($"      [bench]   determinism: 3x K=4 identical ({a.PlacedCount} placements each)");
+
+        // K=1 must reproduce the original single-pass path: engine note has NO
+        // multi-start tag, and the layout is byte-identical to the NO-ARGUMENT
+        // default call (proves existing call sites are unchanged).
+        if (single.Note.Contains("multi-start"))
+            throw new Exception("K=1 must not engage multi-start: " + single.Note);
+        var legacyDefault = ContactNfpHoleNester.Pack(sheet,
+            new List<IReadOnlyList<(double X, double Y)>>(), parts);
+        AssertSamePlacements(single, legacyDefault, "explicit K=1 vs no-arg default");
+    }
+
+    // MULTI-START DENSITY A/B (2026-06-13): the honest measurement the task
+    // demands. Runs K=1 vs K=4 on >=3 irregular instances, including TIGHT ones
+    // where not every part fits, so multi-start can place MORE (the real density
+    // lever). Reports placed/density/time per instance + the K=4/K=1 wall-time
+    // multiplier. REPORTED (asserts only the contract: K=4 >= K=1 placements and
+    // both valid; density gain is data-dependent and printed, not asserted).
+    public static void Cnh_MultiStart_DensityAB_Reported()
+    {
+        Console.WriteLine("      [bench] CNH multi-start density A/B (K=1 vs K=4, general engine):");
+        Console.WriteLine("      [bench]   instance                | K=1 placed/dens/ms     | K=4 placed/dens/ms (order)            | +placed +dens% xTime");
+
+        // 3 irregular instances at deliberately TIGHT sheet sizes. blobs() areas
+        // sum to roughly the sheet area so some parts spill -> multi-start has a
+        // placement lever, not just a compaction lever.
+        AbRow("25 blobs / tight 95x70", Rect(0, 0, 95, 70), MultiStartBlobs(25));
+        AbRow("40 blobs / tight 120x95", Rect(0, 0, 120, 95), MultiStartBlobs(40));
+        AbRow("18 shields / tight 95x60", Rect(0, 0, 95, 60), ShieldParts(18));
+        AbRow("30 blobs / tight 110x80", Rect(0, 0, 110, 80), MultiStartBlobs(30));
+        AbRow("25 blobs / loose 150x110", Rect(0, 0, 150, 110), MultiStartBlobs(25)); // slack control: expect ~0% gain
+
+        // per-K sweep on the most placement-sensitive instance: how much of the
+        // placed-count win is captured by K=2/K=3 vs the full K=4 (cost vs lever)
+        Console.WriteLine("      [bench]   per-K sweep (25 blobs / tight 95x70): placed / density / ms");
+        var sheet = Rect(0, 0, 95, 70); var parts = MultiStartBlobs(25);
+        var empty = new List<IReadOnlyList<(double X, double Y)>>();
+        for (int kk = 1; kk <= 4; kk++)
+        {
+            ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: kk); // warm
+            var r = ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: kk);
+            Console.WriteLine($"      [bench]     K={kk}: {r.PlacedCount}/{parts.Count}  dens={r.Density:0.0000}  {r.ElapsedMs:0.0} ms");
+        }
+    }
+
+    private static void AbRow(string label, IReadOnlyList<(double X, double Y)> sheet, List<HoleNestPart> parts)
+    {
+        var empty = new List<IReadOnlyList<(double X, double Y)>>();
+        // warm
+        ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: 1);
+        ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: 4);
+        var s = ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: 1);
+        var m = ContactNfpHoleNester.Pack(sheet, empty, parts, multiStartOrders: 4);
+
+        if (!s.Valid) throw new Exception($"AB '{label}' K=1 INVALID: {s.Note}");
+        if (!m.Valid) throw new Exception($"AB '{label}' K=4 INVALID: {m.Note}");
+        if (m.PlacedCount < s.PlacedCount)
+            throw new Exception($"AB '{label}' K=4 lost placements: {m.PlacedCount} < {s.PlacedCount}");
+
+        string order = "";
+        int oi = m.Note != null ? m.Note.IndexOf("best order ") : -1;
+        if (oi >= 0) { int e = m.Note.IndexOf(')', oi); order = m.Note.Substring(oi + 11, Math.Max(0, e - oi - 11)); }
+        double densPct = s.Density > 1e-9 ? 100.0 * (m.Density - s.Density) / s.Density : 0.0;
+        double xTime = s.ElapsedMs > 1e-6 ? m.ElapsedMs / s.ElapsedMs : 0.0;
+        Console.WriteLine($"      [bench]   {label,-24}| {s.PlacedCount,2}/{parts.Count} {s.Density:0.0000} {s.ElapsedMs,7:0.0}ms | " +
+                          $"{m.PlacedCount,2}/{parts.Count} {m.Density:0.0000} {m.ElapsedMs,7:0.0}ms ({order}) | " +
+                          $"+{m.PlacedCount - s.PlacedCount} {densPct:+0.00;-0.00}% {xTime:0.0}x");
+    }
+
+    private static List<HoleNestPart> ShieldParts(int count)
+    {
+        var parts = new List<HoleNestPart>(count);
+        for (int k = 0; k < count; k++)
+            parts.Add(new HoleNestPart { Outer = Shield(0.7 + 0.05 * (k % 6)) });
+        return parts;
+    }
+
+    private static void AssertSamePlacements(HoleNestResult x, HoleNestResult y, string label)
+    {
+        if (x.Placements.Count != y.Placements.Count)
+            throw new Exception($"multi-start non-deterministic ({label}): {x.Placements.Count} vs {y.Placements.Count} placements");
+        for (int i = 0; i < x.Placements.Count; i++)
+        {
+            var p = x.Placements[i]; var q = y.Placements[i];
+            if (p.PartIndex != q.PartIndex ||
+                Math.Abs(p.AngleRad - q.AngleRad) > 1e-12 ||
+                Math.Abs(p.Tx - q.Tx) > 1e-9 || Math.Abs(p.Ty - q.Ty) > 1e-9)
+                throw new Exception($"multi-start non-deterministic ({label}) at placement {i}: " +
+                    $"({p.PartIndex},{p.AngleRad:0.######},{p.Tx:0.######},{p.Ty:0.######}) vs " +
+                    $"({q.PartIndex},{q.AngleRad:0.######},{q.Tx:0.######},{q.Ty:0.######})");
+        }
+    }
+
+    // 25 irregular convex-ish blobs of varied size + aspect ratio. NOT rectangles
+    // (forces the general engine) and varied enough that area/width/height orders
+    // differ, so multi-start has distinct passes to choose between. Deterministic
+    // (seeded by index, no RNG).
+    private static List<HoleNestPart> MultiStartBlobs(int count)
+    {
+        var parts = new List<HoleNestPart>(count);
+        for (int k = 0; k < count; k++)
+        {
+            double rx = 6.0 + (k % 5) * 2.2;          // half-width 6..14.8
+            double ry = 5.0 + ((k * 3) % 7) * 1.6;    // half-height 5..14.6 (aspect varies vs rx)
+            int sides = 5 + (k % 4);                  // 5..8 sides (irregular, non-rect)
+            double phase = 0.21 * k;                  // rotate the vertex pattern per part
+            var loop = new List<(double X, double Y)>(sides);
+            for (int s = 0; s < sides; s++)
+            {
+                double ang = phase + 2.0 * Math.PI * s / sides;
+                // mild radius wobble so edges are not all tangent to one ellipse
+                double wob = 1.0 + 0.12 * Math.Sin(3.0 * ang + k);
+                loop.Add((rx * wob * Math.Cos(ang), ry * wob * Math.Sin(ang)));
+            }
+            parts.Add(new HoleNestPart { Outer = loop });
+        }
+        return parts;
+    }
+
     // Shield-ish sampled polygon: convex top arc, concave flanks, bottom point —
     // mimics curve-sampled GH input (the reported failure class).
     private static List<(double X, double Y)> Shield(double s)

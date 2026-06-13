@@ -108,6 +108,14 @@ public sealed class HoleNestComponent : GH_Component
             "was ~10-20x slower than 24 for <2% density gain). Raise it ONLY when small parts must seat " +
             "into tight CONCAVE notches; otherwise leave it low for fast nesting.", GH_ParamAccess.item, 24);
         pManager[7].Optional = true;
+        pManager.AddIntegerParameter("MultiStart", "MS",
+            "Number of deterministic part orders the general engine tries per sheet, keeping the densest " +
+            "valid layout (1..4; default 4). Orders: area / max-dimension / width / height, all descending. " +
+            "1 = the original single largest-first pass. Higher values raise irregular-outline density at a " +
+            "near-linear wall-time cost (4 orders is ~4x the solve time of 1) and never reduce placements or " +
+            "validity. The exact rectangle fast-path ignores this (it is already optimal). Output stays " +
+            "deterministic: identical inputs always reproduce the same layout.", GH_ParamAccess.item, 4);
+        pManager[8].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -169,7 +177,7 @@ public sealed class HoleNestComponent : GH_Component
         public List<double> SheetNetArea;    // per sheet: |outer| - sum|holes| (for the aggregate density)
         public List<HoleNestPart> Parts;
         public double UserSpacing, EngineSpacing, MaxDev;
-        public int BaseRotations, ContactRotations;
+        public int BaseRotations, ContactRotations, MultiStart;
         public List<int> InputIndexOf;
         public List<double> PartZOf;
         public List<Curve> Originals;   // duplicated on the UI thread (owned)
@@ -301,7 +309,7 @@ public sealed class HoleNestComponent : GH_Component
                 {
                     var perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
                         snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
-                        onPlacement: onPlacement);
+                        onPlacement: onPlacement, multiStartOrders: snap.MultiStart);
                     var agg = new HoleNestResult { Note = "" };
                     double usedArea = 0, netArea = 0;
                     var notes = new System.Collections.Generic.List<string>();
@@ -363,10 +371,13 @@ public sealed class HoleNestComponent : GH_Component
         int resolution = 24;
         da.GetData(7, ref resolution);
         _smoothSampleVerts = Math.Max(16, Math.Min(MaxVerts, resolution));
+        int multiStart = 4;
+        da.GetData(8, ref multiStart);
 
         spacing = Math.Max(0.0, spacing);
         baseRotations = Math.Max(1, baseRotations);
         contactRotations = Math.Max(0, contactRotations);
+        multiStart = Math.Max(1, multiStart); // Core clamps the upper bound to the available order count
 
         double partDev = 0.0, sheetDev = 0.0;
         var sheets = new List<IReadOnlyList<(double X, double Y)>>();
@@ -554,7 +565,7 @@ public sealed class HoleNestComponent : GH_Component
             HQ(b.Max.X); HQ(b.Max.Y); HQ(b.Max.Z);
             HD(c.SpanCount);   // a stable, sampling-free shape signal (segment count)
         }
-        HQ(spacing); HD(baseRotations); HD(contactRotations); HD(_smoothSampleVerts);
+        HQ(spacing); HD(baseRotations); HD(contactRotations); HD(_smoothSampleVerts); HD(multiStart);
         HD(sheetCurves.Count);
         foreach (var c in sheetCurves) HBox(c);
         if (sheetHolesTree != null)
@@ -571,7 +582,7 @@ public sealed class HoleNestComponent : GH_Component
             Sheets = sheets, SheetHolesPerSheet = sheetHolesPerSheet,
             SheetZ = sheetZs, SheetNetArea = sheetNet, Parts = parts,
             UserSpacing = spacing, EngineSpacing = engineSpacing, MaxDev = maxDev,
-            BaseRotations = baseRotations, ContactRotations = contactRotations,
+            BaseRotations = baseRotations, ContactRotations = contactRotations, MultiStart = multiStart,
             InputIndexOf = inputIndexOf, PartZOf = partZOf, Originals = originals,
             OriginalHoles = originalHoles,
             Hash = h,

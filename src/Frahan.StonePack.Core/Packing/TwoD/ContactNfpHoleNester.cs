@@ -111,7 +111,8 @@ namespace Frahan.Packing.TwoD
             int baseRotationCount = 4,
             int contactRotations = 6,
             bool enableRectFastPath = true, // append-only (2026-06-12): opt-out for the exact rect shelf fast-path
-            Action<HoleNestResult> onPlacement = null) // append-only: progressive snapshot after each placement (caller-space copies)
+            Action<HoleNestResult> onPlacement = null, // append-only: progressive snapshot after each placement (caller-space copies)
+            int multiStartOrders = 1) // append-only (2026-06-13): K deterministic part orders, keep the best layout (1 = today's single-pass, byte-for-byte)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
             var res = new HoleNestResult();
@@ -156,9 +157,9 @@ namespace Frahan.Packing.TwoD
             double sheetHoleArea = sheetHoles.Sum(h => Math.Abs(SignedArea(h)));
             double sheetNet = Math.Max(Eps, sheetArea - sheetHoleArea);
 
-            // largest-first: big parts anchor the layout, smalls fill holes
-            var order = Enumerable.Range(0, parts.Count)
-                .OrderByDescending(i => Math.Abs(SignedArea(parts[i].Outer))).ToList();
+            // largest-first: big parts anchor the layout, smalls fill holes.
+            // This is multi-start ORDER 0 (area-desc), the original single pass.
+            var order = BuildOrder(parts, 0);
 
             // engine dispatch: the rect shelf fast-path runs ONLY when the whole
             // instance is axis-aligned rectangles and spacing == 0; anything
@@ -186,21 +187,109 @@ namespace Frahan.Packing.TwoD
                     res.Note = "";
                 }
                 engine = fastTried ? "general-nfp (fast path left parts unplaced)" : "general-nfp";
-                // progressive snapshots: after each committed placement hand the
-                // caller a CALLER-SPACE copy of the layout so far (the engine
-                // runs in scaled+normalized space; copies are mapped back)
-                Action progressTick = onPlacement == null ? (Action)null : () =>
+
+                // ── MULTI-START (2026-06-13): try K deterministic part orders,
+                // keep the best valid layout. ────────────────────────────────
+                // Orders (extensible, OrderKeys.Length total): 0 area-desc
+                // (the original single pass), 1 max-dimension-desc, 2 width-desc,
+                // 3 height-desc. K is clamped to [1, OrderKeys.Length]; K=1
+                // reproduces the original pass byte-for-byte. FRAHAN_MULTISTART=0
+                // is the kill switch (forces K=1, ignoring the argument).
+                //
+                // CACHE SAFETY (the critical correctness point): the NFP cache is
+                // keyed on (obstacle index, rotSig) where the index is into
+                // placedMaterial — which is built in PLACEMENT order and so
+                // differs per part order. A cache shared across passes would map
+                // a stale obstacle to a fresh index and return the WRONG NFP.
+                // PackGeneral allocates its OWN cache per call, and each pass uses
+                // a FRESH HoleNestResult, so every pass gets a fresh cache. We
+                // never pass a cache across passes. (Verified: nfpCache is a local
+                // in PackGeneral, line ~392.)
+                int kRequested = Math.Max(1, multiStartOrders);
+                int k = Math.Min(kRequested, OrderKeyCount);
+                if (Environment.GetEnvironmentVariable("FRAHAN_MULTISTART") == "0") k = 1;
+
+                if (k == 1)
                 {
-                    var snap = new HoleNestResult
+                    // ── single pass: identical to pre-multi-start behaviour,
+                    // including live per-placement progress ticks. ────────────
+                    Action progressTick = onPlacement == null ? (Action)null : () =>
                     {
-                        Placements = MapPlacementsToCallerSpace(res.Placements, normOffset, inPlace: false),
-                        PlacedCount = res.Placements.Count,
-                        PartHolesFilled = res.PartHolesFilled,
-                        Note = "progress",
+                        var snap = new HoleNestResult
+                        {
+                            Placements = MapPlacementsToCallerSpace(res.Placements, normOffset, inPlace: false),
+                            PlacedCount = res.Placements.Count,
+                            PartHolesFilled = res.PartHolesFilled,
+                            Note = "progress",
+                        };
+                        onPlacement(snap);
                     };
-                    onPlacement(snap);
-                };
-                PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res, progressTick);
+                    PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res, progressTick);
+                }
+                else
+                {
+                    // ── K>1: each pass runs to completion on a FRESH result with
+                    // a FRESH cache, then is boolean-validated in scaled space so
+                    // keep-best ranks only VALID candidates by (placed, density,
+                    // tightest box). The winning result replaces `res` in place.
+                    // Per-pass progress ticks are suppressed (the canvas would
+                    // thrash across K passes); a single completion snapshot of the
+                    // winner is emitted after the loop so progressive callers
+                    // still update once. ──────────────────────────────────────
+                    HoleNestResult bestRes = null;
+                    bool bestValid = false;
+                    int bestPlaced = -1; double bestDensity = -1, bestDiag = double.MaxValue;
+                    int bestOrderId = 0;
+                    for (int oi = 0; oi < k; oi++)
+                    {
+                        var cand = new HoleNestResult();
+                        var candOrder = oi == 0 ? order : BuildOrder(parts, oi);
+                        PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, candOrder, cand, null);
+                        // scaled-space validity + UsedArea (Validate sets UsedArea
+                        // from PlacedOuter, which is still scaled at this point).
+                        // Validate() returns the verdict but does NOT write cand.Valid,
+                        // so the keep-best MUST compare against the tracked bestValid
+                        // local, never bestRes.Valid (which stays default false).
+                        bool candValid = Validate(cand, parts, sheetOuter, sheetHoles);
+                        int placed = cand.Placements.Count;
+                        // same scaling as the final res.Density at line ~291
+                        // (UsedArea and sheetNet are both scaled => real density).
+                        double density = cand.UsedArea / sheetNet;
+                        double diag = LayoutBoxDiagonal(cand);
+                        // keep-best: prefer VALID; then most placed; then highest
+                        // density; final deterministic tie-break = smallest used
+                        // bounding-box diagonal. All keys are deterministic, so
+                        // the winner is reproducible for identical inputs.
+                        bool better;
+                        if (bestRes == null) better = true;
+                        else if (candValid != bestValid) better = candValid; // valid beats invalid
+                        else if (placed != bestPlaced) better = placed > bestPlaced;
+                        else if (Math.Abs(density - bestDensity) > 1e-12) better = density > bestDensity;
+                        else better = diag < bestDiag - 1e-9;
+                        if (better)
+                        {
+                            bestRes = cand; bestValid = candValid; bestPlaced = placed;
+                            bestDensity = density; bestDiag = diag; bestOrderId = oi;
+                        }
+                    }
+                    // adopt the winner into `res` (it already holds scaled-space
+                    // placements + UsedArea; the post-loop Validate re-certifies).
+                    res.Placements = bestRes.Placements;
+                    res.PartHolesFilled = bestRes.PartHolesFilled;
+                    res.UsedArea = bestRes.UsedArea;
+                    res.Note = bestRes.Note;
+                    engine += $" | multi-start K={k} (best order {OrderName(bestOrderId)})";
+                    if (onPlacement != null)
+                    {
+                        onPlacement(new HoleNestResult
+                        {
+                            Placements = MapPlacementsToCallerSpace(res.Placements, normOffset, inPlace: false),
+                            PlacedCount = res.Placements.Count,
+                            PartHolesFilled = res.PartHolesFilled,
+                            Note = "progress",
+                        });
+                    }
+                }
             }
 
             // ---- final validation (boolean, independent of the placement path)
@@ -238,7 +327,8 @@ namespace Frahan.Packing.TwoD
             int baseRotationCount = 4,
             int contactRotations = 6,
             bool enableRectFastPath = true,
-            Action<HoleNestResult> onPlacement = null)
+            Action<HoleNestResult> onPlacement = null,
+            int multiStartOrders = 1) // append-only (2026-06-13): per-sheet multi-start order count (each Pack call multi-starts)
         {
             var results = new List<HoleNestResult>();
             if (sheets == null || sheets.Count == 0) return results;
@@ -276,7 +366,7 @@ namespace Frahan.Packing.TwoD
                 var holes = sheetHolesPerSheet != null && si < sheetHolesPerSheet.Count
                     ? sheetHolesPerSheet[si] : null;
                 var res = Pack(sheets[si], holes, remaining, spacing,
-                    baseRotationCount, contactRotations, enableRectFastPath, tick);
+                    baseRotationCount, contactRotations, enableRectFastPath, tick, multiStartOrders);
 
                 var placedLocal = new HashSet<int>();
                 foreach (var pl in res.Placements)
@@ -296,6 +386,71 @@ namespace Frahan.Packing.TwoD
                 remainingIdx = nextIdx;
             }
             return results;
+        }
+
+        // ── multi-start order keys (2026-06-13) ──────────────────────────────
+        // Deterministic part orders for multi-start. Each builds the SAME index
+        // list as the original single pass (order 0 = area-desc) but sorted by a
+        // different size key. ALL keys break ties by the part index so the order
+        // is a total, reproducible permutation (no dependence on sort stability).
+        // Adding a key here automatically extends the multi-start ceiling.
+        private const int OrderKeyCount = 4;
+
+        private static string OrderName(int orderId)
+        {
+            switch (orderId)
+            {
+                case 0: return "area-desc";
+                case 1: return "maxdim-desc";
+                case 2: return "width-desc";
+                case 3: return "height-desc";
+                default: return "area-desc";
+            }
+        }
+
+        // sort key for a part under a given order (larger key = placed earlier).
+        // parts arrive normalized to bbox-min, so BBox gives width/height directly.
+        private static double OrderKey(HoleNestPart p, int orderId)
+        {
+            switch (orderId)
+            {
+                case 1: { BBox(p.Outer, out _, out _, out double mx, out double my); return Math.Max(mx, my); }
+                case 2: { BBox(p.Outer, out _, out _, out double mx, out _); return mx; }
+                case 3: { BBox(p.Outer, out _, out _, out _, out double my); return my; }
+                default: return Math.Abs(SignedArea(p.Outer)); // 0 = area-desc
+            }
+        }
+
+        private static List<int> BuildOrder(IReadOnlyList<HoleNestPart> parts, int orderId)
+        {
+            // descending by key, ties broken by ascending index (total order →
+            // deterministic; not reliant on OrderBy's documented stability)
+            var idx = new List<int>(parts.Count);
+            for (int i = 0; i < parts.Count; i++) idx.Add(i);
+            var keys = new double[parts.Count];
+            for (int i = 0; i < parts.Count; i++) keys[i] = OrderKey(parts[i], orderId);
+            idx.Sort((a, b) =>
+            {
+                int c = keys[b].CompareTo(keys[a]); // descending key
+                return c != 0 ? c : a.CompareTo(b);  // ascending index tie-break
+            });
+            return idx;
+        }
+
+        // deterministic tightness tie-break: diagonal of the used bounding box
+        // over all placed outers (scaled space). Smaller = tighter layout.
+        private static double LayoutBoxDiagonal(HoleNestResult r)
+        {
+            if (r.Placements.Count == 0) return double.MaxValue;
+            double minx = double.MaxValue, miny = double.MaxValue, maxx = double.MinValue, maxy = double.MinValue;
+            foreach (var pl in r.Placements)
+                foreach (var v in pl.PlacedOuter)
+                {
+                    if (v.X < minx) minx = v.X; if (v.Y < miny) miny = v.Y;
+                    if (v.X > maxx) maxx = v.X; if (v.Y > maxy) maxy = v.Y;
+                }
+            double dx = maxx - minx, dy = maxy - miny;
+            return Math.Sqrt(dx * dx + dy * dy);
         }
 
         // cache-or-compute a single NFP's loop set (managed lane)

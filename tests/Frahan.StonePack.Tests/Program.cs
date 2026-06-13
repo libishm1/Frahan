@@ -362,6 +362,8 @@ var tests = new List<(string Name, Action Body)>
     ("CNH world-offset shields stay valid (canvas overlap regression)", ContactNfpHoleNesterBenchTests.Cnh_Irregular_Shields_WorldOffset_GeneralValid),
     ("CNH fully-inside obstacle case stays valid (general engine, regression)", ContactNfpHoleNesterBenchTests.Cnh_FullyInside_GeneralValid),
     ("CNH shields native-kernel interleaved bench (7 shields x5, lane-tagged)", ContactNfpHoleNesterBenchTests.Cnh_Shields_NativeKernel_Bench),
+    ("CNH multi-start denser-or-equal + valid + deterministic (25 irregular blobs)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DenserOrEqual_Valid_Deterministic),
+    ("CNH multi-start density A/B K=1 vs K=4 (3 tight irregular instances, reported)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DensityAB_Reported),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
