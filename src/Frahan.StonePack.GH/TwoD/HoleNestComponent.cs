@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using Frahan.GH.Attributes;
 using Frahan.Packing.TwoD;
 using Grasshopper.Kernel;
@@ -147,19 +145,14 @@ public sealed class HoleNestComponent : GH_Component
     // The solver runs on a background Task so the canvas NEVER freezes; while a
     // new layout computes, the PREVIOUS layout stays visible ("updating...") and
     // the finished result pops in via ScheduleSolution — the instant-feel
-    // pattern. Unlike the scan-ingest nodes there is no Run gate (a mid-graph
-    // nester must auto-solve; async alone removes the freeze risk), and an
-    // input-hash cache prevents redundant recomputes on benign re-expires.
-    private readonly object _gate = new object();
-    private Task _task;
-    private CancellationTokenSource _cts;
-    private ulong _taskHash;
-    private volatile string _progress = "";
-    private Payload _readyPayload;
-    private string _readyError;
-    private bool _hasReady;
-    private Payload _last;
-
+    // pattern.
+    //
+    // SYNCHRONOUS as of 2026-06-13: the background-Task async model was REVERTED.
+    // Its input-hash cache + ScheduleSolution re-solve loop restarted the solve
+    // endlessly on NURBS input ("nesting to-and-fro"). The multi-sheet PACKING
+    // engine was never the problem — only the async wrapper. A synchronous solve
+    // cannot loop: it computes the layout once in SolveInstance and emits. Cost:
+    // the canvas blocks during a long solve; keep Resolution low (default 24).
     private sealed class Snapshot
     {
         public List<IReadOnlyList<(double X, double Y)>> Sheets;
@@ -173,15 +166,13 @@ public sealed class HoleNestComponent : GH_Component
         public List<double> PartZOf;
         public List<Curve> Originals;   // duplicated on the UI thread (owned)
         public List<List<Curve>> OriginalHoles; // per prepared part, duplicated (may be null per part)
-        public ulong Hash;
     }
 
     private sealed class Payload
     {
         public Snapshot Snap;
         public HoleNestResult Res;          // aggregate across sheets
-        public List<HoleNestResult> PerSheet; // per-sheet engine results (null for partials)
-        public bool Partial;   // progressive snapshot (mid-solve), not a final result
+        public List<HoleNestResult> PerSheet; // per-sheet engine results
     }
 
     protected override void SolveInstance(IGH_DataAccess da)
@@ -189,128 +180,49 @@ public sealed class HoleNestComponent : GH_Component
         var snap = BuildSnapshot(da);
         if (snap == null) return; // validation error already reported
 
-        Payload ready = null; string readyError = null; bool taskRunning; ulong taskHash;
-        lock (_gate)
+        // SYNCHRONOUS solve — runs once, emits, cannot loop. Multi-sheet greedy
+        // overflow via PackSheets; results aggregated across sheets for the
+        // report/density and emitted in one pass.
+        List<HoleNestResult> perSheet;
+        try
         {
-            if (_hasReady)
-            {
-                ready = _readyPayload; readyError = _readyError;
-                _readyPayload = null; _readyError = null; _hasReady = false;
-                if (readyError == null && ready != null) _last = ready;
-            }
-            taskRunning = _task != null && !_task.IsCompleted;
-            taskHash = _taskHash;
+            perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
+                snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations);
         }
-        if (readyError != null)
+        catch (Exception ex)
         {
             Message = "error";
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, readyError);
-            EmitEmpty(da, readyError);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Hole-aware nesting failed: " + ex.Message);
+            EmitEmpty(da, "Hole-aware nesting failed: " + ex.Message);
             return;
         }
 
-        // cache hit: same inputs as the last completed solve -> instant emit
-        if (_last != null && !_last.Partial && _last.Snap.Hash == snap.Hash && !taskRunning)
+        var agg = new HoleNestResult { Note = "" };
+        double usedArea = 0, netArea = 0;
+        var notes = new List<string>();
+        bool allValid = true;
+        for (int si = 0; si < perSheet.Count; si++)
         {
-            Message = null;
-            EmitPayload(da, _last, null);
-            return;
+            var r = perSheet[si];
+            agg.Placements.AddRange(r.Placements);
+            agg.PartHolesFilled += r.PartHolesFilled;
+            agg.ElapsedMs += r.ElapsedMs;
+            usedArea += r.UsedArea;
+            if (si < snap.SheetNetArea.Count) netArea += Math.Max(1e-9, snap.SheetNetArea[si]);
+            if (r.Placements.Count > 0 || !r.Note.StartsWith("empty")) allValid &= r.Valid;
+            if (!string.IsNullOrEmpty(r.Note) && !notes.Contains(r.Note)) notes.Add(r.Note);
         }
+        agg.PlacedCount = agg.Placements.Count;
+        agg.UsedArea = usedArea;
+        agg.Density = netArea > 1e-9 ? usedArea / netArea : 0.0;
+        agg.Valid = allValid;
+        agg.Note = string.Join(" ; ", notes);
 
-        if (taskRunning && taskHash == snap.Hash)
-        {
-            Message = _progress;
-            if (_last != null) EmitPayload(da, _last, _last.Partial ? _progress : "updating...");
-            else EmitEmpty(da, "Nesting in the background — canvas stays live; the result pops in when ready.");
-            return;
-        }
-
-        StartCompute(snap);
-        Message = "nesting...";
-        if (_last != null) EmitPayload(da, _last, "updating...");
-        else EmitEmpty(da, "Nesting in the background — canvas stays live; the result pops in when ready.");
+        Message = null;
+        EmitPayload(da, new Payload { Snap = snap, Res = agg, PerSheet = perSheet }, null);
     }
 
-    private void StartCompute(Snapshot snap)
-    {
-        var doc = OnPingDocument();
-        var iguid = InstanceGuid;
-        lock (_gate)
-        {
-            try { _cts?.Cancel(); } catch { }
-            _cts = new CancellationTokenSource();
-            var token = _cts.Token;
-            _taskHash = snap.Hash;
-            _progress = $"nesting {snap.Parts.Count} parts...";
-            _task = Task.Run(() =>
-            {
-                Payload payload = null; string error = null;
-                // progressive steps (the instant-feel pattern): every ~300 ms a
-                // caller-space snapshot of the partial layout replaces _last and
-                // a re-solve is scheduled, so the nest visibly grows on canvas
-                var tick = System.Diagnostics.Stopwatch.StartNew();
-                Action<HoleNestResult> onPlacement = partial =>
-                {
-                    if (token.IsCancellationRequested) return;
-                    if (tick.ElapsedMilliseconds < 300) return;
-                    tick.Restart();
-                    var pp = new Payload { Snap = snap, Res = partial, Partial = true };
-                    lock (_gate) { _last = pp; }
-                    _progress = $"nesting {partial.PlacedCount}/{snap.Parts.Count}...";
-                    try
-                    {
-                        doc?.ScheduleSolution(10, d =>
-                        {
-                            if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true);
-                        });
-                    }
-                    catch { }
-                };
-                try
-                {
-                    var perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
-                        snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
-                        onPlacement: onPlacement);
-                    var agg = new HoleNestResult { Note = "" };
-                    double usedArea = 0, netArea = 0;
-                    var notes = new System.Collections.Generic.List<string>();
-                    bool allValid = true;
-                    for (int si = 0; si < perSheet.Count; si++)
-                    {
-                        var r = perSheet[si];
-                        agg.Placements.AddRange(r.Placements);
-                        agg.PartHolesFilled += r.PartHolesFilled;
-                        agg.ElapsedMs += r.ElapsedMs;
-                        usedArea += r.UsedArea;
-                        if (si < snap.SheetNetArea.Count) netArea += Math.Max(1e-9, snap.SheetNetArea[si]);
-                        if (r.Placements.Count > 0 || !r.Note.StartsWith("empty"))
-                            allValid &= r.Valid;
-                        if (!string.IsNullOrEmpty(r.Note) && !notes.Contains(r.Note)) notes.Add(r.Note);
-                    }
-                    agg.PlacedCount = agg.Placements.Count;
-                    agg.UsedArea = usedArea;
-                    agg.Density = netArea > 1e-9 ? usedArea / netArea : 0.0;
-                    agg.Valid = allValid;
-                    agg.Note = string.Join(" ; ", notes);
-                    payload = new Payload { Snap = snap, Res = agg, PerSheet = perSheet };
-                }
-                catch (Exception ex) { error = "Hole-aware nesting failed: " + ex.Message; }
-                bool cancelled = token.IsCancellationRequested;
-                if (cancelled) return; // stale job: discard silently
-                lock (_gate) { _readyPayload = payload; _readyError = error; _hasReady = true; }
-                try
-                {
-                    doc?.ScheduleSolution(10, d =>
-                    {
-                        if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true);
-                    });
-                }
-                catch { }
-            }, token);
-        }
-    }
-
-    /// <summary>Inputs -> owned snapshot (conversion + proxy-deviation measurement + hash). UI thread only.</summary>
+    /// <summary>Inputs -> owned snapshot (conversion + proxy-deviation measurement). UI thread (only thread).</summary>
     private Snapshot BuildSnapshot(IGH_DataAccess da)
     {
         var sheetCurves = new List<Curve>();
@@ -498,23 +410,6 @@ public sealed class HoleNestComponent : GH_Component
         double maxDev = Math.Max(partDev, sheetDev); // reported for transparency
         double engineSpacing = spacing + 2.0 * partDev + sheetDev;
 
-        ulong h = 1469598103934665603UL;
-        void HD(double v) { h ^= (ulong)BitConverter.DoubleToInt64Bits(v); h *= 1099511628211UL; }
-        void HL(IReadOnlyList<(double X, double Y)> lp) { HD(lp.Count); foreach (var q in lp) { HD(q.X); HD(q.Y); } }
-        HD(engineSpacing); HD(baseRotations); HD(contactRotations); HD(_smoothSampleVerts);
-        HD(sheets.Count);
-        for (int si = 0; si < sheets.Count; si++)
-        {
-            HL(sheets[si]); HD(sheetZs[si]);
-            HD(sheetHolesPerSheet[si].Count);
-            foreach (var q in sheetHolesPerSheet[si]) HL(q);
-        }
-        HD(parts.Count);
-        for (int i = 0; i < parts.Count; i++)
-        {
-            HL(parts[i].Outer); HD(partZOf[i]); HD(inputIndexOf[i]);
-            if (parts[i].Holes != null) foreach (var q in parts[i].Holes) HL(q);
-        }
 
         return new Snapshot
         {
@@ -524,7 +419,6 @@ public sealed class HoleNestComponent : GH_Component
             BaseRotations = baseRotations, ContactRotations = contactRotations,
             InputIndexOf = inputIndexOf, PartZOf = partZOf, Originals = originals,
             OriginalHoles = originalHoles,
-            Hash = h,
         };
     }
 
