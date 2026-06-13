@@ -322,9 +322,9 @@ barycentric coordinates for polygons. The audit ground truth is explicit:
 "Inverse map = standard barycentric interpolation. NO Floater-2003 MVC code present"
 (`wiki/research/slm_cards/bff-surface-flatten.md:6`). The correct attribution for
 the implemented method is classical barycentric interpolation over a triangle mesh;
-the Floater 2003 citation should be softened to "related work" or removed. This is a
-**citation-correctness** flag, not a code defect: the math that ships is correct, it
-is simply not the cited method.
+Floater (2003) stands here only as **related background** for the mean-value-coordinate
+family, not as the implemented method. This is a **citation-correctness** flag, not a
+code defect: the math that ships is correct, it is simply not the cited method.
 
 **Originality.** **Clean-room** classical barycentric interpolation. The method is
 textbook; the contribution is the seam-correct, face-index-aligned plumbing that
@@ -528,8 +528,9 @@ arbitrary scale and units".
 - Sawhney, R. and Crane, K. (2017). Boundary First Flattening. ACM Transactions on
   Graphics 36(4):109. DOI 10.1145/3072959.3056432.
 - Floater, M.S. (2003). Mean value coordinates. Computer Aided Geometric Design
-  20(1):19-27. DOI 10.1016/S0167-8396(03)00002-5. *(Cited in the source attribute;
-  not actually implemented; see Section 7.6.)*
+  20(1):19-27. DOI 10.1016/S0167-8396(03)00002-5. *(Related background for the
+  mean-value-coordinate family; the shipped surface lift is plain triangle
+  barycentric interpolation, not Floater's polygon MVC. See Section 7.6.)*
 - Burke, E.K., Hellier, R., Kendall, G. and Whitwell, G. (2006). A New Bottom-Left-Fill
   Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem. Operations
   Research 54(3):587-601. DOI 10.1287/opre.1060.0293.

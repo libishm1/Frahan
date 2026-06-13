@@ -93,14 +93,13 @@ A result in this thesis is true only when visually validated in Rhino
 validated, until seen on the canvas. The example renders below are the
 visually validated forms.
 
-> **Binding-section status (2026-06-13).** All fifteen chapters are complete and
-> each carries its own per-component originality classification, status, and
-> citations inline. The three back-matter ledgers currently consolidate chapters
-> 01, 03, 05, 07, 08 and 14; the cross-fifteen consolidation of the Originality
-> Matrix and Roadmap, and a short list of citation normalisations (the
-> Elkarmoty, Bennell-Oliveira, Kim, Furrer and Floater fixes), are queued. Until
-> then, treat each chapter's inline originality and status sections as
-> authoritative for chapters 02, 04, 06, 09–13 and 15.
+> **Status (2026-06-13): complete.** All fifteen chapters are written, and the
+> three back-matter ledgers are consolidated across all fifteen: the Originality
+> Matrix classifies 109 component families (clean-room 59, facade-over-primitives
+> 20, evolved-fork 9, original-research 8, vendored-library 5, wrapper-of-native
+> 5, direct-port 3) with file-and-line evidence and a thirteen-flag licensing
+> register; the Roadmap consolidates every chapter's open items by severity; and
+> the Bibliography returns every cited work, citation-normalised.
 
 ![Marble bench max-cost block yield from GPR-mapped beds](../examples/08_gpr_marble/08c_maxcost.png)
 

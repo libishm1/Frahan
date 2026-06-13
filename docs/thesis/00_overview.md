@@ -122,6 +122,19 @@ placements per `("Frahan", "<tab>")` category attribute.
 | 17 | Reports | 3 | Cost, volume and plan reporting; LaTeX and table emission. |
 | 18 | Analysis | 3 | Boundary-rail indexing and geometric analysis helpers. |
 
+The per-tab counts above sum to 221, which exceeds the 206 unique
+`GH_Component` types: the 221 figure counts category-attribute placements
+(a component can register under more than one sub-category, or appear in `Lab`
+as well as its home tab, and is then counted once per placement), while 206 is
+the count of distinct `GH_Component` types. A third number is the source-file
+count: a grep for `: GH_Component` / `: GH_TaskCapableComponent` over
+`src/Frahan.StonePack.GH` matches 174 `.cs` files, fewer than the 206 types
+because several files declare more than one component class (for example
+`BlockCutOptComponents.cs`, `CgalTestComponents.cs`, and
+`GeogramTestComponents.cs` each hold a family of components). So the three
+figures are distinct by construction: 174 source files, 206 unique component
+types, 221 category placements.
+
 The ribbon obeys the canvas rules in `AGENTS.md` §6: one canonical type
 per concept, no ghost components (every node on the primary ribbon emits a
 real valid output), and heavy nodes carry a default-false `Run` gate so

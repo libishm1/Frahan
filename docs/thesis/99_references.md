@@ -2,14 +2,15 @@
 
 Sole author: Independent Research. Open data, open source.
 
-This is the consolidated reference list for the thesis. It merges three
-sources: (1) every `[Algorithm("title","Author Year ... venue", Doi=...)]`
-and `Note`/`WikiPath` attribute across `src/` (262 attribute occurrences,
-138 files); (2) the curated citation library `wiki/index/references.md`;
-(3) the bibliographies of the two submitted papers (`MASTER_PAPER.tex` and
-`MASTER_PAPER_BoEGE.tex`). Works are deduplicated, normalised, grouped by
-theme, and keyed `[Rn]`. A work appears once even when cited by many
-components or by both papers.
+This is the consolidated reference list for the thesis. It contains every
+work cited anywhere in the fifteen chapters and the binding sections. It
+merges three sources: (1) every `[Algorithm("title","Author Year ... venue",
+Doi=...)]` and `Note`/`WikiPath` attribute across `src/` (262 attribute
+occurrences, 138 files); (2) the curated citation library
+`wiki/index/references.md`; (3) the bibliographies of the two submitted
+papers (`MASTER_PAPER.tex` and `MASTER_PAPER_BoEGE.tex`). Works are
+deduplicated, normalised, grouped by theme, and keyed `[Rn]`. A work appears
+once even when cited by many components or by both papers.
 
 In-text citation style is author-date, e.g. (Kao et al. 2022). The `[Rn]`
 key is the stable cross-reference used by the chapter files.
@@ -118,6 +119,10 @@ key is the stable cross-reference used by the chapter files.
 
 [R46] Anbazhagan, P., Guru, B., Biswal, T. (2011). Remote sensing in delineating deep fractured aquifer zones. In: *Geoinformatics in applied geomorphology.* CRC Press, Boca Raton, ch 12. ISBN 9781439830598.
 
+[R160] Isakova, E. (2021). GPR survey of fractured Karelia granite (OKO-2, 150 / 1200 MHz antennas). (Cited for the high-energy fracture-reflector reading.)
+
+[R161] USGS (1999). Mirror Lake GPR continuity protocol, Water-Resources Investigations Report 99-4018C (>=40-trace lateral-continuity criterion).
+
 ### E. Fracture networks, DFN, and open fracture datasets
 
 [R47] ISRM (1978). Suggested methods for the quantitative description of discontinuities in rock masses; with Priest, S.D. (1993). *Discontinuity analysis for rock engineering.* Chapman & Hall (joint-set DFN basis).
@@ -140,21 +145,25 @@ key is the stable cross-reference used by the chapter files.
 
 [R56] Panara, Y. et al. (2024). GeoCrack and GeoFractNet: a CNN for automated rock-fracture digitisation (mIoU 0.91, MIT licensed).
 
+[R162] Tian, W. (2025). Multi-model discrete fracture network generation (Baecher, Veneziano, Levy-Lee, Priest joint generators). *Computers and Geotechnics*. (Cited as quarry improvement I13, proposed not yet built; `BlockCutOpt/README.md:197`.)
+
 ### F. Masonry assembly, stability, and rigid-block analysis
 
 [R57] Heyman, J. (1966). The stone skeleton (limit-state theorem of masonry; centre of thrust within the support). *International Journal of Solids and Structures* 2(2):249-279. DOI 10.1016/0020-7683(66)90018-7.
 
 [R58] Kao, G.T.-C., Iannuzzo, A., Thomaszewski, B., Coros, S., Van Mele, T., Block, P. (2022). Coupled Rigid-Block Analysis: stability-aware design of complex discrete-element assemblies. *Computer-Aided Design* 146:103216. DOI 10.1016/j.cad.2022.103216.
 
-[R59] Kim, S. et al. (2024). Finding installation sequence of polygonal masonry through design and depth search of a DAG. *ASME IDETC/CIE 2024*, DETC2024-142563.
+[R59] Kim, T. (2024). Finding the installation sequence of polygonal masonry through design and depth search of a directed acyclic graph. *ASME IDETC/CIE 2024*, paper DETC2024-142563. (Cited by the polygonal-masonry sequencer and the Polygonal Wall generator substrate; distinct from the Kim 2025 *Computation* tree-packing paper [R9].)
 
-[R60] Gramazio, F., Kohler, M., Eichenhofer, M. (2017). Robotic stone assembly. ETH Zurich, NCCR Digital Fabrication (`gramaziokohler/ashlar`).
+[R60] Gramazio, F., Kohler, M., Eichenhofer, M. (2017). Robotic stone assembly. ETH Zurich, NCCR Digital Fabrication (`gramaziokohler/ashlar`). (Running-bond ashlar reference; the Best-Fit inventory lineage is Furrer 2017 [R61] / Johns 2020 [R62].)
 
 [R61] Furrer, F., Wermelinger, M., Yoshida, H., Gramazio, F., Kohler, M., Siegwart, R., Hutter, M. (2017). Autonomous robotic stone stacking with online next-best-object target pose planning. *IEEE ICRA 2017*, pp 2350-2356. DOI 10.1109/ICRA.2017.7989273.
 
 [R62] Johns, R.L., Wermelinger, M., Mascaro, R., Jud, D., Gramazio, F., Kohler, M., Chli, M., Hutter, M. (2020). Autonomous dry stone: on-site planning and assembly of stone walls with a robotic excavator. *Construction Robotics* 4:127-140. DOI 10.1007/s41693-020-00037-6.
 
 [R63] Lu, C.-L., Zhu, Z., Olesti, G.P., Scully, P., Devadass, P. (2025). Computational design and robotic fabrication of dry-stacked non-standard spanning limestone assemblies. *Construction Robotics*. DOI 10.1007/s41693-026-00180-6 (journal); preprint DOI 10.21203/rs.3.rs-8019586/v1. CC-BY 4.0.
+
+[R163] Whiting, E., Ochsendorf, J., Durand, F. (2009). Procedural modeling of structurally-sound masonry buildings. *ACM Transactions on Graphics (SIGGRAPH Asia 2009)* 28(5):112. DOI 10.1145/1618452.1618458. (Rigid-block-equilibrium masonry stability precedent, RBE lineage with Kao 2022 [R58].)
 
 ### G. Stereotomy, voussoir geometry, and cathedral form-finding
 
@@ -173,6 +182,12 @@ key is the stable cross-reference used by the chapter files.
 [R70] Fallacara, G. (New Fundamentals Research Group, Politecnico di Bari). Contemporary stereotomy with digitally fabricated voussoirs.
 
 [R71] Vitruvius (~25 BCE). *De architectura* (the ten books on architecture). Morgan, M.H. (trans., 1914), Harvard University Press / Loeb Classical Library.
+
+[R148] Frezier, A.-F. (1737-1739). *La theorie et la pratique de la coupe des pierres et des bois* (the stereotomy treatise that coined *stereotomie*; the radial bed-joint rule).
+
+[R149] Monge, G. (1798). *Geometrie descriptive* (lines of curvature for vault tessellation). Baudouin, Paris.
+
+[R164] Hooke, R. (1675). *A description of helioscopes and some other instruments* (the inverted-catenary anagram: the funicular line of a pure arch). London. (Cited in source for the catenary intrados profile.)
 
 ### H. Cyclopean masonry and recipe-driven assembly
 
@@ -232,11 +247,13 @@ key is the stable cross-reference used by the chapter files.
 
 [R98] Shapira, L., Shamir, A., Cohen-Or, D. (2008). Consistent mesh partitioning and skeletonisation using the shape diameter function. *The Visual Computer* 24(4):249-259. DOI 10.1007/s00371-007-0197-5.
 
+[R165] Cooley, J.W., Tukey, J.W. (1965). An algorithm for the machine calculation of complex Fourier series. *Mathematics of Computation* 19(90):297-301. DOI 10.1090/S0025-5718-1965-0178586-1. (Radix-2 FFT for the in-tree GPR spectral kernel.)
+
 ### J. Surface parameterisation and unwrapping
 
 [R99] Sawhney, R., Crane, K. (2017). Boundary first flattening. *ACM Transactions on Graphics* 36(4):109. DOI 10.1145/3072959.3056432.
 
-[R100] Floater, M.S. (2003). Mean value coordinates. *Computer Aided Geometric Design* 20(1):19-27. DOI 10.1016/S0167-8396(03)00002-5.
+[R100] Floater, M.S. (2003). Mean value coordinates. *Computer Aided Geometric Design* 20(1):19-27. DOI 10.1016/S0167-8396(03)00002-5. (The mean-value-coordinate family. The shipped surface lift is plain triangle barycentric interpolation, not Floater's polygon MVC; this work is the attribution for the barycentric family, not the exact implemented scheme — see chapter 07.)
 
 ### K. Registration, ICP, pose, and assignment
 
@@ -254,13 +271,15 @@ key is the stable cross-reference used by the chapter files.
 
 [R107] Sola, J., Deray, J., Atchuthan, D. (2018). A micro Lie theory for state estimation in robotics. arXiv:1812.01537.
 
-[R108] Kuhn, H.W. (1955). The Hungarian method for the assignment problem. *Naval Research Logistics Quarterly* 2:83-97. DOI 10.1002/nav.3800020109.
+[R108] Kuhn, H.W. (1955). The Hungarian method for the assignment problem. *Naval Research Logistics Quarterly* 2(1-2):83-97. DOI 10.1002/nav.3800020109.
 
 [R109] Munkres, J. (1957). Algorithms for the assignment and transportation problems. *Journal of the SIAM* 5(1):32-38. DOI 10.1137/0105003.
 
 [R110] Welsh, D.J.A., Powell, M.B. (1967). An upper bound for the chromatic number of a graph and its application to timetabling problems. *The Computer Journal* 10(1):85-86. DOI 10.1093/comjnl/10.1.85.
 
 [R111] Graham, R.L. (1969). Bounds on multiprocessing timing anomalies. *SIAM Journal on Applied Mathematics* 17(2):416-429. DOI 10.1137/0117039.
+
+[R166] Bourgeois, F., Lassalle, J.-C. (1971). An extension of the Munkres algorithm for the assignment problem to rectangular matrices. *Communications of the ACM* 14(12):802-804. DOI 10.1145/362919.362945. (Shortest-augmenting-path Hungarian formulation cited in the `HungarianAssignment` header; the Kuhn 1955 [R108] / Munkres 1957 [R109] lineage is the textbook basis.)
 
 ### L. Learning-based reassembly and fracture datasets
 
@@ -269,6 +288,16 @@ key is the stable cross-reference used by the chapter files.
 [R113] Sellan, S., Chen, Y.-C., Wu, Z., Garg, A., Jacobson, A. (2022). Breaking bad: a dataset for geometric fracture and reassembly. *NeurIPS 2022 Datasets and Benchmarks*.
 
 [R114] ETH dry-stone masonry dataset (ETH1100): 1100 real meshes with viability labels. Zenodo record 10038881.
+
+[R167] Ho, J., Jain, A., Abbeel, P. (2020). Denoising diffusion probabilistic models. *Advances in Neural Information Processing Systems* 33:6840-6851. arXiv:2006.11239.
+
+[R168] Qi, C.R., Yi, L., Su, H., Guibas, L.J. (2017). PointNet++: deep hierarchical feature learning on point sets in a metric space. *Advances in Neural Information Processing Systems* 30. arXiv:1706.02413.
+
+[R169] van den Oord, A., Vinyals, O., Kavukcuoglu, K. (2017). Neural discrete representation learning (VQ-VAE). *Advances in Neural Information Processing Systems* 30. arXiv:1711.00937.
+
+[R170] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., Polosukhin, I. (2017). Attention is all you need. *Advances in Neural Information Processing Systems* 30. arXiv:1706.03762.
+
+[R171] Peebles, W., Xie, S. (2023). Scalable diffusion models with transformers (DiT, adaptive layer-norm conditioning). *IEEE/CVF ICCV 2023*:4195-4205. arXiv:2212.09748.
 
 ### M. Matching and circular reuse
 
@@ -291,6 +320,8 @@ key is the stable cross-reference used by the chapter files.
 [R122] JCGM (2008). JCGM 100:2008 — evaluation of measurement data: guide to the expression of uncertainty in measurement (GUM). Joint Committee for Guides in Metrology, BIPM.
 
 [R123] Tukey, J.W. (1977). *Exploratory data analysis.* Addison-Wesley. ISBN 978-0201076165.
+
+[R172] Shepard, D. (1968). A two-dimensional interpolation function for irregularly-spaced data. *Proceedings of the 23rd ACM National Conference*, pp 517-524. DOI 10.1145/800186.810616. (Inverse-distance weighting for the bedrock TIN merge.)
 
 ### O. Software, libraries, formats, and tools
 
@@ -328,9 +359,29 @@ key is the stable cross-reference used by the chapter files.
 
 [R140] SEG Technical Standards Committee. SEG-Y data exchange format, revisions 0/1/2. Society of Exploration Geophysicists.
 
+[R173] Coumans, E. et al. Bullet Physics SDK: rigid-body dynamics with a sequential-impulse solver (via BulletSharp.x64). zlib License. https://github.com/bulletphysics/bullet3.
+
+[R174] Wallace, E. csg.js: constructive solid geometry via BSP trees. MIT. (Ported as the managed `MeshCsg` boolean fallback.)
+
+[R175] ISO 6983-1:2009. Automation systems and integration — numerical control of machines — program format and definitions of address words — part 1: data format for positioning, line motion and contouring control systems. International Organization for Standardization. (G-code ingest.)
+
+[R176] Bowring, B.R. (1976). Transformation from spatial to geographical coordinates. *Survey Review* 23(181):323-327. DOI 10.1179/sre.1976.23.181.323.
+
+[R177] Karney, C.F.F. (2011). Transverse Mercator with an accuracy of a few nanometres. *Journal of Geodesy* 85(8):475-485. DOI 10.1007/s00190-011-0445-3.
+
+[R178] Snyder, J.P. (1987). *Map projections: a working manual.* USGS Professional Paper 1395.
+
+[R179] Braumann, J., Brell-Cokcan, S. KUKA|prc — parametric robot control for Grasshopper. Association for Robots in Architecture, Vienna. https://www.robotsinarchitecture.org/kukaprc.
+
+[R180] Soler, V. Robots — a plugin for programming industrial robots in Grasshopper (MIT). https://github.com/visose/Robots.
+
 ### P. Industrial and craft precedents
 
 [R141] Gaudi, A. Trencadis (broken-tile mosaic), Park Guell, Barcelona (craft precedent for fragment packing).
+
+[R181] Zhang, Y., Wu, H., Wang, J. et al. (2024). Robotic diamond-wire cutting of stone with a six-axis arm and end-effector wire saw. *Journal of Computational Design and Engineering* 11(6):75-85. DOI 10.1093/jcde/qwae094. (Robot-mounted diamond-wire kerf-compensation precedent; distinct from the block-cutting MATLAB toolbox Zhang et al. 2024 [R145].)
+
+[R182] Moult, S., Weir, J., Fernando, S. (2018). Robotic diamond-wire bandsaw cutting of stone with a portable end-effector. University of Sydney (proceedings reference, cited in source).
 
 ### Q. Additional cited works (chapter binding sections)
 
@@ -345,16 +396,6 @@ key is the stable cross-reference used by the chapter files.
 [R146] Stolt, R.H. (1978). Migration by Fourier transform. *Geophysics* 43(1):23-48. DOI 10.1190/1.1440826.
 
 [R147] Taner, M.T., Koehler, F., Sheriff, R.E. (1979). Complex seismic trace analysis. *Geophysics* 44(6):1041-1063. DOI 10.1190/1.1440994.
-
-[R148] Frezier, A.-F. (1737-1739). *La theorie et la pratique de la coupe des pierres et des bois* (stereotomy treatise).
-
-[R149] Monge, G. (1798). *Geometrie descriptive* (lines of curvature for vault tessellation). Baudouin, Paris.
-
-[R150] Kim, T. (2024). Finding installation sequence of polygonal masonry through design and depth search of a directed acyclic graph. *ASME IDETC/CIE 2024*, DETC2024-142563.
-
-[R151] Kuhn, H.W. (1955). The Hungarian method for the assignment problem. *Naval Research Logistics Quarterly* 2(1-2):83-97. DOI 10.1002/nav.3800020109. (Kuhn-Munkres assignment; see also Munkres 1957, [R109].)
-
-[R152] Lloyd, S.P. (1982). Least squares quantization in PCM. *IEEE Transactions on Information Theory* 28(2):129-137. DOI 10.1109/TIT.1982.1056489. (CVD-Lloyd relaxation; duplicate key of [R87], retained for chapter cross-reference.)
 
 ### R. Masonry-CRA and edge-matching binding-section additions
 
@@ -388,6 +429,25 @@ key is the stable cross-reference used by the chapter files.
   authored 2026-05-31).
 - **Paper bibliographies:** `MASTER_PAPER.tex` and `MASTER_PAPER_BoEGE.tex`
   (BoEGE submission, 2026-06-09).
+
+Normalisation notes for the binding pass.
+
+- The Kim DETC2024-142563 paper is keyed once at [R59] under the correct
+  first-author initial (Kim, T.), deduplicated from the former duplicate
+  S./T. entries. The Kim, T. (2025) *Computation* tree-packing paper is a
+  distinct work, kept at [R9].
+- Jalalian is normalised to "Jalalian, M.H." at [R23] for every BCSdbBV
+  citation.
+- The Floater 2003 [R100] credit on the barycentric surface lift is an
+  attribution to the mean-value-coordinate family, not a claim that the
+  shipped code implements Floater's polygon MVC; the implemented method is
+  classical triangle barycentric interpolation (chapter 07).
+- The Best-Fit inventory lineage is Furrer 2017 [R61] / Johns 2020 [R62],
+  not the Gramazio/Kohler/Eichenhofer 2017 reference [R60]; the previously
+  mislabelled attribute is corrected to Furrer/Johns (flag E5).
+- The edge-matching coarse-lag stage [R155] turning-function basis is a
+  direct cross-correlation, not a phase-correlation FFT; the wording is
+  corrected in chapter 08 and the licensing register.
 
 Several arXiv/DOI strings appear verbatim in `[Algorithm(..., Doi=...)]`
 attributes; where the attribute carried a partial venue, the full citation

@@ -198,8 +198,9 @@ Unified sheet filler dispatches V506 and the obsolete V1/V2/V3 wrappers;
 `Sheet Nest (Hole-Aware)` D5F10019 is the facade over
 `ContactNfpHoleNester`; `Pack On Surface`
 (`src/Frahan.StonePack.GH/SurfacePacking/PackOnSurfaceComponent.cs:41-42`)
-composes the exact NFP-BLF placement on a BFF chart with a Floater 2003
-mean-value barycentric lift back to 3D.
+composes the exact NFP-BLF placement on a BFF chart with a classical
+triangle barycentric lift back to 3D (attributed to the mean-value-coordinate
+family, after Floater 2003; the shipped lift is plain barycentric, not MVC).
 
 ### Top-down vs bottom-up design flows
 
@@ -335,7 +336,7 @@ The classification is per the seven-class framework. Evidence is
   facade-over-primitives. Composes `BlockCutOptSolver` +
   `Dlbf3dMixedSizePacker` + monument packer
   (`BlockCutOptHeterogeneousComponents.cs:169-179`).
-- **Masonry Stability (RBE) + CRA** — RBE clean-room from Kao 2021/Whiting
+- **Masonry Stability (RBE) + CRA** — RBE clean-room from Kao et al. (2022) / Whiting
   (`MasonryStabilityRbeComponent.cs:69-71`, Kao et al. 2022 cited); the CRA
   alternating-convex certificate is the A-candidate (Kao 2022 solves a
   nonconvex NLP via IPOPT; ours is a managed soundness certificate).
@@ -363,8 +364,9 @@ The classification is per the seven-class framework. Evidence is
 - **Vector Fractures Loader (F2D00BEC)** — wrapper / vendored-library over
   NetTopologySuite.IO.Esri (`VectorFracturesLoaderComponent.cs:38`).
 - **Pack On Surface** — facade-over-primitives: exact NFP-BLF on a BFF
-  chart + Floater 2003 mean-value lift
-  (`SurfacePacking/PackOnSurfaceComponent.cs:41-42`).
+  chart + a classical triangle barycentric lift (attributed to the
+  mean-value-coordinate family, after Floater 2003; the shipped lift is plain
+  barycentric, not MVC) (`SurfacePacking/PackOnSurfaceComponent.cs:41-42`).
 - **Ashlar Pack (F1A2B3C4)** — clean-room Frahan-original grid stacking
   with a Gramazio/Kohler/Eichenhofer 2017 running-bond reference
   (`Masonry/AshlarPackComponent.cs:31-32`).
