@@ -144,8 +144,8 @@ FACETS/Compass/DSE -> fracture traces (DXF/GeoJSON/CSV) -> Frahan.
 | Subsystem | Item | Action |
 |---|---|---|
 | Ingestion | No reader for CloudCompare structural output (FACETS facets, Compass traces/planes, DSE sets). Cheapest win. | Add a fracture-trace ingest that reads DXF/GeoJSON/CSV planes + traces into the fracture model, beside the Shapefile reader + GPR picks. |
-| GPR / Mesh | No in-Frahan facet extraction: a cloud cannot become joint-set planes without round-tripping to CloudCompare. | Add a FACETS-style planar segmentation + dip/dip-direction estimator (RANSAC / region-grow on normals) on an ingested cloud, reusing the CGAL normals/segmentation stack. |
-| Quarry | No discontinuity-set + spacing summary from a cloud. | Add a DSE-style set clustering (pole density) + spacing -> Jv / wJd block-size proxy (the field report's recovery-risk metric). |
+| GPR / Mesh | ~~No in-Frahan facet extraction~~ **LANDED 2026-06-14**: `Discontinuity Sets (Cloud)` (D5F10047) region-grows planar facets (FACETS, Dewez 2016) with dip/dip-direction. | Optionally expose the facet primitive separately and add the convex facet polygon (alpha-shape) contour. |
+| Quarry | ~~No discontinuity-set + spacing summary~~ **LANDED 2026-06-14**: same component clusters poles into joint sets by antipodal mean-shift (DSE, Riquelme 2014) + reports normal spacing. Validated on the Tongjiang quarry-face cloud (4 sets, 16.6 s/140k). | Add the Jv / wJd block-size proxy and a stereonet report card. |
 | Reports / Analysis | No structural-geology summary card. | Add a stereonet + joint-set / spacing report card (Lab/Reports tab). |
 | Ingestion | The manual-mapping-calibrates-the-cloud audit step is unmodelled. | Add a scale/registration QA that aligns scanline measurements to the cloud (manual-vs-digital audit). |
 
