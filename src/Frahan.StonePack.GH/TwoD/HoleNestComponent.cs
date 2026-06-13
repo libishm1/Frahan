@@ -46,7 +46,11 @@ public sealed class HoleNestComponent : GH_Component
                                                // proxy on a large freeform boundary measured 13+ units of
                                                // deviation and the old shared compensation inflated every PART
                                                // by 2x that (ProxyDevComp +27 on the user's S-sheet = 21/200 fill)
-    private int _smoothSampleVerts = 48;       // COST lane: parts + part-holes (Resolution input)
+    private int _smoothSampleVerts = 24;       // COST lane: parts + part-holes (Resolution input). 24 default:
+                                               // benchmark showed solve cost scales ~quadratically with this
+                                               // (48v was ~10-20x slower than 24v) while packing DENSITY is
+                                               // nearly flat (<2%), because this only sets the COLLISION proxy
+                                               // — the Placed output is always the exact original curve.
 
     public HoleNestComponent()
         : base("Sheet Nest (Hole-Aware)", "HoleNest",
@@ -98,11 +102,11 @@ public sealed class HoleNestComponent : GH_Component
             GH_ParamAccess.item, 6);
         pManager.AddIntegerParameter("Resolution", "Res",
             "SOLVER sampling resolution for smooth curves: uniform-by-length vertices per closed curve " +
-            "(16..200, default 48). This only controls the collision proxies — the Placed output is " +
-            "always the ORIGINAL full-resolution curve, transformed. Raise it when parts must seat into " +
-            "tight concave features; solve time grows roughly quadratically. At 48 verts the proxy chord " +
-            "error is ~0.3% of part size (~0.5 mm on a 300 mm part) — keep Spacing above that for " +
-            "fabrication.", GH_ParamAccess.item, 48);
+            "(16..200, default 24). This ONLY sets the collision proxy — the Placed output is always the " +
+            "exact ORIGINAL curve, transformed — so there is no output-quality reason to raise it. Solve " +
+            "time grows ~QUADRATICALLY with this while packing density is nearly flat (benchmark: 48 verts " +
+            "was ~10-20x slower than 24 for <2% density gain). Raise it ONLY when small parts must seat " +
+            "into tight CONCAVE notches; otherwise leave it low for fast nesting.", GH_ParamAccess.item, 24);
         pManager[7].Optional = true;
     }
 
@@ -324,7 +328,7 @@ public sealed class HoleNestComponent : GH_Component
         da.GetData(4, ref spacing);
         da.GetData(5, ref baseRotations);
         da.GetData(6, ref contactRotations);
-        int resolution = 48;
+        int resolution = 24;
         da.GetData(7, ref resolution);
         _smoothSampleVerts = Math.Max(16, Math.Min(MaxVerts, resolution));
 
