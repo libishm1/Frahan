@@ -75,17 +75,18 @@ public sealed class HoleNestComponent : GH_Component
             "fills first, unplaced parts carry to sheet 1, and so on. Sheets stay at their drawn " +
             "positions.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Sheet Holes", "SH",
-            "Closed sheet defect/hole curves as a TREE: branch path {s} holds the holes of Sheets[s] " +
-            "(a flat list addresses Sheets[0]). Parts never overlap them.",
+            "Closed sheet defect/hole curves (flat list or tree). Each hole is routed to whichever sheet " +
+            "geometrically CONTAINS it (tree path {s} is only the fallback) — no tree matching or " +
+            "grafting required; sheets without holes need nothing.",
             GH_ParamAccess.tree);
         pManager[1].Optional = true;
         pManager.AddCurveParameter("Parts", "P",
             "Closed planar part outline curves to nest.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Part Holes", "PH",
-            "Part hole curves as a TREE: branch path {i} holds the hole curves of Parts[i] (graft the " +
-            "Parts list to author it; branches are matched by PATH index, so pruned/empty branches are " +
-            "safe). Parts with holes are placed first as hosts, then smaller parts are nested into " +
-            "their holes via the inner-fit region.",
+            "Part hole curves (flat list or tree). Each hole is routed to the SMALLEST part outline that " +
+            "geometrically CONTAINS it (tree path {i} -> Parts[i] is only the fallback) — no tree " +
+            "matching or grafting required; parts without holes need nothing. Parts with holes are " +
+            "placed first as hosts, then smaller parts nest into their holes via the inner-fit region.",
             GH_ParamAccess.tree);
         pManager[3].Optional = true;
         pManager.AddNumberParameter("Spacing", "Gap",
@@ -354,44 +355,47 @@ public sealed class HoleNestComponent : GH_Component
                 $"{sheetCurves.Count - sheets.Count} sheet curve(s) ignored (must be closed and WorldXY-parallel).");
         _outZ = sheetZs[0];
 
-        // per-sheet holes: branch path {s} addresses Sheets[s] (flat list -> sheet 0)
+        // per-sheet holes: PIP-FIRST geometric routing (the house SheetHolesUtil
+        // pattern, Bug B-2D-001 fix) — each hole goes to whichever sheet
+        // geometrically CONTAINS its centroid; the GH tree path is only the
+        // fallback. Flat lists, grafted trees and sparse trees all route
+        // correctly; sheets without holes need nothing.
+        var validSheetCurves = new List<Curve>();
+        foreach (var sc in sheetCurves) if (sc != null && sc.IsClosed) validSheetCurves.Add(sc);
+        var routedHoles = SheetHolesUtil.BuildHolesBySheet(
+            validSheetCurves, sheetHolesTree, sheets.Count,
+            Math.Max(0.01, 1e-6 * (validSheetCurves.Count > 0 ? validSheetCurves[0].GetBoundingBox(false).Diagonal.Length : 1.0)));
         var sheetHolesPerSheet = new List<IReadOnlyList<IReadOnlyList<(double X, double Y)>>>();
         for (int si = 0; si < sheets.Count; si++) sheetHolesPerSheet.Add(new List<IReadOnlyList<(double X, double Y)>>());
         var droppedSheetHoles = 0;
-        if (sheetHolesTree != null && !sheetHolesTree.IsEmpty)
+        for (int si = 0; si < sheets.Count && si < routedHoles.Count; si++)
         {
-            for (int b = 0; b < sheetHolesTree.PathCount; b++)
+            var target = (List<IReadOnlyList<(double X, double Y)>>)sheetHolesPerSheet[si];
+            foreach (var hc in routedHoles[si])
             {
-                var path = sheetHolesTree.Paths[b];
-                var branch = sheetHolesTree.Branches[b];
-                if (branch == null || branch.Count == 0) continue;
-                int key = path.Indices.Length > 0 ? path.Indices[path.Indices.Length - 1] : 0;
-                if (key < 0 || key >= sheets.Count) key = 0;
-                var target = (List<IReadOnlyList<(double X, double Y)>>)sheetHolesPerSheet[key];
-                foreach (var gc in branch)
+                if (hc == null) continue;
+                var loop = CurveToLoop(hc, null, out _, out var devH, SheetSampleVerts);
+                if (loop != null)
                 {
-                    if (gc == null || gc.Value == null) continue;
-                    var loop = CurveToLoop(gc.Value, null, out _, out var devH, SheetSampleVerts);
-                    if (loop != null)
-                    {
-                        target.Add(loop);
-                        sheetNet[key] -= Math.Abs(SignedArea((List<(double X, double Y)>)loop));
-                        if (devH > sheetDev) sheetDev = devH;
-                    }
-                    else droppedSheetHoles++;
+                    target.Add(loop);
+                    sheetNet[si] -= Math.Abs(SignedArea((List<(double X, double Y)>)loop));
+                    if (devH > sheetDev) sheetDev = devH;
                 }
+                else droppedSheetHoles++;
             }
         }
         if (droppedSheetHoles > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 $"{droppedSheetHoles} sheet-hole curve(s) ignored (must be closed and WorldXY-parallel).");
 
-        // Map part-hole branches by their PATH's last index (= Parts input
-        // index), NOT by branch position: pruned or reordered trees must never
-        // shift holes onto the wrong part (the documented tree-path routing
-        // failure class behind Bug B-2D-001). Unmatched branches warn loudly.
+        // Part holes: PIP-FIRST geometric routing (mirrors the house
+        // SheetHolesUtil pattern) — each hole curve is assigned to the
+        // SMALLEST part outline that geometrically contains its centroid;
+        // the GH tree path (branch {i} -> Parts[i]) is only the fallback when
+        // no part contains it. Flat lists, grafted trees and sparse trees all
+        // route correctly; parts without holes need nothing.
         Dictionary<int, List<GH_Curve>> holesByPartIndex = null;
-        var unmatchedBranches = 0;
+        var unroutedHoles = 0;
         if (partHolesTree != null && !partHolesTree.IsEmpty)
         {
             holesByPartIndex = new Dictionary<int, List<GH_Curve>>();
@@ -400,22 +404,36 @@ public sealed class HoleNestComponent : GH_Component
                 var path = partHolesTree.Paths[b];
                 var branch = partHolesTree.Branches[b];
                 if (branch == null || branch.Count == 0) continue;
-                int key = path.Indices.Length > 0 ? path.Indices[path.Indices.Length - 1] : -1;
-                if (key < 0 || key >= partCurves.Count) { unmatchedBranches++; continue; }
-                if (!holesByPartIndex.TryGetValue(key, out var list))
-                { list = new List<GH_Curve>(); holesByPartIndex[key] = list; }
-                list.AddRange(branch);
+                int pathKey = path.Indices.Length > 0 ? path.Indices[path.Indices.Length - 1] : -1;
+                foreach (var gc in branch)
+                {
+                    if (gc == null || gc.Value == null) continue;
+                    var bb = gc.Value.GetBoundingBox(false);
+                    var centroid = bb.Center;
+                    int bestPart = -1; double bestArea = double.MaxValue;
+                    for (int pi2 = 0; pi2 < partCurves.Count; pi2++)
+                    {
+                        var pc = partCurves[pi2];
+                        if (pc == null || !pc.IsClosed) continue;
+                        var plane = new Plane(new Point3d(0, 0, centroid.Z), Vector3d.ZAxis);
+                        if (pc.Contains(centroid, plane, 1e-6) != PointContainment.Inside) continue;
+                        var amp = AreaMassProperties.Compute(pc);
+                        double area = amp != null ? amp.Area : double.MaxValue;
+                        if (area < bestArea) { bestArea = area; bestPart = pi2; }
+                    }
+                    int key = bestPart >= 0 ? bestPart
+                        : (pathKey >= 0 && pathKey < partCurves.Count ? pathKey : -1);
+                    if (key < 0) { unroutedHoles++; continue; }
+                    if (!holesByPartIndex.TryGetValue(key, out var list))
+                    { list = new List<GH_Curve>(); holesByPartIndex[key] = list; }
+                    list.Add(gc);
+                }
             }
         }
-        if (unmatchedBranches > 0)
+        if (unroutedHoles > 0)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
-                $"{unmatchedBranches} Part Holes branch(es) have no matching Parts index (path {{i}} must " +
-                "address Parts[i]); they were ignored.");
-        if (holesByPartIndex != null && holesByPartIndex.Count == 1 &&
-            holesByPartIndex.ContainsKey(0) && partCurves.Count > 1)
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
-                "Part Holes arrived as a single branch {0}: ALL holes were assigned to Parts[0]. If each " +
-                "part has its own holes, GRAFT the tree so branch path {i} addresses Parts[i].");
+                $"{unroutedHoles} part-hole curve(s) sit inside NO part outline and have no usable tree " +
+                "path; they were ignored. Draw holes inside their parts (or graft branch {i} -> Parts[i]).");
 
         var parts = new List<HoleNestPart>();
         var inputIndexOf = new List<int>();

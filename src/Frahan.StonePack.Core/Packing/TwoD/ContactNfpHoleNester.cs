@@ -298,6 +298,19 @@ namespace Frahan.Packing.TwoD
             return results;
         }
 
+        // cache-or-compute a single NFP's loop set (managed lane)
+        private static List<List<(double X, double Y)>> CachedNfp(
+            Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>> cache,
+            int obstId, string sig,
+            Func<List<List<(double X, double Y)>>> compute)
+        {
+            if (cache == null) return compute();
+            if (cache.TryGetValue((obstId, sig), out var hit)) return hit;
+            var fresh = compute();
+            cache[(obstId, sig)] = fresh;
+            return fresh;
+        }
+
         // remap a placement from sheet-local part indices to the caller's
         // original parts list + tag the sheet (mutates and returns the instance;
         // progressive partials are fresh copies, finals are owned by the result)
@@ -366,6 +379,20 @@ namespace Frahan.Packing.TwoD
             // nest smalls, then place the rest. Track which parts are consumed.
             var consumed = new bool[parts.Count];
 
+            // NFP CACHE (quantity nesting, 2026-06-12): NFP(obstacle, part@angle)
+            // depends only on the obstacle identity and the part's rotated SHAPE
+            // (parts are normalized to bbox-min, so identical shapes have
+            // identical coordinates). Key = (obstacle id, rotation signature);
+            // obstacle ids: sheet-hole index, then sheetHoles.Count + placed
+            // index (both append-only within a run). For N identical parts the
+            // per-part Minkowski work drops from O(N) obstacles to the single
+            // NEWEST obstacle — O(N^2) -> O(N) NFP builds across the run.
+            // Signature collisions only round at ~1e-3 relative; the exact
+            // verification + depth gate guard the placement regardless.
+            var nfpCache = Environment.GetEnvironmentVariable("FRAHAN_NFP_CACHE") == "0"
+                ? null   // A/B kill switch (benchmarks)
+                : new Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>>();
+
             var hostsFirst = order.Where(i => parts[i].Holes != null && parts[i].Holes.Count > 0).ToList();
             var nonHosts = order.Where(i => parts[i].Holes == null || parts[i].Holes.Count == 0).ToList();
 
@@ -373,7 +400,7 @@ namespace Frahan.Packing.TwoD
             foreach (int pi in hostsFirst)
             {
                 if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp))
+                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp, nfpCache))
                 {
                     Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
@@ -401,7 +428,7 @@ namespace Frahan.Packing.TwoD
             {
                 if (consumed[pi]) continue;
                 if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp))
+                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp, nfpCache))
                 {
                     Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
@@ -485,6 +512,20 @@ namespace Frahan.Packing.TwoD
             var placedRects = new List<(double MinX, double MinY, double MaxX, double MaxY)>(); // non-nested footprints
             var openHoles = new List<RectShelfHole>();      // host holes, in placement order
             var consumed = new bool[parts.Count];
+
+            // NFP CACHE (quantity nesting, 2026-06-12): NFP(obstacle, part@angle)
+            // depends only on the obstacle identity and the part's rotated SHAPE
+            // (parts are normalized to bbox-min, so identical shapes have
+            // identical coordinates). Key = (obstacle id, rotation signature);
+            // obstacle ids: sheet-hole index, then sheetHoles.Count + placed
+            // index (both append-only within a run). For N identical parts the
+            // per-part Minkowski work drops from O(N) obstacles to the single
+            // NEWEST obstacle — O(N^2) -> O(N) NFP builds across the run.
+            // Signature collisions only round at ~1e-3 relative; the exact
+            // verification + depth gate guard the placement regardless.
+            var nfpCache = Environment.GetEnvironmentVariable("FRAHAN_NFP_CACHE") == "0"
+                ? null   // A/B kill switch (benchmarks)
+                : new Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>>();
 
             var hosts = order.Where(i => partHoleRects[i] != null).ToList();
             var fillers = order.Where(i => partHoleRects[i] == null).ToList();
@@ -707,7 +748,8 @@ namespace Frahan.Packing.TwoD
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
             List<List<(double X, double Y)>> placedMaterial,
             double spacing, int baseRotationCount, int contactRotations,
-            out HoleNestPlacement best, ref bool usedNativeNfp)
+            out HoleNestPlacement best, ref bool usedNativeNfp,
+            Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>> nfpCache = null)
         {
             best = null;
             double bestY = double.MaxValue, bestX = double.MaxValue;
@@ -726,7 +768,7 @@ namespace Frahan.Packing.TwoD
             // verbatim.
             if (NativeNfpKernel.IsAvailable &&
                 TryPlaceOuterNativeNfp(pi, part, sheetOuter, sheetHoles, placedMaterial, spacing,
-                    baseRotationCount, contactRotations, out best))
+                    baseRotationCount, contactRotations, out best, nfpCache))
             {
                 usedNativeNfp = true;
                 return best != null;
@@ -737,7 +779,8 @@ namespace Frahan.Packing.TwoD
             foreach (double ang in RotationSet(part.Outer, sheetOuter, placedMaterial, baseRotationCount, contactRotations))
             {
                 var rot = Rotate(part.Outer, ang);
-                if (!seenRot.Add(RotSignature(rot))) continue; // same shape already tried
+                var rotSig = RotSignature(rot);
+                if (!seenRot.Add(rotSig)) continue; // same shape already tried
                 if (spacing > 0) rot = InflateOuter(rot, spacing);
                 var refl = Reflect(rot);
 
@@ -757,16 +800,23 @@ namespace Frahan.Packing.TwoD
                 BBox(rot, out double rminx, out double rminy, out double rmaxx, out double rmaxy);
                 var reflSimp = SimplifyLoop(refl, NfpSimplifyTol(rot));
                 var obstacles = new List<List<(double X, double Y)>>();
+                int holeId = 0;
                 foreach (var q in sheetHoles)
-                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(SimplifyLoop(ToList(q), NfpSimplifyTol(q)), reflSimp));
-                foreach (var m in placedMaterial)
                 {
+                    obstacles.AddRange(CachedNfp(nfpCache, holeId, rotSig,
+                        () => Clipper2Adapter.MinkowskiSum(SimplifyLoop(ToList(q), NfpSimplifyTol(q)), reflSimp)));
+                    holeId++;
+                }
+                for (int mi = 0; mi < placedMaterial.Count; mi++)
+                {
+                    var m = placedMaterial[mi];
                     BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
                     double tminx = mminx - rmaxx, tmaxx = mmaxx - rminx;
                     double tminy = mminy - rmaxy, tmaxy = mmaxy - rminy;
                     if (tmaxx < fminx - Eps || tminx > fmaxx + Eps ||
                         tmaxy < fminy - Eps || tminy > fmaxy + Eps) continue;
-                    obstacles.AddRange(Clipper2Adapter.MinkowskiSum(SimplifyLoop(m, NfpSimplifyTol(m)), reflSimp));
+                    obstacles.AddRange(CachedNfp(nfpCache, sheetHoles.Count + mi, rotSig,
+                        () => Clipper2Adapter.MinkowskiSum(SimplifyLoop(m, NfpSimplifyTol(m)), reflSimp)));
                 }
                 if (obstacles.Count > 0)
                     feasible = SubtractLoops(feasible, UnionAll(obstacles));
@@ -810,7 +860,8 @@ namespace Frahan.Packing.TwoD
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
             List<List<(double X, double Y)>> placedMaterial,
             double spacing, int baseRotationCount, int contactRotations,
-            out HoleNestPlacement best)
+            out HoleNestPlacement best,
+            Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>> nfpCache = null)
         {
             best = null;
             int holeCount = sheetHoles.Count;
@@ -830,13 +881,16 @@ namespace Frahan.Packing.TwoD
             // dedup the managed loop applies lazily
             var angles = new List<double>();
             var rots = new List<List<(double X, double Y)>>();
+            var sigs = new List<string>();
             var seenRot = new HashSet<string>();
             foreach (double ang in RotationSet(part.Outer, sheetOuter, placedMaterial, baseRotationCount, contactRotations))
             {
                 var rotRaw = Rotate(part.Outer, ang);
-                if (!seenRot.Add(RotSignature(rotRaw))) continue;
+                var sig = RotSignature(rotRaw);
+                if (!seenRot.Add(sig)) continue;
                 angles.Add(ang);
                 rots.Add(spacing > 0 ? Rotate(baseOuter, ang) : rotRaw);
+                sigs.Add(spacing > 0 ? "s" + spacing.ToString("R") + "|" + sig : sig);
             }
             if (angles.Count == 0) return false;
 
@@ -848,8 +902,77 @@ namespace Frahan.Packing.TwoD
             // ONE batched P/Invoke: all rotations x all obstacles. scale 100 =
             // the managed Clipper2 PathD lane's decimal precision 2; -2e-3 =
             // the relative RDP tolerance NfpSimplifyTol uses (2e-3 x bbox-diag).
-            var nfps = NativeNfpKernel.BatchNfp(baseOuter, angles, obst, 100.0, -2e-3);
-            if (nfps == null) return false; // kernel failed -> managed fallback
+            // cache-aware batching: pairs already computed for this (shape,
+            // angle, obstacle) are pulled from the cache; the kernel batch
+            // covers only angles that still miss something x the union of
+            // missing obstacles (for repeated identical parts that collapses
+            // to all-angles x the single NEWEST obstacle).
+            var missAngles = new List<int>();
+            var missObst = new SortedSet<int>();
+            if (nfpCache != null)
+            {
+                for (int i = 0; i < angles.Count; i++)
+                {
+                    bool any = false;
+                    for (int oi = 0; oi < obst.Count; oi++)
+                        if (!nfpCache.ContainsKey((oi, sigs[i]))) { any = true; missObst.Add(oi); }
+                    if (any) missAngles.Add(i);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < angles.Count; i++) missAngles.Add(i);
+                for (int oi = 0; oi < obst.Count; oi++) missObst.Add(oi);
+            }
+
+            List<NativeNfpKernel.NfpLoop> nfps = null;
+            if (missAngles.Count > 0 && missObst.Count > 0)
+            {
+                var subAngles = new List<double>();
+                foreach (var i in missAngles) subAngles.Add(angles[i]);
+                var subObst = new List<IReadOnlyList<(double X, double Y)>>();
+                var obstMap = new List<int>();
+                foreach (var oi in missObst) { subObst.Add(obst[oi]); obstMap.Add(oi); }
+                var fresh = NativeNfpKernel.BatchNfp(baseOuter, subAngles, subObst, 100.0, -2e-3);
+                if (fresh == null) return false; // kernel failed -> managed fallback
+                // remap the sub-batch tags to global (angle, obstacle) ids and
+                // fold into the cache
+                nfps = new List<NativeNfpKernel.NfpLoop>(fresh.Count);
+                foreach (var l in fresh)
+                {
+                    if (l.AngleIdx < 0 || l.AngleIdx >= missAngles.Count) continue;
+                    if (l.ObstIdx < 0 || l.ObstIdx >= obstMap.Count) continue;
+                    nfps.Add(new NativeNfpKernel.NfpLoop
+                    { AngleIdx = missAngles[l.AngleIdx], ObstIdx = obstMap[l.ObstIdx], Loop = l.Loop });
+                }
+                if (nfpCache != null)
+                {
+                    // group fresh loops per (angle, obst) and store (incl. empties)
+                    var grouped = new Dictionary<(int, int), List<List<(double X, double Y)>>>();
+                    foreach (var i in missAngles)
+                        foreach (var oi in obstMap)
+                            grouped[(i, oi)] = new List<List<(double X, double Y)>>();
+                    foreach (var l in nfps)
+                        if (grouped.TryGetValue((l.AngleIdx, l.ObstIdx), out var g)) g.Add(l.Loop);
+                    foreach (var kv in grouped)
+                        nfpCache[(kv.Key.Item2, sigs[kv.Key.Item1])] = kv.Value;
+                }
+            }
+            else nfps = new List<NativeNfpKernel.NfpLoop>();
+
+            // append cached pairs (those not in the fresh batch)
+            if (nfpCache != null)
+            {
+                for (int i = 0; i < angles.Count; i++)
+                    for (int oi = 0; oi < obst.Count; oi++)
+                    {
+                        bool inFresh = missAngles.Contains(i) && missObst.Contains(oi);
+                        if (inFresh) continue;
+                        if (nfpCache.TryGetValue((oi, sigs[i]), out var cached))
+                            foreach (var loop in cached)
+                                nfps.Add(new NativeNfpKernel.NfpLoop { AngleIdx = i, ObstIdx = oi, Loop = loop });
+                    }
+            }
 
             var byAngle = new List<List<(double X, double Y)>>[angles.Count];
             var byAngleObst = new List<int>[angles.Count];
@@ -1164,7 +1287,10 @@ namespace Frahan.Packing.TwoD
                 used += a;
             }
             res.UsedArea = used;
-            return res.Placements.Count > 0;
+            // an EMPTY layout is vacuously valid (no parts -> no overlaps): a
+            // multi-sheet overflow sheet that legitimately places nothing must
+            // not poison the aggregate validity (productivity is PlacedCount).
+            return true;
         }
 
         private static void Commit(HoleNestPlacement pl, HoleNestPart part,
