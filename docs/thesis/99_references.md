@@ -24,7 +24,7 @@ key is the stable cross-reference used by the chapter files.
 
 [R2] Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2007). Complete and robust no-fit polygon generation for the irregular stock cutting problem. *European Journal of Operational Research* 179(1):27-49. DOI 10.1016/j.ejor.2006.03.011.
 
-[R3] Bennell, J.A., Oliveira, J.F. (2008). The geometry of nesting problems: a tutorial. *Journal of the Operational Research Society* 60(supp 1):S93-S105. DOI 10.1057/jors.2008.169.
+[R3] Bennell, J.A., Oliveira, J.F. (2009). A tutorial in irregular shape packing problems. *Journal of the Operational Research Society* 60(supp 1):S93-S105. DOI 10.1057/jors.2008.169.
 
 [R4] Baker, B.S., Coffman, E.G., Rivest, R.L. (1980). Orthogonal packings in two dimensions. *SIAM Journal on Computing* 9(4):846-855. DOI 10.1137/0209064.
 
@@ -52,7 +52,7 @@ key is the stable cross-reference used by the chapter files.
 
 ### C. Dimension-stone optimisation and quarrying
 
-[R15] Elkarmoty, M., Bondua, S., Bruno, R. (2020). Mechanized in-situ determination of joint-related and yield-related rock-mass parameters during dimension stone block extraction. *Resources Policy* 68:101761. DOI 10.1016/j.resourpol.2020.101761.
+[R15] Elkarmoty, M., Bondua, S., Bruno, R. (2020). A 3D brute-force algorithm for the optimum cutting pattern of dimension stone quarries. *Resources Policy* 68:101761. DOI 10.1016/j.resourpol.2020.101761.
 
 [R16] Elkarmoty, M., Colla, C., Gabrielli, E., Kasmaeeyazdi, S., Tinti, F., Bondua, S., Bruno, R. (2017). Mapping and modelling fractures using ground penetrating radar for ornamental stone assessment and recovery optimization: two case studies. *Mining-Geology-Petroleum Engineering Bulletin (Rudarsko-geolosko-naftni zbornik)* 32(4):63-76. DOI 10.17794/rgn.2017.4.7.
 
@@ -150,7 +150,7 @@ key is the stable cross-reference used by the chapter files.
 
 [R60] Gramazio, F., Kohler, M., Eichenhofer, M. (2017). Robotic stone assembly. ETH Zurich, NCCR Digital Fabrication (`gramaziokohler/ashlar`).
 
-[R61] Furrer, F., Wermelinger, M., Yoshida, H., Gramazio, F., Kohler, M., Siegwart, R., Hutter, M. (2017). Autonomous robotic stone stacking with online next-best-object target pose planning. *IEEE ICRA 2017*, pp 2350-2356. DOI 10.1109/ICRA.2017.7989272.
+[R61] Furrer, F., Wermelinger, M., Yoshida, H., Gramazio, F., Kohler, M., Siegwart, R., Hutter, M. (2017). Autonomous robotic stone stacking with online next-best-object target pose planning. *IEEE ICRA 2017*, pp 2350-2356. DOI 10.1109/ICRA.2017.7989273.
 
 [R62] Johns, R.L., Wermelinger, M., Mascaro, R., Jud, D., Gramazio, F., Kohler, M., Chli, M., Hutter, M. (2020). Autonomous dry stone: on-site planning and assembly of stone walls with a robotic excavator. *Construction Robotics* 4:127-140. DOI 10.1007/s41693-020-00037-6.
 

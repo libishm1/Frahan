@@ -660,6 +660,6 @@ work today (`:41`).
 - Umeyama, S. (1991). Least-squares estimation of transformation parameters
   between two point patterns. IEEE Transactions on Pattern Analysis and Machine
   Intelligence 13(4):376-380. DOI 10.1109/34.88573.
-- Wang, Z., Chen, N., Furukawa, Y. (2025). PuzzleFusion++: Auto-agglomerative 3D
+- Wang, Z., Chen, B., Furukawa, Y. (2025). PuzzleFusion++: Auto-agglomerative 3D
   fracture assembly by denoise and verify. International Conference on Learning
   Representations (ICLR). arXiv:2406.00259.
