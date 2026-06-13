@@ -3,16 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Frahan.Surface;
-using Frahan.GH.TwoD;
+using Frahan.Packing.TwoD;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 namespace Frahan.GH.Surface
 {
-    // Must be public: GH_TaskCapableComponent<T> requires T at least as accessible as the component.
+    // Public so the async payload type is at least as accessible as the component.
     public sealed class PackSurfacesResult
     {
         public List<Curve> PackedCurves3D;
@@ -31,37 +32,41 @@ namespace Frahan.GH.Surface
     /// <summary>
     /// Frahan > Surface Packing > Pack Surfaces
     ///
-    /// Packs closed 2D part curves across ONE OR MORE surface charts using the V5.0.6
-    /// freeform nesting solver. All chart boundaries are arranged side-by-side in a
-    /// shared 2D layout, packed simultaneously, then mapped back to their 3D surfaces.
+    /// Packs closed 2D part curves across ONE OR MORE surface charts using the
+    /// deterministic hole-aware nester (Core ContactNfpHoleNester): exact
+    /// no-fit-polygon bottom-left-fill with multi-start, so layouts are
+    /// 0-overlap by construction and reproducible. EACH chart is its own sheet
+    /// (greedy overflow: chart 0 fills first, unplaced parts carry to chart 1,
+    /// and so on); each chart's inner naked edges become sheet holes the parts
+    /// route around. Packed positions are mapped back to their 3D surfaces.
     ///
-    /// Fabrication mode:
-    ///   Full Transform (FT): single transform from the original flat part directly to
-    ///   its 3D surface position. Apply to the original part geometry (before packing).
-    ///   Equivalent to: packing transform composed with the 3D surface placement transform.
+    /// The solver runs on a background task so the canvas never freezes; while a
+    /// new layout computes, the previous result stays visible and live progress
+    /// ticks in the component message. The finished result pops in when ready.
     ///
-    ///   Transforms 3D (T3): transform from the PACKED 2D position to the 3D surface.
+    /// Fabrication outputs:
+    ///   Full Transform (FT): single transform from the original flat part
+    ///   directly to its 3D surface position. Apply to the ORIGINAL part.
+    ///   Transforms 3D (T3): from the PACKED 2D position to the 3D surface.
     ///   Apply to Packed 2D curves.
-    ///
-    /// Max Deviation output:
-    ///   The maximum gap (model units) between the flat part and the curved surface at
-    ///   the four bounding-box corners of the placement.
-    ///
-    /// Part Index output:
-    ///   The 0-based index into the original Parts input list for each packed part.
-    ///   Use with List Item to select the matching original part for Full Transform.
+    ///   Max Deviation: max gap (model units) between the flat part and the
+    ///   curved surface at the four bounding-box corners of the placement.
+    ///   Part Index: 0-based index into the original Parts input per packed part.
     /// </summary>
-    public sealed class PackSurfacesComponent : GH_TaskCapableComponent<PackSurfacesResult>
+    public sealed class PackSurfacesComponent : GH_Component
     {
         public PackSurfacesComponent()
             : base(
                 "Pack Surfaces", "PackSurfs",
-                "Packs 2D shapes across one or more surface charts with freeform nesting. " +
-                "Outputs Full Transform to place original flat parts on the 3D surface without distortion.",
+                "Packs 2D shapes across one or more surface charts with the deterministic hole-aware " +
+                "nester (exact NFP bottom-left-fill, multi-start, 0-overlap), then maps them onto the 3D " +
+                "surfaces. Runs async: the canvas stays live and the result pops in when ready. Outputs " +
+                "Full Transform to place original flat parts on the surface without distortion.",
                 "Frahan", "Surface Packing")
         {
         }
 
+        // GUID unchanged: existing canvases keep finding this component.
         public override Guid ComponentGuid =>
             new Guid("C4A8D2E1-7F3B-4C5D-9A2E-6B8D4F1E3C7A");
 
@@ -71,36 +76,63 @@ namespace Frahan.GH.Surface
 
         protected override void RegisterInputParams(GH_InputParamManager p)
         {
+            // 0..9 kept in their original slots (no reindex) so existing wiring
+            // is preserved; the four V506-only controls are now inert under the
+            // deterministic hole-aware engine and documented as such.
             p.AddGenericParameter("Surface Maps", "Maps",
-                "One or more FrahanSurfaceChart objects from the Surface Chart component.",
+                "One or more FrahanSurfaceChart objects from the Surface Chart component. Each becomes one " +
+                "sheet (greedy overflow chart 0 -> chart 1 -> ...).",
                 GH_ParamAccess.list);
             p.AddCurveParameter("Parts", "P",
                 "Closed planar 2D part curves to pack.",
                 GH_ParamAccess.list);
             p.AddNumberParameter("Spacing", "Gap",
-                "Clearance between parts and chart boundaries.",
+                "Clearance between parts and chart boundaries (model units).",
                 GH_ParamAccess.item, 5.0);
             p.AddNumberParameter("Rotations", "R",
-                "Allowed rotation angles in degrees. Default: 0, 90, 180, 270.",
+                "Allowed rotation angles in degrees. The hole-aware engine uses the COUNT of angles as its " +
+                "uniform base rotation count (default list 0/90/180/270 -> 4) and extends it with " +
+                "contact (edge-alignment) angles. Pass more angles to raise the base count.",
                 GH_ParamAccess.list, 0.0);
             p.AddNumberParameter("Tolerance", "T",
-                "Geometric tolerance for containment and collision checks.",
+                "Geometric tolerance for the 3D barycentric mapping and containment checks.",
                 GH_ParamAccess.item, 0.01);
             p.AddIntegerParameter("Sort Mode", "M",
-                "0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓.",
+                "IGNORED by the hole-aware engine (kept for compatibility). The engine multi-starts over " +
+                "area/max-dim/width/height orders automatically and keeps the best - see MultiStart.",
                 GH_ParamAccess.item, 1);
             p.AddIntegerParameter("Corner Mode", "Cnr",
-                "0 BottomLeft, 1 BottomRight, 2 TopLeft, 3 TopRight.",
+                "IGNORED by the hole-aware engine (kept for compatibility). Placement is always bottom-left-fill.",
                 GH_ParamAccess.item, 0);
             p.AddIntegerParameter("Seed", "Seed",
-                "0 = deterministic. Non-zero changes tie-breaking randomisation.",
+                "IGNORED by the hole-aware engine (kept for compatibility). The engine is deterministic: " +
+                "identical inputs always reproduce the same layout.",
                 GH_ParamAccess.item, 0);
             p.AddIntegerParameter("Max Candidates", "Max",
-                "Candidate budget per part per rotation. 0 = default (300).",
+                "IGNORED by the hole-aware engine (kept for compatibility). The exact NFP enumerates feasible " +
+                "placements directly.",
                 GH_ParamAccess.item, 300);
             p.AddBooleanParameter("Run", "Run",
-                "Set to True to execute packing.",
+                "Set to True to execute packing. False shows the idle message and cancels any running solve.",
                 GH_ParamAccess.item, false);
+            // 10..12 appended (optional): hole-aware engine controls.
+            p.AddIntegerParameter("ContactRotations", "CR",
+                "Longest-edge count per polygon used to build contact (edge-alignment) rotation angles so " +
+                "parts seat flush. Default 6.",
+                GH_ParamAccess.item, 6);
+            p[10].Optional = true;
+            p.AddIntegerParameter("Resolution", "Res",
+                "Solver sampling resolution for smooth part curves (16..200, default 24). This only sets the " +
+                "collision proxy - packed output is always the exact original curve. Solve time grows " +
+                "~quadratically; raise only for tight concave notches.",
+                GH_ParamAccess.item, 24);
+            p[11].Optional = true;
+            p.AddIntegerParameter("MultiStart", "MS",
+                "Deterministic part orders the engine tries per chart, keeping the densest valid layout " +
+                "(1..4, default 4). 1 = single largest-first pass. Higher raises density at ~linear cost and " +
+                "never reduces placements or validity.",
+                GH_ParamAccess.item, 4);
+            p[12].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -121,9 +153,8 @@ namespace Frahan.GH.Surface
                 GH_ParamAccess.list);
             // 3
             p.AddGenericParameter("Full Transform", "FT",
-                "Composed transform: original flat part → 3D surface in one step. " +
-                "Apply to the ORIGINAL part geometry (before packing) using Part Index to select it. " +
-                "Equivalent to: (packing transform) then (surface placement transform).",
+                "Composed transform: original flat part -> 3D surface in one step. " +
+                "Apply to the ORIGINAL part geometry (before packing) using Part Index to select it.",
                 GH_ParamAccess.list);
             // 4
             p.AddNumberParameter("Max Deviation", "Dev",
@@ -153,179 +184,196 @@ namespace Frahan.GH.Surface
                 GH_ParamAccess.item);
         }
 
-        // --- Solve ----------------------------------------------------------
+        // ─── async solve (HoleNest self-trigger pattern) ────────────────────
+        // The solver + 3D mapping run on a background Task so the canvas never
+        // freezes; the PREVIOUS result stays visible while a new one computes,
+        // progress text ticks live, and the finished result pops in via
+        // ScheduleSolution. A self-trigger flag distinguishes MY OWN scheduled
+        // re-solves (emit only) from real GH input changes (rebuild + restart),
+        // and a stable bbox hash prevents redundant recomputes.
+        private readonly object _gate = new object();
+        private Task _task;
+        private CancellationTokenSource _cts;
+        private ulong _taskHash;
+        private volatile string _progress = "";
+        private Payload _readyPayload;
+        private string _readyError;
+        private bool _hasReady;
+        private Payload _last;
+        private volatile bool _selfTrigger;
+
+        private sealed class Snapshot
+        {
+            public List<FrahanSurfaceChart> Charts;
+            public List<IReadOnlyList<(double X, double Y)>> Sheets;
+            public List<double> SheetZ;
+            public List<IReadOnlyList<IReadOnlyList<(double X, double Y)>>> SheetHoles;
+            public List<HoleNestPart> Parts;
+            public List<Curve> Originals;   // duplicated on the UI thread (owned)
+            public List<int> InputIndexOf;
+            public List<double> PartZOf;
+            public double Tolerance, EngineSpacing, MaxDev;
+            public int BaseRotations, ContactRotations, MultiStart;
+            public ulong Hash;
+        }
+
+        private sealed class Payload
+        {
+            public Snapshot Snap;
+            public PackSurfacesResult Result;
+        }
 
         protected override void SolveInstance(IGH_DataAccess da)
         {
-            if (InPreSolve)
+            // ── SELF-TRIGGERED re-solve: emit the latest result, no rebuild ──
+            if (_selfTrigger)
             {
-                var wrappers = new List<GH_ObjectWrapper>();
-                var parts = new List<Curve>();
-                double spacing = 5.0;
-                var rotations = new List<double>();
-                double tolerance = 0.01;
-                int sortVal = 1, cornerVal = 0, seed = 0, maxCand = 300;
-                bool run = false;
-
-                if (!da.GetDataList(0, wrappers) || wrappers.Count == 0)
-                { da.SetData(9, "No Surface Maps connected."); return; }
-                if (!da.GetDataList(1, parts) || parts.Count == 0)
-                { da.SetData(9, "No parts input."); return; }
-
-                da.GetData(2, ref spacing);
-                da.GetDataList(3, rotations);
-                da.GetData(4, ref tolerance);
-                da.GetData(5, ref sortVal);
-                da.GetData(6, ref cornerVal);
-                da.GetData(7, ref seed);
-                da.GetData(8, ref maxCand);
-                da.GetData(9, ref run);
-
-                if (!run) { da.SetData(9, "Run is false."); return; }
-
-                var charts = ExtractCharts(wrappers);
-                if (charts.Count == 0)
-                { da.SetData(9, "No valid FrahanSurfaceChart found in Maps input."); return; }
-
-                if (rotations.Count == 0)
-                    rotations.AddRange(new[] { 0.0, 90.0, 180.0, 270.0 });
-
-                var sortMode = ToSortMode(sortVal);
-                var cornerMode = ToCornerMode(cornerVal);
-                var partsCopy = parts.ConvertAll(c => c?.DuplicateCurve());
-                var rotsCopy = new List<double>(rotations);
-
-                TaskList.Add(Task.Run(() =>
-                    ComputePacking(charts, partsCopy, spacing, rotsCopy,
-                        tolerance, sortMode, cornerMode, seed, maxCand)));
+                _selfTrigger = false;
+                // honor Run even on a self-scheduled re-solve: if Run flipped
+                // false in the +10ms schedule window, clear the canvas rather
+                // than repainting a layout (matches the AsyncScanComponent gate).
+                bool runST = false; da.GetData(9, ref runST);
+                if (!runST) { Message = "idle"; EmitEmpty(da, "Run is false."); return; }
+                Payload sready = null; string serr = null; bool srunning;
+                lock (_gate)
+                {
+                    if (_hasReady)
+                    {
+                        sready = _readyPayload; serr = _readyError;
+                        _readyPayload = null; _readyError = null; _hasReady = false;
+                        if (serr == null && sready != null) _last = sready;
+                    }
+                    srunning = _task != null && !_task.IsCompleted;
+                }
+                if (serr != null)
+                { Message = "error"; AddRuntimeMessage(GH_RuntimeMessageLevel.Error, serr); EmitEmpty(da, serr); return; }
+                if (_last != null) { Message = srunning ? _progress : null; EmitPayload(da, _last, srunning); }
+                else EmitEmpty(da, "Packing in the background — canvas stays live; the result pops in when ready.");
                 return;
             }
 
-            // Post-solve
-            PackSurfacesResult result;
-            if (!GetSolveResults(da, out result))
+            // ── REAL GH expiration: honor Run, then build/cache/restart ──────
+            bool run = false;
+            da.GetData(9, ref run);
+            if (!run)
             {
-                // Synchronous fallback
-                var wrappers2 = new List<GH_ObjectWrapper>();
-                var parts2 = new List<Curve>();
-                double spacing2 = 5.0; var rots2 = new List<double>();
-                double tol2 = 0.01;
-                int sv2 = 1, cv2 = 0, seed2 = 0, mc2 = 300;
-                bool run2 = false;
-
-                if (!da.GetDataList(0, wrappers2) || !da.GetDataList(1, parts2)) return;
-                da.GetData(2, ref spacing2); da.GetDataList(3, rots2);
-                da.GetData(4, ref tol2); da.GetData(5, ref sv2);
-                da.GetData(6, ref cv2); da.GetData(7, ref seed2);
-                da.GetData(8, ref mc2); da.GetData(9, ref run2);
-
-                if (!run2) { da.SetData(9, "Run is false."); return; }
-
-                var charts2 = ExtractCharts(wrappers2);
-                if (rots2.Count == 0) rots2.AddRange(new[] { 0.0, 90.0, 180.0, 270.0 });
-
-                result = ComputePacking(charts2, parts2, spacing2, rots2, tol2,
-                    ToSortMode(sv2), ToCornerMode(cv2), seed2, mc2);
-            }
-
-            if (result == null)
-            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Packing returned null."); return; }
-
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, result.ErrorMessage);
-                da.SetData(9, result.ErrorMessage);
+                lock (_gate) { try { _cts?.Cancel(); } catch { } }
+                Message = "idle";
+                EmitEmpty(da, "Run is false.");
                 return;
             }
 
-            if (result.UnplacedCurves?.Count > 0)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
-                    $"{result.UnplacedCurves.Count} part(s) could not be placed.");
+            var snap = BuildSnapshot(da);
+            if (snap == null) return; // validation error already reported
 
-            da.SetDataList(0, FilterNulls(result.PackedCurves3D));
-            da.SetDataList(1, result.PlacementPlanes ?? new List<Plane>());
-            da.SetDataList(2, result.Transforms3D ?? new List<Transform>());
-            da.SetDataList(3, result.FullTransforms ?? new List<Transform>());
-            da.SetDataList(4, result.MaxDeviations ?? new List<double>());
-            da.SetDataList(5, FilterNulls(result.PackedCurves2D));
-            da.SetDataList(6, result.ChartIndices ?? new List<int>());
-            da.SetDataList(7, result.PartIndices ?? new List<int>());
-            da.SetDataList(8, result.UnplacedCurves ?? new List<Curve>());
-            da.SetData(9, result.Report ?? string.Empty);
+            Payload ready = null; string readyError = null; bool taskRunning; ulong taskHash;
+            lock (_gate)
+            {
+                if (_hasReady)
+                {
+                    ready = _readyPayload; readyError = _readyError;
+                    _readyPayload = null; _readyError = null; _hasReady = false;
+                    if (readyError == null && ready != null) _last = ready;
+                }
+                taskRunning = _task != null && !_task.IsCompleted;
+                taskHash = _taskHash;
+            }
+            if (readyError != null)
+            {
+                Message = "error";
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, readyError);
+                EmitEmpty(da, readyError);
+                return;
+            }
+
+            // a task is already running for these exact inputs: show progress
+            if (taskRunning && taskHash == snap.Hash)
+            {
+                Message = _progress;
+                if (_last != null) EmitPayload(da, _last, true);
+                else EmitEmpty(da, "Packing in the background — canvas stays live; the result pops in when ready.");
+                return;
+            }
+
+            // cache hit: same inputs as the last completed solve -> instant emit
+            if (_last != null && _last.Snap.Hash == snap.Hash && !taskRunning)
+            {
+                Message = null;
+                EmitPayload(da, _last, false);
+                return;
+            }
+
+            // genuinely new inputs -> (re)start the background solve
+            StartCompute(snap);
+            Message = "packing...";
+            if (_last != null) EmitPayload(da, _last, true);
+            else EmitEmpty(da, "Packing in the background — canvas stays live; the result pops in when ready.");
         }
 
-        // --- Worker ---------------------------------------------------------
+        private void StartCompute(Snapshot snap)
+        {
+            var doc = OnPingDocument();
+            var iguid = InstanceGuid;
+            lock (_gate)
+            {
+                try { _cts?.Cancel(); } catch { }
+                _cts = new CancellationTokenSource();
+                var token = _cts.Token;
+                _taskHash = snap.Hash;
+                _progress = $"packing {snap.Parts.Count} parts...";
+                _task = Task.Run(() =>
+                {
+                    PackSurfacesResult result = null; string error = null;
+                    // PROGRESSIVE: every ~300 ms publish progress TEXT only (3D
+                    // mapping is too heavy to redo per tick) and self-trigger a
+                    // cheap emit-only re-solve so the message updates live.
+                    var tick = System.Diagnostics.Stopwatch.StartNew();
+                    Action<HoleNestResult> onPlacement = partial =>
+                    {
+                        if (token.IsCancellationRequested) return;
+                        if (tick.ElapsedMilliseconds < 300) return;
+                        tick.Restart();
+                        _progress = $"packing {partial.PlacedCount}/{snap.Parts.Count}...";
+                        _selfTrigger = true;
+                        try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
+                        catch { }
+                    };
+                    try { result = ComputePacking(snap, onPlacement, token); }
+                    catch (Exception ex) { error = "Surface packing failed: " + ex.Message; }
+                    if (token.IsCancellationRequested) return; // stale job: discard
+                    lock (_gate) { _readyPayload = result == null ? null : new Payload { Snap = snap, Result = result }; _readyError = error; _hasReady = true; }
+                    _selfTrigger = true;
+                    try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
+                    catch { }
+                }, token);
+            }
+        }
+
+        // --- Worker (background thread) -------------------------------------
 
         private static PackSurfacesResult ComputePacking(
-            List<FrahanSurfaceChart> charts,
-            List<Curve> parts,
-            double spacing,
-            List<double> rotationsDeg,
-            double tolerance,
-            PackingSortMode sortMode,
-            PackingCornerMode cornerMode,
-            int seed,
-            int maxCandidates)
+            Snapshot snap, Action<HoleNestResult> onPlacement, CancellationToken token)
         {
-            var result = new PackSurfacesResult();
-            if (charts == null || charts.Count == 0)
-            { result.ErrorMessage = "No charts provided."; return result; }
-
-            // Arrange all chart flat meshes side by side in XY to avoid overlaps.
-            const double chartGap = 20.0;
-            double offsetX = 0;
-
-            var layouts = new List<(Transform toLayout, Transform fromLayout,
-                FrahanSurfaceChart chart)>(charts.Count);
-            var sheetOutlines = new List<Curve>(charts.Count);
-            var sheetHoles = new List<IReadOnlyList<Curve>>(charts.Count);
-
-            foreach (var chart in charts)
+            var result = new PackSurfacesResult
             {
-                if (chart?.FlatOuterBoundary == null || chart.FlatMesh == null) continue;
+                PackedCurves3D = new List<Curve>(),
+                PlacementPlanes = new List<Plane>(),
+                Transforms3D = new List<Transform>(),
+                FullTransforms = new List<Transform>(),
+                MaxDeviations = new List<double>(),
+                PackedCurves2D = new List<Curve>(),
+                ChartIndices = new List<int>(),
+                PartIndices = new List<int>(),
+                UnplacedCurves = new List<Curve>(),
+            };
 
-                var bbox = chart.FlatMesh.GetBoundingBox(true);
-                var shift = new Vector3d(offsetX - bbox.Min.X, -bbox.Min.Y, 0);
-                var toLayout = Transform.Translation(shift);
-                var fromLayout = Transform.Translation(-shift);
-
-                var outerCurve = new PolylineCurve(chart.FlatOuterBoundary);
-                outerCurve.Transform(toLayout);
-                sheetOutlines.Add(outerCurve);
-
-                // Inner holes: naked edges shorter than the outer boundary
-                var holes = new List<Curve>();
-                var naked = chart.FlatMesh.GetNakedEdges();
-                if (naked != null && naked.Length > 1)
-                {
-                    double outerLen = chart.FlatOuterBoundary.Length;
-                    foreach (var pl in naked)
-                    {
-                        if (pl.Length < outerLen - 1e-6)
-                        {
-                            var hc = new PolylineCurve(pl);
-                            hc.Transform(toLayout);
-                            holes.Add(hc);
-                        }
-                    }
-                }
-                sheetHoles.Add(holes);
-                layouts.Add((toLayout, fromLayout, chart));
-                offsetX += bbox.Max.X - bbox.Min.X + chartGap;
-            }
-
-            if (sheetOutlines.Count == 0)
-            { result.ErrorMessage = "No valid chart boundaries found."; return result; }
-
-            // Run freeform packing across all chart sheets simultaneously
-            PackingResult packed;
+            List<HoleNestResult> perSheet;
             try
             {
-                var solver = new IrregularSheetFillV506(
-                    sheetOutlines, sheetHoles,
-                    spacing, rotationsDeg, tolerance,
-                    sortMode, cornerMode, seed, maxCandidates);
-                packed = solver.Pack(parts);
+                perSheet = ContactNfpHoleNester.PackSheets(
+                    snap.Sheets, snap.SheetHoles, snap.Parts,
+                    snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
+                    onPlacement: onPlacement, multiStartOrders: snap.MultiStart);
             }
             catch (Exception ex)
             {
@@ -333,113 +381,258 @@ namespace Frahan.GH.Surface
                 return result;
             }
 
-            int n = packed.PackedCurves.Count;
-            result.PackedCurves3D = new List<Curve>(n);
-            result.PlacementPlanes = new List<Plane>(n);
-            result.Transforms3D = new List<Transform>(n);
-            result.FullTransforms = new List<Transform>(n);
-            result.MaxDeviations = new List<double>(n);
-            result.PackedCurves2D = new List<Curve>(n);
-            result.ChartIndices = new List<int>(n);
-            result.PartIndices = new List<int>(n);
-            int failedMap = 0;
+            int placedCount = 0, failedMap = 0;
+            var placedPart = new bool[snap.Parts.Count];
 
-            for (int i = 0; i < n; i++)
+            for (int si = 0; si < perSheet.Count && si < snap.Charts.Count; si++)
             {
-                int si = i < packed.SheetIndices.Count ? packed.SheetIndices[i] : 0;
-                int partIdx = i < packed.SourceIndices.Count ? packed.SourceIndices[i] : -1;
-
-                if (si < 0 || si >= layouts.Count)
+                var chart = snap.Charts[si];
+                double sheetZ = si < snap.SheetZ.Count ? snap.SheetZ[si] : 0.0;
+                foreach (var pl in perSheet[si].Placements)
                 {
-                    AppendUnset(result, -1, partIdx);
-                    continue;
+                    if (token.IsCancellationRequested) return null;
+                    int prep = pl.PartIndex;
+                    if (prep < 0 || prep >= snap.Originals.Count) continue;
+                    placedCount++;
+                    if (prep < placedPart.Length) placedPart[prep] = true;
+                    int partIdx = prep < snap.InputIndexOf.Count ? snap.InputIndexOf[prep] : -1;
+
+                    // packed-2D curve in the chart's native flat space (Z lifted
+                    // to the flat chart plane so barycentric mapping locates it)
+                    double partZ = prep < snap.PartZOf.Count ? snap.PartZOf[prep] : 0.0;
+                    var packTx = SurfaceHoleNestBridge.PackTransform(pl, sheetZ - partZ);
+                    Curve nativeCurve = snap.Originals[prep] != null ? snap.Originals[prep].DuplicateCurve() : null;
+                    if (nativeCurve != null && !nativeCurve.Transform(packTx)) nativeCurve = null;
+
+                    result.ChartIndices.Add(si);
+                    result.PartIndices.Add(partIdx);
+                    result.PackedCurves2D.Add(nativeCurve);
+
+                    // shape-deformed 3D curve following the surface exactly
+                    var c3D = nativeCurve == null ? null : BarycentricMapper2DTo3D.MapCurveTo3DSurface(
+                        nativeCurve, chart.FlatMesh, chart.SurfaceMesh3D, snap.Tolerance);
+                    result.PackedCurves3D.Add(c3D);
+                    if (c3D == null) failedMap++;
+
+                    // rigid fabrication frame (no shape distortion)
+                    var (plane, tx3D, maxDev) = ComputePlacementFrame(
+                        nativeCurve, chart.FlatMesh, chart.SurfaceMesh3D, snap.Tolerance);
+                    result.PlacementPlanes.Add(plane);
+                    result.Transforms3D.Add(tx3D);
+                    result.MaxDeviations.Add(maxDev);
+
+                    // original flat part -> 3D surface in one step
+                    var fullTx = Transform.Multiply(tx3D, packTx);
+                    result.FullTransforms.Add(fullTx);
                 }
-
-                var (toLayout, fromLayout, chart) = layouts[si];
-                result.ChartIndices.Add(si);
-                result.PartIndices.Add(partIdx);
-
-                // Convert back from layout space to chart-native coordinate space
-                var nativeCurve = packed.PackedCurves[i].DuplicateCurve();
-                nativeCurve.Transform(fromLayout);
-                result.PackedCurves2D.Add(nativeCurve);
-
-                // Full barycentric 3D curve (shape-deformed, follows surface exactly)
-                var c3D = BarycentricMapper2DTo3D.MapCurveTo3DSurface(
-                    nativeCurve, chart.FlatMesh, chart.SurfaceMesh3D, tolerance);
-                result.PackedCurves3D.Add(c3D);
-                if (c3D == null) failedMap++;
-
-                // Fabrication frame: centroid + tangent axes, NO shape distortion
-                var (plane, tx, maxDev) = ComputePlacementFrame(
-                    nativeCurve, chart.FlatMesh, chart.SurfaceMesh3D, tolerance);
-                result.PlacementPlanes.Add(plane);
-                result.Transforms3D.Add(tx);
-                result.MaxDeviations.Add(maxDev);
-
-                // Full transform: original flat part → 3D surface in one step.
-                // packed.Transforms[i] moves the original part to its packed 2D position.
-                // tx (Transforms3D) moves from packed 2D position to the 3D surface frame.
-                // Composition: apply pack transform first, then surface transform.
-                Transform packTx = i < packed.Transforms.Count
-                    ? packed.Transforms[i]
-                    : Transform.Identity;
-                // Also undo the layout offset that was applied during packing:
-                // the solver packed into layout space, so packTx includes the layout shift.
-                // We compose: fromLayout (undo layout shift) then tx (surface placement).
-                // Net full transform = tx * fromLayout * packTx
-                var fullTx = Transform.Multiply(tx, Transform.Multiply(fromLayout, packTx));
-                result.FullTransforms.Add(fullTx);
             }
 
-            result.UnplacedCurves = new List<Curve>(packed.UnplacedCurves);
+            for (int prep = 0; prep < snap.Parts.Count; prep++)
+                if (!placedPart[prep] && prep < snap.Originals.Count && snap.Originals[prep] != null)
+                    result.UnplacedCurves.Add(snap.Originals[prep]);
 
             var sb = new StringBuilder();
-            sb.AppendLine(packed.Report);
-            sb.AppendLine($"Charts used: {sheetOutlines.Count}.");
+            sb.AppendLine($"Pack Surfaces (hole-aware) — Placed: {placedCount}/{snap.Parts.Count} across {perSheet.Count} chart(s).");
+            for (int si = 0; si < perSheet.Count; si++)
+                sb.AppendLine($"  chart {si}: {perSheet[si].Placements.Count} placed, valid {perSheet[si].Valid}, {perSheet[si].ElapsedMs:0.0} ms.");
+            if (snap.MaxDev > 0)
+                sb.AppendLine($"Proxy-deviation compensation: +{2.0 * snap.MaxDev:0.####} units on spacing.");
             if (failedMap > 0)
-                sb.AppendLine(
-                    $"WARNING: {failedMap} 3D mapping(s) failed (part crosses UV seam).");
+                sb.AppendLine($"WARNING: {failedMap} 3D mapping(s) failed (part crosses a UV seam).");
             result.Report = sb.ToString().TrimEnd();
             return result;
         }
 
-        // --- Placement frame ------------------------------------------------
+        // --- Snapshot build (UI thread) -------------------------------------
+
+        private Snapshot BuildSnapshot(IGH_DataAccess da)
+        {
+            var wrappers = new List<GH_ObjectWrapper>();
+            var partCurves = new List<Curve>();
+            double spacing = 5.0;
+            var rotations = new List<double>();
+            double tolerance = 0.01;
+            int contactRotations = 6, resolution = 24, multiStart = 4;
+
+            if (!da.GetDataList(0, wrappers) || wrappers.Count == 0)
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No Surface Maps connected."); return null; }
+            if (!da.GetDataList(1, partCurves) || partCurves.Count == 0)
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No parts input."); return null; }
+            da.GetData(2, ref spacing);
+            da.GetDataList(3, rotations);
+            da.GetData(4, ref tolerance);
+            // 5..8 (Sort/Corner/Seed/MaxCandidates) intentionally not read: inert.
+            da.GetData(10, ref contactRotations);
+            da.GetData(11, ref resolution);
+            da.GetData(12, ref multiStart);
+
+            spacing = Math.Max(0.0, spacing);
+            tolerance = Math.Max(1e-9, tolerance);
+            int baseRotations = Math.Max(1, rotations.Count);
+            contactRotations = Math.Max(0, contactRotations);
+            resolution = Math.Max(16, Math.Min(SurfaceHoleNestBridge.MaxVerts, resolution));
+            multiStart = Math.Max(1, multiStart);
+
+            var charts = new List<FrahanSurfaceChart>();
+            foreach (var w in wrappers)
+                if (w?.Value is FrahanSurfaceChart c && c.FlatOuterBoundary != null && c.FlatMesh != null)
+                    charts.Add(c);
+            if (charts.Count == 0)
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No valid FrahanSurfaceChart found in Maps input."); return null; }
+
+            // each chart -> one sheet (native flat space) + its inner-edge holes
+            var sheets = new List<IReadOnlyList<(double X, double Y)>>(charts.Count);
+            var sheetZ = new List<double>(charts.Count);
+            var sheetHoles = new List<IReadOnlyList<IReadOnlyList<(double X, double Y)>>>(charts.Count);
+            double sheetDev = 0.0;
+            var keptCharts = new List<FrahanSurfaceChart>(charts.Count);
+            foreach (var chart in charts)
+            {
+                var outerCurve = new PolylineCurve(chart.FlatOuterBoundary);
+                var sr = SurfaceHoleNestBridge.CurveToLoop(outerCurve, SurfaceHoleNestBridge.SheetSampleVerts);
+                if (sr.Loop == null) continue;
+                var holes = new List<IReadOnlyList<(double X, double Y)>>();
+                var naked = chart.FlatMesh.GetNakedEdges();
+                if (naked != null && naked.Length > 1)
+                {
+                    double outerLen = chart.FlatOuterBoundary.Length;
+                    foreach (var nk in naked)
+                    {
+                        if (nk.Length >= outerLen - 1e-6) continue; // the outer boundary itself
+                        var hr = SurfaceHoleNestBridge.CurveToLoop(new PolylineCurve(nk), SurfaceHoleNestBridge.SheetSampleVerts);
+                        if (hr.Loop != null) { holes.Add(hr.Loop); if (hr.MaxDev > sheetDev) sheetDev = hr.MaxDev; }
+                    }
+                }
+                sheets.Add(sr.Loop); sheetZ.Add(sr.PlaneZ); sheetHoles.Add(holes);
+                if (sr.MaxDev > sheetDev) sheetDev = sr.MaxDev;
+                keptCharts.Add(chart);
+            }
+            if (sheets.Count == 0)
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No valid chart boundaries found."); return null; }
+
+            // parts -> HoleNestParts (outer only; surface parts carry no holes)
+            var parts = new List<HoleNestPart>();
+            var originals = new List<Curve>();
+            var inputIndexOf = new List<int>();
+            var partZOf = new List<double>();
+            double partDev = 0.0;
+            int droppedParts = 0;
+            for (int i = 0; i < partCurves.Count; i++)
+            {
+                var pr = SurfaceHoleNestBridge.CurveToLoop(partCurves[i], resolution);
+                if (pr.Loop == null) { droppedParts++; continue; }
+                if (pr.MaxDev > partDev) partDev = pr.MaxDev;
+                parts.Add(new HoleNestPart { Outer = pr.Loop });
+                originals.Add(partCurves[i] != null ? partCurves[i].DuplicateCurve() : null);
+                inputIndexOf.Add(i);
+                partZOf.Add(pr.PlaneZ);
+            }
+            if (droppedParts > 0)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                    $"{droppedParts} part curve(s) ignored (must be closed and WorldXY-parallel).");
+            if (parts.Count == 0)
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No valid part curves."); return null; }
+
+            // proxy-deviation compensation (mirrors HoleNest): part-pair clearance
+            // needs 2x the worst part deviation, the sheet term enters once.
+            double maxDev = Math.Max(partDev, sheetDev);
+            double engineSpacing = spacing + 2.0 * partDev + sheetDev;
+
+            // stable, sampling-free input hash for the async loop-guard
+            ulong h = 1469598103934665603UL;
+            void HD(double v) { unchecked { h ^= (ulong)BitConverter.DoubleToInt64Bits(v); h *= 1099511628211UL; } }
+            void HQ(double v) { HD(Math.Round(v * 1e4) / 1e4); }
+            void HBox(Curve c)
+            {
+                if (c == null) { HD(-7.0); return; }
+                var b = c.GetBoundingBox(false);
+                HQ(b.Min.X); HQ(b.Min.Y); HQ(b.Min.Z); HQ(b.Max.X); HQ(b.Max.Y); HQ(b.Max.Z);
+                HD(c.SpanCount);
+            }
+            HQ(spacing); HD(baseRotations); HD(contactRotations); HD(resolution); HD(multiStart); HQ(tolerance);
+            HD(keptCharts.Count);
+            foreach (var chart in keptCharts)
+            {
+                HBox(new PolylineCurve(chart.FlatOuterBoundary));
+                HD(chart.FlatMesh != null ? chart.FlatMesh.Vertices.Count : -1);
+                HD(chart.SurfaceMesh3D != null ? chart.SurfaceMesh3D.Vertices.Count : -1);
+            }
+            HD(partCurves.Count);
+            foreach (var c in partCurves) HBox(c);
+
+            return new Snapshot
+            {
+                Charts = keptCharts, Sheets = sheets, SheetZ = sheetZ, SheetHoles = sheetHoles,
+                Parts = parts, Originals = originals, InputIndexOf = inputIndexOf, PartZOf = partZOf,
+                Tolerance = tolerance, EngineSpacing = engineSpacing, MaxDev = maxDev,
+                BaseRotations = baseRotations, ContactRotations = contactRotations, MultiStart = multiStart,
+                Hash = h,
+            };
+        }
+
+        // --- Emit -----------------------------------------------------------
+
+        private void EmitPayload(IGH_DataAccess da, Payload payload, bool stale)
+        {
+            var r = payload.Result;
+            if (r == null) { EmitEmpty(da, "No result."); return; }
+            if (!string.IsNullOrWhiteSpace(r.ErrorMessage))
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, r.ErrorMessage); EmitEmpty(da, r.ErrorMessage); return; }
+
+            if (!stale && r.UnplacedCurves?.Count > 0)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"{r.UnplacedCurves.Count} part(s) could not be placed.");
+
+            da.SetDataList(0, FilterNulls(r.PackedCurves3D));
+            da.SetDataList(1, r.PlacementPlanes ?? new List<Plane>());
+            da.SetDataList(2, r.Transforms3D ?? new List<Transform>());
+            da.SetDataList(3, r.FullTransforms ?? new List<Transform>());
+            da.SetDataList(4, r.MaxDeviations ?? new List<double>());
+            da.SetDataList(5, FilterNulls(r.PackedCurves2D));
+            da.SetDataList(6, r.ChartIndices ?? new List<int>());
+            da.SetDataList(7, r.PartIndices ?? new List<int>());
+            da.SetDataList(8, r.UnplacedCurves ?? new List<Curve>());
+            da.SetData(9, (stale ? "[updating...] " : "") + (r.Report ?? string.Empty));
+        }
+
+        private void EmitEmpty(IGH_DataAccess da, string message)
+        {
+            da.SetDataList(0, new List<Curve>());
+            da.SetDataList(1, new List<Plane>());
+            da.SetDataList(2, new List<Transform>());
+            da.SetDataList(3, new List<Transform>());
+            da.SetDataList(4, new List<double>());
+            da.SetDataList(5, new List<Curve>());
+            da.SetDataList(6, new List<int>());
+            da.SetDataList(7, new List<int>());
+            da.SetDataList(8, new List<Curve>());
+            da.SetData(9, message);
+        }
+
+        // --- Placement frame (unchanged math; operates on the native packed curve) ---
 
         private static (Plane plane3D, Transform transform3D, double maxDeviation)
-            ComputePlacementFrame(
-                Curve nativeCurve2D,
-                Mesh flatMesh,
-                Mesh surfaceMesh,
-                double tolerance)
+            ComputePlacementFrame(Curve nativeCurve2D, Mesh flatMesh, Mesh surfaceMesh, double tolerance)
         {
             if (nativeCurve2D == null)
                 return (Plane.Unset, Transform.Unset, 0);
 
             var bbox = nativeCurve2D.GetBoundingBox(Plane.WorldXY);
-            var center2D = bbox.Center;
-            center2D.Z = 0;
+            var center2D = bbox.Center; center2D.Z = 0;
 
             double w = bbox.Max.X - bbox.Min.X;
-            double h = bbox.Max.Y - bbox.Min.Y;
-            double step = Math.Max(tolerance * 10.0, Math.Min(w, h) * 0.1);
+            double hh = bbox.Max.Y - bbox.Min.Y;
+            double step = Math.Max(tolerance * 10.0, Math.Min(w, hh) * 0.1);
             if (step < 1e-8) step = 1.0;
 
-            var origin3D = BarycentricMapper2DTo3D.MapPoint(
-                center2D, flatMesh, surfaceMesh, tolerance);
+            var origin3D = BarycentricMapper2DTo3D.MapPoint(center2D, flatMesh, surfaceMesh, tolerance);
             if (origin3D == Point3d.Unset)
                 return (Plane.Unset, Transform.Unset, 0);
 
-            var xSample3D = BarycentricMapper2DTo3D.MapPoint(
-                center2D + new Vector3d(step, 0, 0), flatMesh, surfaceMesh, tolerance);
-            var ySample3D = BarycentricMapper2DTo3D.MapPoint(
-                center2D + new Vector3d(0, step, 0), flatMesh, surfaceMesh, tolerance);
+            var xSample3D = BarycentricMapper2DTo3D.MapPoint(center2D + new Vector3d(step, 0, 0), flatMesh, surfaceMesh, tolerance);
+            var ySample3D = BarycentricMapper2DTo3D.MapPoint(center2D + new Vector3d(0, step, 0), flatMesh, surfaceMesh, tolerance);
 
-            var xAxis = xSample3D != Point3d.Unset
-                ? xSample3D - origin3D : new Vector3d(1, 0, 0);
-            var yAxis = ySample3D != Point3d.Unset
-                ? ySample3D - origin3D : new Vector3d(0, 1, 0);
-
+            var xAxis = xSample3D != Point3d.Unset ? xSample3D - origin3D : new Vector3d(1, 0, 0);
+            var yAxis = ySample3D != Point3d.Unset ? ySample3D - origin3D : new Vector3d(0, 1, 0);
             if (!xAxis.Unitize()) xAxis = Vector3d.XAxis;
 
             var zAxis = Vector3d.CrossProduct(xAxis, yAxis);
@@ -462,58 +655,20 @@ namespace Frahan.GH.Surface
             double maxDev = 0;
             foreach (var corner in corners2D)
             {
-                var corner3D = BarycentricMapper2DTo3D.MapPoint(
-                    corner, flatMesh, surfaceMesh, tolerance);
+                var corner3D = BarycentricMapper2DTo3D.MapPoint(corner, flatMesh, surfaceMesh, tolerance);
                 if (corner3D == Point3d.Unset) continue;
                 double dev = Math.Abs(plane3D.DistanceTo(corner3D));
                 if (dev > maxDev) maxDev = dev;
             }
-
             return (plane3D, transform3D, maxDev);
-        }
-
-        // --- Helpers --------------------------------------------------------
-
-        private static List<FrahanSurfaceChart> ExtractCharts(List<GH_ObjectWrapper> wrappers)
-        {
-            var charts = new List<FrahanSurfaceChart>(wrappers.Count);
-            foreach (var w in wrappers)
-                if (w?.Value is FrahanSurfaceChart c) charts.Add(c);
-            return charts;
-        }
-
-        private static void AppendUnset(PackSurfacesResult r, int chartIdx, int partIdx)
-        {
-            r.PackedCurves3D.Add(null);
-            r.PlacementPlanes.Add(Plane.Unset);
-            r.Transforms3D.Add(Transform.Unset);
-            r.FullTransforms.Add(Transform.Unset);
-            r.MaxDeviations.Add(0);
-            r.PackedCurves2D.Add(null);
-            r.ChartIndices.Add(chartIdx);
-            r.PartIndices.Add(partIdx);
         }
 
         private static List<Curve> FilterNulls(List<Curve> src)
         {
             if (src == null) return new List<Curve>();
-            var out_ = new List<Curve>(src.Count);
-            foreach (var c in src) if (c != null) out_.Add(c);
-            return out_;
-        }
-
-        private PackingSortMode ToSortMode(int v)
-        {
-            if (Enum.IsDefined(typeof(PackingSortMode), v)) return (PackingSortMode)v;
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Invalid sort mode.");
-            return PackingSortMode.AreaDescending;
-        }
-
-        private PackingCornerMode ToCornerMode(int v)
-        {
-            if (Enum.IsDefined(typeof(PackingCornerMode), v)) return (PackingCornerMode)v;
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Invalid corner mode.");
-            return PackingCornerMode.BottomLeft;
+            var outc = new List<Curve>(src.Count);
+            foreach (var c in src) if (c != null) outc.Add(c);
+            return outc;
         }
     }
 }
