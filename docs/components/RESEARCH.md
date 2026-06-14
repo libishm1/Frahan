@@ -66,7 +66,7 @@ Flag: RecoveryCascade is Core-validated but has no Grasshopper consumer; the shi
 - Apples-to-apples k=24 PCA normals on the 7,858,334-point Tongjiang quarry-face cloud: ~10.2 s, about 1.4x faster than Open3D's KD-tree (14.8 s) at the same neighbourhood; whole discontinuity pipeline ~14.7 s (`native/discontinuity_worker/README.md`, lines 20-25). CloudCompare's octree at radius 0.5 m took 2127 s, but that radius spans thousands of neighbours per point on this 8 mm cloud, a much larger neighbourhood than k=24, so it is a scale reference, not a like-for-like speedup. Any earlier "215x / 265x vs CloudCompare" framing is retracted.
 - Live validation on Tongjiang `detail_cloudXB.ply` (7,858,334 points): 4 joint sets (dip 19/79/72/84, spacing 0.25/0.23/0.67/1.11 m), Jv = 7.20 joints/m3, RQD = 92, Vb = 0.352 m3, Deq = 0.71 m (`docs/validation/discontinuity_ingest_card/VALIDATION_REPORT.md`). Shipped components: Discontinuity Sets (Async) GUID D5F10048, Discontinuity Ingest D5F10049, Stereonet + Block Size D5F1004A.
 
-This area is implemented, benchmarked, and live-validated, but is not yet written into the thesis chapter prose; the worker README and validation report are the authoritative sources.
+This area is implemented, benchmarked, live-validated, and written up in thesis chapter 03b (`docs/thesis/chapters/03b_discontinuity-dfn.md`); the worker README and validation report are the primary sources.
 
 ### (e) GPR fracture mapping
 

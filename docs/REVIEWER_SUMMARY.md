@@ -47,8 +47,6 @@ university or company product. Author: Libish Murugesan (ORCID 0009-0004-3238-42
   (54-interface wall 5.4 s, 147-interface 86 s). Roadmap high priority.
 - RecoveryCascade is Core-validated but has no Grasshopper consumer; the shipped
   FractureBlockPack runs a separate recovery engine (silent-disagreement risk).
-- The point-cloud discontinuity / DFN subsystem is implemented, benchmarked, and live-validated
-  but not yet written into the thesis prose (sourced from the worker README + validation report).
 - Discontinuity worker speedup is ~1.4x vs Open3D KD-tree at matched k=24 (NOT the retracted
   "215x vs CloudCompare", which compared different neighbourhoods - see `RESEARCH.md`).
 - Kintsugi: the pure-C# diffusion denoiser drifts ~3-5% from libtorch kernels; it is the only

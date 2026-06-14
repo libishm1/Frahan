@@ -145,7 +145,7 @@ key is the stable cross-reference used by the chapter files.
 
 [R56] Panara, Y. et al. (2024). GeoCrack and GeoFractNet: a CNN for automated rock-fracture digitisation (mIoU 0.91, MIT licensed).
 
-[R162] Tian, W. (2025). Multi-model discrete fracture network generation (Baecher, Veneziano, Levy-Lee, Priest joint generators). *Computers and Geotechnics*. (Cited as quarry improvement I13, proposed not yet built; `BlockCutOpt/README.md:197`.)
+[R162] Tian, W. (2025). Multi-model discrete fracture network generation (Baecher, Veneziano, Levy-Lee, Priest joint generators). *Computers and Geotechnics*. (Basis for the stochastic finite-disc DFN now built as Stochastic DFN (Baecher) D5F1004C; see chapter 03b.)
 
 ### F. Masonry assembly, stability, and rigid-block analysis
 
