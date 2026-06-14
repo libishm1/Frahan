@@ -6,28 +6,32 @@ consistency before the public release. Method: deterministic pre-compute of ever
 every concept that appears as more than one type. READ-ONLY audit; the verdicts are below.
 Style: short sentences, no em dashes.
 
-Corpus: 187 components, 2028 ports, 0 custom GH types, 115 Generic ports, 40 concepts that
-appear as more than one GH type.
+> **UPDATE 2026-06-15: the one defect is FIXED.** The 14 `transform` output ports were retyped
+> Generic -> Transform (commit `0a29468`), build + battery green, and the bundled `.gha` rebuilt.
+> No bundled example wires those ports (verified live), so nothing broke. The numbers below are
+> refreshed: Generic 115 -> 101, Transform 29 -> 43, multi-type concepts 40 -> 39, defects 0.
+
+Corpus: 187 components, 2028 ports, 0 custom GH types, **101** Generic ports, **39** concepts that
+appear as more than one GH type (was 115 / 40 before the transform fix).
 
 ## TL;DR
 
-The type system is clean. Of the 40 multi-type concepts, 39 are correctly typed and exactly
-**1 is a genuine defect**: the `transform` concept is `Generic` on 12 output ports where the
-plugin already uses `Transform` (29 ports) for the identical concept. Everything else is a
-name collision (one English word, two genuinely different concepts, each correctly typed) or
-a deliberate DTO-vs-geometry split. No conversion is forced anywhere except the `transform`
-case, and even there a downstream `Transform` input auto-casts, so it is a UX/affordance
-defect (grey port, no type-cast affordance) not a correctness bug.
+The type system is clean. Of the 40 multi-type concepts audited, 39 were correctly typed and
+exactly **1 was a genuine defect**: the `transform` concept was `Generic` on 12 output ports
+(+ `Transforms 3D` and `Full Transform`, 14 in all) where the plugin already used `Transform`
+for the identical concept. **That defect is now fixed** (all 14 retyped to `Transform`).
+Everything else is a name collision (one English word, two genuinely different concepts, each
+correctly typed) or a deliberate DTO-vs-geometry split. No conversion is forced anywhere.
 
 The brief expected several big problems (report Generic->Text across ~86 ports, stone/slab/block
 geometry mis-typed, enums Integer-vs-Text). The source refutes all three. They are documented
 below so the reader sees they were checked and dismissed.
 
-Type frequency (2028 ports): Number 580, Integer 410, Text 253, Mesh 169, Boolean 161,
-Curve 142, Generic 115, Point 63, Plane 30, Transform 29, Box 28, Vector 21, Geometry 15,
-Brep 3, Surface 1.
+Type frequency (2028 ports, after the fix): Number 580, Integer 410, Text 253, Mesh 169,
+Boolean 161, Curve 142, Generic 101, Point 63, Transform 43, Plane 30, Box 28, Vector 21,
+Geometry 15, Brep 3, Surface 1.
 
-## The one defect: `transform` should be `Transform`, not `Generic` (12 ports)
+## The one defect (FIXED 2026-06-15): `transform` should be `Transform`, not `Generic` (14 ports)
 
 12 output ports emit a per-element rigid placement transform but register as
 `AddGenericParameter`. The same plugin already establishes `Transform` as canonical for this
@@ -84,12 +88,12 @@ break. After release, it belongs in v0.2 with a migration note ("Transforms outp
   Optimizer Cut Planes port belongs to the 8-sibling FracturePlane family; retyping would split
   it from its siblings and degrade a typed cutting DTO to a bare plane.
 
-## The 115 Generic ports
+## The Generic ports (115 -> 101 after the fix)
 
 | Disposition | Count | Detail |
 |---|---|---|
-| Should become `Transform` | 12 | the defect above (the only wrongly-typed Generic ports) |
-| Legitimately Generic (typed DTO carriers) | 103 | correct; carry Core/Masonry DTO records with no IGH_Goo wrapper |
+| Retyped Generic -> `Transform` | 14 | DONE (commit 0a29468): the 12 `Transforms` ports + `Transforms 3D` + `Full Transform` |
+| Legitimately Generic (typed DTO carriers) | 101 | correct; carry Core/Masonry DTO records with no IGH_Goo wrapper |
 
 The 103 are Slab / MasonryBlock / QuarryBlock DTOs, AshlarPackResult DTOs, inventory container
 DTOs, the FracturePlane family, the FrahanReport input, and the GprRadargram object. Typing any

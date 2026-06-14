@@ -52,7 +52,7 @@ Source of truth = the component source; regenerate after any component change.
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to source curves. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to source curves. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
 | Sheet Preview (`B`) | Curve | item | Preview rectangle for the sheet. |
 | Used Length (`L`) | Number | item | Used sheet length. |
@@ -86,7 +86,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to each source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -120,7 +120,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to each source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -156,7 +156,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to source curves. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to source curves. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve and transform. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -194,7 +194,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to source curves. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to source curves. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
 | Sheet Preview (`B`) | Curve | item | Preview rectangle for the sheet. |
 | NFP Preview (`N`) | Curve | list | Diagnostic no-fit regions used during placement. Capped to keep Grasshopper responsive. |
@@ -268,7 +268,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to each source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -305,7 +305,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to each source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -339,7 +339,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms applied to each source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -371,7 +371,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Generic | list | Placement transforms per source curve. |
+| Transforms (`X`) | Transform | list | Placement transforms per source curve. |
 | Source Indices (`Src`) | Integer | list | Original input index for each packed curve. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index for each packed curve. |
 | Unplaced (`U`) | Curve | list | Curves that could not be placed. |
@@ -930,7 +930,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Placed (`P`) | Curve | list | Shard contours transformed by their solved placements. Frame is included as Identity. |
-| Transforms (`X`) | Generic | list | Per-panel rigid transform. |
+| Transforms (`X`) | Transform | list | Per-panel rigid transform. |
 | Ids (`Id`) | Text | list | Panel ids matching the Placed and Transforms order. |
 | Modes (`Md`) | Text | list | Per-panel mode: Planar2D or Spatial3D. |
 | Planarity RMS (`Rm`) | Number | list | Per-panel best-fit plane RMS (mm). |
@@ -4203,8 +4203,8 @@ Related:
 |---|---|---|---|
 | Packed 3D (`C3`) | Curve | list | Packed curves lifted to the 3D surface via barycentric mapping (shape follows surface). |
 | Placement Planes (`Pl`) | Plane | list | Rigid placement frame on the 3D surface per packed part.  Origin = centroid on surface, X/Y = surface tangent axes, Z = surface normal. |
-| Transforms 3D (`T3`) | Generic | list | Transform from PACKED 2D position to the 3D surface placement frame.  Apply to Packed 2D curves to get rigid (non-deformed) parts on the surface. |
-| Full Transform (`FT`) | Generic | list | Composed transform: original flat part -> 3D surface in one step.  Apply to the ORIGINAL part geometry (before packing) using Part Index to select it. |
+| Transforms 3D (`T3`) | Transform | list | Transform from PACKED 2D position to the 3D surface placement frame.  Apply to Packed 2D curves to get rigid (non-deformed) parts on the surface. |
+| Full Transform (`FT`) | Transform | list | Composed transform: original flat part -> 3D surface in one step.  Apply to the ORIGINAL part geometry (before packing) using Part Index to select it. |
 | Max Deviation (`Dev`) | Number | list | Maximum gap (model units) between the flat part and the curved surface  at the four bounding-box corners. Small = nearly flat. Large = needs shimming. |
 | Packed 2D (`C2`) | Curve | list | Packed curves in each chart's native coordinate space. |
 | Chart Index (`CI`) | Integer | list | Which Surface Map (0-based) each packed part was placed on. |
@@ -4314,7 +4314,7 @@ Related:
 | out | type | access | description |
 |---|---|---|---|
 | Placed Pieces (`C`) | Curve | list | Shard contours transformed into their solved placements.  Sheet outlines are not included (they are the identity frame). |
-| Transforms (`X`) | Generic | list | Per-piece rigid transform. |
+| Transforms (`X`) | Transform | list | Per-piece rigid transform. |
 | Source Indices (`Src`) | Integer | list | Original Parts list index for each placed piece. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet list index this piece was placed onto. |
 | Unplaced (`U`) | Curve | list | Source-curve copies of parts that did not find a match on any sheet. |
@@ -4352,7 +4352,7 @@ Related:
 |---|---|---|---|
 | Trencadís Pieces (`C`) | Curve | list | Final shard curves after trim + grout. Use these for  downstream rendering / fabrication. |
 | Pre-Trim Pieces (`C0`) | Curve | list | Placed shards BEFORE the trim post-pass. Useful for  debugging which piece chipped which. |
-| Transforms (`X`) | Generic | list | Placement transforms (per source curve). |
+| Transforms (`X`) | Transform | list | Placement transforms (per source curve). |
 | Source Indices (`Src`) | Integer | list | Original input curve index for each placed shard. |
 | Sheet Indices (`Sh`) | Integer | list | Sheet index used for each placed shard. |
 | Trim Adjacency (`Ta`) | Integer | tree | DataTree per shard: branch i lists the SOURCE indices of  earlier-placed shards that chipped Trencadís Pieces[i]. |

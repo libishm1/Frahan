@@ -8,10 +8,10 @@
 - Mesh: 169
 - Boolean: 161
 - Curve: 142
-- Generic: 115
+- Generic: 101
 - Point: 63
+- Transform: 43
 - Plane: 30
-- Transform: 29
 - Box: 28
 - Vector: 21
 - Geometry: 15
@@ -21,7 +21,7 @@
 - Interval: 1
 - Surface: 1
 
-## Concepts that appear as MORE THAN ONE type (40)
+## Concepts that appear as MORE THAN ONE type (39)
 
 These are the canonical-type inconsistency candidates: the same named port modelled as different GH types across components.
 
@@ -128,39 +128,6 @@ These are the canonical-type inconsistency candidates: the same named port model
 - Text     out  Arch Voussoirs :: Report
 - Text     out  Pendentive Vault Voussoirs :: Report
 - Generic  in   Frahan Report / Export :: Reports
-
-### `transform` -> Generic, Transform  (31 ports)
-- Generic  out  2D Bottom Left Pack :: Transforms
-- Generic  out  2D Freeform Sheet Pack :: Transforms
-- Generic  out  2D Freeform Sheet Pack V3 :: Transforms
-- Generic  out  2D Irregular Sheet Pack :: Transforms
-- Generic  out  2D NFP Pack :: Transforms
-- Generic  out  Frahan Sheet Pack (Unified Async) :: Transforms
-- Generic  out  Frahan Sheet Pack (Unified) :: Transforms
-- Generic  out  Freeform Sheet Nest :: Transforms
-- Generic  out  Freeform Sheet Nest (Exact NFP) :: Transforms
-- Generic  out  EdgeMatch Solve :: Transforms
-- Generic  out  Frahan Trencadís EdgeMatch :: Transforms
-- Generic  out  Frahan Trencadís Pack :: Transforms
-- Transform out  Sheet Nest (Hole-Aware) :: Transform
-- Transform out  Pack3D Irregular :: Transforms
-- Transform out  Pack3D Irregular Container :: Transforms
-- Transform out  Pack3D Mesh Heightmap :: Transforms
-- Transform out  Settle 3D (Physics) :: Transforms
-- Transform in   Validate Packed Transform :: Transforms
-- Transform out  Block Pair Match 3D :: Transforms
-- Transform out  Contact Settle :: Transforms
-- Transform out  Frahan Kintsugi :: Transforms
-- Transform out  Block Ground Transforms :: Transforms
-- Transform out  Block Pack (Tree) :: Transforms
-- Transform out  Match Block Transform :: Transforms
-- Transform out  Cloud ICP :: Transform
-- Transform out  Georeference :: Transform
-- Transform out  Georeference (Align by Points) :: Transform
-- Transform out  Marker Registration :: Transform
-- Transform out  Move to Origin :: Transform
-- Transform out  Frahan Trencadís Pipeline :: Transforms
-- Transform out  Voussoir Pack Into Block :: Transforms
 
 ### `seed` -> Integer, Point  (30 ports)
 - Integer  in   2D Bottom Left Pack :: Seed
@@ -425,17 +392,8 @@ These are the canonical-type inconsistency candidates: the same named port model
 - Integer  in   Carving Stages :: Stages
 - Mesh     out  Carving Stages :: Stages
 
-## Generic / untyped ports (115)
+## Generic / untyped ports (101)
 
-- out 2D Bottom Left Pack :: Transforms (X) - Placement transforms applied to source curves.
-- out 2D Freeform Sheet Pack :: Transforms (X) - Placement transforms applied to each source curve.
-- out 2D Freeform Sheet Pack V3 :: Transforms (X) - Placement transforms applied to each source curve.
-- out 2D Irregular Sheet Pack :: Transforms (X) - Placement transforms applied to source curves.
-- out 2D NFP Pack :: Transforms (X) - Placement transforms applied to source curves.
-- out Frahan Sheet Pack (Unified Async) :: Transforms (X) - Placement transforms applied to each source curve.
-- out Frahan Sheet Pack (Unified) :: Transforms (X) - Placement transforms applied to each source curve.
-- out Freeform Sheet Nest :: Transforms (X) - Placement transforms applied to each source curve.
-- out Freeform Sheet Nest (Exact NFP) :: Transforms (X) - Placement transforms per source curve.
 - out Frahan Stone Descriptor :: Descriptors (D) - StoneDescriptor per stone (opaque).
 - out Pack3D Irregular :: Pack Result (PR) - Opaque PackResult for downstream Frahan Packing Report.
 - out Pack3D Irregular Container :: Pack Result (PR) - Opaque PackResult for downstream Frahan Packing Report.
@@ -445,7 +403,6 @@ These are the canonical-type inconsistency candidates: the same named port model
 - in  Frahan Fragment Edge Match :: Index (I) - Populated BoundaryRailIndex<BoundaryIntervalInfo> from Frahan Boundary Rail Inde
 - out EdgeMatch Options :: Options (O) - AssemblyOptions DTO bundling the advanced EdgeMatch flags. Wire  into EdgeMatch 
 - in  EdgeMatch Solve :: Options (Opt) - Optional AssemblyOptions DTO from EdgeMatch Options. When wired,  its advanced f
-- out EdgeMatch Solve :: Transforms (X) - Per-panel rigid transform.
 - out Frahan Monument Inventory :: Inventory (Inv) - MonumentInventory.
 - out G-code Parser :: Cut Path (CP) - The typed CutPath record. Wire into GCodeToPlanesComponent or  WireSawToolpathAd
 - in  G-code to Planes :: Cut Path (CP) - The typed CutPath from GCodeParserComponent (D5F10030).
@@ -528,11 +485,7 @@ These are the canonical-type inconsistency candidates: the same named port model
 - out Slab From Mesh :: Slab (S) - Slab DTO. Wire into Slab Cut By Fractures or downstream masonry.
 - in  Pack On Surface :: Surface Map (Map) - FrahanSurfaceChart from the Surface Chart component.
 - in  Pack Surfaces :: Surface Maps (Maps) - One or more FrahanSurfaceChart objects from the Surface Chart component. Each be
-- out Pack Surfaces :: Transforms 3D (T3) - Transform from PACKED 2D position to the 3D surface placement frame.  Apply to P
-- out Pack Surfaces :: Full Transform (FT) - Composed transform: original flat part -> 3D surface in one step.  Apply to the 
 - out Surface Chart :: Surface Map (Map) - FrahanSurfaceChart object. Wire into the Pack On Surface component.
-- out Frahan Trencadís EdgeMatch :: Transforms (X) - Per-piece rigid transform.
-- out Frahan Trencadís Pack :: Transforms (X) - Placement transforms (per source curve).
 - out Arch Voussoirs :: Assembly (VA) - Typed VoussoirAssembly. Wire into Voussoir Stone Matcher (D5F10010).
 - out Pendentive Vault Voussoirs :: Assembly (VA) - Typed VoussoirAssembly. Wire into Voussoir Stone Matcher (D5F10010).
 - in  Voussoir Ingest :: Voussoirs (V) - List of voussoir geometries representing the designed stereotomic  assembly. Acc

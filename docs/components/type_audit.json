@@ -8,10 +8,10 @@
     "Mesh": 169,
     "Boolean": 161,
     "Curve": 142,
-    "Generic": 115,
+    "Generic": 101,
     "Point": 63,
+    "Transform": 43,
     "Plane": 30,
-    "Transform": 29,
     "Box": 28,
     "Vector": 21,
     "Geometry": 15,
@@ -23,69 +23,6 @@
   },
   "custom_types": [],
   "generic_ports": [
-    {
-      "component": "2D Bottom Left Pack",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to source curves."
-    },
-    {
-      "component": "2D Freeform Sheet Pack",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to each source curve."
-    },
-    {
-      "component": "2D Freeform Sheet Pack V3",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to each source curve."
-    },
-    {
-      "component": "2D Irregular Sheet Pack",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to source curves."
-    },
-    {
-      "component": "2D NFP Pack",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to source curves."
-    },
-    {
-      "component": "Frahan Sheet Pack (Unified Async)",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to each source curve."
-    },
-    {
-      "component": "Frahan Sheet Pack (Unified)",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to each source curve."
-    },
-    {
-      "component": "Freeform Sheet Nest",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms applied to each source curve."
-    },
-    {
-      "component": "Freeform Sheet Nest (Exact NFP)",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms per source curve."
-    },
     {
       "component": "Frahan Stone Descriptor",
       "dir": "out",
@@ -148,13 +85,6 @@
       "name": "Options",
       "nick": "Opt",
       "desc": "Optional AssemblyOptions DTO from EdgeMatch Options. When wired,  its advanced f"
-    },
-    {
-      "component": "EdgeMatch Solve",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Per-panel rigid transform."
     },
     {
       "component": "Frahan Monument Inventory",
@@ -731,39 +661,11 @@
       "desc": "One or more FrahanSurfaceChart objects from the Surface Chart component. Each be"
     },
     {
-      "component": "Pack Surfaces",
-      "dir": "out",
-      "name": "Transforms 3D",
-      "nick": "T3",
-      "desc": "Transform from PACKED 2D position to the 3D surface placement frame.  Apply to P"
-    },
-    {
-      "component": "Pack Surfaces",
-      "dir": "out",
-      "name": "Full Transform",
-      "nick": "FT",
-      "desc": "Composed transform: original flat part -> 3D surface in one step.  Apply to the "
-    },
-    {
       "component": "Surface Chart",
       "dir": "out",
       "name": "Surface Map",
       "nick": "Map",
       "desc": "FrahanSurfaceChart object. Wire into the Pack On Surface component."
-    },
-    {
-      "component": "Frahan Trencadís EdgeMatch",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Per-piece rigid transform."
-    },
-    {
-      "component": "Frahan Trencadís Pack",
-      "dir": "out",
-      "name": "Transforms",
-      "nick": "X",
-      "desc": "Placement transforms (per source curve)."
     },
     {
       "component": "Arch Voussoirs",
@@ -1450,203 +1352,6 @@
           "component": "Frahan Report / Export",
           "dir": "in",
           "port": "Reports"
-        }
-      ]
-    },
-    {
-      "concept": "transform",
-      "types": [
-        "Generic",
-        "Transform"
-      ],
-      "n_types": 2,
-      "n_occurrences": 31,
-      "occurrences": [
-        {
-          "type": "Generic",
-          "component": "2D Bottom Left Pack",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "2D Freeform Sheet Pack",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "2D Freeform Sheet Pack V3",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "2D Irregular Sheet Pack",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "2D NFP Pack",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Frahan Sheet Pack (Unified Async)",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Frahan Sheet Pack (Unified)",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Freeform Sheet Nest",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Freeform Sheet Nest (Exact NFP)",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "EdgeMatch Solve",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Frahan Trencadís EdgeMatch",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Generic",
-          "component": "Frahan Trencadís Pack",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Sheet Nest (Hole-Aware)",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Pack3D Irregular",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Pack3D Irregular Container",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Pack3D Mesh Heightmap",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Settle 3D (Physics)",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Validate Packed Transform",
-          "dir": "in",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Block Pair Match 3D",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Contact Settle",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Frahan Kintsugi",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Block Ground Transforms",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Block Pack (Tree)",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Match Block Transform",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Cloud ICP",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Georeference",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Georeference (Align by Points)",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Marker Registration",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Move to Origin",
-          "dir": "out",
-          "port": "Transform"
-        },
-        {
-          "type": "Transform",
-          "component": "Frahan Trencadís Pipeline",
-          "dir": "out",
-          "port": "Transforms"
-        },
-        {
-          "type": "Transform",
-          "component": "Voussoir Pack Into Block",
-          "dir": "out",
-          "port": "Transforms"
         }
       ]
     },
