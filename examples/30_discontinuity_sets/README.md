@@ -29,9 +29,6 @@ belongs to. This is the headline view for a quarry geologist: the wall, colour-c
 |---|---|
 | ![XB](segmentation_tongjiang_XB.png) | ![AB](segmentation_tongjiang_AB.png) |
 
-Facet tiles (each facet a quad oriented by its normal, coloured by set):
-![facets](segmentation_facets.png)
-
 Stereonet of the full-resolution result (honest ISRM decimeter spacings):
 ![stereonet](stereonet_full_5set.png)
 
