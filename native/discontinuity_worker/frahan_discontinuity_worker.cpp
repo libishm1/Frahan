@@ -1,4 +1,10 @@
 // =============================================================================
+// Copyright (c) 2026 Frahan StonePack (Independent Research).
+// SPDX-License-Identifier: LicenseRef-Frahan-Proprietary
+// CLEAN-ROOM implementation (see README): derived only from the cited published
+// papers and first principles, NOT from CloudCompare / CCCoreLib / qFACETS (GPL).
+// Free of copyleft; distributed under Frahan StonePack's own licence.
+// =============================================================================
 // frahan_discontinuity_worker -- out-of-process point-cloud discontinuity
 // extraction (planar facets + joint sets) for the Frahan "Discontinuity Sets
 // (Async)" Grasshopper component.
@@ -62,7 +68,7 @@ static inline void eigSmallest(double a,double b,double c,double d,double e,doub
 static inline V3 lowerHemi(V3 n){ double L=std::sqrt(dot(n,n)); if(L<1e-20)return {0,0,-1}; n.x/=L;n.y/=L;n.z/=L;
     if(n.z>1e-12){n.x=-n.x;n.y=-n.y;n.z=-n.z;} else if(std::fabs(n.z)<=1e-12){ if(n.x<-1e-12||(std::fabs(n.x)<=1e-12&&n.y<0)){n.x=-n.x;n.y=-n.y;n.z=-n.z;} } return n; }
 static void dipDir(const V3&nn,double&dip,double&dd){ V3 n=lowerHemi(nn); dip=std::acos(std::min(1.0,std::fabs(n.z)))*180.0/M_PI;
-    if(std::fabs(n.x)<1e-12&&std::fabs(n.y)<1e-12) dd=0; else { dd=std::atan2(n.x,n.y)*180.0/M_PI; dd=std::fmod(dd+360.0,360.0);} }
+    if(std::fabs(n.x)<1e-12&&std::fabs(n.y)<1e-12) dd=0; else { dd=std::atan2(n.x,n.y)*180.0/M_PI; dd=std::fmod(dd+360.0,360.0); if(dd>=360.0-1e-9)dd=0.0; } }
 static inline double axialDeg(const V3&a,const V3&b){ return std::acos(std::min(1.0,std::fabs(dot(a,b))))*180.0/M_PI; }
 
 // ---- counting-sort CSR uniform grid (Hoetzlein 2014 FRNN; MATH_DERIVATIONS sec.2)
@@ -185,7 +191,9 @@ int main(int argc,char**argv){
 
     // region-grow facets
     double cosMax=std::cos(angle*M_PI/180), band=bandF*spacing;
-    std::vector<int> ord(N); for(int i=0;i<N;i++)ord[i]=i; std::sort(ord.begin(),ord.end(),[&](int a,int b){return eta[a]<eta[b];});
+    // seed order = most-planar first, with an index tiebreak so equal-eta seeds
+    // have a deterministic, perturbation-stable order (a total order, not just <).
+    std::vector<int> ord(N); for(int i=0;i<N;i++)ord[i]=i; std::sort(ord.begin(),ord.end(),[&](int a,int b){ if(eta[a]!=eta[b])return eta[a]<eta[b]; return a<b; });
     std::vector<char> vis(N,0); std::vector<V3> fN,fC; std::vector<std::vector<int>> fI;
     std::vector<int> q; q.reserve(1024);
     for(int oi=0;oi<N;oi++){ int seed=ord[oi]; if(vis[seed]||eta[seed]>seedEta)continue;
@@ -209,12 +217,20 @@ int main(int argc,char**argv){
     // hill-climbs independently to a mode, so write into a pre-sized array).
     std::vector<double> wt(F); for(int i=0;i<F;i++) wt[i]=std::max((size_t)1,fI[i].size());
     double sinbw=std::max(1e-4,std::sin(bw*M_PI/180)), kappa=1.0/(sinbw*sinbw);
-    // cap seeds: a few hundred is plenty to discover every mode of a handful of
-    // joint sets; the cost is O(seeds * iters * F) so this is the main lever.
-    int maxSeeds=256; int stride2=std::max(1,(F+maxSeeds-1)/maxSeeds);
-    int nSeed=(F+stride2-1)/stride2; std::vector<V3> seedModes(nSeed);
+    // Seeds: a fixed Fibonacci hemisphere grid OR a strided facet-pole sample, both
+    // now order-INDEPENDENT given the deterministic (eta,index) seed sort above, so
+    // the discovered modes are a deterministic function of the input. Facet-pole
+    // seeding is data-driven (every seed sits at a real surface orientation); blend
+    // in a coarse Fibonacci grid so no joint-set basin is missed regardless of which
+    // facets the stride happens to sample. Combined seed set is small + fixed.
+    const int nFib=96; const double ga=M_PI*(3.0-std::sqrt(5.0)); // golden angle
+    int maxStride=160; int stride2=std::max(1,(F+maxStride-1)/maxStride);
+    int nStr=(F+stride2-1)/stride2; int nSeed=nStr+nFib;
+    std::vector<V3> seedModes(nSeed);
     #pragma omp parallel for schedule(dynamic,4)
-    for(int si=0;si<nSeed;si++){ int s=si*stride2; V3 m=fN[s];
+    for(int si=0;si<nSeed;si++){ V3 m;
+        if(si<nStr) m=fN[si*stride2];
+        else { int k=si-nStr; double zz=1.0-(k+0.5)*2.0/nFib; double rr=std::sqrt(std::max(0.0,1.0-zz*zz)); double ph=ga*k; m=lowerHemi({rr*std::cos(ph),rr*std::sin(ph),zz}); }
         for(int it=0;it<60;it++){ double sx=0,sy=0,sz=0; for(int j=0;j<F;j++){ double d=dot(m,fN[j]); double w=wt[j]*std::exp(kappa*(d*d-1)); double sg=d>=0?1:-1; sx+=w*sg*fN[j].x;sy+=w*sg*fN[j].y;sz+=w*sg*fN[j].z; } double L=std::sqrt(sx*sx+sy*sy+sz*sz); if(L<1e-12)break; V3 mn={sx/L,sy/L,sz/L}; if(axialDeg(mn,m)<0.02){m=mn;break;} m=mn; }
         seedModes[si]=lowerHemi(m); }
     std::vector<V3> modes(seedModes.begin(),seedModes.end());
