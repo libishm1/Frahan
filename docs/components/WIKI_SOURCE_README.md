@@ -7,10 +7,15 @@ architecture map, and the icon gallery. Everything here is derived from the comp
 
 Regenerate: `python extract_components.py` then `python make_icon_sheet.py`.
 
+The bundle has three layers for the wiki: **architecture** (the system + pipeline),
+**research** (the methods + measured results), and **components** (per-node I/O + icons).
+
 ## Files
 
 | File | What | Use in the wiki/site |
 |---|---|---|
+| `ARCHITECTURE.md` | System architecture: pipeline data-flow, 5 code modules + native shims, the 18-subcategory component map, design patterns, build/test, license posture | The "Architecture" / "How it works" section |
+| `RESEARCH.md` | Research-grade summary: per-area method + citation + measured result, a benchmarks-at-a-glance table, datasets with DOIs, how to cite/reproduce. Every number is source-cited | The "Research" / "Benchmarks" section |
 | `components.json` | 187 components: GUID, name, nickname, category/subcategory, description, algorithm citation, **inputs**, **outputs**, related-component edges, icon, source path | One page per component (I/O tables, citation, source link) |
 | `COMPONENTS.md` | The same, human-readable, grouped by subcategory with input/output tables | Drop-in component reference section |
 | `connections.json` | Architecture graph: 187 nodes + 93 directed edges (upstream/downstream from `[RelatedComponent]`) with reasons | Data for an interactive connection map |
