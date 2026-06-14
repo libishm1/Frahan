@@ -252,9 +252,24 @@ int main(int argc,char**argv){
     for(size_t ki=0;ki<keep.size();ki++){ int k=keep[ki];
         double sx=0,sy=0,sz=0; for(int i=0;i<F;i++) if(asg[i]==k){ double d=dot(sp[k],fN[i]); double sg=d>=0?1:-1; sx+=wt[i]*sg*fN[i].x;sy+=wt[i]*sg*fN[i].y;sz+=wt[i]*sg*fN[i].z; }
         V3 pole=lowerHemi({sx,sy,sz}); double dip,dd; dipDir(pole,dip,dd);
-        // family-constrained normal spacing
+        // ISRM set spacing. Cluster the facet offsets along the set normal into
+        // DISTINCT joints (a gap >> the within-joint facet scatter marks a new
+        // joint plane), then spacing = scanline extent / number of joints.
+        // The old code averaged EVERY consecutive facet gap, which measures facet
+        // sampling density on a continuous surface, not joint spacing -> it under-
+        // estimated by ~10-60x (sub-point-spacing values). The join threshold is
+        // 8x the median within-joint gap, floored at 2x the global point spacing
+        // so joints closer than the scan can resolve are not split.
         std::vector<double> offs; for(int i=0;i<F;i++) if(asg[i]==k) offs.push_back(dot(fC[i],pole)); std::sort(offs.begin(),offs.end());
-        double sp_mean=0; int gaps=0; for(size_t i=1;i<offs.size();i++){ double gp=offs[i]-offs[i-1]; if(gp>1e-9){sp_mean+=gp;gaps++;} } sp_mean=gaps?sp_mean/gaps:0;
+        double sp_mean=0;
+        if(offs.size()>=2){
+            std::vector<double> g; for(size_t i=1;i<offs.size();i++){ double d=offs[i]-offs[i-1]; if(d>1e-9) g.push_back(d); }
+            double thr=2.0*spacing;
+            if(!g.empty()){ std::vector<double> gs=g; std::sort(gs.begin(),gs.end()); double med=gs[gs.size()/2]; thr=std::max(8.0*med,2.0*spacing); }
+            double ext=offs.back()-offs.front();
+            int joints=1; for(double d:g) if(d>thr) joints++;
+            sp_mean = joints>0 ? ext/(double)joints : 0.0;
+        }
         snprintf(buf,sizeof buf,"    {\"id\": %zu, \"dip\": %.2f, \"dipdir\": %.2f, \"pole\": [%.5f,%.5f,%.5f], \"facets\": %d, \"point_share\": %.4f, \"spacing\": %.4f}%s\n",ki+1,dip,dd,pole.x,pole.y,pole.z,sc[k],facetPts? (double)spt[k]/facetPts:0,sp_mean,ki+1<keep.size()?",":""); js+=buf; }
     js+="  ]\n}\n";
     std::string jp=outDir+"/discontinuity.json"; FILE*jf=fopen(jp.c_str(),"wb"); if(jf){fwrite(js.data(),1,js.size(),jf);fclose(jf);}

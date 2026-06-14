@@ -40,34 +40,39 @@ feeds the **evolved Omni solver** (sub-division into zones + coarse-to-fine sear
 It also feeds `RecoveryCascade` (multi-scale crack-aware, Core) and the wire-saw
 `Fracture Block Pack`.
 
-## Benchmark — evolved vs baseline on the real Tongjiang XB DFN
+## Honest spacing (no fudge factor) — the spacing-estimator fix
 
-DFN = 24 fracture planes from the 5 real joint sets (spacing ×100), bench 3×2×2 m,
-Omni sub-divided 3×2:
+An earlier version of this example used a `Spacing scale` of ×100. **That was a
+band-aid over a bug in the worker's spacing estimator, now fixed.** The old code
+averaged the gap between *every consecutive facet patch* along the set normal, which
+measured facet *sampling density* on a continuous surface (sub-millimetre), not the
+spacing between *distinct joints*. The worker now uses the ISRM measure: cluster the
+facet offsets into distinct joint planes and report `spacing = extent / #joints`. On
+the real Tongjiang XB scan the corrected spacings are **decimeter-scale** (dominant
+sets 0.19 / 0.31 / 0.38 m) instead of the old 2.8-20 mm. **Spacing scale is now 1.**
 
-| block (m) | baseline (single pose) | Omni (evolved) |
-|---|---|---|
-| 0.20 | 10 | **13** |
-| 0.25 | **0** | **4** |
-| 0.30+ | 0 | 0 |
+So the scan *is* enough for block size once spacing is computed correctly — no fudge.
 
-The evolved packer recovers more across the range, and **recovers where the baseline
-gets zero** (0.25 m): its sub-division + multi-pose search finds blocks in zones the
-single global pose misses.
+## Result on the real Tongjiang XB DFN (honest)
 
-**Geological read:** recovery collapses above ~0.28 m because the dominant set (S1,
-45 % share, 0.28 m spacing) **caps the achievable block size** — densely jointed rock
-yields only small blocks. The pipeline surfaces that cap directly from the scan.
+18 fracture planes from the dominant joint sets in a 1.5×1×1 m dimension-stone blank
+(seed 1, spacing scale 1):
+
+- **Jv = 12 joints/m³, RQD ≈ 80, Vb ≈ 0.11 m³, Deq ≈ 0.48 m.**
+- Omni recovery: **2 blocks at 0.15 m, 0 at 0.20 m** — the 0.19 m dominant spacing
+  **caps the extractable block size at ~0.15 m.** Densely jointed rock yields only
+  small dimension stone; the pipeline surfaces that cap directly from the scan.
+
+The evolved Omni packer (sub-division + coarse-to-fine + Pareto) still recovers where
+the single-pose baseline gets zero — that comparison is unchanged by the spacing fix.
 
 ## Running on real datasets
 
-The canvas points at the full real `Data/tongjiang/detail_cloudXB.ply` (capped to
-1 M points for a fast preview; press `Run`). The second real exposure
-`detail_cloudAB.ply` (6 sets) runs the same way. **Tuning note (important):** the
-spacing estimate scales with point density and the detail scans are cm-scale, so set
-**Spacing scale** and the **Bench** box to your data — the bench must be larger than
-the joint spacing for the DFN to constrain the blocks. The numbers above are the
-bench-scale proxy (×100); use your real bench dimensions for a real quarry.
+The canvas points at the full real `Data/tongjiang/detail_cloudXB.ply` (capped to 1 M
+points for a fast preview; press `Run`); `detail_cloudAB.ply` (decimeter-to-meter
+spacings 0.43-4.3 m) runs the same way. **Set the Bench box to your blank size** — the
+bench must be larger than the joint spacing for the DFN to constrain the blocks. With
+the spacing fix you no longer need a scale factor: feed the worker's metres directly.
 
 ## Validation
 Built, saved, reloaded and run live in Rhino 8: scan → 5 sets → 24-plane DFN → Omni
