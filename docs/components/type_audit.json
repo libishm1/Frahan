@@ -1,0 +1,3196 @@
+{
+  "components": 187,
+  "ports_total": 2028,
+  "type_frequency": {
+    "Number": 580,
+    "Integer": 410,
+    "Text": 253,
+    "Mesh": 169,
+    "Boolean": 161,
+    "Curve": 142,
+    "Generic": 115,
+    "Point": 63,
+    "Plane": 30,
+    "Transform": 29,
+    "Box": 28,
+    "Vector": 21,
+    "Geometry": 15,
+    "Line": 5,
+    "Brep": 3,
+    "Rectangle": 2,
+    "Interval": 1,
+    "Surface": 1
+  },
+  "custom_types": [],
+  "generic_ports": [
+    {
+      "component": "2D Bottom Left Pack",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to source curves."
+    },
+    {
+      "component": "2D Freeform Sheet Pack",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to each source curve."
+    },
+    {
+      "component": "2D Freeform Sheet Pack V3",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to each source curve."
+    },
+    {
+      "component": "2D Irregular Sheet Pack",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to source curves."
+    },
+    {
+      "component": "2D NFP Pack",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to source curves."
+    },
+    {
+      "component": "Frahan Sheet Pack (Unified Async)",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to each source curve."
+    },
+    {
+      "component": "Frahan Sheet Pack (Unified)",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to each source curve."
+    },
+    {
+      "component": "Freeform Sheet Nest",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms applied to each source curve."
+    },
+    {
+      "component": "Freeform Sheet Nest (Exact NFP)",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms per source curve."
+    },
+    {
+      "component": "Frahan Stone Descriptor",
+      "dir": "out",
+      "name": "Descriptors",
+      "nick": "D",
+      "desc": "StoneDescriptor per stone (opaque)."
+    },
+    {
+      "component": "Pack3D Irregular",
+      "dir": "out",
+      "name": "Pack Result",
+      "nick": "PR",
+      "desc": "Opaque PackResult for downstream Frahan Packing Report."
+    },
+    {
+      "component": "Pack3D Irregular Container",
+      "dir": "out",
+      "name": "Pack Result",
+      "nick": "PR",
+      "desc": "Opaque PackResult for downstream Frahan Packing Report."
+    },
+    {
+      "component": "Pack3D Mesh Heightmap",
+      "dir": "out",
+      "name": "Pack Result",
+      "nick": "PR",
+      "desc": "Opaque PackResult for downstream Frahan Packing Report."
+    },
+    {
+      "component": "Frahan Boundary Rail Index",
+      "dir": "out",
+      "name": "Index",
+      "nick": "I",
+      "desc": "Populated BoundaryRailIndex&lt;BoundaryIntervalInfo&gt; (opaque)."
+    },
+    {
+      "component": "Frahan Fragment Descriptors",
+      "dir": "out",
+      "name": "Descriptors",
+      "nick": "D",
+      "desc": "FragmentDescriptor per fragment (opaque)."
+    },
+    {
+      "component": "Frahan Fragment Edge Match",
+      "dir": "in",
+      "name": "Index",
+      "nick": "I",
+      "desc": "Populated BoundaryRailIndex<BoundaryIntervalInfo> from Frahan Boundary Rail Inde"
+    },
+    {
+      "component": "EdgeMatch Options",
+      "dir": "out",
+      "name": "Options",
+      "nick": "O",
+      "desc": "AssemblyOptions DTO bundling the advanced EdgeMatch flags. Wire  into EdgeMatch "
+    },
+    {
+      "component": "EdgeMatch Solve",
+      "dir": "in",
+      "name": "Options",
+      "nick": "Opt",
+      "desc": "Optional AssemblyOptions DTO from EdgeMatch Options. When wired,  its advanced f"
+    },
+    {
+      "component": "EdgeMatch Solve",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Per-panel rigid transform."
+    },
+    {
+      "component": "Frahan Monument Inventory",
+      "dir": "out",
+      "name": "Inventory",
+      "nick": "Inv",
+      "desc": "MonumentInventory."
+    },
+    {
+      "component": "G-code Parser",
+      "dir": "out",
+      "name": "Cut Path",
+      "nick": "CP",
+      "desc": "The typed CutPath record. Wire into GCodeToPlanesComponent or  WireSawToolpathAd"
+    },
+    {
+      "component": "G-code to Planes",
+      "dir": "in",
+      "name": "Cut Path",
+      "nick": "CP",
+      "desc": "The typed CutPath from GCodeParserComponent (D5F10030)."
+    },
+    {
+      "component": "Planes to KUKAprc Commands",
+      "dir": "in",
+      "name": "Cut Path (optional)",
+      "nick": "CP",
+      "desc": "Optional: the source CutPath typed record (from GCodeParser  D5F10030). If wired"
+    },
+    {
+      "component": "Planes to Robot Targets",
+      "dir": "in",
+      "name": "Cut Path (optional)",
+      "nick": "CP",
+      "desc": "Optional CutPath typed record (from GCodeParser D5F10030). If  wired, the wrappe"
+    },
+    {
+      "component": "Brick-Pattern Fracture Planes",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO whose bounding box seeds the brick grid."
+    },
+    {
+      "component": "Brick-Pattern Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs in a running-bond pattern."
+    },
+    {
+      "component": "Fracture Plane Filter",
+      "dir": "in",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "Input FracturePlane DTOs (any source)."
+    },
+    {
+      "component": "Fracture Plane Filter",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Target Slab whose bounding box drives the filter."
+    },
+    {
+      "component": "Fracture Plane Filter",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "Filtered FracturePlane DTOs (only those intersecting the slab AABB)."
+    },
+    {
+      "component": "Fracture Polygon From Curve",
+      "dir": "out",
+      "name": "FracturePolygon",
+      "nick": "F",
+      "desc": "FracturePolygon DTO. Wire into Slab Cut By Fracture Polygons."
+    },
+    {
+      "component": "Grid Fracture Planes",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO whose bounding box seeds the grid."
+    },
+    {
+      "component": "Grid Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs. Wire into Slab Cut By Fractures or Quarry Decompose."
+    },
+    {
+      "component": "Jittered Grid Fracture Planes",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO whose bounding box seeds the grid."
+    },
+    {
+      "component": "Jittered Grid Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs."
+    },
+    {
+      "component": "Layered Fracture Planes",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO whose bounding box seeds the layers."
+    },
+    {
+      "component": "Layered Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs (parallel, evenly spaced)."
+    },
+    {
+      "component": "Radial Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs around the rotation axis."
+    },
+    {
+      "component": "Random Fracture Planes",
+      "dir": "in",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO whose bounding box seeds the random plane points."
+    },
+    {
+      "component": "Random Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs."
+    },
+    {
+      "component": "Slab Cut By Fracture Polygons",
+      "dir": "in",
+      "name": "FracturePolygon",
+      "nick": "F",
+      "desc": "FracturePolygon DTOs (from Fracture Polygon From Curve)."
+    },
+    {
+      "component": "Slab Cut By Fracture Polygons",
+      "dir": "out",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Output Slabs after cutting."
+    },
+    {
+      "component": "Voronoi Fracture Planes",
+      "dir": "out",
+      "name": "Planes",
+      "nick": "P",
+      "desc": "FracturePlane DTOs (one per distinct seed pair)."
+    },
+    {
+      "component": "Ashlar Pack",
+      "dir": "in",
+      "name": "Wall Frame",
+      "nick": "Wf",
+      "desc": "Optional WallFrame DTO from Wall Frame component. When wired,  this overrides th"
+    },
+    {
+      "component": "Ashlar Pack",
+      "dir": "in",
+      "name": "Options",
+      "nick": "Op",
+      "desc": "Optional AshlarPackOptions DTO from Ashlar Pack Options  component. When wired, "
+    },
+    {
+      "component": "Ashlar Pack",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly with bottom-course blocks fixed. Wire into  Masonry Stability (R"
+    },
+    {
+      "component": "Ashlar Pack",
+      "dir": "out",
+      "name": "Result",
+      "nick": "R",
+      "desc": "AshlarPackResult carrying coverage / leftovers / notes / placed  blocks. Wire in"
+    },
+    {
+      "component": "Ashlar Pack Options",
+      "dir": "out",
+      "name": "Options",
+      "nick": "O",
+      "desc": "AshlarPackOptions DTO bundling all algorithmic knobs. Wire  into Ashlar Pack's O"
+    },
+    {
+      "component": "Assembly Preview",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly DTO (from Masonry Assembly or Ashlar Pack)."
+    },
+    {
+      "component": "Auto Interfaces",
+      "dir": "out",
+      "name": "Interfaces",
+      "nick": "I",
+      "desc": "Detected MasonryInterfaces. Wire into Masonry Assembly."
+    },
+    {
+      "component": "Best Fit Pack",
+      "dir": "in",
+      "name": "Wall Frame",
+      "nick": "Wf",
+      "desc": "Optional WallFrame DTO. Overrides primitive Wall W/H/T."
+    },
+    {
+      "component": "Best Fit Pack",
+      "dir": "in",
+      "name": "Options",
+      "nick": "Op",
+      "desc": "Optional AshlarPackOptions DTO. Overrides primitive  algorithmic inputs."
+    },
+    {
+      "component": "Best Fit Pack",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly with bottom-course blocks fixed."
+    },
+    {
+      "component": "Best Fit Pack",
+      "dir": "out",
+      "name": "Result",
+      "nick": "R",
+      "desc": "AshlarPackResult — coverage / leftovers / notes / placed blocks."
+    },
+    {
+      "component": "Block Build Order",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly DTO."
+    },
+    {
+      "component": "Block Graph Coloring",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly with blocks + interfaces."
+    },
+    {
+      "component": "Block Size Distribution",
+      "dir": "in",
+      "name": "Slabs",
+      "nick": "S",
+      "desc": "Slab DTOs."
+    },
+    {
+      "component": "Build-Order Stability Stream",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "Full MasonryAssembly DTO."
+    },
+    {
+      "component": "Cut Validation",
+      "dir": "in",
+      "name": "Pre Slabs",
+      "nick": "Pre",
+      "desc": "Slab DTOs before the cut."
+    },
+    {
+      "component": "Cut Validation",
+      "dir": "in",
+      "name": "Post Slabs",
+      "nick": "Post",
+      "desc": "Slab DTOs after the cut."
+    },
+    {
+      "component": "Cut Validation",
+      "dir": "out",
+      "name": "Cleaned Slabs",
+      "nick": "Clean",
+      "desc": "Sliver-free subset of post slabs. Empty when Drop  Slivers is false."
+    },
+    {
+      "component": "Fragment Merger",
+      "dir": "in",
+      "name": "Slabs",
+      "nick": "S",
+      "desc": "Slab DTOs (the candidate pieces)."
+    },
+    {
+      "component": "Masonry Assembly",
+      "dir": "in",
+      "name": "Blocks",
+      "nick": "B",
+      "desc": "MasonryBlock DTOs from Masonry Block."
+    },
+    {
+      "component": "Masonry Assembly",
+      "dir": "in",
+      "name": "Interfaces",
+      "nick": "I",
+      "desc": "MasonryInterface DTOs. May be empty; auto-detection is a future task."
+    },
+    {
+      "component": "Masonry Assembly",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly DTO. Wire into Masonry Stability (RBE)."
+    },
+    {
+      "component": "Masonry Block",
+      "dir": "out",
+      "name": "Block",
+      "nick": "B",
+      "desc": "MasonryBlock DTO. Wire into Masonry Assembly."
+    },
+    {
+      "component": "Masonry Stability (RBE)",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "MasonryAssembly from Masonry Assembly."
+    },
+    {
+      "component": "Masonry Stability Check",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "OPTIONAL: a pre-built assembly (e.g. the Polygonal Wall Generator's Assembly out"
+    },
+    {
+      "component": "Pack Diagnostics",
+      "dir": "in",
+      "name": "Result",
+      "nick": "R",
+      "desc": "AshlarPackResult from Ashlar Pack."
+    },
+    {
+      "component": "Pack Diagnostics",
+      "dir": "out",
+      "name": "Leftovers",
+      "nick": "L",
+      "desc": "Slabs from the input inventory that were not placed."
+    },
+    {
+      "component": "Pack Diagnostics",
+      "dir": "out",
+      "name": "Placed Blocks",
+      "nick": "B",
+      "desc": "MasonryBlocks in the order they were laid."
+    },
+    {
+      "component": "Pack Preview",
+      "dir": "in",
+      "name": "Result",
+      "nick": "R",
+      "desc": "AshlarPackResult from Ashlar Pack."
+    },
+    {
+      "component": "Polygonal Wall (Generator)",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "A",
+      "desc": "The wall as a structural assembly with EXACT joint interfaces from the generator"
+    },
+    {
+      "component": "Robust Auto Interfaces",
+      "dir": "out",
+      "name": "Interfaces",
+      "nick": "I",
+      "desc": "Detected MasonryInterfaces. Wire into Masonry Assembly."
+    },
+    {
+      "component": "Wall Frame",
+      "dir": "out",
+      "name": "Wall Frame",
+      "nick": "F",
+      "desc": "WallFrame DTO. Wire into Ashlar Pack's Wall Frame input to  reuse the same envel"
+    },
+    {
+      "component": "Bench From Mesh",
+      "dir": "out",
+      "name": "Bench Boundary",
+      "nick": "BB",
+      "desc": "Opaque BenchBoundary value (Box + Mesh combined). Future  BCO-v2 components cons"
+    },
+    {
+      "component": "Load Photo Set",
+      "dir": "out",
+      "name": "Photo Set",
+      "nick": "PS",
+      "desc": "Typed PhotoSet record (Frahan.Core.ScanIngest.PhotoSet). Wire  into downstream F"
+    },
+    {
+      "component": "Read Metashape Project",
+      "dir": "out",
+      "name": "Metashape Project",
+      "nick": "MP",
+      "desc": "Typed MetashapeProject record (Frahan.Core.ScanIngest.MetashapeProject)."
+    },
+    {
+      "component": "Stone Prep (Scan)",
+      "dir": "out",
+      "name": "Descriptors",
+      "nick": "D",
+      "desc": "StoneDescriptor per stone (opaque; consumable by Pack3D and  downstream Frahan 3"
+    },
+    {
+      "component": "Convex Hull Slab",
+      "dir": "out",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Convex-hull Slab."
+    },
+    {
+      "component": "Frahan GPR Radargram Reader",
+      "dir": "out",
+      "name": "Radargram",
+      "nick": "R",
+      "desc": "GprRadargram object."
+    },
+    {
+      "component": "Frahan Quarry Inventory",
+      "dir": "out",
+      "name": "Inventory",
+      "nick": "Inv",
+      "desc": "QuarryInventory object."
+    },
+    {
+      "component": "Frahan Slab Yield Optimizer",
+      "dir": "in",
+      "name": "Fracture Planes",
+      "nick": "F",
+      "desc": "Optional List<FracturePlane>. Wire from Frahan Mesh → Fracture Planes."
+    },
+    {
+      "component": "Frahan Slab Yield Optimizer",
+      "dir": "out",
+      "name": "Best Plan",
+      "nick": "P",
+      "desc": "SlabPlan with the highest score."
+    },
+    {
+      "component": "Frahan Slab Yield Optimizer",
+      "dir": "out",
+      "name": "Cut Planes",
+      "nick": "Cp",
+      "desc": "FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures)."
+    },
+    {
+      "component": "Joint Set",
+      "dir": "out",
+      "name": "Joint Set",
+      "nick": "J",
+      "desc": "JointSet DTO. Wire into Quarry DFN."
+    },
+    {
+      "component": "Mesh Shell Split",
+      "dir": "out",
+      "name": "Slabs",
+      "nick": "S",
+      "desc": "One Slab per connected shell."
+    },
+    {
+      "component": "Quarry DFN",
+      "dir": "in",
+      "name": "Joint Sets",
+      "nick": "J",
+      "desc": "JointSet DTOs (from Joint Set component)."
+    },
+    {
+      "component": "Quarry DFN",
+      "dir": "out",
+      "name": "Slabs",
+      "nick": "S",
+      "desc": "Same blocks as Slab DTOs (for downstream Frahan plumbing)."
+    },
+    {
+      "component": "Quarry Decompose",
+      "dir": "in",
+      "name": "Quarry",
+      "nick": "Q",
+      "desc": "Convex quarry. Accepts a Frahan Slab DTO (from Slab From Mesh)  OR a Rhino Mesh "
+    },
+    {
+      "component": "Quarry Decompose",
+      "dir": "out",
+      "name": "Slabs",
+      "nick": "S",
+      "desc": "Output Slab DTOs. Wire into Ashlar Pack."
+    },
+    {
+      "component": "Frahan Packing Plan Report",
+      "dir": "in",
+      "name": "Packing Metrics",
+      "nick": "M",
+      "desc": "PackingMetricsReport (opaque) from Frahan Pack3D / Frahan Packing Metrics."
+    },
+    {
+      "component": "Frahan Packing Plan Report",
+      "dir": "in",
+      "name": "Residual Voids",
+      "nick": "V",
+      "desc": "ResidualVoid list (opaque) from Frahan Residual Voids component.  Optional; defa"
+    },
+    {
+      "component": "Frahan Packing Plan Report",
+      "dir": "in",
+      "name": "Edge Match Scores",
+      "nick": "E",
+      "desc": "Per-fragment-per-edge best match scores as a nested list  (IReadOnlyList<IReadOn"
+    },
+    {
+      "component": "Frahan Packing Plan Report",
+      "dir": "out",
+      "name": "Plan Report",
+      "nick": "R",
+      "desc": "PackingPlanReport (opaque) for downstream serialisation / further reporting."
+    },
+    {
+      "component": "Frahan Packing Report",
+      "dir": "in",
+      "name": "Pack Result",
+      "nick": "R",
+      "desc": "PackResult from a 3D pack solver (opaque)."
+    },
+    {
+      "component": "Frahan Report / Export",
+      "dir": "in",
+      "name": "Reports",
+      "nick": "R",
+      "desc": "Frahan report records (PackingReport, MeshDiagnostics, FabricationPrep,  BlockCu"
+    },
+    {
+      "component": "Slab Cut By Fractures",
+      "dir": "in",
+      "name": "Plane",
+      "nick": "P",
+      "desc": "Oriented infinite fracture planes. Accepts the Frahan  FracturePlane DTO (from a"
+    },
+    {
+      "component": "Slab Cut By Fractures",
+      "dir": "out",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Output Slabs after cutting."
+    },
+    {
+      "component": "Slab From Mesh",
+      "dir": "out",
+      "name": "Slab",
+      "nick": "S",
+      "desc": "Slab DTO. Wire into Slab Cut By Fractures or downstream masonry."
+    },
+    {
+      "component": "Pack On Surface",
+      "dir": "in",
+      "name": "Surface Map",
+      "nick": "Map",
+      "desc": "FrahanSurfaceChart from the Surface Chart component."
+    },
+    {
+      "component": "Pack Surfaces",
+      "dir": "in",
+      "name": "Surface Maps",
+      "nick": "Maps",
+      "desc": "One or more FrahanSurfaceChart objects from the Surface Chart component. Each be"
+    },
+    {
+      "component": "Pack Surfaces",
+      "dir": "out",
+      "name": "Transforms 3D",
+      "nick": "T3",
+      "desc": "Transform from PACKED 2D position to the 3D surface placement frame.  Apply to P"
+    },
+    {
+      "component": "Pack Surfaces",
+      "dir": "out",
+      "name": "Full Transform",
+      "nick": "FT",
+      "desc": "Composed transform: original flat part -> 3D surface in one step.  Apply to the "
+    },
+    {
+      "component": "Surface Chart",
+      "dir": "out",
+      "name": "Surface Map",
+      "nick": "Map",
+      "desc": "FrahanSurfaceChart object. Wire into the Pack On Surface component."
+    },
+    {
+      "component": "Frahan Trencadís EdgeMatch",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Per-piece rigid transform."
+    },
+    {
+      "component": "Frahan Trencadís Pack",
+      "dir": "out",
+      "name": "Transforms",
+      "nick": "X",
+      "desc": "Placement transforms (per source curve)."
+    },
+    {
+      "component": "Arch Voussoirs",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "VA",
+      "desc": "Typed VoussoirAssembly. Wire into Voussoir Stone Matcher (D5F10010)."
+    },
+    {
+      "component": "Pendentive Vault Voussoirs",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "VA",
+      "desc": "Typed VoussoirAssembly. Wire into Voussoir Stone Matcher (D5F10010)."
+    },
+    {
+      "component": "Voussoir Ingest",
+      "dir": "in",
+      "name": "Voussoirs",
+      "nick": "V",
+      "desc": "List of voussoir geometries representing the designed stereotomic  assembly. Acc"
+    },
+    {
+      "component": "Voussoir Ingest",
+      "dir": "out",
+      "name": "Assembly",
+      "nick": "VA",
+      "desc": "The typed VoussoirAssembly. Wire into VoussoirStoneMatcher +  VoussoirPackIntoBl"
+    },
+    {
+      "component": "Voussoir Ingest",
+      "dir": "out",
+      "name": "Match Items",
+      "nick": "MI",
+      "desc": "List of MatchItem (substrate-compatible). Wire into MatcherContextBuilder  as th"
+    },
+    {
+      "component": "Voussoir Pack Into Block",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "VA",
+      "desc": "VoussoirAssembly from VoussoirIngestComponent (D5F1000F)."
+    },
+    {
+      "component": "Voussoir Pack Into Block",
+      "dir": "in",
+      "name": "Block",
+      "nick": "B",
+      "desc": "A single quarried block (accepts QuarryBlock typed record from  ScanToBlockInven"
+    },
+    {
+      "component": "Voussoir Stone Matcher",
+      "dir": "in",
+      "name": "Assembly",
+      "nick": "VA",
+      "desc": "VoussoirAssembly from VoussoirIngestComponent (D5F1000F)."
+    },
+    {
+      "component": "Voussoir Stone Matcher",
+      "dir": "in",
+      "name": "Quarry Stones",
+      "nick": "QS",
+      "desc": "List of quarry-block candidates. Accepts either:  (a) QuarryBlock typed records "
+    }
+  ],
+  "multi_type_concepts": [
+    {
+      "concept": "container",
+      "types": [
+        "Box",
+        "Integer",
+        "Mesh"
+      ],
+      "n_types": 3,
+      "n_occurrences": 7,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "CoM In-Container Check",
+          "dir": "in",
+          "port": "Container"
+        },
+        {
+          "type": "Mesh",
+          "component": "Settle 3D (Physics)",
+          "dir": "in",
+          "port": "Container"
+        },
+        {
+          "type": "Box",
+          "component": "Pack3D Irregular",
+          "dir": "in",
+          "port": "Container"
+        },
+        {
+          "type": "Box",
+          "component": "Pack3D Mesh Heightmap",
+          "dir": "in",
+          "port": "Container"
+        },
+        {
+          "type": "Box",
+          "component": "Block Pack (Tree)",
+          "dir": "in",
+          "port": "Containers"
+        },
+        {
+          "type": "Integer",
+          "component": "IFC Export (Building)",
+          "dir": "in",
+          "port": "Containers"
+        },
+        {
+          "type": "Integer",
+          "component": "IFC Export (Stone Assembly)",
+          "dir": "in",
+          "port": "Container"
+        }
+      ]
+    },
+    {
+      "concept": "placed",
+      "types": [
+        "Curve",
+        "Integer",
+        "Mesh"
+      ],
+      "n_types": 3,
+      "n_occurrences": 5,
+      "occurrences": [
+        {
+          "type": "Curve",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "out",
+          "port": "Placed"
+        },
+        {
+          "type": "Curve",
+          "component": "EdgeMatch Solve",
+          "dir": "out",
+          "port": "Placed"
+        },
+        {
+          "type": "Integer",
+          "component": "Live Edge Match",
+          "dir": "out",
+          "port": "Placed"
+        },
+        {
+          "type": "Mesh",
+          "component": "Stone-Cell Match (Λ)",
+          "dir": "out",
+          "port": "Placed"
+        },
+        {
+          "type": "Mesh",
+          "component": "Fit In Block",
+          "dir": "out",
+          "port": "Placed"
+        }
+      ]
+    },
+    {
+      "concept": "report",
+      "types": [
+        "Generic",
+        "Text"
+      ],
+      "n_types": 2,
+      "n_occurrences": 86,
+      "occurrences": [
+        {
+          "type": "Text",
+          "component": "2D Bottom Left Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "2D Freeform Sheet Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "2D Freeform Sheet Pack V3",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "2D Irregular Sheet Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "2D NFP Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "CSV Parts Reader",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Residual Voids",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Sheet Pack (Unified Async)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Sheet Pack (Unified)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Freeform Sheet Nest",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Freeform Sheet Nest (Exact NFP)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Stone Descriptor",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Settle 3D (Physics)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Validate Packed Transform",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Boundary Rail Index",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Fragment Descriptors",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Fragment Edge Match",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "EdgeMatch Solve",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Live Edge Stagger Layup",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Fabrication Prep Report",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Staggered Block Decompose",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Stone-Aware Cut Export",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "GPR Radargram Mesh",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Contact Settle",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Fracture Roughen",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Fragment Shatter",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Kintsugi",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Load BB Sample",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Load Scan Fragments",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Synthetic Block",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Download Frahan Data",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh CSG (CGAL)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Decimate (Geogram)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Decompose (CoACD)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Repair (Auto)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Block Pack (Tree)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Block Size Distribution",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Build-Order Stability Stream",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Cut Validation",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "IFC Export (Building)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "IFC Export (Stone Assembly)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Masonry Stability (RBE)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Masonry Stability Check",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Quality Report",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Polygonal Wall (Generator)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Stone-Cell Match (Λ)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Clip Boxes By Mesh",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Cloud ICP",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Estimate Cloud Normals",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Mesh Diagnostics",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Georeference",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Georeference (Align by Points)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Sanitize Mesh",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Scan Reconstruct",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Scan Scale Calibrate",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Clean Scan Mesh",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Discontinuity Ingest",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Discontinuity Sets (Async)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Discontinuity Sets (Cloud)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Fracture Block Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "GPR Bedrock Surface",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "GPR Fracture Extract",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "GPR Fracture Surfaces 3D",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "GPR Fractures on Mesh",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Joint Sets to DFN",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Overburden To Rock Face",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Quarry Decompose By CoACD",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Scan to Block Inventory",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Stereonet + Block Size",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Stochastic DFN (Baecher)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Packing Report",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Fit In Block",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Slab Cut By Tool Mesh (CGAL)",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Chart Flatness Report",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Pack On Surface",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Pack Surfaces",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Surface Chart",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Trencadís Catalog Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Trencadís Dynamic Settle",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Trencadís EdgeMatch",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Trencadís Pack",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Trencadís Pipeline",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Arch Voussoirs",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Text",
+          "component": "Pendentive Vault Voussoirs",
+          "dir": "out",
+          "port": "Report"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Report / Export",
+          "dir": "in",
+          "port": "Reports"
+        }
+      ]
+    },
+    {
+      "concept": "transform",
+      "types": [
+        "Generic",
+        "Transform"
+      ],
+      "n_types": 2,
+      "n_occurrences": 31,
+      "occurrences": [
+        {
+          "type": "Generic",
+          "component": "2D Bottom Left Pack",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "2D Freeform Sheet Pack",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "2D Freeform Sheet Pack V3",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "2D Irregular Sheet Pack",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "2D NFP Pack",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Sheet Pack (Unified Async)",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Sheet Pack (Unified)",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Freeform Sheet Nest",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Freeform Sheet Nest (Exact NFP)",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "EdgeMatch Solve",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Trencadís EdgeMatch",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Trencadís Pack",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Pack3D Irregular",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Pack3D Irregular Container",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Pack3D Mesh Heightmap",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Settle 3D (Physics)",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Validate Packed Transform",
+          "dir": "in",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Block Pair Match 3D",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Contact Settle",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Frahan Kintsugi",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Block Ground Transforms",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Block Pack (Tree)",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Match Block Transform",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Cloud ICP",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Georeference",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Georeference (Align by Points)",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Marker Registration",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Move to Origin",
+          "dir": "out",
+          "port": "Transform"
+        },
+        {
+          "type": "Transform",
+          "component": "Frahan Trencadís Pipeline",
+          "dir": "out",
+          "port": "Transforms"
+        },
+        {
+          "type": "Transform",
+          "component": "Voussoir Pack Into Block",
+          "dir": "out",
+          "port": "Transforms"
+        }
+      ]
+    },
+    {
+      "concept": "seed",
+      "types": [
+        "Integer",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 30,
+      "occurrences": [
+        {
+          "type": "Integer",
+          "component": "2D Bottom Left Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "2D Freeform Sheet Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "2D Freeform Sheet Pack V3",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "2D Irregular Sheet Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "2D NFP Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Sheet Pack (Unified Async)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Sheet Pack (Unified)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Freeform Sheet Nest",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Freeform Sheet Nest (Exact NFP)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Pack3D Irregular Container",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Pack3D Mesh Heightmap",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Live Edge Match",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Live Edge Stagger Layup",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Jittered Grid Fracture Planes",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Random Fracture Planes",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Fracture Roughen",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Fragment Shatter",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Synthetic Block",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Mesh Decompose (CoACD)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Block Pack (Tree)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Polygonal Wall (Generator)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Joint Sets to DFN",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Quarry DFN",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Quarry Decompose By CoACD",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Stochastic DFN (Baecher)",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Pack On Surface",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Pack Surfaces",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Trencadís Catalog Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Trencadís Pack",
+          "dir": "in",
+          "port": "Seed"
+        },
+        {
+          "type": "Point",
+          "component": "Voronoi Fracture Planes",
+          "dir": "in",
+          "port": "Seeds"
+        }
+      ]
+    },
+    {
+      "concept": "plan",
+      "types": [
+        "Generic",
+        "Plane"
+      ],
+      "n_types": 2,
+      "n_occurrences": 17,
+      "occurrences": [
+        {
+          "type": "Plane",
+          "component": "G-code to Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Planes to KUKAprc Commands",
+          "dir": "in",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Planes to KUKAprc Commands",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Planes to Robot Targets",
+          "dir": "in",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Planes to Robot Targets",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Wire-Saw Toolpath",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Discontinuity Ingest",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Vertical Fracture Planes From Curves",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Brick-Pattern Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Fracture Plane Filter",
+          "dir": "in",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Fracture Plane Filter",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Grid Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Jittered Grid Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Layered Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Radial Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Random Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        },
+        {
+          "type": "Generic",
+          "component": "Voronoi Fracture Planes",
+          "dir": "out",
+          "port": "Planes"
+        }
+      ]
+    },
+    {
+      "concept": "slab",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 16,
+      "occurrences": [
+        {
+          "type": "Generic",
+          "component": "Brick-Pattern Fracture Planes",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Fracture Plane Filter",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Grid Fracture Planes",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Jittered Grid Fracture Planes",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Layered Fracture Planes",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Random Fracture Planes",
+          "dir": "in",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Slab Cut By Fracture Polygons",
+          "dir": "out",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Block Size Distribution",
+          "dir": "in",
+          "port": "Slabs"
+        },
+        {
+          "type": "Generic",
+          "component": "Fragment Merger",
+          "dir": "in",
+          "port": "Slabs"
+        },
+        {
+          "type": "Generic",
+          "component": "Convex Hull Slab",
+          "dir": "out",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Mesh Shell Split",
+          "dir": "out",
+          "port": "Slabs"
+        },
+        {
+          "type": "Generic",
+          "component": "Quarry DFN",
+          "dir": "out",
+          "port": "Slabs"
+        },
+        {
+          "type": "Generic",
+          "component": "Quarry Decompose",
+          "dir": "out",
+          "port": "Slabs"
+        },
+        {
+          "type": "Generic",
+          "component": "Slab Cut By Fractures",
+          "dir": "out",
+          "port": "Slab"
+        },
+        {
+          "type": "Generic",
+          "component": "Slab From Mesh",
+          "dir": "out",
+          "port": "Slab"
+        },
+        {
+          "type": "Mesh",
+          "component": "Slab Cut By Tool Mesh (CGAL)",
+          "dir": "in",
+          "port": "Slab"
+        }
+      ]
+    },
+    {
+      "concept": "block",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 11,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Fabrication Prep Report",
+          "dir": "in",
+          "port": "Blocks"
+        },
+        {
+          "type": "Mesh",
+          "component": "Synthetic Block",
+          "dir": "out",
+          "port": "Blocks"
+        },
+        {
+          "type": "Mesh",
+          "component": "Fracture Block Pack",
+          "dir": "out",
+          "port": "Blocks"
+        },
+        {
+          "type": "Mesh",
+          "component": "Frahan Slab Yield Optimizer",
+          "dir": "in",
+          "port": "Block"
+        },
+        {
+          "type": "Mesh",
+          "component": "Quarry DFN",
+          "dir": "out",
+          "port": "Blocks"
+        },
+        {
+          "type": "Mesh",
+          "component": "Quarry Decompose By CoACD",
+          "dir": "out",
+          "port": "Blocks"
+        },
+        {
+          "type": "Mesh",
+          "component": "Carving Stages",
+          "dir": "in",
+          "port": "Block"
+        },
+        {
+          "type": "Mesh",
+          "component": "Fit In Block",
+          "dir": "in",
+          "port": "Block"
+        },
+        {
+          "type": "Generic",
+          "component": "Masonry Assembly",
+          "dir": "in",
+          "port": "Blocks"
+        },
+        {
+          "type": "Generic",
+          "component": "Masonry Block",
+          "dir": "out",
+          "port": "Block"
+        },
+        {
+          "type": "Generic",
+          "component": "Voussoir Pack Into Block",
+          "dir": "in",
+          "port": "Block"
+        }
+      ]
+    },
+    {
+      "concept": "ston",
+      "types": [
+        "Curve",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 9,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Frahan Stone Descriptor",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "IFC Export (Building)",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "IFC Export (Stone Assembly)",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "Masonry Stability Check",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "Polygonal Masonry Sequence 3D",
+          "dir": "out",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "Polygonal Wall (Generator)",
+          "dir": "out",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "Rubble Wall Settle",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Mesh",
+          "component": "Stone-Cell Match (Λ)",
+          "dir": "in",
+          "port": "Stones"
+        },
+        {
+          "type": "Curve",
+          "component": "Polygonal Masonry Sequence",
+          "dir": "out",
+          "port": "Stones"
+        }
+      ]
+    },
+    {
+      "concept": "fragment",
+      "types": [
+        "Curve",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 9,
+      "occurrences": [
+        {
+          "type": "Curve",
+          "component": "Frahan Fragment Descriptors",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Curve",
+          "component": "Frahan Fragment Edge Match",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Soft ICP 3D",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Contact Settle",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Fracture Roughen",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Frahan Fragment Shatter",
+          "dir": "out",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Frahan Kintsugi",
+          "dir": "in",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Load BB Sample",
+          "dir": "out",
+          "port": "Fragments"
+        },
+        {
+          "type": "Mesh",
+          "component": "Load Scan Fragments",
+          "dir": "out",
+          "port": "Fragments"
+        }
+      ]
+    },
+    {
+      "concept": "mode",
+      "types": [
+        "Integer",
+        "Text"
+      ],
+      "n_types": 2,
+      "n_occurrences": 8,
+      "occurrences": [
+        {
+          "type": "Text",
+          "component": "EdgeMatch Segments",
+          "dir": "out",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Live Edge Match",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Live Edge Stagger Layup",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Mesh Decimate (Geogram)",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Scan Reconstruct",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Carving Stages",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Enlarge Sculpture",
+          "dir": "in",
+          "port": "Mode"
+        },
+        {
+          "type": "Integer",
+          "component": "Slab Cut By Tool Mesh (CGAL)",
+          "dir": "in",
+          "port": "Mode"
+        }
+      ]
+    },
+    {
+      "concept": "depth",
+      "types": [
+        "Integer",
+        "Number"
+      ],
+      "n_types": 2,
+      "n_occurrences": 7,
+      "occurrences": [
+        {
+          "type": "Number",
+          "component": "Live Edge Trim",
+          "dir": "out",
+          "port": "Depth"
+        },
+        {
+          "type": "Number",
+          "component": "Polygonal Wall (Generator)",
+          "dir": "in",
+          "port": "Depth"
+        },
+        {
+          "type": "Number",
+          "component": "Mesh AABB",
+          "dir": "out",
+          "port": "Depth"
+        },
+        {
+          "type": "Number",
+          "component": "GPR Bedrock Surface",
+          "dir": "in",
+          "port": "Depths"
+        },
+        {
+          "type": "Number",
+          "component": "GPR Fracture Extract",
+          "dir": "out",
+          "port": "Depths"
+        },
+        {
+          "type": "Integer",
+          "component": "Polygonal Masonry Sequence",
+          "dir": "out",
+          "port": "Depth"
+        },
+        {
+          "type": "Integer",
+          "component": "Polygonal Masonry Sequence 3D",
+          "dir": "out",
+          "port": "Depth"
+        }
+      ]
+    },
+    {
+      "concept": "backend",
+      "types": [
+        "Integer",
+        "Text"
+      ],
+      "n_types": 2,
+      "n_occurrences": 7,
+      "occurrences": [
+        {
+          "type": "Text",
+          "component": "Mesh CSG (CGAL)",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Decimate (Geogram)",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Decompose (CoACD)",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Text",
+          "component": "Mesh Repair (Auto)",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Text",
+          "component": "Frahan Photo Detect → PLY",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Text",
+          "component": "Slab Cut By Tool Mesh (CGAL)",
+          "dir": "out",
+          "port": "Backend"
+        },
+        {
+          "type": "Integer",
+          "component": "Sanitize Mesh",
+          "dir": "in",
+          "port": "Backend"
+        }
+      ]
+    },
+    {
+      "concept": "fractur",
+      "types": [
+        "Integer",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 6,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Frahan Pareto Front Inspector",
+          "dir": "in",
+          "port": "Fractures"
+        },
+        {
+          "type": "Mesh",
+          "component": "BlockCutOpt Extract Grid",
+          "dir": "in",
+          "port": "Fractures"
+        },
+        {
+          "type": "Mesh",
+          "component": "BlockCutOpt Load Fractures",
+          "dir": "out",
+          "port": "Fractures"
+        },
+        {
+          "type": "Mesh",
+          "component": "Frahan Photo Detect → PLY",
+          "dir": "out",
+          "port": "Fractures"
+        },
+        {
+          "type": "Integer",
+          "component": "Joint Sets to DFN",
+          "dir": "out",
+          "port": "Fractures"
+        },
+        {
+          "type": "Integer",
+          "component": "Stochastic DFN (Baecher)",
+          "dir": "out",
+          "port": "Fractures"
+        }
+      ]
+    },
+    {
+      "concept": "clearance",
+      "types": [
+        "Number",
+        "Vector"
+      ],
+      "n_types": 2,
+      "n_occurrences": 5,
+      "occurrences": [
+        {
+          "type": "Number",
+          "component": "Pack3D Irregular",
+          "dir": "in",
+          "port": "Clearance"
+        },
+        {
+          "type": "Number",
+          "component": "Pack3D Irregular Container",
+          "dir": "in",
+          "port": "Clearance"
+        },
+        {
+          "type": "Number",
+          "component": "Pack3D Mesh Heightmap",
+          "dir": "in",
+          "port": "Clearance"
+        },
+        {
+          "type": "Number",
+          "component": "Rubble Wall Settle",
+          "dir": "out",
+          "port": "Clearance"
+        },
+        {
+          "type": "Vector",
+          "component": "Fit In Block",
+          "dir": "out",
+          "port": "Clearance"
+        }
+      ]
+    },
+    {
+      "concept": "cell",
+      "types": [
+        "Box",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 5,
+      "occurrences": [
+        {
+          "type": "Box",
+          "component": "Staggered Block Decompose",
+          "dir": "out",
+          "port": "Cells"
+        },
+        {
+          "type": "Mesh",
+          "component": "Polygonal Masonry Sequence 3D",
+          "dir": "in",
+          "port": "Cells"
+        },
+        {
+          "type": "Mesh",
+          "component": "Stone-Cell Match (Λ)",
+          "dir": "in",
+          "port": "Cells"
+        },
+        {
+          "type": "Mesh",
+          "component": "Arch Voussoirs",
+          "dir": "out",
+          "port": "Cells"
+        },
+        {
+          "type": "Mesh",
+          "component": "Pendentive Vault Voussoirs",
+          "dir": "out",
+          "port": "Cells"
+        }
+      ]
+    },
+    {
+      "concept": "result",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 5,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Mesh CSG (CGAL)",
+          "dir": "out",
+          "port": "Result"
+        },
+        {
+          "type": "Generic",
+          "component": "Ashlar Pack",
+          "dir": "out",
+          "port": "Result"
+        },
+        {
+          "type": "Generic",
+          "component": "Best Fit Pack",
+          "dir": "out",
+          "port": "Result"
+        },
+        {
+          "type": "Generic",
+          "component": "Pack Diagnostics",
+          "dir": "in",
+          "port": "Result"
+        },
+        {
+          "type": "Generic",
+          "component": "Pack Preview",
+          "dir": "in",
+          "port": "Result"
+        }
+      ]
+    },
+    {
+      "concept": "plane",
+      "types": [
+        "Generic",
+        "Plane"
+      ],
+      "n_types": 2,
+      "n_occurrences": 4,
+      "occurrences": [
+        {
+          "type": "Plane",
+          "component": "Mesh Planar Polygon Extractor",
+          "dir": "in",
+          "port": "Plane"
+        },
+        {
+          "type": "Plane",
+          "component": "Polygon Sanitize",
+          "dir": "in",
+          "port": "Plane"
+        },
+        {
+          "type": "Plane",
+          "component": "Stereonet + Block Size",
+          "dir": "in",
+          "port": "Plane"
+        },
+        {
+          "type": "Generic",
+          "component": "Slab Cut By Fractures",
+          "dir": "in",
+          "port": "Plane"
+        }
+      ]
+    },
+    {
+      "concept": "sheet",
+      "types": [
+        "Curve",
+        "Integer"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Curve",
+          "component": "Frahan Residual Voids",
+          "dir": "in",
+          "port": "Sheet"
+        },
+        {
+          "type": "Curve",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "in",
+          "port": "Sheets"
+        },
+        {
+          "type": "Integer",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "out",
+          "port": "Sheet"
+        }
+      ]
+    },
+    {
+      "concept": "frame",
+      "types": [
+        "Curve",
+        "Plane"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Curve",
+          "component": "EdgeMatch Solve",
+          "dir": "in",
+          "port": "Frame"
+        },
+        {
+          "type": "Plane",
+          "component": "Mesh PCA",
+          "dir": "out",
+          "port": "Frame"
+        },
+        {
+          "type": "Plane",
+          "component": "Scan to Block Inventory",
+          "dir": "out",
+          "port": "Frame"
+        }
+      ]
+    },
+    {
+      "concept": "inventory",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Generic",
+          "component": "Frahan Monument Inventory",
+          "dir": "out",
+          "port": "Inventory"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan Quarry Inventory",
+          "dir": "out",
+          "port": "Inventory"
+        },
+        {
+          "type": "Mesh",
+          "component": "Best Fit Pack",
+          "dir": "in",
+          "port": "Inventory"
+        }
+      ]
+    },
+    {
+      "concept": "axi",
+      "types": [
+        "Integer",
+        "Vector"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Integer",
+          "component": "Layered Fracture Planes",
+          "dir": "in",
+          "port": "Axis"
+        },
+        {
+          "type": "Integer",
+          "component": "Frahan Slab Yield Optimizer",
+          "dir": "out",
+          "port": "Axis"
+        },
+        {
+          "type": "Vector",
+          "component": "Radial Fracture Planes",
+          "dir": "in",
+          "port": "Axis"
+        }
+      ]
+    },
+    {
+      "concept": "pick",
+      "types": [
+        "Plane",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Plane",
+          "component": "Pick Place Frames",
+          "dir": "out",
+          "port": "Pick"
+        },
+        {
+          "type": "Point",
+          "component": "GPR Bedrock Surface",
+          "dir": "in",
+          "port": "Picks"
+        },
+        {
+          "type": "Point",
+          "component": "GPR Fractures on Mesh",
+          "dir": "in",
+          "port": "Picks"
+        }
+      ]
+    },
+    {
+      "concept": "target",
+      "types": [
+        "Mesh",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Point",
+          "component": "Georeference (Align by Points)",
+          "dir": "in",
+          "port": "Target"
+        },
+        {
+          "type": "Point",
+          "component": "Move to Origin",
+          "dir": "in",
+          "port": "Target"
+        },
+        {
+          "type": "Mesh",
+          "component": "Carving Stages",
+          "dir": "in",
+          "port": "Target"
+        }
+      ]
+    },
+    {
+      "concept": "set pol",
+      "types": [
+        "Line",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Line",
+          "component": "Discontinuity Sets (Async)",
+          "dir": "out",
+          "port": "Set poles"
+        },
+        {
+          "type": "Line",
+          "component": "Discontinuity Sets (Cloud)",
+          "dir": "out",
+          "port": "Set poles"
+        },
+        {
+          "type": "Point",
+          "component": "Stereonet + Block Size",
+          "dir": "out",
+          "port": "Set poles"
+        }
+      ]
+    },
+    {
+      "concept": "quarry",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 3,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Quarry DFN",
+          "dir": "in",
+          "port": "Quarry"
+        },
+        {
+          "type": "Mesh",
+          "component": "Quarry Decompose By CoACD",
+          "dir": "in",
+          "port": "Quarry"
+        },
+        {
+          "type": "Generic",
+          "component": "Quarry Decompose",
+          "dir": "in",
+          "port": "Quarry"
+        }
+      ]
+    },
+    {
+      "concept": "scale",
+      "types": [
+        "Boolean",
+        "Number"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Number",
+          "component": "CSV Parts Reader",
+          "dir": "in",
+          "port": "Scale"
+        },
+        {
+          "type": "Boolean",
+          "component": "Georeference (Align by Points)",
+          "dir": "in",
+          "port": "Scale"
+        }
+      ]
+    },
+    {
+      "concept": "source",
+      "types": [
+        "Integer",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Integer",
+          "component": "Sheet Nest (Hole-Aware)",
+          "dir": "out",
+          "port": "Source"
+        },
+        {
+          "type": "Point",
+          "component": "Georeference (Align by Points)",
+          "dir": "in",
+          "port": "Source"
+        }
+      ]
+    },
+    {
+      "concept": "inside",
+      "types": [
+        "Boolean",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Boolean",
+          "component": "CoM In-Container Check",
+          "dir": "out",
+          "port": "Inside"
+        },
+        {
+          "type": "Mesh",
+          "component": "Slab Cut By Tool Mesh (CGAL)",
+          "dir": "out",
+          "port": "Inside"
+        }
+      ]
+    },
+    {
+      "concept": "placed block",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Adaptive Block Match 3D",
+          "dir": "out",
+          "port": "Placed Block"
+        },
+        {
+          "type": "Generic",
+          "component": "Pack Diagnostics",
+          "dir": "out",
+          "port": "Placed Blocks"
+        }
+      ]
+    },
+    {
+      "concept": "board",
+      "types": [
+        "Curve",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "Live Edge Stagger Layup",
+          "dir": "out",
+          "port": "Boards"
+        },
+        {
+          "type": "Curve",
+          "component": "Live Edge Trim",
+          "dir": "in",
+          "port": "Board"
+        }
+      ]
+    },
+    {
+      "concept": "radargram",
+      "types": [
+        "Generic",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Mesh",
+          "component": "GPR Radargram Mesh",
+          "dir": "out",
+          "port": "Radargram"
+        },
+        {
+          "type": "Generic",
+          "component": "Frahan GPR Radargram Reader",
+          "dir": "out",
+          "port": "Radargram"
+        }
+      ]
+    },
+    {
+      "concept": "project",
+      "types": [
+        "Integer",
+        "Text"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Text",
+          "component": "IFC Export (Building)",
+          "dir": "in",
+          "port": "Project"
+        },
+        {
+          "type": "Integer",
+          "component": "GPR Fractures on Mesh",
+          "dir": "in",
+          "port": "Project"
+        }
+      ]
+    },
+    {
+      "concept": "place",
+      "types": [
+        "Boolean",
+        "Plane"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Plane",
+          "component": "Pick Place Frames",
+          "dir": "out",
+          "port": "Place"
+        },
+        {
+          "type": "Boolean",
+          "component": "Fit In Block",
+          "dir": "in",
+          "port": "Place"
+        }
+      ]
+    },
+    {
+      "concept": "surface",
+      "types": [
+        "Mesh",
+        "Surface"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Surface",
+          "component": "Polygonal Wall (Generator)",
+          "dir": "in",
+          "port": "Surface"
+        },
+        {
+          "type": "Mesh",
+          "component": "Surface Chart",
+          "dir": "in",
+          "port": "Surface"
+        }
+      ]
+    },
+    {
+      "concept": "anchor",
+      "types": [
+        "Integer",
+        "Point"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Integer",
+          "component": "Move to Origin",
+          "dir": "in",
+          "port": "Anchor"
+        },
+        {
+          "type": "Point",
+          "component": "Enlarge Sculpture",
+          "dir": "in",
+          "port": "Anchor"
+        }
+      ]
+    },
+    {
+      "concept": "scale factor",
+      "types": [
+        "Number",
+        "Vector"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Number",
+          "component": "Scan Scale Calibrate",
+          "dir": "out",
+          "port": "Scale Factor"
+        },
+        {
+          "type": "Vector",
+          "component": "Enlarge Sculpture",
+          "dir": "out",
+          "port": "Scale Factors"
+        }
+      ]
+    },
+    {
+      "concept": "cut plan",
+      "types": [
+        "Generic",
+        "Plane"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Generic",
+          "component": "Frahan Slab Yield Optimizer",
+          "dir": "out",
+          "port": "Cut Planes"
+        },
+        {
+          "type": "Plane",
+          "component": "Voussoir Pack Into Block",
+          "dir": "out",
+          "port": "Cut Planes"
+        }
+      ]
+    },
+    {
+      "concept": "net",
+      "types": [
+        "Curve",
+        "Number"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Number",
+          "component": "Overburden To Rock Face",
+          "dir": "out",
+          "port": "Net"
+        },
+        {
+          "type": "Curve",
+          "component": "Stereonet + Block Size",
+          "dir": "out",
+          "port": "Net"
+        }
+      ]
+    },
+    {
+      "concept": "stag",
+      "types": [
+        "Integer",
+        "Mesh"
+      ],
+      "n_types": 2,
+      "n_occurrences": 2,
+      "occurrences": [
+        {
+          "type": "Integer",
+          "component": "Carving Stages",
+          "dir": "in",
+          "port": "Stages"
+        },
+        {
+          "type": "Mesh",
+          "component": "Carving Stages",
+          "dir": "out",
+          "port": "Stages"
+        }
+      ]
+    }
+  ]
+}
