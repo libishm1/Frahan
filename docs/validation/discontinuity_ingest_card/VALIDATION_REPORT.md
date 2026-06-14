@@ -63,6 +63,30 @@ Unit scale 100 (the cm-scale detail scan → metre bench proxy), equal-area:
 `%APPDATA%\Grasshopper\Libraries\` (backups: `*.bak-pre-disc-ingest-card`), plus the
 NetTopologySuite runtime chain (GeoJSON/SHP paths). Worker exe unchanged.
 
+## 4b. Grasshopper examples + real-dataset studies (2026-06-14 addendum)
+Built two self-presenting canvas examples and validated them live (build → save →
+reload → Run → capture):
+- **`examples/30_discontinuity_sets/`** — File → `Discontinuity Sets (Async)` D5F10048
+  → **Segmented** cloud (coloured by joint set) + **Set poles** + `Stereonet + Block
+  Size` D5F1004A. Reloads to 13 wired objects, runs, produces the coloured cloud +
+  stereonet. Bundled `tongjiang_detail_decim.ply` (393 k, decimated **real** Tongjiang).
+- **`examples/31_discontinuity_ingest/`** — File → `Discontinuity Ingest` D5F10049 →
+  Rectangle → Boundary Surfaces → Custom Preview coloured by **Set id** (Gradient).
+  Validated on a 26-plane synthetic survey + the **real** 5-set `tongjiang_real_sets.csv`.
+
+**Colour-by-segmentation:** the worker's `segmented.ply` carries per-vertex RGB by
+joint set (5 set colours + grey unassigned); rendered the rock face coloured by set
+(`segmented_cloud_byset_clean.png`) and as oriented facet tiles.
+
+**Real datasets (the studies are data-driven, not preset):**
+| scan | points | joint sets |
+|---|---|---|
+| Tongjiang `detail_cloudXB.ply` | 7,858,334 | 5 (18.9/49.6/73.6/45.4/79.4) |
+| Tongjiang `detail_cloudAB.ply` | 6,857,772 | 6 (50.8/8.2/37.6/52.5/69.2/84.8) |
+
+Each real exposure yields its own site-specific sets (`segmented_AB_byset.png`).
+LAZ scans (Granite Dells TLS) need a LAZ→PLY conversion first (laspy/CloudCompare).
+
 ## 5. Observations / follow-ups (non-blocking)
 - The reader's broad `catch (Exception)` swallows even environment-fatal errors
   (`DllNotFoundException`) as "bad rows". Harmless live (rhcommon_c always loads in
