@@ -53,6 +53,24 @@ correct way to consume it:
   in-situ analysis the Granite Dells full scan (A4) is the better input; RockCloud-Align
   clouds are small registration crops.
 
+### Verified complete-rock-slope run (Finestrat, 2026-06-14)
+
+To answer "can we do a complete bench?" on a COMPLETE face (not crops): downloaded the
+Finestrat gypsum rock slope (Riquelme/DSE, Zenodo CC-BY, `Finestrat_2011.txt`, 1,738,184
+points, XYZ) and ran the worker. Result: **3 joint sets** - S1 dip 85/12 (53%), S2 dip
+38/351 (26%), S3 dip 87/310 (21%), honest meter-scale spacings (1.7-1.9 m), 54% of points
+assigned (vs 26% on the Tongjiang muck pile, and only part-of-a-scan on a single
+RockCloud-Align crop). This is the correct kind of input: one complete in-situ rock face,
+openly licensed.
+
+![Finestrat complete-slope segmentation](validation/discontinuity_ingest_card/images/finestrat_seg.png)
+![Finestrat stereonet](validation/discontinuity_ingest_card/images/finestrat_stereonet.png)
+
+**Takeaway:** complete-bench discontinuity analysis needs a COMPLETE single-scan cloud
+(Finestrat / Ouray / Granite Dells), not RockCloud-Align registration crops. Open complete
+rock-slope clouds: Finestrat (Zenodo 7576524, .txt/.e57), Fontcalent (Zenodo 6772702, .las),
+Ouray quartzite road-cut (ResearchGate RG.2.2.11917.82403, the canonical DSE benchmark).
+
 ## A. Point-cloud rock-face / outcrop datasets (primary inputs)
 
 These are the real 3D rock-face clouds the worker can run on directly.
