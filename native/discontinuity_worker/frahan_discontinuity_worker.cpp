@@ -132,15 +132,15 @@ static bool readPLY(const char*path,std::vector<V3>&out){
     for(long i=0;i<nv;i++){ if(fread(buf.data(),1,stride,f)!=(size_t)stride) break; float x,y,z; memcpy(&x,buf.data()+xo,4);memcpy(&y,buf.data()+yo,4);memcpy(&z,buf.data()+zo,4); out.push_back({x,y,z}); }
     fclose(f); return true;
 }
-static void writeSegPLY(const char*path,const std::vector<V3>&P,const std::vector<unsigned char>&rgb){
+static void writeSegPLY(const char*path,const std::vector<V3>&P,const std::vector<unsigned char>&rgb,V3 origin){
     FILE*f=fopen(path,"wb"); if(!f)return; fprintf(f,"ply\nformat binary_little_endian 1.0\nelement vertex %zu\nproperty float x\nproperty float y\nproperty float z\nproperty uchar red\nproperty uchar green\nproperty uchar blue\nend_header\n",P.size());
-    for(size_t i=0;i<P.size();i++){ float x=(float)P[i].x,y=(float)P[i].y,z=(float)P[i].z; fwrite(&x,4,1,f);fwrite(&y,4,1,f);fwrite(&z,4,1,f); fwrite(&rgb[i*3],1,3,f); } fclose(f);
+    for(size_t i=0;i<P.size();i++){ float x=(float)(P[i].x+origin.x),y=(float)(P[i].y+origin.y),z=(float)(P[i].z+origin.z); fwrite(&x,4,1,f);fwrite(&y,4,1,f);fwrite(&z,4,1,f); fwrite(&rgb[i*3],1,3,f); } fclose(f);
 }
 
 int main(int argc,char**argv){
-    std::string inPath,outDir; int K=24; double angle=12,bandF=2.5,seedEta=0.06,bw=15,merge=8,voxel=0; int minFacet=40,minSet=4; long maxPts=1200000; bool segply=false;
+    std::string inPath,outDir; int K=24; double angle=12,bandF=2.5,seedEta=0.06,bw=15,merge=8,voxel=0,minShare=0.02; int minFacet=40,minSet=4; long maxPts=1200000; bool segply=false;
     for(int i=1;i<argc;i++){ std::string a=argv[i]; auto nx=[&](double&v){ if(i+1<argc)v=atof(argv[++i]); }; auto ni=[&](int&v){ if(i+1<argc)v=atoi(argv[++i]); };
-        if(a=="--in"&&i+1<argc)inPath=argv[++i]; else if(a=="--out"&&i+1<argc)outDir=argv[++i]; else if(a=="--k")ni(K); else if(a=="--angle")nx(angle); else if(a=="--band")nx(bandF); else if(a=="--seedeta")nx(seedEta); else if(a=="--minfacet")ni(minFacet); else if(a=="--bw")nx(bw); else if(a=="--merge")nx(merge); else if(a=="--minset")ni(minSet); else if(a=="--voxel")nx(voxel); else if(a=="--maxpts"){ if(i+1<argc)maxPts=atol(argv[++i]); } else if(a=="--segply")segply=true; }
+        if(a=="--in"&&i+1<argc)inPath=argv[++i]; else if(a=="--out"&&i+1<argc)outDir=argv[++i]; else if(a=="--k")ni(K); else if(a=="--angle")nx(angle); else if(a=="--band")nx(bandF); else if(a=="--seedeta")nx(seedEta); else if(a=="--minfacet")ni(minFacet); else if(a=="--bw")nx(bw); else if(a=="--merge")nx(merge); else if(a=="--minset")ni(minSet); else if(a=="--minshare")nx(minShare); else if(a=="--voxel")nx(voxel); else if(a=="--maxpts"){ if(i+1<argc)maxPts=atol(argv[++i]); } else if(a=="--segply")segply=true; }
     if(inPath.empty()||outDir.empty()){ fprintf(stderr,"need --in and --out\n"); return 2; }
     auto t0=std::chrono::high_resolution_clock::now();
     std::vector<V3> raw; if(!readPLY(inPath.c_str(),raw)){ fprintf(stderr,"read failed\n"); return 3; }
@@ -154,6 +154,14 @@ int main(int argc,char**argv){
     raw.clear(); raw.shrink_to_fit();
     int N=(int)P.size(); if(N<K+1){ fprintf(stderr,"too few points\n"); return 4; }
     auto tRead=std::chrono::high_resolution_clock::now();
+
+    // Coordinates are kept absolute. Translation-invariance + good conditioning come
+    // from the region-grow accumulating SEED-RELATIVE covariance and the normals PCA
+    // centring each neighbourhood -- so no global shift is needed (and a global shift
+    // changed nothing but added an output add-back). origin stays zero. NOTE: a UTM
+    // cloud stored as float32 loses sub-decimetre precision in the FILE itself (an
+    // upstream issue); ingest such clouds with a local offset or from LAZ scale+offset.
+    V3 origin={0,0,0};
 
     // spacing + grid
     double bbd; { double maxx=-1e300,maxy=-1e300,maxz=-1e300,mnx=1e300,mny=1e300,mnz=1e300; for(auto&q:P){mnx=std::min(mnx,q.x);mny=std::min(mny,q.y);mnz=std::min(mnz,q.z);maxx=std::max(maxx,q.x);maxy=std::max(maxy,q.y);maxz=std::max(maxz,q.z);} bbd=std::sqrt((maxx-mnx)*(maxx-mnx)+(maxy-mny)*(maxy-mny)+(maxz-mnz)*(maxz-mnz)); }
@@ -182,9 +190,19 @@ int main(int argc,char**argv){
     std::vector<int> q; q.reserve(1024);
     for(int oi=0;oi<N;oi++){ int seed=ord[oi]; if(vis[seed]||eta[seed]>seedEta)continue;
         std::vector<int> mem; V3 fn=nrm[seed],fc=P[seed]; q.clear(); q.push_back(seed); vis[seed]=1; size_t head=0; int sf=0;
-        while(head<q.size()){ int j=q[head++]; mem.push_back(j); if(++sf>=64&&mem.size()>=16){ V3 nn;double e;V3 c; pca(P,mem,nn,e,c); fn=nn;fc=c;sf=0; }
+        // incremental covariance accumulated RELATIVE TO THE SEED point so a refit
+        // is O(1) AND exactly translation-invariant + well-conditioned (the diffs
+        // are facet-scale, not absolute position -> no catastrophic cancellation).
+        const V3 ref=P[seed];
+        double Sx=0,Sy=0,Sz=0,Sxx=0,Syy=0,Szz=0,Sxy=0,Sxz=0,Syz=0; long mc=0;
+        auto refit=[&](){ if(mc<3)return; double cx=Sx/mc,cy=Sy/mc,cz=Sz/mc;
+            double xx=Sxx-mc*cx*cx,yy=Syy-mc*cy*cy,zz=Szz-mc*cz*cz,xy=Sxy-mc*cx*cy,xz=Sxz-mc*cx*cz,yz=Syz-mc*cy*cz;
+            double l0,nv[3],tr; eigSmallest(xx,yy,zz,xy,xz,yz,l0,nv,tr); fn=lowerHemi({nv[0],nv[1],nv[2]}); fc={ref.x+cx,ref.y+cy,ref.z+cz}; };
+        while(head<q.size()){ int j=q[head++]; mem.push_back(j); double dx=P[j].x-ref.x,dy=P[j].y-ref.y,dz=P[j].z-ref.z;
+            Sx+=dx;Sy+=dy;Sz+=dz; Sxx+=dx*dx;Syy+=dy*dy;Szz+=dz*dz; Sxy+=dx*dy;Sxz+=dx*dz;Syz+=dy*dz; mc++;
+            if(++sf>=64&&mc>=16){ refit(); sf=0; }
             const int* nbp=&knnFlat[(size_t)j*K]; for(int t=0;t<K;t++){ int x=nbp[t]; if(x<0)break; if(vis[x])continue; if(std::fabs(dot(nrm[x],fn))<cosMax)continue; V3 v=sub(P[x],fc); if(std::fabs(dot(v,fn))>band)continue; vis[x]=1; q.push_back(x); } }
-        if((int)mem.size()<minFacet)continue; V3 nn;double e;V3 c; pca(P,mem,nn,e,c); fN.push_back(nn); fC.push_back(c); fI.push_back(mem); }
+        if((int)mem.size()<minFacet)continue; refit(); fN.push_back(fn); fC.push_back(fc); fI.push_back(mem); }
     int F=(int)fN.size(); auto tFacet=std::chrono::high_resolution_clock::now();
 
     // Watson axial mean-shift on facet poles (parallel over seeds; each seed
@@ -203,7 +221,9 @@ int main(int argc,char**argv){
     std::vector<V3> sp; for(auto&md:modes){ bool mg=false; for(auto&s:sp) if(axialDeg(md,s)<merge){mg=true;break;} if(!mg)sp.push_back(md); }
     std::vector<int> asg(F,-1); for(int i=0;i<F;i++){ int b=-1; double ba=1e9; for(int k=0;k<(int)sp.size();k++){ double a=axialDeg(fN[i],sp[k]); if(a<ba){ba=a;b=k;} } asg[i]=b; }
     std::vector<int> sc(sp.size(),0),spt(sp.size(),0); long facetPts=0; for(int i=0;i<F;i++){ sc[asg[i]]++; spt[asg[i]]+=(int)fI[i].size(); facetPts+=(long)fI[i].size(); }
-    std::vector<int> keep; for(int k=0;k<(int)sp.size();k++) if(sc[k]>=minSet) keep.push_back(k);
+    // keep a set only if it has >= minSet facets AND >= minShare of the facet
+    // points (drops spurious micro-sets; stabilises the count across densities).
+    std::vector<int> keep; for(int k=0;k<(int)sp.size();k++) if(sc[k]>=minSet && (facetPts<=0 || (double)spt[k]/facetPts>=minShare)) keep.push_back(k);
     std::sort(keep.begin(),keep.end(),[&](int a,int b){return spt[a]>spt[b];});
     auto tAll=std::chrono::high_resolution_clock::now();
     auto ms=[&](std::chrono::high_resolution_clock::time_point a,std::chrono::high_resolution_clock::time_point b){ return std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count(); };
@@ -223,10 +243,19 @@ int main(int argc,char**argv){
     js+="  ]\n}\n";
     std::string jp=outDir+"/discontinuity.json"; FILE*jf=fopen(jp.c_str(),"wb"); if(jf){fwrite(js.data(),1,js.size(),jf);fclose(jf);}
 
-    if(segply){ int setIdxOf[1]; (void)setIdxOf; std::vector<int> kmap(sp.size(),-1); for(size_t ki=0;ki<keep.size();ki++) kmap[keep[ki]]=(int)ki;
+    std::vector<int> kmap(sp.size(),-1); for(size_t ki=0;ki<keep.size();ki++) kmap[keep[ki]]=(int)ki;
+    // per-facet table (centroid, lower-hemi pole, 1-based kept set id or 0, point count)
+    // -> density stereonet + facet-level visualisation.
+    { std::string fp=outDir+"/facets.csv"; FILE*ff=fopen(fp.c_str(),"wb");
+      if(ff){ fprintf(ff,"cx,cy,cz,nx,ny,nz,set,npts\n");
+        for(int f=0;f<F;f++){ int ki=kmap[asg[f]]; V3 nn=lowerHemi(fN[f]);
+            fprintf(ff,"%.4f,%.4f,%.4f,%.5f,%.5f,%.5f,%d,%d\n",fC[f].x+origin.x,fC[f].y+origin.y,fC[f].z+origin.z,nn.x,nn.y,nn.z,ki<0?0:ki+1,(int)fI[f].size()); }
+        fclose(ff); } }
+
+    if(segply){
         const unsigned char pal[10][3]={{220,50,47},{38,139,210},{133,153,0},{181,137,0},{211,54,130},{42,161,152},{203,75,22},{108,113,196},{0,160,90},{150,100,40}};
         std::vector<unsigned char> rgb(N*3,105); for(int f=0;f<F;f++){ int ki=kmap[asg[f]]; if(ki<0)continue; const unsigned char*c=pal[ki%10]; for(int pi:fI[f]){ rgb[pi*3]=c[0];rgb[pi*3+1]=c[1];rgb[pi*3+2]=c[2]; } }
-        std::string pp=outDir+"/segmented.ply"; writeSegPLY(pp.c_str(),P,rgb); }
+        std::string pp=outDir+"/segmented.ply"; writeSegPLY(pp.c_str(),P,rgb,origin); }
     fprintf(stderr,"%s",js.c_str());
     return 0;
 }

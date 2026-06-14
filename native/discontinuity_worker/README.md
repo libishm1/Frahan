@@ -32,8 +32,19 @@ Deploy the exe beside the plug-in (`Libraries/Frahan.StonePack.MeshHeightmap/`).
 ```
 frahan_discontinuity_worker --in cloud.ply --out <dir>
   [--k 24] [--angle 12] [--band 2.5] [--seedeta 0.06] [--minfacet 40]
-  [--bw 15] [--merge 8] [--minset 4] [--voxel 0] [--maxpts 6000000] [--segply]
+  [--bw 15] [--merge 8] [--minset 4] [--minshare 0.02] [--voxel 0]
+  [--maxpts 6000000] [--segply]
 ```
+Outputs `discontinuity.json` (per-set dip/dipdir/spacing/share + timings),
+`facets.csv` (per-facet centroid + lower-hemi pole + set id + point count, for
+density stereonets), and `segmented.ply` (RGB by set) when `--segply` is set.
+`--minshare` drops joint sets holding less than this fraction of facet points.
+
+## Notes / limits
+Region-grow facet covariance is accumulated **seed-relative** (translation-invariant,
+well-conditioned). A UTM cloud stored as float32 loses sub-decimetre precision in the
+file itself (upstream) — ingest with a local offset or from LAZ scale+offset. The exact
+minor-set count is bandwidth- and density-sensitive (the dominant sets are robust).
 
 ## Files
 - `frahan_discontinuity_worker.cpp` — the worker (CSR grid + analytic eig + FACETS + mean-shift).
