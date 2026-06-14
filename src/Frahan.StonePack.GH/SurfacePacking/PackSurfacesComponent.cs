@@ -147,12 +147,12 @@ namespace Frahan.GH.Surface
                 "Origin = centroid on surface, X/Y = surface tangent axes, Z = surface normal.",
                 GH_ParamAccess.list);
             // 2
-            p.AddGenericParameter("Transforms 3D", "T3",
+            p.AddTransformParameter("Transforms 3D", "T3",
                 "Transform from PACKED 2D position to the 3D surface placement frame. " +
                 "Apply to Packed 2D curves to get rigid (non-deformed) parts on the surface.",
                 GH_ParamAccess.list);
             // 3
-            p.AddGenericParameter("Full Transform", "FT",
+            p.AddTransformParameter("Full Transform", "FT",
                 "Composed transform: original flat part -> 3D surface in one step. " +
                 "Apply to the ORIGINAL part geometry (before packing) using Part Index to select it.",
                 GH_ParamAccess.list);

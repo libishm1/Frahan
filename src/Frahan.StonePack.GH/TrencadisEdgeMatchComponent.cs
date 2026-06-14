@@ -94,7 +94,7 @@ public sealed class TrencadisEdgeMatchComponent : FrahanComponentBase
             "Shard contours transformed into their solved placements. " +
             "Sheet outlines are not included (they are the identity frame).",
             GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X",
+        pManager.AddTransformParameter("Transforms", "X",
             "Per-piece rigid transform.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Source Indices", "Src",
             "Original Parts list index for each placed piece.",

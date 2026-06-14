@@ -156,7 +156,7 @@ public sealed class Pack2DTrencadisComponent : FrahanComponentBase
         pManager.AddCurveParameter("Pre-Trim Pieces", "C0",
             "Placed shards BEFORE the trim post-pass. Useful for " +
             "debugging which piece chipped which.", GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X",
+        pManager.AddTransformParameter("Transforms", "X",
             "Placement transforms (per source curve).", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Source Indices", "Src",
             "Original input curve index for each placed shard.", GH_ParamAccess.list);

@@ -106,7 +106,7 @@ public sealed class EdgeMatchSolveComponent : FrahanComponentBase
         pManager.AddCurveParameter("Placed", "P",
             "Shard contours transformed by their solved placements. Frame is included as Identity.",
             GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X",
+        pManager.AddTransformParameter("Transforms", "X",
             "Per-panel rigid transform.", GH_ParamAccess.list);
         pManager.AddTextParameter("Ids", "Id",
             "Panel ids matching the Placed and Transforms order.", GH_ParamAccess.list);

@@ -65,7 +65,7 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddCurveParameter("Packed Curves", "C", "Placed part curves.", GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X", "Placement transforms per source curve.", GH_ParamAccess.list);
+        pManager.AddTransformParameter("Transforms", "X", "Placement transforms per source curve.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Source Indices", "Src", "Original input index for each packed curve.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Sheet Indices", "Sh", "Sheet index for each packed curve.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Unplaced", "U", "Curves that could not be placed.", GH_ParamAccess.list);

@@ -65,7 +65,7 @@ public sealed class Pack2DBottomLeftComponent : FrahanComponentBase
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddCurveParameter("Packed Curves", "C", "Placed curves.", GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X", "Placement transforms applied to source curves.", GH_ParamAccess.list);
+        pManager.AddTransformParameter("Transforms", "X", "Placement transforms applied to source curves.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Unplaced", "U", "Curves that could not be placed.", GH_ParamAccess.list);
         pManager.AddCurveParameter("Sheet Preview", "B", "Preview rectangle for the sheet.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Used Length", "L", "Used sheet length.", GH_ParamAccess.item);

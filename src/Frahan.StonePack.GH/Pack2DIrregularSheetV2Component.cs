@@ -90,7 +90,7 @@ public sealed class Pack2DIrregularSheetV2Component : GH_TaskCapableComponent<Pa
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddCurveParameter("Packed Curves", "C", "Placed part curves.", GH_ParamAccess.list);
-        pManager.AddGenericParameter("Transforms", "X",
+        pManager.AddTransformParameter("Transforms", "X",
             "Placement transforms applied to each source curve.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Source Indices", "Src",
             "Original input curve index for each packed curve.", GH_ParamAccess.list);
