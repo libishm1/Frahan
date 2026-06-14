@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: "Frahan StonePack"
+message: "If you use this software, please cite it using this metadata."
+type: software
+authors:
+  - given-names: Libish
+    family-names: Murugesan
+    orcid: "https://orcid.org/0009-0004-3238-4202"
+abstract: >-
+  Frahan StonePack is a Rhino / Grasshopper plugin for stone-fabrication
+  readiness: a bridge layer between design intent and machine-ready fabrication
+  for dimension stone, monuments, and dry-stone masonry. It covers the pipeline
+  from GPR / scan to fracture mapping and point-cloud discontinuity / joint-set
+  extraction, 3D reconstruction, discrete fracture networks, block packing and
+  cutting, masonry equilibrium, and fabrication export, with a research-grade
+  algorithm library. Released as a research preview for educational and research use.
+version: "0.1.0-alpha"
+license: GPL-3.0-only
+repository-code: "https://github.com/libishm1/Frahan"
+keywords:
+  - stone fabrication
+  - dimension stone
+  - Grasshopper
+  - Rhino
+  - point cloud
+  - discontinuity sets
+  - discrete fracture network
+  - nesting
+  - block packing
+  - masonry equilibrium
+  - digital fabrication

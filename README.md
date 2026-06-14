@@ -1,5 +1,12 @@
 # Frahan StonePack
 
+> **v0.1.0-alpha - experimental / research prototype.** An independent open-source research
+> implementation for stone / geometry-processing workflows in Grasshopper, under active development.
+> This release is for **public testing, feedback, and citation of the initial implementation**.
+> **Not** an official university or company product. Licensed GPLv3; bundles a non-commercial
+> research-only component (Kintsugi / PuzzleFusion++) - see the License note below and `NOTICE.md`.
+> Cite via `CITATION.cff`.
+
 ![Fracture modelling to block packing](docs/results/hero_fracture_block_packing.png)
 
 *Fracture modelling -> wire-saw block packing: intact, saw-separable stock (blue/green) recovered from a
@@ -13,8 +20,12 @@ discrete fracture network (DFN) -> block packing + cutting -> masonry assembly -
 a research-grade algorithm library (2D/3D packing, hole-aware no-fit-polygon nesting, block-cut
 optimization, masonry equilibrium, edge-matching, surface mosaicing, joint-set + Baecher DFN).
 
-License: GPL-3.0 (see LICENSE). The plugin links `Frahan.Kintsugi.Port` (a GPL-3.0 port), so the whole
-distribution is GPL-3.0.
+License: **GPL-3.0** (see `LICENSE`), released as a **research preview for educational and research use**.
+The plugin bundles `Frahan.Kintsugi.Port` + `kintsugi.bin`, a port of **PuzzleFusion++** whose authors permit
+research use only (GPLv3 for research, **not for commercial use**) - so this distribution is for research /
+education, not commercial use. A commercial-capable GPL-3.0 subset is obtainable by excluding the Kintsugi
+module. Full attribution + per-component licenses: `NOTICE.md`, `THIRD_PARTY_NOTICES.md`, `data/ATTRIBUTION.md`.
+How to cite: `CITATION.cff` (a Zenodo DOI is minted for v0.1.0-alpha).
 
 ## Quick start (users)
 1. Rhino 8 (Windows). Build `src/Frahan.StonePack.GH` (net48) -> `Frahan.StonePack.gha`.
@@ -32,7 +43,8 @@ distribution is GPL-3.0.
 - Read `AGENTS.md` (orchestration rules) + `handoffs/` before contributing. Read `CONTRIBUTING.md`.
 
 ## Repository layout
-- `src/` — the 5 modules: Core, GH (.gha), Rhino (.rhp), EdgeMatching.Core, Kintsugi.Port (GPL-3.0).
+- `src/` — the 5 modules: Core, GH (.gha), Rhino (.rhp), EdgeMatching.Core, Kintsugi.Port (PuzzleFusion++
+  port, non-commercial research-only; see `NOTICE.md`).
 - `tools/` — headless harness + GPR bench. `tests/` — the test suite.
 - `examples/` — master-spine workflows (`.gh` + `.3dm` + README, referencing `data/`).
 - `data/` — sample datasets per workflow (see `data/ATTRIBUTION.md`; LFS at the public step).

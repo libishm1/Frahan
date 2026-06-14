@@ -1,0 +1,27 @@
+{
+  "title": "Frahan StonePack",
+  "description": "<p>This is an early alpha release of an independent open-source research implementation for stone/geometry-processing workflows in Grasshopper. The tool is experimental and under active development, and the current release is intended for public testing, feedback, and citation of the initial implementation.</p><p>Frahan StonePack is a Rhino / Grasshopper plugin for stone-fabrication readiness: a bridge layer between design intent and machine-ready fabrication for dimension stone, monuments, and dry-stone masonry. It covers the pipeline from GPR / scan to fracture mapping and point-cloud discontinuity / joint-set extraction, 3D reconstruction, discrete fracture networks, block packing and cutting, masonry equilibrium, and fabrication export, with a research-grade algorithm library (2D/3D packing, hole-aware no-fit-polygon nesting, block-cut optimization, masonry CRA equilibrium, edge-matching, surface mosaicing, joint-set and Baecher DFN). Released for educational and research use. Note: bundles a non-commercial research-only port of PuzzleFusion++ (Kintsugi module).</p>",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "GPL-3.0-only",
+  "version": "0.1.0-alpha",
+  "creators": [
+    {
+      "name": "Murugesan, Libish",
+      "orcid": "0009-0004-3238-4202"
+    }
+  ],
+  "keywords": [
+    "stone fabrication",
+    "dimension stone",
+    "Grasshopper",
+    "Rhino",
+    "point cloud",
+    "discontinuity sets",
+    "discrete fracture network",
+    "nesting",
+    "block packing",
+    "masonry equilibrium",
+    "digital fabrication"
+  ]
+}
