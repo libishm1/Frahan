@@ -37,7 +37,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Ashlar masonry vernacular; Gramazio Kohler Eichenhofer 2017 NCCR Digital Fabrication ETH",
         Tolerance = "course horizontality <= 1 deg/row; vertical joints offset >= 30 % between rows",
         CardSet = "wiki/research/hitl_cards/bu_ashlar/ (proposed)")]
-    public sealed class AshlarPackComponent : GH_Component
+    public sealed class AshlarPackComponent : FrahanComponentBase
     {
         public AshlarPackComponent()
             : base(
@@ -157,7 +157,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             double wallWidth = 0.0;
             double wallHeight = 0.0;

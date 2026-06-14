@@ -29,7 +29,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run a fracture detector on a calibrated image and emit the  vertical-extruded PLY consumable by BlockCutOpt",
         DesignFlow.TopDown)]
-    public sealed class FrahanPhotoToPlyComponent : GH_Component
+    public sealed class FrahanPhotoToPlyComponent : FrahanComponentBase
     {
         public FrahanPhotoToPlyComponent()
             : base(
@@ -68,7 +68,7 @@ namespace Frahan.GH.Quarry
             p.AddTextParameter("Backend", "Bk", "Detector backend used.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string csv = null;
             double ox = 0.0, oy = 0.0, gsd = 0.02;
@@ -110,7 +110,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Build a convex polyhedron from N half-space inequalities  Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synth...",
         DesignFlow.TopDown)]
-    public sealed class FrahanAlgebraicConvexPolyComponent : GH_Component
+    public sealed class FrahanAlgebraicConvexPolyComponent : FrahanComponentBase
     {
         public FrahanAlgebraicConvexPolyComponent()
             : base(
@@ -145,7 +145,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Volume (m^3)", "Vol", "Polyhedron volume.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var bs = new List<double>();
             var nxs = new List<double>();
@@ -191,7 +191,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Generate a deterministic synthetic discrete fracture network  for Tamil Nadu granite (three joint sets: NE-...",
         DesignFlow.TopDown)]
-    public sealed class FrahanSyntheticTnGraniteComponent : GH_Component
+    public sealed class FrahanSyntheticTnGraniteComponent : FrahanComponentBase
     {
         public FrahanSyntheticTnGraniteComponent()
             : base(
@@ -231,7 +231,7 @@ namespace Frahan.GH.Quarry
             p.AddTextParameter("PLY Written", "Po", "PLY file path actually written (empty when W=false).", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             int seed = 12345;

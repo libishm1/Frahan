@@ -24,7 +24,7 @@ namespace Frahan.GH.Masonry
         "Splits an AshlarPackResult into Coverage / Course Count /  Leftovers / Notes / Placed Blocks for inspection",
         DesignFlow.Bridges,
         Precedent = "Frahan-original diagnostic / report")]
-    public sealed class PackDiagnosticsComponent : GH_Component
+    public sealed class PackDiagnosticsComponent : FrahanComponentBase
     {
         public PackDiagnosticsComponent()
             : base(
@@ -68,7 +68,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object raw = null;
             if (!da.GetData(0, ref raw))

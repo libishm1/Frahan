@@ -37,7 +37,7 @@ namespace Frahan.GH.Masonry
         "Walks a masonry build order and runs the RBE convex-QP  stability check on each partial assembly",
         DesignFlow.BottomUp,
         Precedent = "Kim 2024 polygonal masonry install order; Heyman 1966 + Kao 2022 CRA stability gates")]
-    public sealed class BuildOrderStabilityStreamComponent : GH_Component
+    public sealed class BuildOrderStabilityStreamComponent : FrahanComponentBase
     {
         public BuildOrderStabilityStreamComponent()
             : base(
@@ -109,7 +109,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawAssembly = null;
             var ids = new List<string>();

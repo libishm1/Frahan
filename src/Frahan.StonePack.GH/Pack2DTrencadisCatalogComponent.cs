@@ -40,7 +40,7 @@ namespace Frahan.GH;
     "Trencadís catalog packer: partition each sheet into CVD-Lloyd  cells, then optimally assign catalog parts t...",
     DesignFlow.BottomUp,
     Precedent = "Lloyd 1982 Centroidal Voronoi diagram (CVD); Battiato 2013 Trencadis synthesis")]
-public sealed class Pack2DTrencadisCatalogComponent : GH_Component
+public sealed class Pack2DTrencadisCatalogComponent : FrahanComponentBase
 {
     public Pack2DTrencadisCatalogComponent()
         : base("Frahan Trencadís Catalog Pack", "TrencadisCat",
@@ -103,7 +103,7 @@ public sealed class Pack2DTrencadisCatalogComponent : GH_Component
             "Catalog packing report.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var parts = new List<Curve>();
         var sheets = new List<Curve>();

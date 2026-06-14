@@ -28,7 +28,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Bundle Rhino meshes as a MonumentInventory consumable by  the Frahan Bench Monument Pack components",
         DesignFlow.TopDown)]
-    public sealed class FrahanMonumentInventoryComponent : GH_Component
+    public sealed class FrahanMonumentInventoryComponent : FrahanComponentBase
     {
         public FrahanMonumentInventoryComponent()
             : base(
@@ -61,7 +61,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Total AABB Volume (m^3)", "V", "Sum of monument AABB volumes.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             var ids = new List<string>();
@@ -102,7 +102,7 @@ namespace Frahan.GH.Quarry
         DesignFlow.TopDown)]
     [Algorithm("24-orientation SO(3) sampling + greedy AABB packing", "Frahan-original",
         Note = "24-rotation cube-symmetry sampling is a known recipe; the bench/fracture-cell packing logic is Frahan-original")]
-    public sealed class FrahanBenchMonumentPackComponent : GH_Component
+    public sealed class FrahanBenchMonumentPackComponent : FrahanComponentBase
     {
         public FrahanBenchMonumentPackComponent()
             : base(
@@ -138,7 +138,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Fill Ratio", "Fr", "TotalPlacedVolume / BenchAabbVolume.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var bgW = new GH_ObjectWrapper();
             var invW = new GH_ObjectWrapper();
@@ -188,7 +188,7 @@ namespace Frahan.GH.Quarry
         DesignFlow.TopDown)]
     [Algorithm("24-orientation SO(3) sampling + greedy AABB packing", "Frahan-original",
         Note = "single-cell entry to the same BenchMonumentPacker engine as MonPack; Frahan-original recipe")]
-    public sealed class FrahanPackMonumentsInCellComponent : GH_Component
+    public sealed class FrahanPackMonumentsInCellComponent : FrahanComponentBase
     {
         public FrahanPackMonumentsInCellComponent()
             : base(
@@ -222,7 +222,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Placed Count", "N", "Total placements in this cell.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var bgW = new GH_ObjectWrapper();
             int cellIndex = 0;

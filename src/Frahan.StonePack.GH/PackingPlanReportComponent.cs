@@ -22,7 +22,7 @@ namespace Frahan.GH;
     "Aggregate PackingMetricsReport + residual voids + edge-match scores  into one PackingPlanReport",
     DesignFlow.TopDown,
     Precedent = "Frahan-original packing-plan report")]
-public sealed class PackingPlanReportComponent : GH_Component
+public sealed class PackingPlanReportComponent : FrahanComponentBase
 {
     public PackingPlanReportComponent()
         : base("Frahan Packing Plan Report", "PackPlanRpt",
@@ -82,7 +82,7 @@ public sealed class PackingPlanReportComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         // Input 0 - PackingMetricsReport, required.
         var metricsWrapper = new GH_ObjectWrapper();

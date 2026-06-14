@@ -35,7 +35,7 @@ namespace Frahan.GH.Quarry;
     "Derive an axis-aligned Box bench + carry the original Mesh  for use with the existing 11 BCO components (wh...",
     DesignFlow.Bridges,
     Precedent = "Frahan-original quarry-bench-from-scan utility")]
-public sealed class BenchFromMeshComponent : GH_Component
+public sealed class BenchFromMeshComponent : FrahanComponentBase
 {
     public BenchFromMeshComponent()
         : base("Bench From Mesh", "BenchFromMesh",
@@ -90,7 +90,7 @@ public sealed class BenchFromMeshComponent : GH_Component
             "Mesh vertex count (sanity check).", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh mesh = null;
         double benchHeight = 0.0;

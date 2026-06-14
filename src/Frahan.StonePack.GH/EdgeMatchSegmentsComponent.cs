@@ -25,7 +25,7 @@ namespace Frahan.GH;
     Precedent = "Stage-1 segmenter of the canonical 5-stage EdgeMatch pipeline (Frahan-original)",
     Tolerance = "no numeric pass criterion -- pure inspection / tuning tool",
     CardSet = "wiki/research/hitl_cards/em_2d_boundary_match/ (the consumer card-set)")]
-public sealed class EdgeMatchSegmentsComponent : GH_Component
+public sealed class EdgeMatchSegmentsComponent : FrahanComponentBase
 {
     public EdgeMatchSegmentsComponent()
         : base("EdgeMatch Segments", "EMSegs",
@@ -85,7 +85,7 @@ public sealed class EdgeMatchSegmentsComponent : GH_Component
             "Best-fit plane RMS (mm) for the input curve.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve? curve = null;
         double planarityTol = Panel.DefaultPlanarityTolerance;

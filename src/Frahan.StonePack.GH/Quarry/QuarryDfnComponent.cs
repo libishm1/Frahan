@@ -34,7 +34,7 @@ namespace Frahan.GH.Masonry
         "Extracts dimension-stone blocks from a quarry mesh following  a Discrete Fracture Network defined by joint ...",
         DesignFlow.BottomUp,
         Precedent = "Discrete Fracture Network synthesis; ISRM Suggested Methods + Priest 1993")]
-    public sealed class QuarryDfnComponent : GH_Component
+    public sealed class QuarryDfnComponent : FrahanComponentBase
     {
         public QuarryDfnComponent()
             : base(
@@ -76,7 +76,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh quarryMesh = null;
             var rawJointSets = new List<object>();

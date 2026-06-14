@@ -29,7 +29,7 @@ namespace Frahan.GH.Quarry;
     Note = "Inverse companion to DSE: reads measured/mapped orientations from CSV/GeoJSON/DXF/SHP.")]
 [RelatedComponent("Frahan > Quarry > Discontinuity Sets (Async)", Reason = "Discovers joint sets from a scan; this ingests measured ones.")]
 [RelatedComponent("Frahan > Quarry > Joint Set", Reason = "Author a single set by hand instead of reading a file.")]
-public sealed class DiscontinuityIngestComponent : GH_Component
+public sealed class DiscontinuityIngestComponent : FrahanComponentBase
 {
     public DiscontinuityIngestComponent()
         : base("Discontinuity Ingest", "DiscIn",
@@ -67,7 +67,7 @@ public sealed class DiscontinuityIngestComponent : GH_Component
         p.AddTextParameter("Report", "Re", "Counts, CRS, and any skipped-row warnings.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string file = null;
         if (!da.GetData(0, ref file) || string.IsNullOrWhiteSpace(file))

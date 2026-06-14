@@ -32,7 +32,7 @@ namespace Frahan.GH;
     "Best-fit transform from 3+ corresponding control points (Horn's  absolute orientation)",
     DesignFlow.Bridges,
     Precedent = "Standard UTM / EPSG transforms + Horn 1987 best-fit absolute orientation")]
-public sealed class GeoreferenceComponent : GH_Component
+public sealed class GeoreferenceComponent : FrahanComponentBase
 {
     public GeoreferenceComponent()
         : base("Georeference (Align by Points)", "GeorefPts",
@@ -70,7 +70,7 @@ public sealed class GeoreferenceComponent : GH_Component
         p.AddTextParameter("Report", "R", "Fit summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var geo = new List<IGH_GeometricGoo>();
         var src = new List<Point3d>();

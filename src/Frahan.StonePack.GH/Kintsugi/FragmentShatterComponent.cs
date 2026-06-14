@@ -53,7 +53,7 @@ namespace Frahan.GH.Kintsugi;
     "Voronoi-shatter a solid input mesh into N fragments suitable  for round-trip testing of Frahan Kintsugi",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original Voronoi-shatter; Aurenhammer 1991 Voronoi diagrams")]
-public sealed class FragmentShatterComponent : GH_Component
+public sealed class FragmentShatterComponent : FrahanComponentBase
 {
     public FragmentShatterComponent()
         : base("Frahan Fragment Shatter",
@@ -116,7 +116,7 @@ public sealed class FragmentShatterComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh solid = null;
         int n = 8;

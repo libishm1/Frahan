@@ -37,7 +37,7 @@ namespace Frahan.GH.TwoD;
 [RelatedComponent("Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP)",
     Reason = "Multi-sheet exact NFP-BLF production sibling without part-in-part-hole nesting; use it when parts have no usable holes.",
     ComponentGuid = "2d351646-2cb0-402a-bbd8-3950b5bb1fbc")]
-public sealed class HoleNestComponent : GH_Component
+public sealed class HoleNestComponent : FrahanComponentBase
 {
     private const int MaxVerts = 200;          // hard cap for explicit polylines (drawn as-is)
     private const int SheetSampleVerts = 192;  // ACCURACY lane: the sheet + sheet-holes are single loops whose
@@ -193,7 +193,7 @@ public sealed class HoleNestComponent : GH_Component
         public bool Partial;   // progressive snapshot (mid-solve), not a final result
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         // ── SELF-TRIGGERED re-solve (2026-06-13) ────────────────────────────
         // This re-solve was scheduled by MY OWN progress/completion callback,

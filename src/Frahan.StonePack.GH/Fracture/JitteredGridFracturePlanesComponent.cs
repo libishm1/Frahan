@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original grid + per-cell jitter perturbation")]
     [Algorithm("Grid with per-plane offset jitter", "Frahan-original",
         Note = "grid plus uniform per-plane normal offset; not a published sampler")]
-    public sealed class JitteredGridFracturePlanesComponent : GH_Component
+    public sealed class JitteredGridFracturePlanesComponent : FrahanComponentBase
     {
         public JitteredGridFracturePlanesComponent()
             : base(
@@ -64,7 +64,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawSlab = null;
             int nX = 1, nY = 0, nZ = 1, seed = 12345;

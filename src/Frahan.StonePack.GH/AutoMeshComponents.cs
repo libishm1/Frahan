@@ -22,7 +22,7 @@ namespace Frahan.GH;
 [DesignApplication(
     "Topology-aware mesh repair via the best available backend  (Geogram first, CGAL fallback)",
     DesignFlow.Bridges)]
-public sealed class AutoMeshRepairComponent : GH_Component
+public sealed class AutoMeshRepairComponent : FrahanComponentBase
 {
     public AutoMeshRepairComponent()
         : base("Mesh Repair (Auto)", "RepairAuto",
@@ -52,7 +52,7 @@ public sealed class AutoMeshRepairComponent : GH_Component
         pManager.AddTextParameter("Diagnostics", "D", "Loaded shim versions.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; bool run = false;
         if (!da.GetData(0, ref m)) return;
@@ -92,7 +92,7 @@ public sealed class AutoMeshRepairComponent : GH_Component
 [DesignApplication(
     "Mesh decimation via the best available backend (Geogram  vertex-clustering preferred; CGAL edge-collapse fa...",
     DesignFlow.Bridges)]
-public sealed class AutoMeshDecimateComponent : GH_Component
+public sealed class AutoMeshDecimateComponent : FrahanComponentBase
 {
     public AutoMeshDecimateComponent()
         : base("Mesh Decimate (Auto)", "DecimateAuto",
@@ -120,7 +120,7 @@ public sealed class AutoMeshDecimateComponent : GH_Component
         pManager.AddTextParameter("Diagnostics", "D", "Loaded shim versions.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; double ratio = 0.5; bool run = false;
         if (!da.GetData(0, ref m)) return;
@@ -157,7 +157,7 @@ public sealed class AutoMeshDecimateComponent : GH_Component
 [DesignApplication(
     "Oriented bounding box via the best available backend  (Geogram preferred - lighter, no Eigen)",
     DesignFlow.Bridges)]
-public sealed class AutoObbComponent : GH_Component
+public sealed class AutoObbComponent : FrahanComponentBase
 {
     public AutoObbComponent()
         : base("OBB (Auto)", "ObbAuto",
@@ -182,7 +182,7 @@ public sealed class AutoObbComponent : GH_Component
         pManager.AddTextParameter("Diagnostics", "D", "Loaded shim versions.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; bool run = false;
         if (!da.GetData(0, ref m)) return;

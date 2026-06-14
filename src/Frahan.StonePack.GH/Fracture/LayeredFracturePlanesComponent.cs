@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original layered (sedimentary-like) fracture set")]
     [Algorithm("Parallel layered fracture set", "Frahan-original",
         Note = "evenly-spaced parallel planes; no canonical published source")]
-    public sealed class LayeredFracturePlanesComponent : GH_Component
+    public sealed class LayeredFracturePlanesComponent : FrahanComponentBase
     {
         public LayeredFracturePlanesComponent()
             : base(
@@ -63,7 +63,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawSlab = null;
             int axis = 2, count = 3;

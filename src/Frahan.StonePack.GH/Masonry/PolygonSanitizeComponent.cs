@@ -30,7 +30,7 @@ namespace Frahan.GH.Masonry
         "Drops duplicate / collinear vertices and sliver edges  from a closed polyline",
         DesignFlow.Bridges,
         Precedent = "Frahan-original polygon-cleanup utility")]
-    public sealed class PolygonSanitizeComponent : GH_Component
+    public sealed class PolygonSanitizeComponent : FrahanComponentBase
     {
         public PolygonSanitizeComponent()
             : base(
@@ -81,7 +81,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Curve crv = null;
             if (!da.GetData(0, ref crv) || crv == null)

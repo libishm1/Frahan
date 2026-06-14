@@ -42,7 +42,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "Quarra Parallel Nature off-cut matching; Block Research Group Armadillo Vault voussoir subdivision; Voussoir GH plugin",
     Tolerance = "per-cell trim volume <= 10 %; total assignment cost globally optimal (Hungarian)",
     CardSet = "wiki/research/hitl_cards/em_2d_template_panel_match/ (2D sibling); em_3d_chain_ucl_bartlett/ (3D consumer)")]
-public sealed class TemplateBlockMatch3DComponent : GH_Component
+public sealed class TemplateBlockMatch3DComponent : FrahanComponentBase
 {
     public TemplateBlockMatch3DComponent()
         : base("Template Block Match 3D", "TmplBlk3D",
@@ -120,7 +120,7 @@ public sealed class TemplateBlockMatch3DComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var cells = new List<Mesh>();
         var inventory = new List<Mesh>();

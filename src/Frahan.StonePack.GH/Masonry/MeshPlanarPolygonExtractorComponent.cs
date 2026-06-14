@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         "Extracts the outer + hole loops from a mesh's boundary  and projects them into a 2D plane",
         DesignFlow.Bridges,
         Precedent = "Frahan-original planar-polygon extractor")]
-    public sealed class MeshPlanarPolygonExtractorComponent : GH_Component
+    public sealed class MeshPlanarPolygonExtractorComponent : FrahanComponentBase
     {
         public MeshPlanarPolygonExtractorComponent()
             : base(
@@ -76,7 +76,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh m = null;
             if (!da.GetData(0, ref m) || m == null)

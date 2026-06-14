@@ -53,7 +53,7 @@ namespace Frahan.GH.Kintsugi;
     "Push placed fragment meshes apart with rigid translations until  they touch at fracture faces but do not in...",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original rigid-translation settle; Heyman 1966 stability theorem; Furrer 2017 IROS robotic stacking")]
-public sealed class SettleContactComponent : GH_Component
+public sealed class SettleContactComponent : FrahanComponentBase
 {
     public SettleContactComponent()
         : base("Contact Settle", "Settle",
@@ -116,7 +116,7 @@ public sealed class SettleContactComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var input = new List<Mesh>();
         int iterations = 25;

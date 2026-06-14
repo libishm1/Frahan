@@ -20,7 +20,7 @@ namespace Frahan.GH;
 [Algorithm("Bipartite assignment", "Kuhn 1955 Hungarian method", Note = "Mode=1: optimal offcut-to-slot assignment.")]
 [RelatedComponent("Frahan > EdgeMatch > Live Edge Stagger Layup", Reason = "Builds the floor geometry from this assignment.")]
 [RelatedComponent("Frahan > Voussoir > Template Panel Match", Reason = "Same HungarianAssigner, 3D top-down version.")]
-public class LiveEdgeMatchComponent : GH_Component
+public class LiveEdgeMatchComponent : FrahanComponentBase
 {
     public LiveEdgeMatchComponent()
         : base("Live Edge Match", "LEMatch",
@@ -57,7 +57,7 @@ public class LiveEdgeMatchComponent : GH_Component
         pManager.AddCurveParameter("Rivers", "Rv", "The live-edge seams between courses.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var outlines = new List<Curve>();
         da.GetDataList(0, outlines);

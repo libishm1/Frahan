@@ -11,7 +11,7 @@ namespace Frahan.GH;
     "Debugs StonePack transforms by comparing source mesh + transform against placed mesh output",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original transform-validation diagnostic")]
-public sealed class ValidatePackedTransformComponent : GH_Component
+public sealed class ValidatePackedTransformComponent : FrahanComponentBase
 {
     public ValidatePackedTransformComponent()
         : base("Validate Packed Transform", "PackXformCheck",
@@ -42,7 +42,7 @@ public sealed class ValidatePackedTransformComponent : GH_Component
         pManager.AddTextParameter("Report", "Info", "Validation summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var sourceMeshes = new List<Mesh>();
         var placedMeshes = new List<Mesh>();

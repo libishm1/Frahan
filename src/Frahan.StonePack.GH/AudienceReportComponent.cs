@@ -29,7 +29,7 @@ namespace Frahan.GH;
     DesignFlow.Bridges,
     Precedent = "SAMPLE_GH_SPEC.md three-audience report terminal; Frahan-original audience composer",
     Tolerance = "Engineer release refused without a declared CRS/datum")]
-public sealed class AudienceReportComponent : GH_Component
+public sealed class AudienceReportComponent : FrahanComponentBase
 {
     public AudienceReportComponent()
         : base("Frahan Report / Export", "Report",
@@ -87,7 +87,7 @@ public sealed class AudienceReportComponent : GH_Component
         p.AddTextParameter("Files Written", "Fw", "Paths written when Run is true.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var goos = new List<IGH_Goo>();
         da.GetDataList(0, goos);

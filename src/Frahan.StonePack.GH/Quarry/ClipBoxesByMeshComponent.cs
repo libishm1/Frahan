@@ -31,7 +31,7 @@ namespace Frahan.GH.Quarry;
     "Filter a Box[] grid from BCO output by mesh-boundary  containment",
     DesignFlow.Bridges,
     Precedent = "Frahan-original mesh-clip utility")]
-public sealed class ClipBoxesByMeshComponent : GH_Component
+public sealed class ClipBoxesByMeshComponent : FrahanComponentBase
 {
     public ClipBoxesByMeshComponent()
         : base("Clip Boxes By Mesh", "ClipBoxesByMesh",
@@ -92,7 +92,7 @@ public sealed class ClipBoxesByMeshComponent : GH_Component
             "Human-readable summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var boxes = new List<Box>();
         Mesh mesh = null;

@@ -39,7 +39,7 @@ namespace Frahan.GH.Quarry;
     "Convert a Box (e.g",
     DesignFlow.Bridges,
     Precedent = "Frahan-original box-to-mesh utility")]
-public sealed class BoxToMeshComponent : GH_Component
+public sealed class BoxToMeshComponent : FrahanComponentBase
 {
     public BoxToMeshComponent()
         : base("Box To Mesh", "Box2Mesh",
@@ -71,7 +71,7 @@ public sealed class BoxToMeshComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Box box = Box.Unset;
         if (!da.GetData(0, ref box))

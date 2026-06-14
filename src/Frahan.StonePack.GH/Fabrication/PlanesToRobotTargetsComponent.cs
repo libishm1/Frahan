@@ -46,7 +46,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "visose/Robots plugin (Vicente Soler, MIT, v1.9.0) Plane->CreateTarget API; closes the zero-G-code-ingest gap in the Robots plugin per wiki/research/robot_ingest_pipeline/gcode_to_kukaprc_robots.md and wiki/research/fabrication_bridge_gap_map.md.",
     Tolerance = "round-trip identity on Plane[] passthrough; motion-type mapping preserves CutSegment.Kind exactly when Cut Path is wired; speed unit converted mm/min -> mm/s (factor 1/60).",
     CardSet = "Template-General/outputs/2026-05-31/hitl_cards/gcode_to_robots/ (proposed)")]
-public sealed class PlanesToRobotTargetsComponent : GH_Component
+public sealed class PlanesToRobotTargetsComponent : FrahanComponentBase
 {
     public PlanesToRobotTargetsComponent()
         : base("Planes to Robot Targets", "Pl2Robots",
@@ -118,7 +118,7 @@ public sealed class PlanesToRobotTargetsComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var planes = new List<Plane>();
         var feeds = new List<double>();

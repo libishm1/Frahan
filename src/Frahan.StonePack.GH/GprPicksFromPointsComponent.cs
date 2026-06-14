@@ -29,7 +29,7 @@ namespace Frahan.GH;
     "Turn points picked on a GPR Radargram Mesh section into reflector  picks for GPR Fractures on Mesh",
     DesignFlow.Bridges,
     Precedent = "Frahan-original reflector-pick conversion")]
-public sealed class GprPicksFromPointsComponent : GH_Component
+public sealed class GprPicksFromPointsComponent : FrahanComponentBase
 {
     public GprPicksFromPointsComponent()
         : base("GPR Picks From Points", "GprPicks",
@@ -75,7 +75,7 @@ public sealed class GprPicksFromPointsComponent : GH_Component
         p.AddTextParameter("Picks CSV", "Csv", "The picks CSV content (also written if CSV Out is set).", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var pts = new List<Point3d>();
         double scale = 1.0;

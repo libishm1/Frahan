@@ -55,7 +55,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "Myronenko-Song 2010 CPD; Frahan EM weighted-Kabsch closed-form per Soft ICP roadmap (Pillar A Phase 2+4)",
     Tolerance = "convergence translation < 1e-4 * objectScale; rotation < 1e-3 deg per fragment per iter; default 40 EM iters",
     CardSet = "wiki/research/hitl_cards/em_2d_trencadis_solve/ + em_3d_chain_ucl_bartlett/ + bu_kintsugi/ (multi-workflow primitive)")]
-public sealed class SoftIcp3DComponent : GH_Component
+public sealed class SoftIcp3DComponent : FrahanComponentBase
 {
     public SoftIcp3DComponent()
         : base("Soft ICP 3D", "SoftICP3D",
@@ -134,7 +134,7 @@ public sealed class SoftIcp3DComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var meshes = new List<Mesh>();
         int anchorIndex = 0;

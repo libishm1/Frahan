@@ -38,7 +38,7 @@ namespace Frahan.GH;
 [DesignApplication(
     "Decomposes a quarry mesh into nearly-convex blocks via  CoACD (Wei et al, SIGGRAPH 2022)",
     DesignFlow.TopDown)]
-public sealed class CoacdQuarryDecomposeComponent : GH_Component
+public sealed class CoacdQuarryDecomposeComponent : FrahanComponentBase
 {
     public CoacdQuarryDecomposeComponent()
         : base("Quarry Decompose By CoACD", "QuarryDcCoacd",
@@ -100,7 +100,7 @@ public sealed class CoacdQuarryDecomposeComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh quarry = null;
         double threshold = 0.05;
@@ -185,7 +185,7 @@ public sealed class CoacdQuarryDecomposeComponent : GH_Component
 [DesignApplication(
     "Decomposes a quarry mesh into tetrahedra via Geogram",
     DesignFlow.TopDown)]
-public sealed class GeogramTetQuarryDecomposeComponent : GH_Component
+public sealed class GeogramTetQuarryDecomposeComponent : FrahanComponentBase
 {
     public GeogramTetQuarryDecomposeComponent()
         : base("Quarry Decompose By Tet", "QuarryDcTet",
@@ -244,7 +244,7 @@ public sealed class GeogramTetQuarryDecomposeComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh quarry = null;
         bool preprocess = true, refine = false;
@@ -364,7 +364,7 @@ public sealed class GeogramTetQuarryDecomposeComponent : GH_Component
 [DesignApplication(
     "Decomposes a (possibly non-convex) quarry mesh into solid  Voronoi blocks",
     DesignFlow.TopDown)]
-public sealed class VoronoiQuarryDecomposeComponent : GH_Component
+public sealed class VoronoiQuarryDecomposeComponent : FrahanComponentBase
 {
     public VoronoiQuarryDecomposeComponent()
         : base("Quarry Decompose By Voronoi", "QuarryDcVoro",
@@ -426,7 +426,7 @@ public sealed class VoronoiQuarryDecomposeComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh quarry = null;
         int nSeeds = 30, lloydIters = 5, seedRng = 1;

@@ -33,7 +33,7 @@ namespace Frahan.GH;
 [Algorithm("Boundary-rail edge affinity scoring", "Frahan-original",
     Note = "diagnostic surface for the irregular-sheet packer's internal edge-matching (spec 5 §5.5); not a published algorithm",
     WikiPath = "wiki/algorithms/edge_matching/")]
-public sealed class FragmentEdgeMatchComponent : GH_Component
+public sealed class FragmentEdgeMatchComponent : FrahanComponentBase
 {
     public FragmentEdgeMatchComponent()
         : base("Frahan Fragment Edge Match", "FragMatch",
@@ -103,7 +103,7 @@ public sealed class FragmentEdgeMatchComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         IGH_Goo? indexGoo = null;
         var fragments = new List<Curve>();

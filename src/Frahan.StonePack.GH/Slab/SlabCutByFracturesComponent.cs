@@ -41,7 +41,7 @@ namespace Frahan.GH.Masonry
         "Cuts a list of Slabs by a list of oriented fracture planes",
         DesignFlow.TopDown,
         Precedent = "Frahan-original slab-cut by fracture set")]
-    public sealed class SlabCutByFracturesComponent : GH_Component
+    public sealed class SlabCutByFracturesComponent : FrahanComponentBase
     {
         public SlabCutByFracturesComponent()
             : base(
@@ -114,7 +114,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             da.GetDataList(0, meshes);

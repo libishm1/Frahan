@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         "Builds the convex hull of a Rhino mesh's vertices and emits  the hull as a Slab",
         DesignFlow.Bridges,
         Precedent = "Standard QuickHull (Barber Dobkin Huhdanpaa 1996); Rhino Mesh.CreateConvexHull primitive")]
-    public sealed class ConvexHullSlabComponent : GH_Component
+    public sealed class ConvexHullSlabComponent : FrahanComponentBase
     {
         public ConvexHullSlabComponent()
             : base(
@@ -62,7 +62,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             if (!da.GetData(0, ref mesh) || mesh == null)

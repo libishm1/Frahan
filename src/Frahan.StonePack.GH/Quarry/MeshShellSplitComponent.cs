@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         "Separates a multi-shell Rhino mesh into one Slab per  connected shell",
         DesignFlow.Bridges,
         Precedent = "Frahan-original mesh-shell splitter (multi-shell decomposition)")]
-    public sealed class MeshShellSplitComponent : GH_Component
+    public sealed class MeshShellSplitComponent : FrahanComponentBase
     {
         public MeshShellSplitComponent()
             : base(
@@ -62,7 +62,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             if (!da.GetData(0, ref mesh) || mesh == null)

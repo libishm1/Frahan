@@ -28,7 +28,7 @@ namespace Frahan.GH.Masonry
         "Cuts a convex quarry Slab into a list of smaller convex Slabs  by an orthogonal grid of fracture planes",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original quarry decompose (DFN -> block candidates)")]
-    public sealed class QuarryDecomposeComponent : GH_Component
+    public sealed class QuarryDecomposeComponent : FrahanComponentBase
     {
         public QuarryDecomposeComponent()
             : base(
@@ -80,7 +80,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawQuarry = null;
             int nX = 4, nY = 0, nZ = 2;

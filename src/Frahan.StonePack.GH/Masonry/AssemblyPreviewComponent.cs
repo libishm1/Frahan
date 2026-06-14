@@ -30,7 +30,7 @@ namespace Frahan.GH.Masonry
         "Visualizes a MasonryAssembly",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original assembly-visualisation helper")]
-    public sealed class AssemblyPreviewComponent : GH_Component
+    public sealed class AssemblyPreviewComponent : FrahanComponentBase
     {
         public AssemblyPreviewComponent()
             : base(
@@ -88,7 +88,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object raw = null;
             if (!da.GetData(0, ref raw))

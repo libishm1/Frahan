@@ -46,7 +46,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "KUKAprc Pro (Brell-Cokcan + Braumann Vienna) Plane->LIN/PTP/CIRC component family; first FREE alternative to KUKAprc's paid Generic NC Import per wiki/research/robot_ingest_pipeline/gcode_to_kukaprc_robots.md.",
     Tolerance = "round-trip identity on Plane[] passthrough (no resampling); motion-type mapping preserves CutSegment.Kind exactly when Cut Path is wired.",
     CardSet = "Template-General/outputs/2026-05-31/hitl_cards/gcode_to_kukaprc/ (proposed)")]
-public sealed class PlanesToKukaPrcCommandsComponent : GH_Component
+public sealed class PlanesToKukaPrcCommandsComponent : FrahanComponentBase
 {
     public PlanesToKukaPrcCommandsComponent()
         : base("Planes to KUKAprc Commands", "Pl2KUKAprc",
@@ -118,7 +118,7 @@ public sealed class PlanesToKukaPrcCommandsComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var planes = new List<Plane>();
         var feeds = new List<double>();

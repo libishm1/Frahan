@@ -47,7 +47,7 @@ namespace Frahan.GH.Quarry;
     "Map fractures / cavities inside a quarry block from a GPR scan before cutting, to avoid waste and plan blocks",
     DesignFlow.BottomUp,
     Precedent = "Bondua/Bruno/Elkarmoty 2024 (Botticino marble); Isakova 2021 (Karelia granite); Porsani 2006 (Capao Bonito granite)")]
-public sealed class GprFractureExtractComponent : GH_Component
+public sealed class GprFractureExtractComponent : FrahanComponentBase
 {
     public GprFractureExtractComponent()
         : base("GPR Fracture Extract", "GprFracture",
@@ -150,7 +150,7 @@ public sealed class GprFractureExtractComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string file = null, presetKey = "granite_160";
         double vOverride = -1.0, qOverride = -1.0, dipOverride = -1.0;

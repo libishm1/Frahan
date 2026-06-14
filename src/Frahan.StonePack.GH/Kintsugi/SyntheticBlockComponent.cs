@@ -53,7 +53,7 @@ namespace Frahan.GH.Kintsugi;
     "Generate parametric closed stone-block meshes (10 shapes) as  targets for synthetic fracture-assembly training",
     DesignFlow.Bridges,
     Precedent = "Frahan-original parametric block generator (10 shapes)")]
-public sealed class SyntheticBlockComponent : GH_Component
+public sealed class SyntheticBlockComponent : FrahanComponentBase
 {
     private static readonly string[] ShapeNames =
     {
@@ -129,7 +129,7 @@ public sealed class SyntheticBlockComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         int shape = 4;
         double size = 100.0;

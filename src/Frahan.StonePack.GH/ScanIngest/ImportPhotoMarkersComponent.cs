@@ -28,7 +28,7 @@ namespace Frahan.GH.ScanIngest;
     "Read photogrammetry markers / GCPs from a CSV (Metashape / COLMAP /  RealityCapture export or a plain GCP f...",
     DesignFlow.Bridges,
     Precedent = "OpenCV ArUco / ChArUco markers; ARCore alignment (per project_photogrammetry_scope_decision)")]
-public sealed class ImportPhotoMarkersComponent : GH_Component
+public sealed class ImportPhotoMarkersComponent : FrahanComponentBase
 {
     public ImportPhotoMarkersComponent()
         : base("Import Photo Markers", "PhotoMarkers",
@@ -60,7 +60,7 @@ public sealed class ImportPhotoMarkersComponent : GH_Component
         p.AddIntegerParameter("Count", "N", "Number of markers read.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = null;
         if (!da.GetData(0, ref path) || string.IsNullOrWhiteSpace(path))

@@ -17,7 +17,7 @@ namespace Frahan.GH;
 /// colour-mapped (green = within tolerance -> red), and the CONFIDENCE (mean P(|dev|<=T)) is the
 /// optimisation metric. Fully managed -- no native shim, no Python.
 /// </summary>
-public sealed class GprFractureSurface3DComponent : GH_Component
+public sealed class GprFractureSurface3DComponent : FrahanComponentBase
 {
     public GprFractureSurface3DComponent()
         : base("GPR Fracture Surfaces 3D", "GprFrac3D",
@@ -96,7 +96,7 @@ public sealed class GprFractureSurface3DComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var pts = new List<Point3d>();
         if (!da.GetDataList(0, pts) || pts.Count < 6)

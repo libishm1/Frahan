@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         "Wraps a Rhino mesh into a Slab DTO",
         DesignFlow.Bridges,
         Precedent = "Frahan-original slab-extractor from input mesh")]
-    public sealed class SlabFromMeshComponent : GH_Component
+    public sealed class SlabFromMeshComponent : FrahanComponentBase
     {
         public SlabFromMeshComponent()
             : base(
@@ -73,7 +73,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
 

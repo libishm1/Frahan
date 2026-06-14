@@ -43,7 +43,7 @@ namespace Frahan.GH.Masonry
         "Encodes the masonry build sequence as a JSON string",
         DesignFlow.TopDown,
         Precedent = "Frahan-original JSON serialiser for build sequence")]
-    public sealed class BuildSequenceJsonComponent : GH_Component
+    public sealed class BuildSequenceJsonComponent : FrahanComponentBase
     {
         public BuildSequenceJsonComponent()
             : base(
@@ -90,7 +90,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var ids = new List<string>();
             var planes = new List<Plane>();

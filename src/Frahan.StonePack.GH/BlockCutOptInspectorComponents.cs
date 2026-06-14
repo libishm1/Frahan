@@ -41,7 +41,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run BlockCutOpt with 4-axis Pareto optimisation and emit the  recovery-max, revenue-max, kerf-time-min and ...",
         DesignFlow.TopDown)]
-    public sealed class FrahanParetoFrontInspectorComponent : GH_Component
+    public sealed class FrahanParetoFrontInspectorComponent : FrahanComponentBase
     {
         public FrahanParetoFrontInspectorComponent()
             : base(
@@ -94,7 +94,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Elapsed (ms)", "T", "Wall-clock duration.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             Mesh fxMesh = null;
@@ -178,7 +178,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run BlockCutOpt M times against M Fisher-perturbed DFN  realisations of the same joint sets; return p10 / p...",
         DesignFlow.TopDown)]
-    public sealed class FrahanFisherRobustComponent : GH_Component
+    public sealed class FrahanFisherRobustComponent : FrahanComponentBase
     {
         public FrahanFisherRobustComponent()
             : base(
@@ -228,7 +228,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Per-Sample Psi (deg)", "Pk", "All M psi values.", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             var dd = new List<double>();
@@ -301,7 +301,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Adaptive sub-division of the tested area by 2D fracture- density watershed (synthesis I5)",
         DesignFlow.TopDown)]
-    public sealed class FrahanDensityWatershedZonesComponent : GH_Component
+    public sealed class FrahanDensityWatershedZonesComponent : FrahanComponentBase
     {
         public FrahanDensityWatershedZonesComponent()
             : base(
@@ -337,7 +337,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Zone Count", "N", "Total number of zones.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             var raw = new List<IGH_Goo>();
@@ -392,7 +392,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run BlockCutOpt then dump the optimal cutting grid to a  ParaView .vtu file",
         DesignFlow.TopDown)]
-    public sealed class FrahanVtuExportComponent : GH_Component
+    public sealed class FrahanVtuExportComponent : FrahanComponentBase
     {
         public FrahanVtuExportComponent()
             : base(
@@ -432,7 +432,7 @@ namespace Frahan.GH.Quarry
             p.AddTextParameter("Written Path", "Out", "Path written, or empty when Write=false.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             Mesh fxMesh = null;
@@ -513,7 +513,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Pack a catalogue of mixed-size blocks (multiple Width x  Depth pairs each with its own revenue) into the te...",
         DesignFlow.TopDown)]
-    public sealed class FrahanMixedSizeBlockPackComponent : GH_Component
+    public sealed class FrahanMixedSizeBlockPackComponent : FrahanComponentBase
     {
         public FrahanMixedSizeBlockPackComponent()
             : base(
@@ -556,7 +556,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Placed Count", "N", "Number of placements.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             var ids = new List<string>();

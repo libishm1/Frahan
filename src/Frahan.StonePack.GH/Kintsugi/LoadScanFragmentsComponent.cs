@@ -42,7 +42,7 @@ namespace Frahan.GH.Kintsugi;
     "Load scanned fragment .ply files (mesh or point cloud) into  per-fragment point clouds + meshes for Frahan ...",
     DesignFlow.Bridges,
     Precedent = "Breaking Bad dataset (Sellan 2022) + Stanford PLY format (Greenberg Turk 1994)")]
-public sealed class LoadScanFragmentsComponent : GH_Component
+public sealed class LoadScanFragmentsComponent : FrahanComponentBase
 {
     public LoadScanFragmentsComponent()
         : base("Load Scan Fragments", "ScanFrags",
@@ -113,7 +113,7 @@ public sealed class LoadScanFragmentsComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string folder = "";
         var files = new List<string>();

@@ -25,7 +25,7 @@ namespace Frahan.GH.ScanIngest;
         "Heyman, J. (1966), The Stone Skeleton, Int. J. Solids Struct. 2(2):249-279",
         Doi = "10.1016/0020-7683(66)90018-7",
         WikiPath = "wiki/index/references.md#Heyman1966LimitState")]
-public sealed class PackComCheckComponent : GH_Component
+public sealed class PackComCheckComponent : FrahanComponentBase
 {
     public PackComCheckComponent()
         : base("CoM In-Container Check", "PackComCheck",
@@ -64,7 +64,7 @@ public sealed class PackComCheckComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         Mesh container = null;

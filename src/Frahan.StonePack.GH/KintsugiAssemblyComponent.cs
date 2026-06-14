@@ -80,7 +80,7 @@ namespace Frahan.GH.Kintsugi;
     DesignFlow.BottomUp,
     Precedent = "PuzzleFusion++ Wang Chen Furukawa 2025 ICLR (arXiv:2406.00259); Kintsugi Japanese repair tradition; Frahan-original pose composition fix",
     Tolerance = "reassembled pose Hausdorff <= 2 mm to ground truth; verifier score >= 0.5")]
-public sealed class KintsugiAssemblyComponent : GH_Component
+public sealed class KintsugiAssemblyComponent : FrahanComponentBase
 {
     public KintsugiAssemblyComponent()
         : base("Frahan Kintsugi",
@@ -250,7 +250,7 @@ public sealed class KintsugiAssemblyComponent : GH_Component
             "Human-readable assembly summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var fragments = new List<Mesh>();
         double jointWidth = 1.0;

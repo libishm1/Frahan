@@ -19,7 +19,7 @@ namespace Frahan.GH.ScanIngest;
     "Derive a uniform scale Transform from a measured reference  curve in the scan and the curve's real-world le...",
     DesignFlow.Bridges,
     Precedent = "Frahan-original known-distance scale calibration")]
-public sealed class ScaleCalibrateComponent : GH_Component
+public sealed class ScaleCalibrateComponent : FrahanComponentBase
 {
     public ScaleCalibrateComponent()
         : base("Scan Scale Calibrate", "ScaleCal",
@@ -79,7 +79,7 @@ public sealed class ScaleCalibrateComponent : GH_Component
             "Human-readable summary line.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve measured = null;
         double refLength = 0.0;

@@ -64,7 +64,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "Clifford-McGee 2017 ACADIA Cyclopean Cannibalism; Inka cyclopean masonry tradition (Kachiqhata quarry, Protzen 1993)",
     Tolerance = "wall coverage >= 90 %; all stones with CoM over support; recipe-rule violations = 0",
     CardSet = "wiki/research/hitl_cards/em_3d_cyclopean_cannibalism/")]
-public sealed class CyclopeanRecipeCoursingComponent : GH_Component
+public sealed class CyclopeanRecipeCoursingComponent : FrahanComponentBase
 {
     public CyclopeanRecipeCoursingComponent()
         : base("Cyclopean Recipe Coursing", "CycRecipe",
@@ -154,7 +154,7 @@ public sealed class CyclopeanRecipeCoursingComponent : GH_Component
             "stability-check results.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var inventory = new List<Mesh>();
         Brep envelope = null;

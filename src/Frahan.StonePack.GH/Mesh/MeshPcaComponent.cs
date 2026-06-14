@@ -33,7 +33,7 @@ namespace Frahan.GH.Masonry
         "Principal-component analysis of a mesh's vertex cloud",
         DesignFlow.Bridges,
         Precedent = "Standard 3x3 covariance + Jacobi eigendecomposition")]
-    public sealed class MeshPcaComponent : GH_Component
+    public sealed class MeshPcaComponent : FrahanComponentBase
     {
         public MeshPcaComponent()
             : base(
@@ -79,7 +79,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             if (!da.GetData(0, ref mesh) || mesh == null)

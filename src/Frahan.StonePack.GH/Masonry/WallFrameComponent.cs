@@ -23,7 +23,7 @@ namespace Frahan.GH.Masonry
         "Bundles wall width / height / thickness into a WallFrame DTO",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original wall-frame DTO for ashlar / rubble packers")]
-    public sealed class WallFrameComponent : GH_Component
+    public sealed class WallFrameComponent : FrahanComponentBase
     {
         public WallFrameComponent()
             : base(
@@ -63,7 +63,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             double w = 0.0, h = 0.0, t = 0.0;
             if (!da.GetData(0, ref w)) return;

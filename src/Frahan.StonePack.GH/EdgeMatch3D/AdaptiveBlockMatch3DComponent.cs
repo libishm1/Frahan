@@ -50,7 +50,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "Clifford-McGee 2017 Cyclopean Cannibalism (ACADIA pp. 404-413); UCL Devadass 2025 SS2.7 minimum machining",
     Tolerance = "carved volume <= 10 % of source; post-trim joint Hausdorff <= 2 mm",
     CardSet = "wiki/research/hitl_cards/em_2d_adaptive_trim/ (2D sibling); em_3d_cyclopean_cannibalism/ (3D consumer)")]
-public sealed class AdaptiveBlockMatch3DComponent : GH_Component
+public sealed class AdaptiveBlockMatch3DComponent : FrahanComponentBase
 {
     public AdaptiveBlockMatch3DComponent()
         : base("Adaptive Block Match 3D", "AdaptBlk3D",
@@ -112,7 +112,7 @@ public sealed class AdaptiveBlockMatch3DComponent : GH_Component
             "stayed inside the volume budget, etc.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         Mesh slot = null;
         Mesh candidate = null;

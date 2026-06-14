@@ -64,7 +64,7 @@ namespace Frahan.GH;
     "All-in-one trencadís pipeline",
     DesignFlow.BottomUp,
     Precedent = "Gaudi Park Guell Trencadis; Battiato 2013 CVD+GVF full-pipeline reconstruction")]
-public sealed class Pack2DTrencadisPipelineComponent : GH_Component, IGH_VariableParameterComponent
+public sealed class Pack2DTrencadisPipelineComponent : FrahanComponentBase, IGH_VariableParameterComponent
 {
     // Progressive-disclosure toggles. Default: all collapsed. Each
     // toggle is exposed in the right-click context menu and reveals
@@ -175,7 +175,7 @@ public sealed class Pack2DTrencadisPipelineComponent : GH_Component, IGH_Variabl
             GH_ParamAccess.tree);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         try
         {

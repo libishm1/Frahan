@@ -26,7 +26,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "Quarra MIT Out of Frame lecture 2025-10-24 SS11 -- lift class, CoM sphere abstraction, rigging engineering",
     Tolerance = "weight estimate within 5 % of computed volume x density; CoM within 1 % of bounding-box span",
     CardSet = "wiki/research/hitl_cards/br_fab_prep/")]
-public sealed class FabricationPrepReportComponent : GH_Component
+public sealed class FabricationPrepReportComponent : FrahanComponentBase
 {
     public FabricationPrepReportComponent()
         : base("Fabrication Prep Report", "FabPrep",
@@ -61,7 +61,7 @@ public sealed class FabricationPrepReportComponent : GH_Component
         p.AddTextParameter("Report", "R", "Summary + per-class counts.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var blocks = new List<Mesh>();
         double density = FabricationReport.GraniteDensityKgM3;

@@ -46,7 +46,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "PolytopeSolutions MatchMeshTransformation; the simple-component idiom Libish flagged 2026-05-31",
     Tolerance = "yield ratio (template_vol / stock_vol) >= 0.4 for feasible match; OBB containment + 5 mm margin",
     CardSet = "wiki/research/hitl_cards/td_voussoir/ (the consumer card-set)")]
-public sealed class MeshTemplateMatchComponent : GH_Component
+public sealed class MeshTemplateMatchComponent : FrahanComponentBase
 {
     public MeshTemplateMatchComponent()
         : base("Mesh Template Match", "MTM",
@@ -105,7 +105,7 @@ public sealed class MeshTemplateMatchComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var stock = new List<Mesh>();
         Mesh template = null;

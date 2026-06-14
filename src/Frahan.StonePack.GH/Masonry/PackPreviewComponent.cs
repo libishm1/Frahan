@@ -28,7 +28,7 @@ namespace Frahan.GH.Masonry
         "Builds one Rhino mesh per placed block in an AshlarPackResult  for visual preview on the canvas",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original packing-visualisation helper")]
-    public sealed class PackPreviewComponent : GH_Component
+    public sealed class PackPreviewComponent : FrahanComponentBase
     {
         public PackPreviewComponent()
             : base(
@@ -60,7 +60,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object raw = null;
             if (!da.GetData(0, ref raw))

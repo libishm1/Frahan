@@ -19,7 +19,7 @@ namespace Frahan.GH.ScanIngest;
     "For each placed stone, report the fraction of its vertices  that lie strictly inside another placed stone",
     DesignFlow.Bridges,
     Precedent = "Frahan-original mesh-overlap diagnostic")]
-public sealed class PackOverlapComponent : GH_Component
+public sealed class PackOverlapComponent : FrahanComponentBase
 {
     public PackOverlapComponent()
         : base("Per-Stone Overlap", "PackOverlap",
@@ -59,7 +59,7 @@ public sealed class PackOverlapComponent : GH_Component
             "Worst-case per-stone overlap fraction.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         double tol = 1e-6;

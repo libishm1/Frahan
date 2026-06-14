@@ -41,7 +41,7 @@ namespace Frahan.GH.Masonry
         "Per-block pick-and-place planes for a robot consumer",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original pick-and-place frame generator")]
-    public sealed class PickPlaceFramesComponent : GH_Component
+    public sealed class PickPlaceFramesComponent : FrahanComponentBase
     {
         public PickPlaceFramesComponent()
             : base(
@@ -109,7 +109,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var transforms = new List<Transform>();
             if (!da.GetDataList(0, transforms) || transforms.Count == 0)

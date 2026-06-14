@@ -22,7 +22,7 @@ namespace Frahan.GH;
     Precedent = "Frahan-original chart-flatness diagnostic for BFF surface charts")]
 [Algorithm("Per-face area-ratio distortion classification", "Frahan-original",
     Note = "max(ratio, 1/ratio) threshold test; pairs with BFF (Sawhney 2017) charts but the classifier is Frahan-original, not the BFF algorithm")]
-public sealed class ChartFlatnessReportComponent : GH_Component
+public sealed class ChartFlatnessReportComponent : FrahanComponentBase
 {
     public ChartFlatnessReportComponent()
         : base("Frahan Chart Flatness Report", "ChartFlat",
@@ -59,7 +59,7 @@ public sealed class ChartFlatnessReportComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Single-line summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var ratios = new List<double>();
         double threshold = 1.5;

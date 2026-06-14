@@ -43,7 +43,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "3D generalisation of DLBF (Chehrazad 2025)",
         DesignFlow.TopDown)]
-    public sealed class FrahanMixedSizeBlockPack3DComponent : GH_Component
+    public sealed class FrahanMixedSizeBlockPack3DComponent : FrahanComponentBase
     {
         public FrahanMixedSizeBlockPack3DComponent()
             : base(
@@ -86,7 +86,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Placed Count", "N", "Number of placements.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             var ids = new List<string>();
@@ -176,7 +176,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-s...",
         DesignFlow.TopDown)]
-    public sealed class FrahanHeterogeneousExtractionComponent : GH_Component
+    public sealed class FrahanHeterogeneousExtractionComponent : FrahanComponentBase
     {
         public FrahanHeterogeneousExtractionComponent()
             : base(
@@ -245,7 +245,7 @@ namespace Frahan.GH.Quarry
             p.AddTextParameter("Unplaced Monuments", "Mou", "Monuments that did not fit anywhere.", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             Mesh fxMesh = null;

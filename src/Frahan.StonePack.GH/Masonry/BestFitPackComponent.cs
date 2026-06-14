@@ -33,7 +33,7 @@ namespace Frahan.GH.Masonry
         DesignFlow.BottomUp,
         Precedent = "Gramazio Kohler Eichenhofer 2017 NCCR Digital Fabrication ETH (gramaziokohler/ashlar inventory-aware variant)",
         CardSet = "wiki/research/hitl_cards/bu_ashlar/")]
-    public sealed class BestFitPackComponent : GH_Component
+    public sealed class BestFitPackComponent : FrahanComponentBase
     {
         public BestFitPackComponent()
             : base(
@@ -118,7 +118,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             double wallWidth = 1.5, wallHeight = 1.0, wallThickness = 0.20;
             double targetCourseHeight = 0.15, bedJoint = 0.001, headJoint = 0.001;

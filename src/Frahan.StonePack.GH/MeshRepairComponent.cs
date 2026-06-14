@@ -23,7 +23,7 @@ namespace Frahan.GH;
     Precedent = "Botsch Kobbelt Pauly Alliez Levy 2010 Polygon Mesh Processing (ISBN 978-1568814261)",
     Tolerance = "watertight + manifold output; Euler characteristic correct; vertex count within 10 % of input",
     CardSet = "wiki/research/hitl_cards/br_mesh_sanitize/")]
-public sealed class MeshRepairComponent : GH_Component
+public sealed class MeshRepairComponent : FrahanComponentBase
 {
     public MeshRepairComponent()
         : base("Frahan Mesh Repair", "MeshFix",
@@ -64,7 +64,7 @@ public sealed class MeshRepairComponent : GH_Component
         pManager.AddTextParameter("Summary", "S", "One-line summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         double weldAngle = Math.PI / 8.0;

@@ -122,7 +122,7 @@ internal static class CgalConvert
 [DesignApplication(
     "Boolean operation between two meshes via the CGAL native  shim",
     DesignFlow.Bridges)]
-public sealed class CgalMeshCsgComponent : GH_Component
+public sealed class CgalMeshCsgComponent : FrahanComponentBase
 {
     public CgalMeshCsgComponent()
         : base("Mesh CSG (CGAL)", "MeshCsgCgal",
@@ -172,7 +172,7 @@ public sealed class CgalMeshCsgComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh a = null, b = null;
         int op = 0;
@@ -256,7 +256,7 @@ public sealed class CgalMeshCsgComponent : GH_Component
 [DesignApplication(
     "Interior straight skeleton of a 2D polygon (with optional  holes) via CGAL Straight_skeleton_2",
     DesignFlow.Bridges)]
-public sealed class CgalStraightSkeletonComponent : GH_Component
+public sealed class CgalStraightSkeletonComponent : FrahanComponentBase
 {
     public CgalStraightSkeletonComponent()
         : base("Straight Skeleton (CGAL)", "SkeletonCgal",
@@ -303,7 +303,7 @@ public sealed class CgalStraightSkeletonComponent : GH_Component
             "Diagnostic report.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve outer = null;
         var holes = new List<Curve>();
@@ -400,7 +400,7 @@ public sealed class CgalStraightSkeletonComponent : GH_Component
 [DesignApplication(
     "Robust mesh repair via CGAL Polygon Mesh Processing",
     DesignFlow.Bridges)]
-public sealed class CgalMeshRepairComponent : GH_Component
+public sealed class CgalMeshRepairComponent : FrahanComponentBase
 {
     public CgalMeshRepairComponent()
         : base("Mesh Repair (CGAL)", "MeshRepairCgal",
@@ -437,7 +437,7 @@ public sealed class CgalMeshRepairComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         bool run = false;
@@ -509,7 +509,7 @@ public sealed class CgalMeshRepairComponent : GH_Component
 [DesignApplication(
     "Mesh simplification via CGAL Surface_mesh_simplification  (quadric-error edge collapse, Lindstrom-Turk poli...",
     DesignFlow.Bridges)]
-public sealed class CgalMeshDecimateComponent : GH_Component
+public sealed class CgalMeshDecimateComponent : FrahanComponentBase
 {
     public CgalMeshDecimateComponent()
         : base("Mesh Decimate (CGAL)", "DecimateCgal",
@@ -560,7 +560,7 @@ public sealed class CgalMeshDecimateComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         int stopKind = 0;
@@ -635,7 +635,7 @@ public sealed class CgalMeshDecimateComponent : GH_Component
 [DesignApplication(
     "Decompose a 2D simple polygon into convex sub-polygons or  y-monotone pieces via CGAL Partition_2",
     DesignFlow.Bridges)]
-public sealed class CgalPolygonPartitionComponent : GH_Component
+public sealed class CgalPolygonPartitionComponent : FrahanComponentBase
 {
     public CgalPolygonPartitionComponent()
         : base("Polygon Partition (CGAL)", "PartitionCgal",
@@ -678,7 +678,7 @@ public sealed class CgalPolygonPartitionComponent : GH_Component
             "Diagnostic report.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve poly = null;
         int kind = 0;
@@ -758,7 +758,7 @@ public sealed class CgalPolygonPartitionComponent : GH_Component
 [DesignApplication(
     "Surface mesh segmentation via Shape Diameter Function",
     DesignFlow.Bridges)]
-public sealed class CgalSdfSegmentationComponent : GH_Component
+public sealed class CgalSdfSegmentationComponent : FrahanComponentBase
 {
     public CgalSdfSegmentationComponent()
         : base("Mesh Segmentation (CGAL SDF)", "SegmentSdfCgal",
@@ -804,7 +804,7 @@ public sealed class CgalSdfSegmentationComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff CGAL shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         int nbClusters = 5;
@@ -870,7 +870,7 @@ public sealed class CgalSdfSegmentationComponent : GH_Component
 [DesignApplication(
     "Cluster mesh faces by dihedral-angle change",
     DesignFlow.Bridges)]
-public sealed class CgalAngleSegmentationComponent : GH_Component
+public sealed class CgalAngleSegmentationComponent : FrahanComponentBase
 {
     public CgalAngleSegmentationComponent()
         : base("Mesh Segmentation by Angle (CGAL)", "SegmentAngleCgal",
@@ -903,7 +903,7 @@ public sealed class CgalAngleSegmentationComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff CGAL shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         double angleDeg = 30.0;
@@ -958,7 +958,7 @@ public sealed class CgalAngleSegmentationComponent : GH_Component
 [DesignApplication(
     "Split a mesh surface into Voronoi cells driven by  geodesic distance from user-supplied seed points (Crane ...",
     DesignFlow.Bridges)]
-public sealed class CgalGeodesicVoronoiComponent : GH_Component
+public sealed class CgalGeodesicVoronoiComponent : FrahanComponentBase
 {
     public CgalGeodesicVoronoiComponent()
         : base("Geodesic Voronoi (CGAL)", "GeodesicVoronoiCgal",
@@ -991,7 +991,7 @@ public sealed class CgalGeodesicVoronoiComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff CGAL shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         var seeds = new List<Point3d>();

@@ -23,7 +23,7 @@ namespace Frahan.GH;
 [DesignApplication(
     "Recenter geometry (mesh / cloud / curves / blocks) to the world  origin as a group",
     DesignFlow.Bridges)]
-public sealed class MoveToOriginComponent : GH_Component
+public sealed class MoveToOriginComponent : FrahanComponentBase
 {
     public MoveToOriginComponent()
         : base("Move to Origin", "ToOrigin",
@@ -62,7 +62,7 @@ public sealed class MoveToOriginComponent : GH_Component
         p.AddPointParameter("Anchor Point", "P", "The source anchor point (in world coords).", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var goos = new List<IGH_GeometricGoo>();
         int anchorMode = 1;

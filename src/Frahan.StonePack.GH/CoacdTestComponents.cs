@@ -32,7 +32,7 @@ namespace Frahan.GH;
 [DesignApplication(
     "Approximate convex decomposition via the CoACD native shim",
     DesignFlow.Bridges)]
-public sealed class CoacdMeshDecomposeComponent : GH_Component
+public sealed class CoacdMeshDecomposeComponent : FrahanComponentBase
 {
     public CoacdMeshDecomposeComponent()
         : base("Mesh Decompose (CoACD)", "DecomposeCoacd",
@@ -120,7 +120,7 @@ public sealed class CoacdMeshDecomposeComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         double threshold = 0.05;

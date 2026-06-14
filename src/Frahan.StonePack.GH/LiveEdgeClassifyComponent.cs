@@ -18,7 +18,7 @@ namespace Frahan.GH;
     Note = "The two longest straight runs are the sawn ends; their endpoints are the corners; the two arcs between are the live edges.")]
 [RelatedComponent("Frahan > EdgeMatch > Live Edge Stagger Layup",
     Reason = "End-to-end floor that consumes classified offcuts.")]
-public class LiveEdgeClassifyComponent : GH_Component
+public class LiveEdgeClassifyComponent : FrahanComponentBase
 {
     public LiveEdgeClassifyComponent()
         : base("Live Edge Classify", "LEClassify",
@@ -46,7 +46,7 @@ public class LiveEdgeClassifyComponent : GH_Component
         pManager.AddNumberParameter("Straightness", "St", "Per-edge chord/arc-length (~1 = straight).", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve crv = null;
         if (!da.GetData(0, ref crv) || crv == null) return;

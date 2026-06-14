@@ -34,7 +34,7 @@ namespace Frahan.GH.Packing;
     DesignFlow.TopDown,
     Precedent = "Park Han 2024 tree-packing; Chehrazad 2025 DLBF substrate",
     CardSet = "wiki/research/hitl_cards/td_voussoir/")]
-public sealed class BlockPackTreeComponent : GH_Component
+public sealed class BlockPackTreeComponent : FrahanComponentBase
 {
     public BlockPackTreeComponent()
         : base("Block Pack (Tree)", "BlockPackTree",
@@ -166,7 +166,7 @@ public sealed class BlockPackTreeComponent : GH_Component
             "Human-readable summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var elements = new List<Box>();
         var elementValues = new List<double>();

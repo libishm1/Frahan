@@ -48,7 +48,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "KUKAprc Plane->LIN/PTP/CIRC commands (Brell-Cokcan + Braumann); visose/Robots CreateTarget (Soler MIT)",
     Tolerance = "arc chord error <= Arc Step / 2; tool-axis vector preserved exactly; round-trip CutPath -> Plane[] -> CutPath identity on linear-only paths",
     CardSet = "wiki/research/hitl_cards/br_gcode_ingest/ (proposed)")]
-public sealed class GCodeToPlanesComponent : GH_Component
+public sealed class GCodeToPlanesComponent : FrahanComponentBase
 {
     public GCodeToPlanesComponent()
         : base("G-code to Planes", "GCodeToPlanes",
@@ -108,7 +108,7 @@ public sealed class GCodeToPlanesComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         IGH_Goo goo = null;
         Vector3d toolAxis = -Vector3d.ZAxis;

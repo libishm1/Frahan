@@ -29,7 +29,7 @@ namespace Frahan.GH.Registration;
     "Closed-form rigid alignment of N≥3 source/target point pairs  (Horn 1987 quaternion absolute orientation)",
     DesignFlow.Bridges,
     Precedent = "Horn 1987 closed-form absolute orientation via unit quaternions (J. Opt. Soc. Am. A 4(4):629-642)")]
-public sealed class MarkerRegistrationComponent : GH_Component
+public sealed class MarkerRegistrationComponent : FrahanComponentBase
 {
     public MarkerRegistrationComponent()
         : base("Marker Registration", "MarkerReg",
@@ -74,7 +74,7 @@ public sealed class MarkerRegistrationComponent : GH_Component
             "Number of input pairs used.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var source = new List<Point3d>();
         var target = new List<Point3d>();

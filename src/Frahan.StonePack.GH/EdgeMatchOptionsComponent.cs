@@ -43,7 +43,7 @@ namespace Frahan.GH;
     Reason = "3D fragment reassembly that shares the agglomerative + Soft-ICP refine machinery these knobs tune")]
 [RelatedComponent("Frahan > EdgeMatch > Trencadis EdgeMatch",
     Reason = "2D Trencadís edge-matching that runs the same FrameAnchored beam these options tune")]
-public sealed class EdgeMatchOptionsComponent : GH_Component
+public sealed class EdgeMatchOptionsComponent : FrahanComponentBase
 {
     public EdgeMatchOptionsComponent()
         : base("EdgeMatch Options", "EMOpts",
@@ -227,7 +227,7 @@ public sealed class EdgeMatchOptionsComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var opts = new AssemblyOptions();
         var soft = opts.SoftIcp; // never null; default instance

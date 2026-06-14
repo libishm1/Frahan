@@ -25,7 +25,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Load fractures from disk (PLY, CSV, .lines, .txt)",
         DesignFlow.TopDown)]
-    public sealed class BlockCutOptLoadFracturesComponent : GH_Component
+    public sealed class BlockCutOptLoadFracturesComponent : FrahanComponentBase
     {
         public BlockCutOptLoadFracturesComponent()
             : base(
@@ -57,7 +57,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Triangle Count", "N", "Number of fracture triangles.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string path = null;
             double zMin = 0.0, zMax = 1.0;
@@ -103,7 +103,7 @@ namespace Frahan.GH.Quarry
         DesignFlow.TopDown,
         Precedent = "Elkarmoty 2020 + Goodman 1985 key-block; Akenine-Moller 2001 SAT tri-box; Frahan BlockCutOpt v2 synthesis",
         CardSet = "wiki/research/hitl_cards/td_blockcutopt_pareto/")]
-    public sealed class BlockCutOptSolveComponent : GH_Component
+    public sealed class BlockCutOptSolveComponent : FrahanComponentBase
     {
         public BlockCutOptSolveComponent()
             : base(
@@ -151,7 +151,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Elapsed (ms)", "T", "Wall-clock duration.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             // Run gate first (matches the IfcExportComponent pattern):
             // the brute-force pose-grid search must not fire on canvas drop.
@@ -216,7 +216,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Plan a sequence of plane cuts (Shao 2022) that reduces the  starting block toward a target bounding sphere",
         DesignFlow.TopDown)]
-    public sealed class BlockCutOptAmrrPlanComponent : GH_Component
+    public sealed class BlockCutOptAmrrPlanComponent : FrahanComponentBase
     {
         public BlockCutOptAmrrPlanComponent()
             : base(
@@ -253,7 +253,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("AMRR (mm^3/min)", "AMRR", "Average material removal rate.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var box = Box.Empty;
             var center = Point3d.Origin;
@@ -308,7 +308,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run the omni-solver: uniform (mx, my) sub-division per zone,  4-axis Pareto multi-objective (recovery, reve...",
         DesignFlow.TopDown)]
-    public sealed class BlockCutOptOmniSolveComponent : GH_Component
+    public sealed class BlockCutOptOmniSolveComponent : FrahanComponentBase
     {
         public BlockCutOptOmniSolveComponent()
             : base(
@@ -353,7 +353,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Aggregate Recovery", "R", "Sum of recovery counts.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             // Run gate first (matches the IfcExportComponent pattern):
             // the per-zone pose-grid search must not fire on canvas drop.

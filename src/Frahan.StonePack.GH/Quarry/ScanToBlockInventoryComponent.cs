@@ -33,7 +33,7 @@ namespace Frahan.GH.Quarry;
     Precedent = "Quarra Parallel Nature off-cut matching workflow; UCL Devadass 2025 50-fragment limestone library",
     Tolerance = "OBB / convex-hull volume within 1 % of source mesh; principal axes correctly computed",
     CardSet = "Template-General/outputs/2026-05-30/hitl_cards/scan_to_block_inventory/ (V-BLOCKIN)")]
-public sealed class ScanToBlockInventoryComponent : GH_Component
+public sealed class ScanToBlockInventoryComponent : FrahanComponentBase
 {
     public ScanToBlockInventoryComponent()
         : base("Scan to Block Inventory", "ScanBlock",
@@ -113,7 +113,7 @@ public sealed class ScanToBlockInventoryComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh mesh = null;
         int orient = 1;

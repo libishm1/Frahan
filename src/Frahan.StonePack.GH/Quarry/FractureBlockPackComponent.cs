@@ -24,7 +24,7 @@ namespace Frahan.GH;
 /// to the fracture's position sigma (GPR Fracture Surfaces 3D) for uncertainty-safe blocks.
 /// Fully managed -- no native shim.
 /// </summary>
-public sealed class FractureBlockPackComponent : GH_Component
+public sealed class FractureBlockPackComponent : FrahanComponentBase
 {
     public FractureBlockPackComponent()
         : base("Fracture Block Pack", "FracBlockPack",
@@ -81,7 +81,7 @@ public sealed class FractureBlockPackComponent : GH_Component
         p.AddTextParameter("Report", "Rpt", "Per-bin yield summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var bins = new List<Mesh>();
         if (!da.GetDataList(0, bins) || bins.Count == 0)

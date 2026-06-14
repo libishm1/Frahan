@@ -23,7 +23,7 @@ namespace Frahan.GH;
     WikiPath = "wiki/index/references.md#Chehrazad2025DLBF")]
 [Algorithm("Tree-packing for irregular 3D containers", "Park-Han (2024). Tree-packing for irregular 3D containers",
     WikiPath = "wiki/index/references.md#Park2024TreePack")]
-public sealed class Pack3DIrregularComponent : GH_Component
+public sealed class Pack3DIrregularComponent : FrahanComponentBase
 {
     public Pack3DIrregularComponent()
         : base("Pack3D Irregular", "Pack3D",
@@ -58,7 +58,7 @@ public sealed class Pack3DIrregularComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         var containerBox = Box.Unset;

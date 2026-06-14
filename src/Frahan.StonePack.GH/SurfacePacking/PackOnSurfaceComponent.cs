@@ -40,7 +40,7 @@ namespace Frahan.GH.Surface
     /// </summary>
     [Algorithm("Barycentric 2D-to-3D mapping", "Floater 2003, Computer Aided Geometric Design 20(1):19-27 Mean value coordinates", Doi = "10.1016/S0167-8396(03)00002-5", Note = "Mean-value barycentric interpolation lifts packed UV curves back to the 3D surface", WikiPath = "wiki/algorithms/surface_mosaicing/")]
     [Algorithm("Exact No-Fit-Polygon Bottom-Left-Fill", "Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2006). A New Bottom-Left-Fill Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem. Operations Research 54(3):587-601", Doi = "10.1287/opre.1060.0293", Note = "Core ContactNfpHoleNester places parts on the flat chart sheet")]
-    public sealed class PackOnSurfaceComponent : GH_Component
+    public sealed class PackOnSurfaceComponent : FrahanComponentBase
     {
         public PackOnSurfaceComponent()
             : base(
@@ -162,7 +162,7 @@ namespace Frahan.GH.Surface
             public PackOnSurfaceResult Result;
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             if (_selfTrigger)
             {

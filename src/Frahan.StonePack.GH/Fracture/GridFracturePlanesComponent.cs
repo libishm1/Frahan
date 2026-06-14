@@ -28,7 +28,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original orthogonal grid fracture set")]
     [Algorithm("Orthogonal grid fracture set", "Frahan-original",
         Note = "axis-aligned grid generator; no canonical published source")]
-    public sealed class GridFracturePlanesComponent : GH_Component
+    public sealed class GridFracturePlanesComponent : FrahanComponentBase
     {
         public GridFracturePlanesComponent()
             : base(
@@ -68,7 +68,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawSlab = null;
             int nX = 1, nY = 0, nZ = 1;

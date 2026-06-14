@@ -56,7 +56,7 @@ namespace Frahan.GH.Kintsugi;
     "Load a Breaking Bad sample (.bin from extract_breaking_bad_sample.py)  and output per-fragment point clouds...",
     DesignFlow.Bridges,
     Precedent = "Breaking Bad dataset (Sellan et al. 2022, NeurIPS) -- pre-converted to FRKINTSU .bin")]
-public sealed class BreakingBadSampleLoaderComponent : GH_Component
+public sealed class BreakingBadSampleLoaderComponent : FrahanComponentBase
 {
     public BreakingBadSampleLoaderComponent()
         : base("Load BB Sample", "BBLoad",
@@ -121,7 +121,7 @@ public sealed class BreakingBadSampleLoaderComponent : GH_Component
             "Sample loader diagnostic.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = "";
         int meshStyle = 0;

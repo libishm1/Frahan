@@ -38,7 +38,7 @@ namespace Frahan.GH.Registration;
     "Rigid scan→world transform from N≥3 control-point pairs in a  global coordinate system",
     DesignFlow.Bridges,
     Precedent = "Standard UTM / EPSG transforms + Horn 1987 best-fit absolute orientation")]
-public sealed class GeoreferenceComponent : GH_Component
+public sealed class GeoreferenceComponent : FrahanComponentBase
 {
     public GeoreferenceComponent()
         : base("Georeference", "GeorefCRS",
@@ -107,7 +107,7 @@ public sealed class GeoreferenceComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var worldPts = new List<Point3d>();
         var scanPts = new List<Point3d>();

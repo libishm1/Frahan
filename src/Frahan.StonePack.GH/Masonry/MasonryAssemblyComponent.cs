@@ -29,7 +29,7 @@ namespace Frahan.GH.Masonry
         "Composes MasonryBlocks, MasonryInterfaces, and fixed-block boundary  conditions into a MasonryAssembly DTO",
         DesignFlow.BottomUp,
         Precedent = "ETH Gramazio Kohler robotic masonry assembly lineage; Kao 2022 Coupled Rigid-Block Analysis")]
-    public sealed class MasonryAssemblyComponent : GH_Component
+    public sealed class MasonryAssemblyComponent : FrahanComponentBase
     {
         public MasonryAssemblyComponent()
             : base(
@@ -74,7 +74,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             // ---- Blocks (required, list) -----------------------------------
             var rawBlocks = new List<object>();

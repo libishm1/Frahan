@@ -33,7 +33,7 @@ namespace Frahan.GH.Quarry;
 [Algorithm("In-situ block size", "Palmstrom Jv / Vb / RQD (Palmstrom 1995, 2005)",
     Note = "Vb = s1 s2 s3 / (sin g12 sin g23 sin g31); Jv = sum 1/s; RQD ~ 110 - 2.5 Jv.")]
 [RelatedComponent("Frahan > Quarry > Discontinuity Sets (Async)", Reason = "Upstream source of dip/dipdir/spacing/share + facets.csv.")]
-public sealed class StereonetBlockSizeComponent : GH_Component
+public sealed class StereonetBlockSizeComponent : FrahanComponentBase
 {
     public StereonetBlockSizeComponent()
         : base("Stereonet + Block Size", "Stereonet",
@@ -89,7 +89,7 @@ public sealed class StereonetBlockSizeComponent : GH_Component
         p.AddTextParameter("Report", "Re", "Per-set table + block-size readout + unit notes.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         ClearPreview();
 

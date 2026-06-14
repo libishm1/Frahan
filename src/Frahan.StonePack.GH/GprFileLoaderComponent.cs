@@ -42,7 +42,7 @@ namespace Frahan.GH.Quarry;
     "Load a ground-penetrating-radar file by extension: CSV / SEG-Y / MALA RD3 / pulseEKKO DT1",
     DesignFlow.Bridges,
     Precedent = "SEG-Y rev 1 / Mala RD3 / PulseEKKO DT1 / GSSI DZT / IDS DT format specs")]
-public sealed class GprFileLoaderComponent : GH_Component
+public sealed class GprFileLoaderComponent : FrahanComponentBase
 {
     public GprFileLoaderComponent()
         : base("GPR File Loader", "GprLoad",
@@ -86,7 +86,7 @@ public sealed class GprFileLoaderComponent : GH_Component
             "The source file path echoed verbatim.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = string.Empty;
         string id = string.Empty;

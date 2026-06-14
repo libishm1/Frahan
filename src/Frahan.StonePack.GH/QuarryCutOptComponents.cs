@@ -31,7 +31,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Aggregate a list of bench-block AABBs into a QuarryInventory",
         DesignFlow.TopDown)]
-    public sealed class FrahanQuarryInventoryComponent : GH_Component
+    public sealed class FrahanQuarryInventoryComponent : FrahanComponentBase
     {
         public FrahanQuarryInventoryComponent()
             : base(
@@ -65,7 +65,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Avg Grade", "G", "Volume-weighted average geology grade.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string benchId = "bench-1";
             var boxes = new List<Box>();
@@ -120,7 +120,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Per-block yield estimate via BlockCutOpt as a sub-routine",
         DesignFlow.TopDown)]
-    public sealed class FrahanQuarryYieldEstimatorComponent : GH_Component
+    public sealed class FrahanQuarryYieldEstimatorComponent : FrahanComponentBase
     {
         public FrahanQuarryYieldEstimatorComponent()
             : base(
@@ -162,7 +162,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Cutting Time (min)", "T", "Per-block estimated cutting time.", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var wrapper = new GH_ObjectWrapper();
             Mesh fxMesh = null;
@@ -224,7 +224,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Order BenchBlocks by score = w_yield*yield - w_risk*risk -  w_access*access",
         DesignFlow.TopDown)]
-    public sealed class FrahanExtractionOrderOptimizerComponent : GH_Component
+    public sealed class FrahanExtractionOrderOptimizerComponent : FrahanComponentBase
     {
         public FrahanExtractionOrderOptimizerComponent()
             : base(
@@ -262,7 +262,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Total Waste (m^3)", "Vw", "Sum of waste volumes.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var invWrapper = new GH_ObjectWrapper();
             var estWrappers = new List<GH_ObjectWrapper>();
@@ -323,7 +323,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Greedy LPT schedule of accepted blocks onto N saw beds",
         DesignFlow.TopDown)]
-    public sealed class FrahanSawBedScheduleComponent : GH_Component
+    public sealed class FrahanSawBedScheduleComponent : FrahanComponentBase
     {
         public FrahanSawBedScheduleComponent()
             : base(
@@ -355,7 +355,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Slot Count", "K", "Total scheduled slots.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var wrapper = new GH_ObjectWrapper();
             int bedCount = 2;
@@ -398,7 +398,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Aggregate Inventory + ExtractionPlan + SawBedSchedule into  a Markdown summary plus headline numbers",
         DesignFlow.TopDown)]
-    public sealed class FrahanQuarryReportComponent : GH_Component
+    public sealed class FrahanQuarryReportComponent : FrahanComponentBase
     {
         public FrahanQuarryReportComponent()
             : base(
@@ -432,7 +432,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Makespan (min)", "M", "Schedule makespan.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var invW = new GH_ObjectWrapper();
             var planW = new GH_ObjectWrapper();

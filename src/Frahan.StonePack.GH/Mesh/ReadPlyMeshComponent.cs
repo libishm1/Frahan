@@ -42,7 +42,7 @@ namespace Frahan.GH.Masonry
         "Loads a mesh from a .ply, .obj, or .stl file via pure-managed  parsers (no third-party native code)",
         DesignFlow.Bridges,
         Precedent = "Stanford PLY format (Greenberg Turk 1994)")]
-    public sealed class ReadPlyMeshComponent : GH_Component
+    public sealed class ReadPlyMeshComponent : FrahanComponentBase
     {
         public ReadPlyMeshComponent()
             : base(
@@ -94,7 +94,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string path = null;
             int formatInt = 0;

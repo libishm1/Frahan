@@ -46,7 +46,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Heyman 1966 limit-state masonry theorem; Gramazio Kohler Autonomous Dry Stone (Johns et al. 2020-2022); Furrer et al. 2017 IROS Autonomous Robotic Stone Stacking",
         Tolerance = "all stones with CoM over support polygon; max penetration <= 1 mm",
         CardSet = "wiki/research/hitl_cards/bu_drop_settle/")]
-    public sealed class RubbleWallSettleComponent : GH_Component
+    public sealed class RubbleWallSettleComponent : FrahanComponentBase
     {
         public RubbleWallSettleComponent()
             : base(
@@ -119,7 +119,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var stones = new List<Mesh>();
             if (!da.GetDataList(0, stones) || stones.Count == 0)

@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original random / Poisson fracture set")]
     [Algorithm("Random plane placement", "Frahan-original",
         Note = "uniform sphere-pick (Marsaglia 1972) for normals; no Poisson-disk rejection")]
-    public sealed class RandomFracturePlanesComponent : GH_Component
+    public sealed class RandomFracturePlanesComponent : FrahanComponentBase
     {
         public RandomFracturePlanesComponent()
             : base(
@@ -63,7 +63,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawSlab = null;
             int count = 4, seed = 12345;

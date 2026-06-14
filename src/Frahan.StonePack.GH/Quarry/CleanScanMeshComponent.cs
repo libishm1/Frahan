@@ -33,7 +33,7 @@ namespace Frahan.GH.Quarry;
     "Turn a raw quarry scan reconstruction into clean terrain for volume + face work",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original; geom.at / Fade2D land-survey peel logic")]
-public sealed class CleanScanMeshComponent : GH_Component
+public sealed class CleanScanMeshComponent : FrahanComponentBase
 {
     public CleanScanMeshComponent()
         : base("Clean Scan Mesh", "CleanTIN",
@@ -71,7 +71,7 @@ public sealed class CleanScanMeshComponent : GH_Component
         p.AddTextParameter("Report", "Rpt", "Summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh mesh = null;
         double k = 3.0, tilt = 85.0, cap = 140.0;

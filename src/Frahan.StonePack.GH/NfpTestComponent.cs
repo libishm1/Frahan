@@ -15,7 +15,7 @@ namespace Frahan.GH;
     "Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). \"Complete and robust no-fit polygon generation for the irregular stock cutting problem.\" Eur. J. Oper. Res.",
     Doi = "10.1016/j.ejor.2006.03.011",
     WikiPath = "wiki/index/references.md#BurkeNFP2007")]
-public sealed class NfpTestComponent : GH_Component
+public sealed class NfpTestComponent : FrahanComponentBase
 {
     public NfpTestComponent()
         : base("NFP Test", "NFP",
@@ -44,7 +44,7 @@ public sealed class NfpTestComponent : GH_Component
         pManager.AddTextParameter("Message", "M", "NFP status message.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve? stationary = null;
         Curve? sliding = null;

@@ -24,7 +24,7 @@ namespace Frahan.GH;
     Note = "Mode-seeking on the sphere; set count discovered, not preset.")]
 [RelatedComponent("Frahan > Quarry > BlockCutOpt Solve", Reason = "Consumes the discontinuity model this produces.")]
 [RelatedComponent("Frahan > Ingest > Load E57 Cloud", Reason = "Produces the point cloud this segments.")]
-public class DiscontinuitySetsComponent : GH_Component
+public class DiscontinuitySetsComponent : FrahanComponentBase
 {
     public DiscontinuitySetsComponent()
         : base("Discontinuity Sets (Cloud)", "DiscSets",
@@ -68,7 +68,7 @@ public class DiscontinuitySetsComponent : GH_Component
         new[]{0,160,90}, new[]{150,100,40}
     };
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         IGH_GeometricGoo goo = null;
         if (!da.GetData(0, ref goo) || goo == null) return;

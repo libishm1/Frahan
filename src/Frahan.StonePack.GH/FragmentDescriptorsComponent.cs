@@ -29,7 +29,7 @@ namespace Frahan.GH;
 [Algorithm("Fragment shape descriptor extraction", "Frahan-original",
     Note = "geometric descriptors are textbook quantities but the descriptor schema is Frahan-original (spec 5)",
     WikiPath = "wiki/algorithms/surface_mosaicing/descriptors/fragment_descriptor.md")]
-public sealed class FragmentDescriptorsComponent : GH_Component
+public sealed class FragmentDescriptorsComponent : FrahanComponentBase
 {
     public FragmentDescriptorsComponent()
         : base("Frahan Fragment Descriptors", "FragDesc",
@@ -69,7 +69,7 @@ public sealed class FragmentDescriptorsComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var fragments = new List<Curve>();
         var zoneBuckets = new List<int>();

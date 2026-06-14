@@ -19,7 +19,7 @@ namespace Frahan.GH.Masonry
     // building model (walls + arches + vaults + pendentives + columns) that
     // the bottom-up stone workflows feed — verified per element upstream.
     // =========================================================================
-    public class IfcBuildingExportComponent : GH_Component
+    public class IfcBuildingExportComponent : FrahanComponentBase
     {
         public IfcBuildingExportComponent()
             : base("IFC Export (Building)", "IfcBuilding",
@@ -52,7 +52,7 @@ namespace Frahan.GH.Masonry
             p.AddBooleanParameter("OK", "OK", "True if the file was written", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             GH_Structure<Grasshopper.Kernel.Types.GH_Mesh> tree = null;
             var names = new List<string>();

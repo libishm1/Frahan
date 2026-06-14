@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         "Detects face-face contacts between a list of placed Slabs  and emits the corresponding MasonryInterfaces",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original face-face contact detector; Holzmann 2006 Power-of-10 hardening")]
-    public sealed class AutoInterfacesComponent : GH_Component
+    public sealed class AutoInterfacesComponent : FrahanComponentBase
     {
         public AutoInterfacesComponent()
             : base(
@@ -77,7 +77,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             if (!da.GetDataList(0, meshes))

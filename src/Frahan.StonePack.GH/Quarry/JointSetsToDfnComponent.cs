@@ -41,7 +41,7 @@ namespace Frahan.GH.Quarry;
 [RelatedComponent("Frahan > Quarry > Discontinuity Ingest", Reason = "Upstream: ingests measured dip/dipdir orientations.")]
 [RelatedComponent("Frahan > Quarry > BlockCutOpt Omni Solve", Reason = "Downstream (evolved): sub-division + coarse-to-fine + Pareto recovery on this DFN.")]
 [RelatedComponent("Frahan > Quarry > Fracture Block Pack", Reason = "Downstream: wire-saw staged guillotine packing against this DFN.")]
-public sealed class JointSetsToDfnComponent : GH_Component
+public sealed class JointSetsToDfnComponent : FrahanComponentBase
 {
     public JointSetsToDfnComponent()
         : base("Joint Sets to DFN", "Sets2DFN",
@@ -78,7 +78,7 @@ public sealed class JointSetsToDfnComponent : GH_Component
         p.AddTextParameter("Report", "Re", "Per-set summary + DFN stats + any skipped sets.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var dip = new List<double>(); var dipdir = new List<double>(); var spacing = new List<double>();
         var scatter = new List<double>();

@@ -62,7 +62,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "MRAC IAAC 2023 robotic milling of non-standard logs workshop; KUKAprc Generic NC Import (paid Pro tier); Robots plugin (Soler MIT) has NO native G-code ingest -> Frahan fills the gap",
     Tolerance = "lossless parse of G00/G01/G02/G03 + F + S; arc I/J coordinates preserved verbatim; round-trip identity on canonical RhinoCAM .nc files",
     CardSet = "wiki/research/hitl_cards/br_gcode_ingest/ (proposed)")]
-public sealed class GCodeParserComponent : GH_Component
+public sealed class GCodeParserComponent : FrahanComponentBase
 {
     public GCodeParserComponent()
         : base("G-code Parser", "GCode",
@@ -122,7 +122,7 @@ public sealed class GCodeParserComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         string filePath = null;
         Point3d initialPos = Point3d.Origin;

@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         "Slider-driven animation of a masonry build sequence",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original step-preview slider")]
-    public sealed class BuildStepPreviewComponent : GH_Component
+    public sealed class BuildStepPreviewComponent : FrahanComponentBase
     {
         public BuildStepPreviewComponent()
             : base(
@@ -76,7 +76,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             if (!da.GetDataList(0, meshes))

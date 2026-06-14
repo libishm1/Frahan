@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         DesignFlow.BottomUp,
         Precedent = "DTO bundle for AshlarPackComponent (Gramazio Kohler Eichenhofer 2017)",
         CardSet = "wiki/research/hitl_cards/bu_ashlar/")]
-    public sealed class AshlarPackOptionsComponent : GH_Component
+    public sealed class AshlarPackOptionsComponent : FrahanComponentBase
     {
         public AshlarPackOptionsComponent()
             : base(
@@ -91,7 +91,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             int modeInt = 0;
             double courseHeight = 0.15;

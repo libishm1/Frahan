@@ -21,7 +21,7 @@ namespace Frahan.GH.ScanIngest;
     "One-button cleanup pipeline for scanned stones:  Repair → optional Decimate → StoneDescriptor",
     DesignFlow.Bridges,
     Precedent = "Frahan-original scan-stone preprocessing pipeline")]
-public sealed class StonePrepComponent : GH_Component
+public sealed class StonePrepComponent : FrahanComponentBase
 {
     public StonePrepComponent()
         : base("Stone Prep (Scan)", "StonePrep",
@@ -84,7 +84,7 @@ public sealed class StonePrepComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         var ids = new List<string>();

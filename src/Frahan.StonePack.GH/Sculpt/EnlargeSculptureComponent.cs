@@ -24,7 +24,7 @@ namespace Frahan.GH.Sculpt;
     Precedent = "Borrowed Earth Wood Ridge contour-sculpture pipeline (CEU 2026-03-05 SS5); heritage scan upscaling tradition")]
 [Algorithm("Parametric enlargement", "Frahan-original",
     Note = "digital pointing-machine tradition; affine scale, not a published algorithm")]
-public sealed class EnlargeSculptureComponent : GH_Component
+public sealed class EnlargeSculptureComponent : FrahanComponentBase
 {
     public EnlargeSculptureComponent()
         : base("Enlarge Sculpture", "Enlarge",
@@ -68,7 +68,7 @@ public sealed class EnlargeSculptureComponent : GH_Component
         p.AddNumberParameter("Volume", "Vol", "Volume of the enlarged mesh (0 if not closed).", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh mesh = null;
         if (!da.GetData(0, ref mesh) || mesh == null || !mesh.IsValid)

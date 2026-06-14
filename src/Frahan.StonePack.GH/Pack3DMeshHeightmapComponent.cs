@@ -19,7 +19,7 @@ namespace Frahan.GH;
     Precedent = "Frahan-original mesh-pile heightmap packing; Chehrazad 2025 DLBF substrate")]
 [Algorithm("Mesh top/bottom heightmap greedy packing", "Frahan-original",
     Note = "Frahan-original mesh-pile heightmap proxy; greedy deepest-bottom-left substrate per Chehrazad 2025 DLBF")]
-public sealed class Pack3DMeshHeightmapComponent : GH_Component
+public sealed class Pack3DMeshHeightmapComponent : FrahanComponentBase
 {
     public Pack3DMeshHeightmapComponent()
         : base("Pack3D Mesh Heightmap", "Pack3DMesh",
@@ -61,7 +61,7 @@ public sealed class Pack3DMeshHeightmapComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         var containerBox = Box.Unset;

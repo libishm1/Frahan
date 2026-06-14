@@ -32,7 +32,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "Frahan flagship Fabricate niche; staggered masonry-like decomposition for wire-saw + robotic milling")]
 [Algorithm("Running-bond staggered cell layout", "Frahan-original",
     Note = "Core StaggeredBlockLayout grid + brick-offset layout; running-bond is a masonry convention, not a citable algorithm")]
-public sealed class StaggeredBlockDecomposeComponent : GH_Component
+public sealed class StaggeredBlockDecomposeComponent : FrahanComponentBase
 {
     public StaggeredBlockDecomposeComponent()
         : base("Staggered Block Decompose", "StaggerBlocks",
@@ -69,7 +69,7 @@ public sealed class StaggeredBlockDecomposeComponent : GH_Component
         p.AddTextParameter("Report", "R", "Layout summary + min/max cell size (wire-saw / mill feasibility).", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh form = null;
         double hc = 0.3, lb = 0.5, st = 0.5;

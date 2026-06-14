@@ -37,7 +37,7 @@ namespace Frahan.GH.Masonry
         "Agglomerates small fragments into their largest adjacent  host using upstream contact adjacency",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original fragment merger for split-mesh recombination")]
-    public sealed class FragmentMergerComponent : GH_Component
+    public sealed class FragmentMergerComponent : FrahanComponentBase
     {
         public FragmentMergerComponent()
             : base(
@@ -91,7 +91,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var raw = new List<object>();
             var ai = new List<int>();

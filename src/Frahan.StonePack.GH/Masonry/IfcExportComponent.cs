@@ -20,7 +20,7 @@ namespace Frahan.GH.Masonry
     // it consumes the SAME stone meshes the generator / matcher / carve-back
     // emit, so any workflow ends in BIM with one node.
     // =========================================================================
-    public class IfcExportComponent : GH_Component
+    public class IfcExportComponent : FrahanComponentBase
     {
         public IfcExportComponent()
             : base("IFC Export (Stone Assembly)", "IfcStones",
@@ -56,7 +56,7 @@ namespace Frahan.GH.Masonry
             p.AddBooleanParameter("OK", "OK", "True if the file was written", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var stones = new List<Mesh>();
             string name = "StoneWall", path = string.Empty;

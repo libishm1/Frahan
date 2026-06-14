@@ -39,7 +39,7 @@ namespace Frahan.GH.Masonry
         "Recovers the rigid transform per placed block",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original per-block ground-transform recovery")]
-    public sealed class BlockGroundTransformsComponent : GH_Component
+    public sealed class BlockGroundTransformsComponent : FrahanComponentBase
     {
         public BlockGroundTransformsComponent()
             : base(
@@ -103,7 +103,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var placed = new List<Mesh>();
             if (!da.GetDataList(0, placed) || placed.Count == 0)

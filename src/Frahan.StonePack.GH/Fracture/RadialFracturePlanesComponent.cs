@@ -24,7 +24,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original radial fracture set")]
     [Algorithm("Radial / fan fracture set", "Frahan-original",
         Note = "frame construction plus rotation; no canonical published source")]
-    public sealed class RadialFracturePlanesComponent : GH_Component
+    public sealed class RadialFracturePlanesComponent : FrahanComponentBase
     {
         public RadialFracturePlanesComponent()
             : base(
@@ -61,7 +61,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Point3d center = Point3d.Origin;
             Vector3d axis = Vector3d.ZAxis;

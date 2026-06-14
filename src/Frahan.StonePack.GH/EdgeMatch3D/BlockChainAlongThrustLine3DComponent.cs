@@ -42,7 +42,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "UCL Bartlett Lu/Zhu/Olesti/Scully/Devadass 2025 18-stone three-legged limestone arch (DOI 10.21203/rs.3.rs-8019586/v1)",
     Tolerance = "endpoint deviation <= 50 mm at 2.5 m span; Cg deviation per stone <= 30 mm; cumulative angle <= 5 deg",
     CardSet = "wiki/research/hitl_cards/em_3d_chain_ucl_bartlett/")]
-public sealed class BlockChainAlongThrustLine3DComponent : GH_Component
+public sealed class BlockChainAlongThrustLine3DComponent : FrahanComponentBase
 {
     public BlockChainAlongThrustLine3DComponent()
         : base("Block Chain Along Thrust Line", "BlkChain3D",
@@ -118,7 +118,7 @@ public sealed class BlockChainAlongThrustLine3DComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var inventory = new List<Mesh>();
         Curve thrustCurve = null;

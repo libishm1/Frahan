@@ -25,7 +25,7 @@ namespace Frahan.GH;
     "Bennell, J.A. & Oliveira, J.F. (2008). \"A tutorial in irregular shape packing problems.\" J. Oper. Res. Soc. 60(1)",
     Doi = "10.1057/jors.2008.169",
     WikiPath = "wiki/index/references.md#BennellOliveira2008")]
-public sealed class Pack2DIrregularSheetComponent : GH_Component
+public sealed class Pack2DIrregularSheetComponent : FrahanComponentBase
 {
     public Pack2DIrregularSheetComponent()
         : base("2D Irregular Sheet Pack", "Sheet Pack",
@@ -75,7 +75,7 @@ public sealed class Pack2DIrregularSheetComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Packing report.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var parts = new List<Curve>();
         var sheets = new List<Curve>();

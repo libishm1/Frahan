@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         DesignFlow.TopDown,
         Precedent = "Kim 2024 polygonal masonry install order (DETC2024-142563)",
         CardSet = "wiki/research/hitl_cards/td_voussoir/")]
-    public sealed class BlockBuildOrderComponent : GH_Component
+    public sealed class BlockBuildOrderComponent : FrahanComponentBase
     {
         public BlockBuildOrderComponent()
             : base(
@@ -87,7 +87,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object raw = null;
             if (!da.GetData(0, ref raw))

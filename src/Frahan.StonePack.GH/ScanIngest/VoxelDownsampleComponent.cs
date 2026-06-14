@@ -23,7 +23,7 @@ namespace Frahan.GH.ScanIngest;
     "Reduce a point cloud by averaging points within each voxel",
     DesignFlow.Bridges,
     Precedent = "Standard voxel-grid downsampling (Open3D voxel_down_sample equivalent)")]
-public sealed class VoxelDownsampleComponent : GH_Component
+public sealed class VoxelDownsampleComponent : FrahanComponentBase
 {
     public VoxelDownsampleComponent()
         : base("Voxel Downsample", "VoxelDown",
@@ -57,7 +57,7 @@ public sealed class VoxelDownsampleComponent : GH_Component
             "Number of centroids.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var pts = new List<Point3d>();
         double voxel = 0.05;

@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         "Topology + geometry diagnostics for a Rhino mesh",
         DesignFlow.Bridges,
         Precedent = "Standard mesh quality metrics (Frey Borouchaki 1999 mesh quality)")]
-    public sealed class MeshQualityReportComponent : GH_Component
+    public sealed class MeshQualityReportComponent : FrahanComponentBase
     {
         public MeshQualityReportComponent()
             : base(
@@ -110,7 +110,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh m = null;
             if (!da.GetData(0, ref m) || m == null)

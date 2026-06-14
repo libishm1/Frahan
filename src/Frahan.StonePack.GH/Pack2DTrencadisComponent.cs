@@ -41,7 +41,7 @@ namespace Frahan.GH;
     DesignFlow.BottomUp,
     Precedent = "Gaudi Park Guell Trencadis; Battiato 2013 CVD+GVF Trencadis synthesis",
     CardSet = "wiki/research/hitl_cards/em_2d_trencadis_solve/")]
-public sealed class Pack2DTrencadisComponent : GH_Component
+public sealed class Pack2DTrencadisComponent : FrahanComponentBase
 {
     public Pack2DTrencadisComponent()
         : base("Frahan Trencadís Pack", "Trencadis",
@@ -178,7 +178,7 @@ public sealed class Pack2DTrencadisComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var parts = new List<Curve>();
         var sheets = new List<Curve>();

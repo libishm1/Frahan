@@ -46,7 +46,7 @@ namespace Frahan.GH.Masonry
         "Library-based auto-match: given a list of canonical  library meshes and a list of placed (target) meshes,  ...",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original block-transform matcher")]
-    public sealed class MatchBlockTransformComponent : GH_Component
+    public sealed class MatchBlockTransformComponent : FrahanComponentBase
     {
         public MatchBlockTransformComponent()
             : base(
@@ -101,7 +101,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var library = new List<Mesh>();
             var targets = new List<Mesh>();

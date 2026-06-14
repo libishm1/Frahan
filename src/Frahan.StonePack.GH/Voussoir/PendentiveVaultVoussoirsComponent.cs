@@ -38,7 +38,7 @@ namespace Frahan.GH.Voussoir;
     Precedent = "Monge geometrie descriptive 1798; Rippmann-Block 2011 Digital Stereotomy; Block Research Group RhinoVAULT; Frahan example 22",
     Tolerance = "faceted cells (flat patches between grid stations); raise grid U/V to reduce facet error; requires 2*halfWidth^2 < R^2 so corners lie on the sphere; closed solids (Mesh.IsClosed)",
     CardSet = "wiki/research/stereotomy_voussoir_from_rubble.md")]
-public sealed class PendentiveVaultVoussoirsComponent : GH_Component
+public sealed class PendentiveVaultVoussoirsComponent : FrahanComponentBase
 {
     public PendentiveVaultVoussoirsComponent()
         : base("Pendentive Vault Voussoirs", "VaultVous",
@@ -108,7 +108,7 @@ public sealed class PendentiveVaultVoussoirsComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         double radius = 2.5, half = 1.6, thickness = 0.4;
         int gridU = 6, gridV = 6;

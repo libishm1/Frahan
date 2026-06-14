@@ -44,7 +44,7 @@ namespace Frahan.GH.TwoD;
     "Read an Albano-format 2D packing benchmark CSV  (num,polygon rows where polygon is a JSON-ish [[x,y], ...])...",
     DesignFlow.Bridges,
     Precedent = "Standard CSV import for 2D parts (Bennell Oliveira 2008 review-conforming inputs)")]
-public sealed class CsvPartsReaderComponent : GH_Component
+public sealed class CsvPartsReaderComponent : FrahanComponentBase
 {
     public CsvPartsReaderComponent()
         : base("CSV Parts Reader", "CSVParts",
@@ -96,7 +96,7 @@ public sealed class CsvPartsReaderComponent : GH_Component
             "One-line summary of the read.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = string.Empty;
         if (!da.GetData(0, ref path) || string.IsNullOrWhiteSpace(path))

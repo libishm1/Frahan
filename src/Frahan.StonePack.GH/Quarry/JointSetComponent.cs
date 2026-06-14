@@ -23,7 +23,7 @@ namespace Frahan.GH.Masonry
         "Authors a structural-geology joint set: dip direction (azimuth  of steepest descent, 0 = North), dip angle,...",
         DesignFlow.BottomUp,
         Precedent = "ISRM Suggested Methods + Priest 1993 joint-set DFN")]
-    public sealed class JointSetComponent : GH_Component
+    public sealed class JointSetComponent : FrahanComponentBase
     {
         public JointSetComponent()
             : base(
@@ -62,7 +62,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             double dipDir = 0.0, dip = 90.0, spacing = 0.30;
             da.GetData(0, ref dipDir);

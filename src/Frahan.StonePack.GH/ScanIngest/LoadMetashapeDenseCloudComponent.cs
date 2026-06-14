@@ -38,7 +38,7 @@ namespace Frahan.GH.ScanIngest;
     Precedent = "Frahan E57 stub bridge pattern (project_e57_ingest_component memory); Agisoft Metashape File > Export > Export Dense Cloud workflow",
     Tolerance = "exact file-existence + extension match; no numerical computation",
     CardSet = "Template-General/outputs/2026-05-31/hitl_cards/scan_to_cut_pipeline/cards/01_load_quarry_scan_ply.md (related)")]
-public sealed class LoadMetashapeDenseCloudComponent : GH_Component
+public sealed class LoadMetashapeDenseCloudComponent : FrahanComponentBase
 {
     public LoadMetashapeDenseCloudComponent()
         : base("Load Metashape Dense Cloud", "LoadOc3",
@@ -81,7 +81,7 @@ public sealed class LoadMetashapeDenseCloudComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         string path = null;
         if (!DA.GetData(0, ref path)) return;

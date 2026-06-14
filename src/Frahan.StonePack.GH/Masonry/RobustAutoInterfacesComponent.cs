@@ -47,7 +47,7 @@ namespace Frahan.GH.Masonry
         "Detects block-to-block contacts via mesh-vertex proximity",
         DesignFlow.BottomUp,
         Precedent = "Cockroach mesh-machine plug-in inspiration (citation TODO per audit row 4); Whiting 2009 procedurally-assembled stable masonry as candidate alternative")]
-    public sealed class RobustAutoInterfacesComponent : GH_Component
+    public sealed class RobustAutoInterfacesComponent : FrahanComponentBase
     {
         public RobustAutoInterfacesComponent()
             : base(
@@ -103,7 +103,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             if (!da.GetDataList(0, meshes))

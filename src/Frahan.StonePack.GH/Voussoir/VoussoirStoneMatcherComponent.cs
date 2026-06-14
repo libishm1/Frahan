@@ -59,7 +59,7 @@ namespace Frahan.GH.Voussoir;
     Precedent = "Rippmann-Block 2011 Digital Stereotomy; Block Research Group Armadillo Vault 2016; Quarra Parallel Nature off-cut matching; UCL Devadass 2025 50-fragment limestone library",
     Tolerance = "yield ratio (template_vol/stock_vol) >= 0.4 default; carving <= 30% of stock volume; OBB containment + 5 mm safety margin",
     CardSet = "wiki/research/hitl_cards/td_voussoir/ (proposed; TD-VOUSSOIR per master plan)")]
-public sealed class VoussoirStoneMatcherComponent : GH_Component
+public sealed class VoussoirStoneMatcherComponent : FrahanComponentBase
 {
     public VoussoirStoneMatcherComponent()
         : base("Voussoir Stone Matcher", "VousMatch",
@@ -147,7 +147,7 @@ public sealed class VoussoirStoneMatcherComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         VoussoirAssembly assembly = null;
         var stonesIn = new List<IGH_Goo>();

@@ -56,7 +56,7 @@ namespace Frahan.GH.Voussoir;
     Precedent = "Rippmann-Block 2011 Digital Stereotomy IABSE-IASS; Block Research Group Armadillo Vault 2016; Voussoir GH plugin (food4rhino)",
     Tolerance = "OBB volume within 1% of source mesh (AABB-based v1); adjacency detected when face centroids within 5% of object span",
     CardSet = "wiki/research/hitl_cards/td_voussoir/ (proposed; TD-VOUSSOIR per master plan)")]
-public sealed class VoussoirIngestComponent : GH_Component
+public sealed class VoussoirIngestComponent : FrahanComponentBase
 {
     public VoussoirIngestComponent()
         : base("Voussoir Ingest", "VousIngest",
@@ -157,7 +157,7 @@ public sealed class VoussoirIngestComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         var rawGoo = new List<IGH_Goo>();
         var jointClasses = new List<string>();

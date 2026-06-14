@@ -54,7 +54,7 @@ namespace Frahan.GH.Voussoir;
     Precedent = "Quarra Two Horse Relief Met 2024 (80,000 lb block extracted intact, cut into bas-relief halves); UCL Devadass 2025 SS2.7 minimum-machining; Rippmann-Block 2011 Digital Stereotomy",
     Tolerance = "yield ratio (sum_voussoir_vol / block_vol) >= 0.4; per-voussoir AABB+spacing fits inside block AABB; v1 AABB-grid v2 exact-shape via BlockPackTree",
     CardSet = "wiki/research/hitl_cards/td_voussoir/ (proposed; TD-VOUSSOIR per master plan)")]
-public sealed class VoussoirPackIntoBlockComponent : GH_Component
+public sealed class VoussoirPackIntoBlockComponent : FrahanComponentBase
 {
     public VoussoirPackIntoBlockComponent()
         : base("Voussoir Pack Into Block", "VousPack",
@@ -128,7 +128,7 @@ public sealed class VoussoirPackIntoBlockComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         VoussoirAssembly assembly = null;
         IGH_Goo blockGoo = null;

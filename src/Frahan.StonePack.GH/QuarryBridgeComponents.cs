@@ -28,7 +28,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Brute-force search + extract the winning OrientedBlock grid",
         DesignFlow.Bridges)]
-    public sealed class FrahanBlockCutOptExtractGridComponent : GH_Component
+    public sealed class FrahanBlockCutOptExtractGridComponent : FrahanComponentBase
     {
         public FrahanBlockCutOptExtractGridComponent()
             : base(
@@ -72,7 +72,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Elapsed (ms)", "T", "Wall-clock duration.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Box area = Box.Empty;
             Mesh fxMesh = null;
@@ -130,7 +130,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Run BlockCutOpt per BenchBlock in the ExtractionPlan order  and emit the winning cut-grid as Slabs (Mesh form)",
         DesignFlow.Bridges)]
-    public sealed class FrahanBenchBlockToSlabsComponent : GH_Component
+    public sealed class FrahanBenchBlockToSlabsComponent : FrahanComponentBase
     {
         public FrahanBenchBlockToSlabsComponent()
             : base(
@@ -172,7 +172,7 @@ namespace Frahan.GH.Quarry
             p.AddGenericParameter("Cut Results", "C", "List of BenchBlockCutResult objects.", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var invW = new GH_ObjectWrapper();
             var planW = new GH_ObjectWrapper();
@@ -256,7 +256,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Convert a hand-drawn Rhino Mesh into a List<FracturePlane>  consumable by Slab Cut By Fractures",
         DesignFlow.Bridges)]
-    public sealed class FrahanMeshFacesToFracturePlanesComponent : GH_Component
+    public sealed class FrahanMeshFacesToFracturePlanesComponent : FrahanComponentBase
     {
         public FrahanMeshFacesToFracturePlanesComponent()
             : base(
@@ -288,7 +288,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Count", "N", "Number of fracture planes.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             bool unit = true;

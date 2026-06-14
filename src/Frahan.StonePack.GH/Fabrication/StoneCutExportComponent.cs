@@ -34,7 +34,7 @@ namespace Frahan.GH.Fabrication;
     DesignFlow.Bridges,
     Precedent = "Quarra MIT lecture SS1.2 'selective precision' + Borrowed Earth SS11 hand-finishing -- StoneCutMetadata schema",
     CardSet = "wiki/research/hitl_cards/br_stone_aware_export/")]
-public sealed class StoneCutExportComponent : GH_Component
+public sealed class StoneCutExportComponent : FrahanComponentBase
 {
     public StoneCutExportComponent()
         : base("Stone-Aware Cut Export", "CutExport",
@@ -77,7 +77,7 @@ public sealed class StoneCutExportComponent : GH_Component
         p.AddTextParameter("Report", "R", "Export summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var goos = new List<IGH_GeometricGoo>();
         if (!da.GetDataList(0, goos) || goos.Count == 0)

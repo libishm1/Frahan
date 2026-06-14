@@ -26,7 +26,7 @@ namespace Frahan.GH.Masonry
         "Drops planes that miss the target slab's bounding box",
         DesignFlow.TopDown,
         Precedent = "Frahan-original fracture-plane spatial / orientation filter")]
-    public sealed class FracturePlaneFilterComponent : GH_Component
+    public sealed class FracturePlaneFilterComponent : FrahanComponentBase
     {
         public FracturePlaneFilterComponent()
             : base(
@@ -60,7 +60,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var rawPlanes = new List<object>();
             object rawSlab = null;

@@ -22,7 +22,7 @@ namespace Frahan.GH;
 [Algorithm("Bipartite assignment", "Kuhn 1955 Hungarian method", Note = "Optional Mode=1: global min-trim assignment over the staggered slots.")]
 [RelatedComponent("Frahan > EdgeMatch > Live Edge Classify", Reason = "Produces the live/sawn split each offcut is laid by.")]
 [RelatedComponent("Frahan > Voussoir > Template Panel Match", Reason = "Same HungarianAssigner, 3D top-down stone-to-slot assignment.")]
-public class LiveEdgeStaggerComponent : GH_Component
+public class LiveEdgeStaggerComponent : FrahanComponentBase
 {
     public LiveEdgeStaggerComponent()
         : base("Live Edge Stagger Layup", "LEStagger",
@@ -58,7 +58,7 @@ public class LiveEdgeStaggerComponent : GH_Component
         pManager.AddTextParameter("Report", "Re", "Layup summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var outlines = new List<Curve>();
         da.GetDataList(0, outlines);

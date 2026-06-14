@@ -40,7 +40,7 @@ namespace Frahan.GH.Quarry
         Precedent = "Frahan-original SlabCutOpt (spec 09 SS2); Marvie Reed Bondua 2025 review context (DOI 10.2478/minrv-2025-0015)",
         Tolerance = "slab count within 95 % of fracture-free theoretical max",
         CardSet = "wiki/research/hitl_cards/td_slabcut/")]
-    public sealed class FrahanSlabYieldOptimizerComponent : GH_Component
+    public sealed class FrahanSlabYieldOptimizerComponent : FrahanComponentBase
     {
         public FrahanSlabYieldOptimizerComponent()
             : base(
@@ -92,7 +92,7 @@ namespace Frahan.GH.Quarry
             p.AddGenericParameter("Cut Planes", "Cp", "FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures).", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             var fxWrappers = new List<GH_ObjectWrapper>();
@@ -167,7 +167,7 @@ namespace Frahan.GH.Quarry
         "Sub-divide slabs into billets along an axis at a target  billet width",
         DesignFlow.TopDown,
         Precedent = "Frahan-original slab-to-billet sub-divider (spec 09)")]
-    public sealed class FrahanBilletCutterComponent : GH_Component
+    public sealed class FrahanBilletCutterComponent : FrahanComponentBase
     {
         public FrahanBilletCutterComponent()
             : base(
@@ -198,7 +198,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Count", "N", "Total billet count.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             int axisInt = 0;
@@ -244,7 +244,7 @@ namespace Frahan.GH.Quarry
         "Wrap a user-supplied list of FracturePlanes (and optional  confidences) as a CrackGraph for spec-08 downstr...",
         DesignFlow.TopDown,
         Precedent = "Frahan-original fracture-plane crack-graph builder (spec 09)")]
-    public sealed class FrahanCrackGraphBuilderComponent : GH_Component
+    public sealed class FrahanCrackGraphBuilderComponent : FrahanComponentBase
     {
         public FrahanCrackGraphBuilderComponent()
             : base(
@@ -276,7 +276,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Count", "N", "Number of cracks.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var fxWrappers = new List<GH_ObjectWrapper>();
             var confs = new List<double>();
@@ -315,7 +315,7 @@ namespace Frahan.GH.Quarry
         "Partition a bench (Box or Mesh) into BlockCells using a  CrackGraph",
         DesignFlow.TopDown,
         Precedent = "Frahan-original CrackGraph -> BlockGraph reduction (spec 09)")]
-    public sealed class FrahanBlockGraphBuilderComponent : GH_Component
+    public sealed class FrahanBlockGraphBuilderComponent : FrahanComponentBase
     {
         public FrahanBlockGraphBuilderComponent()
             : base(
@@ -348,7 +348,7 @@ namespace Frahan.GH.Quarry
             p.AddNumberParameter("Total Volume (m^3)", "V", "Sum of cell volumes.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh benchMesh = null;
             var graphW = new GH_ObjectWrapper();
@@ -383,7 +383,7 @@ namespace Frahan.GH.Quarry
         "Emit one BlockCandidate per BlockCell using the cell's AABB  as the BenchBlock footprint",
         DesignFlow.TopDown,
         Precedent = "Frahan-original block-candidate generator (spec 09 SS2)")]
-    public sealed class FrahanBlockCandidateGeneratorComponent : GH_Component
+    public sealed class FrahanBlockCandidateGeneratorComponent : FrahanComponentBase
     {
         public FrahanBlockCandidateGeneratorComponent()
             : base(
@@ -430,7 +430,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Count", "N", "Number of candidates.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var bgW = new GH_ObjectWrapper();
             string benchId = "bench-1";

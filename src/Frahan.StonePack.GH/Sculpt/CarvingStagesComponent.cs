@@ -52,7 +52,7 @@ namespace Frahan.GH.Sculpt;
     CardSet = "wiki/research/hitl_cards/td_carve_stages/")]
 [Algorithm("Staged offset-shell roughing", "Frahan-original",
     Note = "pure per-vertex offset math, O(vertices x stages), cached + Run-gated; no published roughing-strategy paper implemented")]
-public sealed class CarvingStagesComponent : GH_Component
+public sealed class CarvingStagesComponent : FrahanComponentBase
 {
     public CarvingStagesComponent()
         : base("Carving Stages", "CarveStages",
@@ -106,7 +106,7 @@ public sealed class CarvingStagesComponent : GH_Component
         p.AddIntegerParameter("Count", "N", "Number of stage meshes produced.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh target = null, block = null;
         int stages = 4, mode = 0; double maxOff = 0.05, finish = 0.0, boost = 1.0;

@@ -30,7 +30,7 @@ namespace Frahan.GH.Masonry
         "Diagnostic stats over a list of slab volumes",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original size-distribution diagnostic")]
-    public sealed class BlockSizeDistributionComponent : GH_Component
+    public sealed class BlockSizeDistributionComponent : FrahanComponentBase
     {
         public BlockSizeDistributionComponent()
             : base(
@@ -81,7 +81,7 @@ namespace Frahan.GH.Masonry
                 "One-line summary.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var raw = new List<object>();
             int bins = 0;

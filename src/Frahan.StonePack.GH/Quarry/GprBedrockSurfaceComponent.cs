@@ -37,7 +37,7 @@ namespace Frahan.GH.Quarry;
     "Reconstruct the buried rock-face top from a GPR scan to plan the overburden strip",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original; Porsani Capao Bonito + Bondua Botticino bedrock-from-GPR")]
-public sealed class GprBedrockSurfaceComponent : GH_Component
+public sealed class GprBedrockSurfaceComponent : FrahanComponentBase
 {
     public GprBedrockSurfaceComponent()
         : base("GPR Bedrock Surface", "GprBedrock",
@@ -84,7 +84,7 @@ public sealed class GprBedrockSurfaceComponent : GH_Component
         p.AddTextParameter("Report", "Rpt", "Summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh ground = null;
         var picks = new List<Point3d>();

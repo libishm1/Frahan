@@ -32,7 +32,7 @@ namespace Frahan.GH.ScanIngest;
     Precedent = "MRAC IAAC Barcelona 2023 photogrammetry workflow (Metashape 1.8.2.0) per wiki/research/mrac_workshop_2023/exercise_dossier.md; Agisoft Metashape File > Save As convention",
     Tolerance = "tolerant XML parse (handles version skew); chunk transform parsed to within float precision; mesh.ply path resolves to exact on-disk file when Extract Mesh is true",
     CardSet = "Template-General/outputs/2026-05-31/hitl_cards/scan_to_cut_pipeline/cards/01_load_quarry_scan_ply.md (related)")]
-public sealed class ReadMetashapeProjectComponent : GH_Component
+public sealed class ReadMetashapeProjectComponent : FrahanComponentBase
 {
     public ReadMetashapeProjectComponent()
         : base("Read Metashape Project", "ReadPsx",
@@ -105,7 +105,7 @@ public sealed class ReadMetashapeProjectComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         string psxPath = null;
         int chunkSel = -1;

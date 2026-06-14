@@ -53,7 +53,7 @@ namespace Frahan.GH.Surface
     ///   curved surface at the four bounding-box corners of the placement.
     ///   Part Index: 0-based index into the original Parts input per packed part.
     /// </summary>
-    public sealed class PackSurfacesComponent : GH_Component
+    public sealed class PackSurfacesComponent : FrahanComponentBase
     {
         public PackSurfacesComponent()
             : base(
@@ -223,7 +223,7 @@ namespace Frahan.GH.Surface
             public PackSurfacesResult Result;
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             // ── SELF-TRIGGERED re-solve: emit the latest result, no rebuild ──
             if (_selfTrigger)

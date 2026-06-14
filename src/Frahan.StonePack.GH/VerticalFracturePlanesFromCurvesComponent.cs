@@ -25,7 +25,7 @@ namespace Frahan.GH;
     "Turn plan-view fracture trace curves (e.g",
     DesignFlow.TopDown,
     Precedent = "Frahan-original vertical-curve-to-fracture-plane sweep")]
-public sealed class VerticalFracturePlanesFromCurvesComponent : GH_Component
+public sealed class VerticalFracturePlanesFromCurvesComponent : FrahanComponentBase
 {
     public VerticalFracturePlanesFromCurvesComponent()
         : base("Vertical Fracture Planes From Curves", "FracPlanes",
@@ -56,7 +56,7 @@ public sealed class VerticalFracturePlanesFromCurvesComponent : GH_Component
         p.AddIntegerParameter("Count", "N", "Number of planes produced.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var curves = new List<Curve>();
         bool perSeg = false;

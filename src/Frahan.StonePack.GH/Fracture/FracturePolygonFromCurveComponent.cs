@@ -37,7 +37,7 @@ namespace Frahan.GH.Masonry
         "Wraps a closed planar polyline into a FracturePolygon DTO",
         DesignFlow.TopDown,
         Precedent = "Frahan-original curve-to-fracture-polygon converter")]
-    public sealed class FracturePolygonFromCurveComponent : GH_Component
+    public sealed class FracturePolygonFromCurveComponent : FrahanComponentBase
     {
         public FracturePolygonFromCurveComponent()
             : base(
@@ -82,7 +82,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Curve curve = null;
             bool forceProject = false;

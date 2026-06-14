@@ -23,7 +23,7 @@ namespace Frahan.GH.ScanIngest;
         "Heyman, J. (1966), The Stone Skeleton, Int. J. Solids Struct. 2(2):249-279",
         Doi = "10.1016/0020-7683(66)90018-7",
         WikiPath = "wiki/index/references.md#Heyman1966LimitState")]
-public sealed class PackStabilityComponent : GH_Component
+public sealed class PackStabilityComponent : FrahanComponentBase
 {
     public PackStabilityComponent()
         : base("Packed-Pile Stability", "PackStability",
@@ -67,7 +67,7 @@ public sealed class PackStabilityComponent : GH_Component
             "True iff every stone passes.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         Vector3d up = Vector3d.ZAxis;

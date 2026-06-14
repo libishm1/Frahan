@@ -37,7 +37,7 @@ namespace Frahan.GH.ScanIngest;
     Precedent = "MRAC IAAC Barcelona 2023 photogrammetry workflow (1_Photogrammetry/ folder convention per wiki/research/mrac_workshop_2023/exercise_dossier.md); Agisoft Metashape 'Add Photos' convention",
     Tolerance = "exact file-count match between filesystem and PhotoEntry list; bucket classification 100% deterministic on standard subfolder names",
     CardSet = "Template-General/outputs/2026-05-31/hitl_cards/scan_to_cut_pipeline/ (proposed extension)")]
-public sealed class LoadPhotoSetComponent : GH_Component
+public sealed class LoadPhotoSetComponent : FrahanComponentBase
 {
     public LoadPhotoSetComponent()
         : base("Load Photo Set", "LoadPhotoSet",
@@ -91,7 +91,7 @@ public sealed class LoadPhotoSetComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         string root = null;
         bool recurse = true;

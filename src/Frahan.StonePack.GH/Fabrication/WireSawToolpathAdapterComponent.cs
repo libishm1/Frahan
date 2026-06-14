@@ -66,7 +66,7 @@ namespace Frahan.GH.Fabrication;
     Precedent = "Zhang 2024 6-axis robot + brazed diamond wire (Stanford Bunny marble); Moult 2018 USyd KUKA + portable wire bandsaw; Quarra wire-saw (stationary, NOT end-effector) for Two Horse Relief 80,000 lb block split",
     Tolerance = "kerf compensation Δ = 1.75 mm verbatim from Zhang 2024 §3.2; cut surface within 0.5 mm of designed curve after compensation; wire dwell <= 3 s per sample",
     CardSet = "wiki/research/hitl_cards/bu_wire_saw/ (proposed; the bottom-up flagship Frahan-original card-set)")]
-public sealed class WireSawToolpathAdapterComponent : GH_Component
+public sealed class WireSawToolpathAdapterComponent : FrahanComponentBase
 {
     public WireSawToolpathAdapterComponent()
         : base("Wire-Saw Toolpath", "WireSaw",
@@ -135,7 +135,7 @@ public sealed class WireSawToolpathAdapterComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         Curve cutCurve = null;
         Vector3d wireAxis = Vector3d.YAxis;

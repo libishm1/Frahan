@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Frahan.Masonry.Packing;
+using Frahan.GH;
 
 namespace Frahan.StonePack.GH.Masonry
 {
@@ -19,7 +20,7 @@ namespace Frahan.StonePack.GH.Masonry
     /// Math: Frahan.Masonry.Packing.StoneCellAssignment (Rhino-free Core,
     /// validated against the closed-form λ = 1 − 1/k³ inflation anchor).
     /// </summary>
-    public class StoneCellMatchComponent : GH_Component
+    public class StoneCellMatchComponent : FrahanComponentBase
     {
         public StoneCellMatchComponent()
           : base("Stone-Cell Match (Λ)", "StoneMatchL",
@@ -55,7 +56,7 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddTextParameter("Report", "R", "Summary", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var stones = new List<Mesh>();
             var cells = new List<Mesh>();

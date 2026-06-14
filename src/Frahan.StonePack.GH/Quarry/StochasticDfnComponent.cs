@@ -31,7 +31,7 @@ namespace Frahan.GH.Quarry;
 [RelatedComponent("Frahan > Quarry > Discontinuity Sets (Async)", Reason = "Upstream: dip/dipdir/spacing per set.")]
 [RelatedComponent("Frahan > Quarry > Joint Sets to DFN", Reason = "The infinite-plane (deterministic) sibling; this is finite-persistence + stochastic.")]
 [RelatedComponent("Frahan > Quarry > BlockCutOpt Omni Solve", Reason = "Downstream: block-cut yield per realisation (Monte-Carlo over seeds).")]
-public sealed class StochasticDfnComponent : GH_Component
+public sealed class StochasticDfnComponent : FrahanComponentBase
 {
     public StochasticDfnComponent()
         : base("Stochastic DFN (Baecher)", "BaecherDFN",
@@ -69,7 +69,7 @@ public sealed class StochasticDfnComponent : GH_Component
         p.AddTextParameter("Report", "Re", "Per-set disc counts + intensity + notes.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var dip = new List<double>(); var dipdir = new List<double>(); var spacing = new List<double>();
         var kappa = new List<double>(); var persist = new List<double>();

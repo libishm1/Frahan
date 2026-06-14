@@ -64,7 +64,7 @@ namespace Frahan.GH;
     "Light Kangaroo 2 settle for trimmed trencadís packing",
     DesignFlow.BottomUp,
     Precedent = "Battiato 2013 CVD+GVF Trencadis synthesis (dynamic-tile variant)")]
-public sealed class Pack2DTrencadisDynamicComponent : GH_Component
+public sealed class Pack2DTrencadisDynamicComponent : FrahanComponentBase
 {
     public Pack2DTrencadisDynamicComponent()
         : base("Frahan Trencadís Dynamic Settle", "TrencadisDyn",
@@ -159,7 +159,7 @@ public sealed class Pack2DTrencadisDynamicComponent : GH_Component
             "Settle report.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var pieces = new List<Curve>();
         var sheets = new List<Curve>();

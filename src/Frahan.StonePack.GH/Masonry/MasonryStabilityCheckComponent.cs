@@ -5,6 +5,7 @@ using System.Text;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Frahan.Masonry.Solvers;
+using Frahan.GH;
 
 namespace Frahan.StonePack.GH.Masonry
 {
@@ -19,7 +20,7 @@ namespace Frahan.StonePack.GH.Masonry
     /// RBE is the force-only necessary condition; the coupled CRA refinement
     /// (Kao 2022 Eqs 8-14) is evolution phase P2.
     /// </summary>
-    public class MasonryStabilityCheckComponent : GH_Component
+    public class MasonryStabilityCheckComponent : FrahanComponentBase
     {
         public MasonryStabilityCheckComponent()
           : base("Masonry Stability Check", "MasonStable",
@@ -64,7 +65,7 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddNumberParameter("Utilization", "U", "Per-interface max friction utilization (1.0 = cone saturated)", GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var stones = new List<Mesh>();
             double mu = 0.84, fixBelowZ = 0.01, density = 2400.0, contactTol = 0.005, angleTol = 5.0;

@@ -48,7 +48,7 @@ namespace Frahan.GH.Kintsugi;
     "Give Voronoi shatter fragments worn, irregular fracture surfaces  using a shared world-position fractal fie...",
     DesignFlow.BottomUp,
     Precedent = "Frahan-original Voronoi-shatter post-process")]
-public sealed class FractureRoughenComponent : GH_Component
+public sealed class FractureRoughenComponent : FrahanComponentBase
 {
     public FractureRoughenComponent()
         : base("Fracture Roughen", "Roughen",
@@ -113,7 +113,7 @@ public sealed class FractureRoughenComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var inputs = new List<Mesh>();
         double amplitude = 0.02;

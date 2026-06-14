@@ -32,7 +32,7 @@ namespace Frahan.GH.Masonry
         "Aurenhammer, F. (1991). \"Voronoi diagrams—a survey.\" ACM Computing Surveys 23(3):345-405",
         Doi = "10.1145/116873.116880",
         WikiPath = "wiki/index/references.md#Aurenhammer1991Voronoi")]
-    public sealed class VoronoiFracturePlanesComponent : GH_Component
+    public sealed class VoronoiFracturePlanesComponent : FrahanComponentBase
     {
         public VoronoiFracturePlanesComponent()
             : base(
@@ -63,7 +63,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var pts = new List<Point3d>();
             if (!da.GetDataList(0, pts))

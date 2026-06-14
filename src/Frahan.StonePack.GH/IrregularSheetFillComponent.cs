@@ -36,7 +36,7 @@ namespace Frahan.GH;
     DesignFlow.BottomUp,
     Precedent = "Burke 2007 NFP + Bennell Oliveira 2008 irregular-shape packing review",
     Tolerance = "0 overlap; >= 85 % sheet utilisation")]
-public sealed class IrregularSheetFillComponent : GH_Component
+public sealed class IrregularSheetFillComponent : FrahanComponentBase
 {
     public IrregularSheetFillComponent()
         : base("Frahan Sheet Pack (Unified)", "FreeNestU",
@@ -172,7 +172,7 @@ public sealed class IrregularSheetFillComponent : GH_Component
             GH_ParamAccess.tree);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var parts = new List<Curve>();
         var sheets = new List<Curve>();

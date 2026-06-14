@@ -24,7 +24,7 @@ namespace Frahan.GH.Masonry
         "Axis-aligned bounding box of a mesh",
         DesignFlow.Bridges,
         Precedent = "Standard mesh AABB via Rhino BoundingBox")]
-    public sealed class MeshAabbComponent : GH_Component
+    public sealed class MeshAabbComponent : FrahanComponentBase
     {
         public MeshAabbComponent()
             : base(
@@ -67,7 +67,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             if (!da.GetData(0, ref mesh) || mesh == null)

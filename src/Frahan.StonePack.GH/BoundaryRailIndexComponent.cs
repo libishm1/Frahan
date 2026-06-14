@@ -33,7 +33,7 @@ namespace Frahan.GH;
 [Algorithm("Boundary-rail affinity bucketing", "Frahan-original",
     Note = "arc-length affinity bucketing (spec 5 §5.5-5.6); not a published algorithm",
     WikiPath = "wiki/algorithms/edge_matching/")]
-public sealed class BoundaryRailIndexComponent : GH_Component
+public sealed class BoundaryRailIndexComponent : FrahanComponentBase
 {
     public BoundaryRailIndexComponent()
         : base("Frahan Boundary Rail Index", "RailIdx",
@@ -97,7 +97,7 @@ public sealed class BoundaryRailIndexComponent : GH_Component
             "Human-readable summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var boundaries = new List<Curve>();
         var outerFlags = new List<bool>();

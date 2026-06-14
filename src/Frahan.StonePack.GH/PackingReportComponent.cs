@@ -23,7 +23,7 @@ namespace Frahan.GH;
     "Compute summary metrics for a 3D PackResult: placements, failures,  fill ratio, average placement score, it...",
     DesignFlow.Bridges,
     Precedent = "Frahan-original packing-report generator (consumes PackResult)")]
-public sealed class PackingReportComponent : GH_Component
+public sealed class PackingReportComponent : FrahanComponentBase
 {
     public PackingReportComponent()
         : base("Frahan Packing Report", "PackRpt",
@@ -59,7 +59,7 @@ public sealed class PackingReportComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Single-line summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         IGH_Goo? goo = null;
         if (!da.GetData(0, ref goo) || goo == null)

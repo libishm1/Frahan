@@ -33,7 +33,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Read a Frahan-format GPR radargram (traces CSV + optional  picks CSV)",
         DesignFlow.Bridges)]
-    public sealed class FrahanGprRadargramReaderComponent : GH_Component
+    public sealed class FrahanGprRadargramReaderComponent : FrahanComponentBase
     {
         public FrahanGprRadargramReaderComponent()
             : base(
@@ -71,7 +71,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Pick Count", "Np", "Number of picks.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string id = "scan-1", tracesPath = null, picksPath = string.Empty;
             da.GetData(0, ref id);
@@ -120,7 +120,7 @@ namespace Frahan.GH.Quarry
     [DesignApplication(
         "Load pre-computed GeoFractNet fracture predictions from CSV  and emit a BlockCutOpt-ready fracture Mesh cli...",
         DesignFlow.Bridges)]
-    public sealed class FrahanGeoFractNetInferenceComponent : GH_Component
+    public sealed class FrahanGeoFractNetInferenceComponent : FrahanComponentBase
     {
         public FrahanGeoFractNetInferenceComponent()
             : base(
@@ -155,7 +155,7 @@ namespace Frahan.GH.Quarry
             p.AddIntegerParameter("Triangle Count", "Nt", "Triangles in the fracture mesh.", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             string path = null;
             Box box = Box.Empty;

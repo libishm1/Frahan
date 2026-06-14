@@ -5,6 +5,7 @@ using System.Linq;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Frahan.Masonry.Sequencing;
+using Frahan.GH;
 
 namespace Frahan.StonePack.GH.Masonry.Sequencing
 {
@@ -21,7 +22,7 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
     /// MANIFOLD, unified-outward-normal stone meshes (watertight ->
     /// fabrication / Boolean / equilibrium-check / IFC ready).
     /// </summary>
-    public class PolygonalWallGeneratorComponent : GH_Component
+    public class PolygonalWallGeneratorComponent : FrahanComponentBase
     {
         public PolygonalWallGeneratorComponent()
           : base("Polygonal Wall (Generator)", "PolyWall",
@@ -70,7 +71,7 @@ namespace Frahan.StonePack.GH.Masonry.Sequencing
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Surface srf = null;
             double w = 3.0, h = 1.8, coursing = 0.4, depth = 0.20, mortar = 0.08, sizeGrade = 0.30;

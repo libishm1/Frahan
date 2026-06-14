@@ -21,7 +21,7 @@ namespace Frahan.GH;
     DesignFlow.TopDown,
     Precedent = "Park Han 2024 tree-packing (BlockPackTree); Chehrazad Roose Wauters 2025 DLBF (DOI 10.1080/00207543.2025.2478434)",
     Tolerance = ">= 70 % container fill; 0 overlap")]
-public sealed class Pack3DIrregularContainerComponent : GH_Component
+public sealed class Pack3DIrregularContainerComponent : FrahanComponentBase
 {
     public Pack3DIrregularContainerComponent()
         : base("Pack3D Irregular Container", "Pack3DContainer",
@@ -75,7 +75,7 @@ public sealed class Pack3DIrregularContainerComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var meshes = new List<Mesh>();
         var containerMeshes = new List<Mesh>();

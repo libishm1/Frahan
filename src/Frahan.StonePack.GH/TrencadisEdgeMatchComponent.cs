@@ -33,7 +33,7 @@ namespace Frahan.GH;
     Precedent = "Gaudi Park Guell Trencadis (1900-1914); Battiato 2013 CVD+GVF Trencadis synthesis; IAAC MRAC RoboMosaic 2022-23",
     Tolerance = "mean joint Hausdorff <= 5 mm",
     CardSet = "wiki/research/hitl_cards/em_2d_trencadis_solve/")]
-public sealed class TrencadisEdgeMatchComponent : GH_Component
+public sealed class TrencadisEdgeMatchComponent : FrahanComponentBase
 {
     public TrencadisEdgeMatchComponent()
         : base("Frahan Trencadís EdgeMatch", "TrencEM",
@@ -114,7 +114,7 @@ public sealed class TrencadisEdgeMatchComponent : GH_Component
             "Human-readable per-sheet summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var partCurves = new List<Curve>();
         var sheetCurves = new List<Curve>();

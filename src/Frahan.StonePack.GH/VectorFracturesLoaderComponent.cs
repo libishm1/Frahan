@@ -37,7 +37,7 @@ namespace Frahan.GH.Quarry;
     Precedent = "NetTopologySuite.IO.Esri Shapefile + GeoJSON readers; OGC Simple Features spec")]
 [Algorithm("Vector fracture import", "ESRI Shapefile / OGC Simple Features (standard)",
     Note = "industry format via NetTopologySuite.IO.Esri; not a paper")]
-public sealed class VectorFracturesLoaderComponent : GH_Component
+public sealed class VectorFracturesLoaderComponent : FrahanComponentBase
 {
     public VectorFracturesLoaderComponent()
         : base("Vector Fractures Loader", "VecFrac",
@@ -82,7 +82,7 @@ public sealed class VectorFracturesLoaderComponent : GH_Component
             "The source file path echoed verbatim.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = string.Empty;
         if (!da.GetData(0, ref path)) return;

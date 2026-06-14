@@ -20,7 +20,7 @@ namespace Frahan.GH;
     "Read a Rhino Mesh and report vertex/face/triangle/quad counts,  IsClosed, IsManifold, HasConsistentWinding,...",
     DesignFlow.Bridges,
     Precedent = "Botsch et al. 2010 Polygon Mesh Processing diagnostic suite")]
-public sealed class MeshDiagnosticsComponent : GH_Component
+public sealed class MeshDiagnosticsComponent : FrahanComponentBase
 {
     public MeshDiagnosticsComponent()
         : base("Frahan Mesh Diagnostics", "MeshDiag",
@@ -55,7 +55,7 @@ public sealed class MeshDiagnosticsComponent : GH_Component
         pManager.AddTextParameter("Report", "R", "Single-line summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh? mesh = null;
         if (!da.GetData(0, ref mesh) || mesh == null)

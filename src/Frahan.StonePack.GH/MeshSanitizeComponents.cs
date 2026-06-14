@@ -65,7 +65,7 @@ internal static class MeshValidity
     "Make a mesh valid so CGAL ops accept it: triangulate non-tri faces,  stitch coincident borders, remove dege...",
     DesignFlow.Bridges,
     Precedent = "(from [Algorithm] citation) CGAL Polygon Mesh Processing: triangulate_faces + stitch_borders + remove_degenerate_faces + orient_to_bound_a_volume")]
-public sealed class SanitizeMeshComponent : GH_Component
+public sealed class SanitizeMeshComponent : FrahanComponentBase
 {
     public SanitizeMeshComponent()
         : base("Sanitize Mesh", "Sanitize",
@@ -101,7 +101,7 @@ public sealed class SanitizeMeshComponent : GH_Component
         p.AddTextParameter("Report", "R", "Before/after validity summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         int backend = 0;

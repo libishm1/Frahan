@@ -40,7 +40,7 @@ namespace Frahan.GH.Masonry.Sequencing
         "Install-order DAG for a 3D polyhedral-stone wall",
         DesignFlow.BottomUp,
         Precedent = "Kim 2024 polygonal masonry install order DAG (3D variant)")]
-    public sealed class PolygonalMasonrySequence3DComponent : GH_Component
+    public sealed class PolygonalMasonrySequence3DComponent : FrahanComponentBase
     {
         public PolygonalMasonrySequence3DComponent()
             : base(
@@ -104,7 +104,7 @@ namespace Frahan.GH.Masonry.Sequencing
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var meshes = new List<Mesh>();
             if (!da.GetDataList(0, meshes) || meshes.Count == 0)

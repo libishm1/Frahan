@@ -27,7 +27,7 @@ namespace Frahan.GH.Sculpt;
     CardSet = "wiki/research/hitl_cards/td_voussoir/")]
 [Algorithm("Bounding-extents containment + max-scale fit", "Frahan-original",
     Note = "axis-aligned bounding extents matched largest-to-largest; OBB-exact orientation search deferred; not a published algorithm")]
-public sealed class FitInBlockComponent : GH_Component
+public sealed class FitInBlockComponent : FrahanComponentBase
 {
     public FitInBlockComponent()
         : base("Fit In Block", "FitBlock",
@@ -68,7 +68,7 @@ public sealed class FitInBlockComponent : GH_Component
         p.AddTextParameter("Report", "R", "Human-readable fit summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh sculpt = null, block = null;
         double margin = 0.0; bool place = true;

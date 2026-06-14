@@ -27,7 +27,7 @@ namespace Frahan.GH.Masonry
         "Validates a cut: sum(post-piece volumes) ≈ sum(pre-slab  volumes) within tolerance",
         DesignFlow.TopDown,
         Precedent = "Frahan-original cut-plan validator")]
-    public sealed class CutValidationComponent : GH_Component
+    public sealed class CutValidationComponent : FrahanComponentBase
     {
         public CutValidationComponent()
             : base(
@@ -104,7 +104,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             var preRaw = new List<object>();
             var postRaw = new List<object>();

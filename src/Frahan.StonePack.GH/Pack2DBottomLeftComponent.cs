@@ -22,7 +22,7 @@ namespace Frahan.GH;
     "Bennell, J.A. & Oliveira, J.F. (2008). \"A tutorial in irregular shape packing problems.\" J. Oper. Res. Soc. 60(1)",
     Doi = "10.1057/jors.2008.169",
     WikiPath = "wiki/index/references.md#BennellOliveira2008")]
-public sealed class Pack2DBottomLeftComponent : GH_Component
+public sealed class Pack2DBottomLeftComponent : FrahanComponentBase
 {
     public Pack2DBottomLeftComponent()
         : base("2D Bottom Left Pack", "BL Pack",
@@ -74,7 +74,7 @@ public sealed class Pack2DBottomLeftComponent : GH_Component
         pManager.AddIntegerParameter("Source Indices", "Src", "Original input curve index for each packed curve and transform.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var inputCurves = new List<Curve>();
         var sheetWidth = 1000.0;

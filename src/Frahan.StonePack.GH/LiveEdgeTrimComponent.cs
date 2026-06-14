@@ -21,7 +21,7 @@ namespace Frahan.GH;
     Note = "Each live-edge point is moved to the target seam height at its x; the swept strip is the trim sliver.")]
 [RelatedComponent("Frahan > EdgeMatch > Live Edge Classify", Reason = "Provides the live/sawn split this trims by.")]
 [RelatedComponent("Frahan > EdgeMatch > Live Edge Stagger Layup", Reason = "Applies this trim across a whole staggered floor.")]
-public class LiveEdgeTrimComponent : GH_Component
+public class LiveEdgeTrimComponent : FrahanComponentBase
 {
     public LiveEdgeTrimComponent()
         : base("Live Edge Trim", "LETrim",
@@ -72,7 +72,7 @@ public class LiveEdgeTrimComponent : GH_Component
         };
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve board = null, lower = null, upper = null;
         if (!da.GetData(0, ref board) || board == null) return;

@@ -29,7 +29,7 @@ namespace Frahan.GH.Masonry
         "4-colours the contact graph of a MasonryAssembly: no two  blocks sharing an interface get the same colour",
         DesignFlow.BottomUp,
         Precedent = "Welsh Powell 1967 graph chromatic-number bound (Computer Journal 10(1):85-86); 4-colour theorem reference impl")]
-    public sealed class BlockGraphColoringComponent : GH_Component
+    public sealed class BlockGraphColoringComponent : FrahanComponentBase
     {
         public BlockGraphColoringComponent()
             : base(
@@ -70,7 +70,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object raw = null;
             if (!da.GetData(0, ref raw))

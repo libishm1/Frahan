@@ -28,7 +28,7 @@ namespace Frahan.GH;
     "Vertex-clustering decimation via Geogram  (GEO::mesh_decimate_vertex_clustering)",
     DesignFlow.Bridges,
     Precedent = "Geogram GEO::mesh_decimate (Levy INRIA)")]
-public sealed class GeogramMeshDecimateComponent : GH_Component
+public sealed class GeogramMeshDecimateComponent : FrahanComponentBase
 {
     public GeogramMeshDecimateComponent()
         : base("Mesh Decimate (Geogram)", "DecimateGeogram",
@@ -84,7 +84,7 @@ public sealed class GeogramMeshDecimateComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null;
         int bins = 100;
@@ -167,7 +167,7 @@ public sealed class GeogramMeshDecimateComponent : GH_Component
     "Topology-aware mesh repair via GEO::mesh_repair  (colocate + remove duplicate facets + triangulate)",
     DesignFlow.Bridges,
     Precedent = "Geogram GEO::mesh_repair (Levy INRIA)")]
-public sealed class GeogramMeshRepairComponent : GH_Component
+public sealed class GeogramMeshRepairComponent : FrahanComponentBase
 {
     public GeogramMeshRepairComponent()
         : base("Mesh Repair (Geogram)", "RepairGeogram",
@@ -201,7 +201,7 @@ public sealed class GeogramMeshRepairComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; int mode = 7; double eps = 0.0; bool run = false;
         if (!da.GetData(0, ref m)) return;
@@ -242,7 +242,7 @@ public sealed class GeogramMeshRepairComponent : GH_Component
     "Oriented bounding box via PrincipalAxes3d (PCA)",
     DesignFlow.Bridges,
     Precedent = "Geogram PrincipalAxes3d / OBB")]
-public sealed class GeogramObbComponent : GH_Component
+public sealed class GeogramObbComponent : FrahanComponentBase
 {
     public GeogramObbComponent()
         : base("OBB (Geogram)", "ObbGeogram",
@@ -266,7 +266,7 @@ public sealed class GeogramObbComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; bool run = false;
         if (!da.GetData(0, ref m)) return;
@@ -535,7 +535,7 @@ public sealed class GeogramRemeshComponent
     "Volumetric tetrahedral mesh of a closed surface via  GEO::mesh_tetrahedralize",
     DesignFlow.Bridges,
     Precedent = "Geogram GEO::mesh_tetrahedralize (Levy INRIA)")]
-public sealed class GeogramTetrahedralizeComponent : GH_Component
+public sealed class GeogramTetrahedralizeComponent : FrahanComponentBase
 {
     public GeogramTetrahedralizeComponent()
         : base("Tetrahedralize (Geogram)", "TetGeogram",
@@ -566,7 +566,7 @@ public sealed class GeogramTetrahedralizeComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; bool pre = true, re = false, kr = false, run = false; double q = 2.0;
         if (!da.GetData(0, ref m)) return;
@@ -630,7 +630,7 @@ public sealed class GeogramTetrahedralizeComponent : GH_Component
     "Compute optimized seed positions on a surface via  centroidal Voronoi tessellation (Lloyd + Newton-Lloyd)",
     DesignFlow.Bridges,
     Precedent = "Geogram Centroidal Voronoi Tessellation (Levy INRIA)")]
-public sealed class GeogramCvtSeedsComponent : GH_Component
+public sealed class GeogramCvtSeedsComponent : FrahanComponentBase
 {
     public GeogramCvtSeedsComponent()
         : base("CVT Seeds (Geogram)", "CvtGeogram",
@@ -657,7 +657,7 @@ public sealed class GeogramCvtSeedsComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; int n = 100, lloyd = 5, newton = 30; bool run = false;
         if (!da.GetData(0, ref m)) return;
@@ -704,7 +704,7 @@ public sealed class GeogramCvtSeedsComponent : GH_Component
     "Partition a surface mesh into N Voronoi cells given seed  points (use CVT Seeds upstream for uniform-area c...",
     DesignFlow.Bridges,
     Precedent = "Geogram CVT + Voronoi (Levy INRIA)")]
-public sealed class GeogramVoronoiPartitionComponent : GH_Component
+public sealed class GeogramVoronoiPartitionComponent : FrahanComponentBase
 {
     public GeogramVoronoiPartitionComponent()
         : base("Voronoi Block Partition (Geogram)", "RvdGeogram",
@@ -749,7 +749,7 @@ public sealed class GeogramVoronoiPartitionComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; var seeds = new List<Point3d>(); bool run = false;
         int smoothPts = 0; bool closed = false;
@@ -825,7 +825,7 @@ public sealed class GeogramVoronoiPartitionComponent : GH_Component
     "Triangulate open boundary loops smaller than a size threshold",
     DesignFlow.Bridges,
     Precedent = "Geogram (Levy INRIA/ALICE v1.9.9, BSD-3)")]
-public sealed class GeogramMeshFillHolesComponent : GH_Component
+public sealed class GeogramMeshFillHolesComponent : FrahanComponentBase
 {
     public GeogramMeshFillHolesComponent()
         : base("Mesh Fill Holes (Geogram)", "FillHolesGeogram",
@@ -864,7 +864,7 @@ public sealed class GeogramMeshFillHolesComponent : GH_Component
         pManager.AddBooleanParameter("Available", "Av", "True iff Geogram shim loaded.", GH_ParamAccess.item);
         pManager.AddTextParameter("Report", "R", "Diagnostic report.", GH_ParamAccess.item);
     }
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh m = null; double maxArea = 0.0; int maxEdges = 0; bool repairAfter = true; bool run = false;
         if (!da.GetData(0, ref m)) return;

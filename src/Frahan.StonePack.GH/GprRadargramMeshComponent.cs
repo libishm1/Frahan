@@ -27,7 +27,7 @@ namespace Frahan.GH;
     "Read a GPR file and draw the radargram as a vertex-coloured vertical  section mesh: the curtain follows the...",
     DesignFlow.Bridges,
     Precedent = "Frahan-original radargram-to-mesh visualisation")]
-public sealed class GprRadargramMeshComponent : GH_Component
+public sealed class GprRadargramMeshComponent : FrahanComponentBase
 {
     public GprRadargramMeshComponent()
         : base("GPR Radargram Mesh", "GprMesh",
@@ -75,7 +75,7 @@ public sealed class GprRadargramMeshComponent : GH_Component
         p.AddTextParameter("Report", "R", "Summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string path = null, id = null, picksCsv = null;
         double depthScale = 1.0, traceSpacing = 0.0, contrast = 1.0;

@@ -46,7 +46,7 @@ namespace Frahan.GH.Quarry;
     "Strip overburden to expose the bedrock / rock face, then hand the face to block extraction",
     DesignFlow.Bridges,
     Precedent = "Frahan-original; quarry overburden strip feeding BlockCutOpt (W16 -> W1)")]
-public sealed class OverburdenToRockFaceComponent : GH_Component
+public sealed class OverburdenToRockFaceComponent : FrahanComponentBase
 {
     public OverburdenToRockFaceComponent()
         : base("Overburden To Rock Face", "Overburden",
@@ -99,7 +99,7 @@ public sealed class OverburdenToRockFaceComponent : GH_Component
         p.AddTextParameter("Report", "Rpt", "Human-readable summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh ground = null, bedrock = null;
         double swell = 0.0;

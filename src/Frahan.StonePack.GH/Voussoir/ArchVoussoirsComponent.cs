@@ -40,7 +40,7 @@ namespace Frahan.GH.Voussoir;
     Precedent = "Frezier Traite de stereotomie 1737; Monge geometrie descriptive 1798; Rippmann-Block 2011 Digital Stereotomy; Voussoir-GH (food4rhino); Frahan example 21",
     Tolerance = "faceted cells (straight chords between arc-length stations); circular extrados exact; raise Count to reduce facet error; closed solids (Mesh.IsClosed)",
     CardSet = "wiki/research/stereotomy_voussoir_from_rubble.md")]
-public sealed class ArchVoussoirsComponent : GH_Component
+public sealed class ArchVoussoirsComponent : FrahanComponentBase
 {
     public ArchVoussoirsComponent()
         : base("Arch Voussoirs", "ArchVous",
@@ -122,7 +122,7 @@ public sealed class ArchVoussoirsComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         int profile = 0;
         double radius = 2.0, thickness = 0.55, width = 0.6, angle = 120.0, rise = 0.0;

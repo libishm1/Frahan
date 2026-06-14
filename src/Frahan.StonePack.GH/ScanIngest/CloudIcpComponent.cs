@@ -27,7 +27,7 @@ namespace Frahan.GH.ScanIngest;
     "Register a source point cloud onto a target via coarse-to- fine trimmed ICP",
     DesignFlow.Bridges,
     Precedent = "Besl McKay 1992 Iterative Closest Point; MathNet.Numerics SVD")]
-public sealed class CloudIcpComponent : GH_Component
+public sealed class CloudIcpComponent : FrahanComponentBase
 {
     public CloudIcpComponent()
         : base("Cloud ICP", "CloudIcp",
@@ -89,7 +89,7 @@ public sealed class CloudIcpComponent : GH_Component
             "Summary line.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var src = new List<Point3d>();
         var tgt = new List<Point3d>();

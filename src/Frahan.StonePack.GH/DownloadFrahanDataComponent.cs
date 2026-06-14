@@ -40,7 +40,7 @@ namespace Frahan.GH;
     "Download the optional large plugin data (Kintsugi Mode=Port weights +  torch/CUDA runtime, and/or examples)...",
     DesignFlow.Bridges,
     Precedent = "Frahan-original dataset bootstrap (ETH1100, Granite Dells, Tongjiang per reference_quarry_scan_datasets)")]
-public sealed class DownloadFrahanDataComponent : GH_Component
+public sealed class DownloadFrahanDataComponent : FrahanComponentBase
 {
     public DownloadFrahanDataComponent()
         : base("Download Frahan Data", "GetData",
@@ -89,7 +89,7 @@ public sealed class DownloadFrahanDataComponent : GH_Component
     private static bool PortReady() =>
         File.Exists(Path.Combine(DeployDir ?? ".", "kintsugi.bin"));
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         string url = null; int what = 0; bool run = false;
         da.GetData(0, ref url); da.GetData(1, ref what); da.GetData(2, ref run);

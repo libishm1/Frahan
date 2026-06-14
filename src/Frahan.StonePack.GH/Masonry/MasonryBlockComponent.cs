@@ -27,7 +27,7 @@ namespace Frahan.GH.Masonry
         "Wraps a Rhino mesh into a MasonryBlock DTO",
         DesignFlow.BottomUp,
         Precedent = "Frahan-original masonry-block DTO")]
-    public sealed class MasonryBlockComponent : GH_Component
+    public sealed class MasonryBlockComponent : FrahanComponentBase
     {
         public MasonryBlockComponent()
             : base(
@@ -76,7 +76,7 @@ namespace Frahan.GH.Masonry
 
         // ─── Solve ──────────────────────────────────────────────────────────
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
             string id = string.Empty;

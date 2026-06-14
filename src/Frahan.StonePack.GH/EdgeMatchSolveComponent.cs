@@ -31,7 +31,7 @@ namespace Frahan.GH;
     Precedent = "Gaudi Park Guell Trencadis (1900-1914); IAAC MRAC RoboMosaic (2022-23)",
     Tolerance = "mean joint Hausdorff <= 5 mm, coverage >= 95 %",
     CardSet = "wiki/research/hitl_cards/em_2d_trencadis_solve/")]
-public sealed class EdgeMatchSolveComponent : GH_Component
+public sealed class EdgeMatchSolveComponent : FrahanComponentBase
 {
     public EdgeMatchSolveComponent()
         : base("EdgeMatch Solve", "EMSolve",
@@ -123,7 +123,7 @@ public sealed class EdgeMatchSolveComponent : GH_Component
             "Human-readable summary of the solve.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve? frameCurve = null;
         var shardCurves = new List<Curve>();

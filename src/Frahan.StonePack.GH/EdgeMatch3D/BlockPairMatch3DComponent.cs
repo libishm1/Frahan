@@ -58,7 +58,7 @@ namespace Frahan.GH.EdgeMatch3D;
     Precedent = "UCL Devadass 2025 face-library evaluation (SS2.4); cyclopean masonry Utah-detail bed-joint scribing",
     Tolerance = "joint-face Hausdorff <= 2 mm; correct-match identification >= 80 % on known pairs",
     CardSet = "wiki/research/hitl_cards/em_2d_boundary_match/ (2D sibling); em_3d_chain_ucl_bartlett/ (3D consumer)")]
-public sealed class BlockPairMatch3DComponent : GH_Component
+public sealed class BlockPairMatch3DComponent : FrahanComponentBase
 {
     public BlockPairMatch3DComponent()
         : base("Block Pair Match 3D", "BlkMatch3D",
@@ -127,7 +127,7 @@ public sealed class BlockPairMatch3DComponent : GH_Component
             GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess DA)
+    protected override void SolveSafe(IGH_DataAccess DA)
     {
         Mesh blockA = null;
         Mesh blockB = null;

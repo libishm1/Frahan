@@ -22,7 +22,7 @@ namespace Frahan.GH;
     Precedent = "Frahan-original residual-voids analyser post-packing")]
 [Algorithm("Grid sampling + connected-component void detection", "Frahan-original",
     Note = "cell-grid sampling plus 4-neighbour connected-component labelling applied as a Frahan-original void metric")]
-public sealed class ResidualVoidsComponent : GH_Component
+public sealed class ResidualVoidsComponent : FrahanComponentBase
 {
     public ResidualVoidsComponent()
         : base("Frahan Residual Voids", "ResVoid",
@@ -75,7 +75,7 @@ public sealed class ResidualVoidsComponent : GH_Component
             "Human-readable summary.", GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Curve? sheet = null;
         var parts = new List<Curve>();

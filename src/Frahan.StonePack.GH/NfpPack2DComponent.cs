@@ -15,7 +15,7 @@ namespace Frahan.GH;
     DesignFlow.BottomUp,
     Precedent = "Burke Hellier Kendall Whitwell 2007 No-Fit Polygon (DOI 10.1016/j.ejor.2006.03.011); Bennell Oliveira 2008 review (DOI 10.1057/jors.2008.169)",
     Tolerance = "0 overlap; >= 90 % container utilisation on convex inputs")]
-public sealed class NfpPack2DComponent : GH_Component
+public sealed class NfpPack2DComponent : FrahanComponentBase
 {
     public NfpPack2DComponent()
         : base("2D NFP Pack", "NFP Pack",
@@ -59,7 +59,7 @@ public sealed class NfpPack2DComponent : GH_Component
         pManager.AddIntegerParameter("Source Indices", "Src", "Original input curve index for each packed curve and transform.", GH_ParamAccess.list);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         var inputCurves = new List<Curve>();
         var sheetWidth = 1000.0;

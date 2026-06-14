@@ -53,7 +53,7 @@ namespace Frahan.GH;
 [DesignApplication(
     "Cuts a slab/block mesh by an arbitrary tool mesh via CGAL  exact-predicate booleans",
     DesignFlow.Bridges)]
-public sealed class CgalSlabCutByToolMeshComponent : GH_Component
+public sealed class CgalSlabCutByToolMeshComponent : FrahanComponentBase
 {
     public CgalSlabCutByToolMeshComponent()
         : base("Slab Cut By Tool Mesh (CGAL)", "SlabCutCgal",
@@ -118,7 +118,7 @@ public sealed class CgalSlabCutByToolMeshComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh slab = null, tool = null;
         int mode = 2;
@@ -238,7 +238,7 @@ public sealed class CgalSlabCutByToolMeshComponent : GH_Component
 [DesignApplication(
     "Decomposes a (possibly non-convex) quarry mesh into blocks  by intersecting it against a 3D grid of box cel...",
     DesignFlow.Bridges)]
-public sealed class CgalQuarryDecomposeByMeshComponent : GH_Component
+public sealed class CgalQuarryDecomposeByMeshComponent : FrahanComponentBase
 {
     public CgalQuarryDecomposeByMeshComponent()
         : base("Quarry Decompose By Mesh (CGAL)", "QuarryDcCgal",
@@ -307,7 +307,7 @@ public sealed class CgalQuarryDecomposeByMeshComponent : GH_Component
             GH_ParamAccess.item);
     }
 
-    protected override void SolveInstance(IGH_DataAccess da)
+    protected override void SolveSafe(IGH_DataAccess da)
     {
         Mesh quarry = null;
         Box box = Box.Empty;

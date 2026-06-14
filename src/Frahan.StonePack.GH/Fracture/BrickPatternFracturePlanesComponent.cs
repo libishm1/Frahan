@@ -27,7 +27,7 @@ namespace Frahan.GH.Masonry
         Precedent = "Frahan-original running-bond brick-pattern emulation")]
     [Algorithm("Running-bond brick-pattern fracture set", "Frahan-original",
         Note = "encodes a running-bond masonry convention; vernacular craft, not a citable algorithm")]
-    public sealed class BrickPatternFracturePlanesComponent : GH_Component
+    public sealed class BrickPatternFracturePlanesComponent : FrahanComponentBase
     {
         public BrickPatternFracturePlanesComponent()
             : base(
@@ -64,7 +64,7 @@ namespace Frahan.GH.Masonry
                 GH_ParamAccess.list);
         }
 
-        protected override void SolveInstance(IGH_DataAccess da)
+        protected override void SolveSafe(IGH_DataAccess da)
         {
             object rawSlab = null;
             int nX = 3, nZ = 3;
