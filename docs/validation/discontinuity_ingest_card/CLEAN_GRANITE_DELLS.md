@@ -5,6 +5,19 @@ Date: 2026-06-14. The valid counterpart to `RIGOROUS_DFN.md`: the same pipeline 
 (OpenTopography, 4.98 M points), converted LAZ → float32 PLY (CloudCompare,
 centroid-shifted).
 
+![dome scan](images/dome_scan.png)
+
+The raw laser scan, elevation-coloured: a granite pavement / low-dome field, ~21 m of
+relief over 95 × 95 m.
+
+> **Note — outcrops, not an open-pit face.** Granite Dells is a *natural granite
+> outcrop / dome field*, which is **valid in-situ granite** (so the joint-set analysis
+> holds), but it is **not** a fresh-cut open-pit quarry bench — the ideal input for
+> dimension-stone work is a clean vertical quarry face. Sheeting dominates here because
+> we are looking at dome tops; a vertical bench would expose the vertical sets more
+> fully. This dataset is the clean *control* that proves the pipeline on real in-situ
+> granite; a quarry-bench scan remains the target input.
+
 ## Why switch datasets
 
 The Tongjiang `detail_cloudXB` scan turned out to be a **vegetated loose-rock slope /
@@ -19,6 +32,12 @@ to a set, and the result is geologically textbook.
 
 ![segmentation](images/dells_seg.png)
 ![stereonet](images/dells_stereonet.png)
+
+The three sets as oriented planes — the granite block geometry directly: the red
+sub-horizontal sheeting plane + two ~orthogonal vertical planes (blue, olive) → a
+near-cubic block.
+
+![joint sets](images/dells_jointsets.png)
 
 3 well-separated joint sets (worker, bw 14, full 4.98 M points, honest ISRM spacing):
 
