@@ -398,7 +398,7 @@ stating: the KB registry with measured reproductions, the 0-overlap gating
 with the `util_stock = placed area / (sheet - holes)` methodology, the
 "REPORTED not gated" comments, the H-model counterexample as a regression
 test, and [Algorithm] citations on 138 source files. The last battery state
-was 1012 PASS / 0 FAIL / 131 SKIP.
+was 1034 PASS / 0 FAIL / 147 SKIP (2026-06-14).
 
 ### Figures
 

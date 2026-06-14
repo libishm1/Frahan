@@ -312,8 +312,10 @@ equilibration and per-row $\rho$ to tame the mixed newton/metre/penalty scales
 triangle meshes: a mesh contact detector splinters 40 stones into ~125
 sub-interfaces and ~612 contact vertices, ill-conditioning the QP. The exact-joint
 assembler emits one planar-quad interface per adjacent stone pair directly from
-the shared generator edge, a **27x total speedup** and the reason CRA certifies
-generated walls (commit `a843027`; `Cra_GeneratedWall_Certified`).
+the shared generator edge, a **~27x speedup of the equilibrium QP** on the 40-stone
+generated wall (exact interfaces vs the ~612 splintered contact vertices the mesh
+detector produced) and the reason CRA certifies generated walls
+(commit `a843027`; `Cra_GeneratedWall_Certified`).
 
 ### 15.4.3 The new metrics: Lambda, the J interlock score, and the building
 

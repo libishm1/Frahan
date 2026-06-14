@@ -16,9 +16,10 @@ Test: tests/Frahan.StonePack.Tests/LambdaStudyBenchmarkTests.cs (REPORTED, not g
 | 1.0 | 6x4 | **0.233 / 0.242** | 0.619 / 0.589 | 0.628 / 0.549 | 3207 |
 
 ## Reading
-1. **Shape-aware matching is worth ~3x in imposition**: the Hungarian engine (PCA + flips + voxel
-   symmetric-difference cost) lands Lambda 0.18-0.23 where volume-only greedy and random both sit ~0.59-0.64
-   — i.e. matching SHAPE, not just size, is what recovers the found-geometry value.
+1. **Shape-aware matching cuts the imposition (carve-back) ratio by ~3x**: the Hungarian engine (PCA +
+   flips + voxel symmetric-difference cost) lands Lambda 0.18-0.23 where volume-only greedy and random both
+   sit ~0.59-0.64 (lower Lambda = less stone carved away; ~0.61/0.21 ≈ 2.9x) — i.e. matching SHAPE, not just
+   size, is what recovers the found-geometry value.
 2. **The advantage holds across the whole Coursing continuum** (Inca polygonal -> coursed): Lambda is flat
    in coursing for Hungarian, so the imposition cost of choosing a more regular aesthetic is small at these
    stone counts; the matcher absorbs it.

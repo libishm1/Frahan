@@ -809,15 +809,17 @@ sheet-hole, 4 host parts with slanted holes, 8 fillers):
 CNH is **valid where the reference physics nester is invalid**: Sparrow ignores
 holes (4 hole-ignore warnings, 953.7 overlap loss) and produces no usable
 hole-aware layout at any time budget. Against Sparrow, CNH v1 is about
-**54x faster and valid** on the same parts; the rect fast-path is about
-22,000x faster and valid. Against the strongest **valid** baseline (the native
-shelf) CNH v1 is 2.8x slower because it runs the general exact-NFP construction
-rather than an axis-aligned shortcut, but it is the only deterministic engine
-and its v2 fast-path beats the native shelf by 146x on all-rectangle instances.
+**54x faster and valid** on the same parts (60.7 ms vs Sparrow's invalid 3255 ms);
+the rect fast-path is 0.148 ms, about 22,000x the invalid Sparrow time. Against the
+strongest **valid** baseline (the native shelf) CNH v1 is 2.8x slower because it runs
+the general exact-NFP construction rather than an axis-aligned shortcut; its v2 rect
+fast-path runs in 0.148 ms on the true-hole bench, 146x the native shelf's 21.6 ms on
+that same instance (an axis-aligned shortcut, not a separate all-rectangle benchmark),
+and it is the only deterministic engine.
 The honesty boundary is held in source: on the **outline-only** strip lane the
 reference physics nester still wins density by 6 to 10 percent, and no
 universal "2x better" claim is made there
-(`HOLE_PACKER_MATH_AND_BENCHMARK.md`, sections 2-3).
+(`docs/benchmarks/HOLE_PACKER_MATH_AND_BENCHMARK.md`, sections 2-3).
 
 ---
 
@@ -2609,7 +2611,7 @@ primitives. Every claim below is anchored to `file:line`, an `[Algorithm]`
 attribute, or a test.
 
 The static-analysis truth criterion for this chapter is the battery: at the
-last audit the suite reported 1012 PASS / 0 FAIL, including the CRA H-model
+last audit the suite reported 1034 PASS / 0 FAIL, including the CRA H-model
 counterexample regression and a `compas_cra` cross-fixture parity set
 (`tests/Frahan.StonePack.Tests/Program.cs:334`, `:347`-`:356`).
 
@@ -7732,7 +7734,7 @@ stating: the KB registry with measured reproductions, the 0-overlap gating
 with the `util_stock = placed area / (sheet - holes)` methodology, the
 "REPORTED not gated" comments, the H-model counterexample as a regression
 test, and [Algorithm] citations on 138 source files. The last battery state
-was 1012 PASS / 0 FAIL / 131 SKIP.
+was 1034 PASS / 0 FAIL / 147 SKIP (2026-06-14).
 
 ### Figures
 
@@ -8072,8 +8074,10 @@ equilibration and per-row $\rho$ to tame the mixed newton/metre/penalty scales
 triangle meshes: a mesh contact detector splinters 40 stones into ~125
 sub-interfaces and ~612 contact vertices, ill-conditioning the QP. The exact-joint
 assembler emits one planar-quad interface per adjacent stone pair directly from
-the shared generator edge, a **27x total speedup** and the reason CRA certifies
-generated walls (commit `a843027`; `Cra_GeneratedWall_Certified`).
+the shared generator edge, a **~27x speedup of the equilibrium QP** on the 40-stone
+generated wall (exact interfaces vs the ~612 splintered contact vertices the mesh
+detector produced) and the reason CRA certifies generated walls
+(commit `a843027`; `Cra_GeneratedWall_Certified`).
 
 ### 15.4.3 The new metrics: Lambda, the J interlock score, and the building
 

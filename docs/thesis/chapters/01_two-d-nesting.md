@@ -349,15 +349,17 @@ sheet-hole, 4 host parts with slanted holes, 8 fillers):
 CNH is **valid where the reference physics nester is invalid**: Sparrow ignores
 holes (4 hole-ignore warnings, 953.7 overlap loss) and produces no usable
 hole-aware layout at any time budget. Against Sparrow, CNH v1 is about
-**54x faster and valid** on the same parts; the rect fast-path is about
-22,000x faster and valid. Against the strongest **valid** baseline (the native
-shelf) CNH v1 is 2.8x slower because it runs the general exact-NFP construction
-rather than an axis-aligned shortcut, but it is the only deterministic engine
-and its v2 fast-path beats the native shelf by 146x on all-rectangle instances.
+**54x faster and valid** on the same parts (60.7 ms vs Sparrow's invalid 3255 ms);
+the rect fast-path is 0.148 ms, about 22,000x the invalid Sparrow time. Against the
+strongest **valid** baseline (the native shelf) CNH v1 is 2.8x slower because it runs
+the general exact-NFP construction rather than an axis-aligned shortcut; its v2 rect
+fast-path runs in 0.148 ms on the true-hole bench, 146x the native shelf's 21.6 ms on
+that same instance (an axis-aligned shortcut, not a separate all-rectangle benchmark),
+and it is the only deterministic engine.
 The honesty boundary is held in source: on the **outline-only** strip lane the
 reference physics nester still wins density by 6 to 10 percent, and no
 universal "2x better" claim is made there
-(`HOLE_PACKER_MATH_AND_BENCHMARK.md`, sections 2-3).
+(`../../benchmarks/HOLE_PACKER_MATH_AND_BENCHMARK.md`, sections 2-3).
 
 ---
 

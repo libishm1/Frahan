@@ -47,8 +47,10 @@ fixtures reproduce their docs/examples verbatim (cra_view removed), fresh assemb
 
 Honest caveats, in both directions:
 - **Their RBE beats ours on the arch** (102-123 ms vs our 159 ms). No "faster than" claim for RBE.
-- CRA on the cubes/stacks fixtures: ours is ~50x (cubes) and ~470x (stacks) faster. Their per-call
-  floor (~50 ms) includes ipopt.exe process spawn + NL file I/O, inherent to their architecture.
+- CRA on the cubes/stacks fixtures: ours is ~50x (cubes) and ~470x (stacks) faster in **wall-time
+  per call** -- NOT a solver-algorithm gap. Their per-call floor (~50 ms) includes ipopt.exe process
+  spawn + NL file I/O, inherent to their out-of-process architecture; subtract that floor and the gap
+  is far smaller. The honest reading: our in-process CRA cert is ~1-2 ms; theirs is ~50 ms + spawn.
 - **06_arch cra_solve did NOT converge here**: IPOPT 3.14.19 exits at max_iter=3000 (50.4 s) with
   constraint violation 3.8e-8 (physically solved) but dual infeasibility stalled at 2.33 against
   their hardcoded tol=1e-10. This is their pinned stack on win64; their docs env (conda-forge

@@ -22,9 +22,11 @@ Apples-to-apples, k=24 PCA normals: **~10.2 s, ~1.4x faster than Open3D's KD-tre
 at the same neighbourhood. Whole discontinuity pipeline ~14.7 s. (CloudCompare's octree
 at radius 0.5 m took 2127 s, but radius 0.5 on this 8 mm-spacing cloud is thousands of
 neighbours/pt — a much larger neighbourhood than k=24, so it is a scale reference, not a
-like-for-like speedup.) Numbers are the shipped double-precision worker; the SoA-float
-`csr_normals_bench` harness reaches ~8 s on the same op. See
-`outputs/2026-06-14/cc_discontinuity_worker/{MATH_DERIVATIONS,BENCHMARK_RESULTS,HANDOFF_02}`.
+like-for-like speedup.) Numbers are the shipped double-precision worker (2026-06-14, this
+machine, 16 logical cores, mingw64 g++ -O3 -fopenmp); the SoA-float `csr_normals_bench`
+harness reaches ~8 s on the same op. Full benchmark table + math derivations live in the
+companion `cc_discontinuity_worker` workspace (MATH_DERIVATIONS / BENCHMARK_RESULTS / HANDOFF_02);
+in-repo validation: `../../docs/validation/discontinuity_ingest_card/`.
 
 ## Build
 ```bash

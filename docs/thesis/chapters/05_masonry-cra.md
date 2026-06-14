@@ -21,7 +21,7 @@ primitives. Every claim below is anchored to `file:line`, an `[Algorithm]`
 attribute, or a test.
 
 The static-analysis truth criterion for this chapter is the battery: at the
-last audit the suite reported 1012 PASS / 0 FAIL, including the CRA H-model
+last audit the suite reported 1034 PASS / 0 FAIL, including the CRA H-model
 counterexample regression and a `compas_cra` cross-fixture parity set
 (`tests/Frahan.StonePack.Tests/Program.cs:334`, `:347`-`:356`).
 

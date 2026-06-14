@@ -26,8 +26,8 @@ distribution is GPL-3.0.
 ## Quick start (developers)
 - See `docs/INSTALL.md` for the toolchain (dotnet, RhinoCommon HintPath, the headless `tools/` harness).
 - Build: `dotnet build src/Frahan.StonePack.GH/Frahan.StonePack.GH.csproj -c Release`.
-- Test: `tests/Frahan.StonePack.Tests` (xUnit-style runner; 1012 PASS / 0 FAIL / 131 SKIP as of
-  2026-06-11; skips = Rhino-runtime + optional-dataset gates). Headless packer benches:
+- Test: `tests/Frahan.StonePack.Tests` (xUnit-style runner; 1034 PASS / 0 FAIL / 147 SKIP as of
+  2026-06-14; skips = Rhino-runtime + optional-dataset gates). Headless packer benches:
   `tools/Frahan.StonePack.Harness --packbench` and `--pack2dstudy`.
 - Read `AGENTS.md` (orchestration rules) + `handoffs/` before contributing. Read `CONTRIBUTING.md`.
 
@@ -49,7 +49,7 @@ See [docs/results/RESULTS.md](docs/results/RESULTS.md) for the measured benchmar
 stock-utilization study (evolved NFP-BLF crosses the 80% bar at 0 overlap with holes), the hole-aware
 nester (HoleNest / ContactNfpHoleNester) head-to-head vs the OpenNest reference physics nester, the 3D
 volumetric ratios (Dlbf best-of-orientation 70.4%), the fracture recovery / block-packing captures, and the
-masonry/quarry decision. Test battery (2026-06-11): 1012 PASS / 0 FAIL / 131 SKIP from a clean clone
+masonry/quarry decision. Test battery (2026-06-14): 1034 PASS / 0 FAIL / 147 SKIP from a clean clone
 (skips = Rhino-runtime + optional-dataset gates).
 
 ## What makes it research-grade
