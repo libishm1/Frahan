@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frahan StonePack — Architecture &amp; Connection Map</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  main{ max-width:1180px; margin:0 auto; padding:40px 40px 120px; }
+  .eyebrow{ margin-bottom:16px; }
+  h1.title{ font-size:44px; font-weight:600; letter-spacing:-.025em; line-height:1.04; margin:0; max-width:820px; }
+  .sub{ font-size:17px; color:var(--fg2); margin-top:14px; max-width:740px; line-height:1.5; }
+
+  section.sec{ padding-top:56px; scroll-margin-top:80px; }
+  section.sec h2.k{ font-size:13px; font-family:var(--mono); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--c-quarry); margin:0 0 6px; }
+  section.sec h2.k + .h{ font-size:29px; font-weight:600; letter-spacing:-.02em; margin:0 0 8px; }
+  p.body{ font-size:15.5px; line-height:1.6; color:var(--fg1); margin:0 0 14px; max-width:780px; text-wrap:pretty; }
+  p.body.muted{ color:var(--fg2); }
+
+  /* pipeline spine */
+  .spine{ display:flex; align-items:stretch; gap:0; margin:30px 0 8px; flex-wrap:wrap; }
+  .pstep{ flex:1; min-width:150px; background:var(--bg-panel); border:1px solid var(--hairline); border-top:3px solid var(--c);
+    border-radius:var(--r-card); padding:16px 16px 14px; }
+  .pstep .pi{ width:44px; height:44px; border-radius:var(--r-tile); background:var(--bg); border:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:center; margin-bottom:11px; }
+  .pstep .pn{ font-weight:600; font-size:16px; letter-spacing:-.01em; }
+  .pstep .ps{ font-family:var(--mono); font-size:11.5px; color:var(--fg3); margin-top:5px; line-height:1.4; }
+  .parrow{ flex:0 0 26px; align-self:center; color:var(--hairline-2); font-size:18px; text-align:center; }
+
+  /* stage flow table */
+  table.t{ width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 10px; }
+  table.t th{ text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--fg3); font-weight:500; padding:9px 10px; border-bottom:1px solid var(--hairline-2); }
+  table.t td{ padding:9px 10px; border-bottom:1px solid var(--hairline); vertical-align:top; line-height:1.45; }
+  table.t td.mono{ font-family:var(--mono); font-size:12px; color:var(--fg2); }
+  table.t tr:hover td{ background:rgba(236,227,211,.4); }
+
+  /* connection map */
+  .mapwrap{ border:1px solid var(--hairline); border-radius:var(--r-card); background:var(--bg-panel); padding:8px; margin-top:18px; overflow:hidden; }
+  .maptools{ display:flex; align-items:center; gap:10px; padding:8px 10px; flex-wrap:wrap; }
+  .maptools .lbl{ font-family:var(--mono); font-size:11.5px; color:var(--fg3); letter-spacing:.04em; }
+  .chip{ font-family:var(--mono); font-size:12px; color:var(--fg2); background:var(--bg); border:1px solid var(--hairline-2);
+    border-radius:var(--r-pill); padding:5px 11px 5px 9px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+  .chip .d{ width:9px; height:9px; border-radius:50%; background:var(--c); }
+  .chip.off{ opacity:.4; }
+  #graph{ width:100%; height:620px; display:block; background:
+    linear-gradient(0deg, transparent 23px, rgba(217,205,184,.35) 24px) 0 0/24px 24px,
+    linear-gradient(90deg, transparent 23px, rgba(217,205,184,.35) 24px) 0 0/24px 24px, var(--bg); border-radius:var(--r-tile); cursor:grab; }
+  #graph.drag{ cursor:grabbing; }
+  .ghint{ font-family:var(--mono); font-size:11.5px; color:var(--fg3); padding:8px 10px; }
+
+  .legend{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .lg{ font-family:var(--mono); font-size:11.5px; color:var(--fg2); display:inline-flex; align-items:center; gap:7px;
+    border:1px solid var(--hairline); border-radius:var(--r-pill); padding:4px 11px 4px 8px; }
+  .lg .d{ width:9px; height:9px; border-radius:50%; background:var(--c); }
+
+  .mods{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:13px; margin-top:18px; }
+  .mod{ background:var(--bg-panel); border:1px solid var(--hairline); border-radius:var(--r-card); padding:17px 19px; }
+  .mod .mn{ font-family:var(--mono); font-weight:600; font-size:14.5px; }
+  .mod .mr{ font-size:14px; color:var(--fg2); margin-top:7px; line-height:1.5; }
+  .mod .md{ font-family:var(--mono); font-size:11.5px; color:var(--fg3); margin-top:9px; }
+
+  .patterns{ display:flex; flex-direction:column; gap:11px; margin-top:16px; }
+  .pat{ background:var(--bg-panel); border:1px solid var(--hairline); border-left:3px solid var(--c-quarry); border-radius:var(--r-tile); padding:14px 17px; }
+  .pat b{ font-weight:600; } .pat p{ margin:5px 0 0; font-size:14px; color:var(--fg2); line-height:1.5; }
+  footer.foot2{ border-top:1px solid var(--hairline); margin-top:56px; padding-top:28px; font-family:var(--mono); font-size:12px; color:var(--fg3); }
+  @media (max-width:820px){ main{ padding:30px 22px 80px; } nav.top{ display:none; } #graph{ height:460px; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="index.html"><span class="mk"><img class="ico" src="assets/icons/QuarryBlock.png" width="24" height="24" alt=""></span>Frahan StonePack <span class="v">v0.1.0-alpha</span></a>
+    <nav class="top">
+      <a href="index.html">Overview</a>
+      <a href="wiki.html">Components</a>
+      <a href="architecture.html" class="on">Architecture</a>
+      <a href="research.html">Research</a>
+      <a href="deck.html">Deck</a>
+    </nav>
+    <div class="bar-cta">
+      <a class="btn ghost" href="https://github.com/libishm1/Frahan" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn" href="https://www.food4rhino.com/en/app/frahans" target="_blank" rel="noopener">Install</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow"><span class="tick"></span>Architecture · how it works</div>
+  <h1 class="title">One spine, eighteen subcategories, a live connection graph.</h1>
+  <p class="sub">Frahan StonePack is pre-CAM: it turns survey and design intent into fabrication-ready geometry, then hands clean geometry to the machine step. The component catalogue and the connection graph below are auto-generated from source, so they stay current.</p>
+
+  <section class="sec" id="pipeline">
+    <h2 class="k">01</h2><div class="h">The pipeline</div>
+    <p class="body">One spine runs left to right. Each stage is a Grasshopper component family on the <code>Frahan</code> ribbon tab; the <code>[RelatedComponent]</code> edges wire the stages together. The DFN bridge is the key decoupling — joint-set statistics produce a fracture network even when the scan mesh is incomplete, so block packing does not depend on a watertight scan.</p>
+    <div class="spine">
+      <div class="pstep" style="--c:var(--c-ingest)"><div class="pi"><img class="ico" src="assets/icons/GprIngest.png" width="28" height="28"></div><div class="pn">Ingest</div><div class="ps">GPR · cloud · vector / CAD</div></div>
+      <div class="parrow">→</div>
+      <div class="pstep" style="--c:var(--c-quarry)"><div class="pi"><img class="ico" src="assets/icons/DiscontinuitySets.png" width="28" height="28"></div><div class="pn">Discontinuity</div><div class="ps">joint sets · stereonet · fracture</div></div>
+      <div class="parrow">→</div>
+      <div class="pstep" style="--c:var(--c-mesh)"><div class="pi"><img class="ico" src="assets/icons/PoissonReconstruct.png" width="28" height="28"></div><div class="pn">Reconstruct + DFN</div><div class="ps">watertight mesh · fracture net</div></div>
+      <div class="parrow">→</div>
+      <div class="pstep" style="--c:var(--c-pack3d)"><div class="pi"><img class="ico" src="assets/icons/BlockCutOpt.png" width="28" height="28"></div><div class="pn">Block / pack</div><div class="ps">BlockCutOpt · 2D/3D nest</div></div>
+      <div class="parrow">→</div>
+      <div class="pstep" style="--c:var(--c-masonry)"><div class="pi"><img class="ico" src="assets/icons/EquilibriumRBE.png" width="28" height="28"></div><div class="pn">Assemble</div><div class="ps">masonry · RBE/CRA · voussoir</div></div>
+      <div class="parrow">→</div>
+      <div class="pstep" style="--c:var(--c-fabricate)"><div class="pi"><img class="ico" src="assets/icons/GcodeExport.png" width="28" height="28"></div><div class="pn">Fabricate</div><div class="ps">cut plans · robot · export</div></div>
+    </div>
+    <table class="t">
+      <thead><tr><th>Stage</th><th>Input</th><th>Output</th><th>Subcategories</th></tr></thead>
+      <tbody>
+        <tr><td>Ingest</td><td>GPR radargrams, point clouds, vector/CAD/raster</td><td>clouds, meshes, fracture traces</td><td class="mono">Ingest, Mesh</td></tr>
+        <tr><td>Discontinuity / fracture</td><td>point cloud, GPR B-scan</td><td>joint sets, stereonet, fracture planes, block size</td><td class="mono">Quarry, Fracture, Analysis</td></tr>
+        <tr><td>Reconstruction</td><td>point cloud / mesh soup</td><td>clean watertight mesh</td><td class="mono">Mesh</td></tr>
+        <tr><td>DFN</td><td>joint-set statistics</td><td>fracture-network mesh + bench</td><td class="mono">Quarry</td></tr>
+        <tr><td>Block packing + cutting</td><td>bench + fractures / containers</td><td>block sets, guillotine cut plans, recovery</td><td class="mono">Quarry, 3D Packing, Slab</td></tr>
+        <tr><td>2D nesting</td><td>parts + sheet (with holes)</td><td>0-overlap nested layout</td><td class="mono">2D Packing, Surface Packing, Trencadis</td></tr>
+        <tr><td>Masonry assembly</td><td>stones / wall target</td><td>placed wall, equilibrium certificate, metrics</td><td class="mono">Masonry, Voussoir</td></tr>
+        <tr><td>Restoration / matching</td><td>broken fragments</td><td>reassembly poses</td><td class="mono">EdgeMatch, Kintsugi</td></tr>
+        <tr><td>Fabrication export</td><td>cut planes / placements</td><td>cut plans, robot targets</td><td class="mono">Fabricate, Reports, Sculpt</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="sec" id="map">
+    <h2 class="k">02</h2><div class="h">Connection map</div>
+    <p class="body muted">The live <span id="edgeCount">93</span>-edge upstream → downstream graph across all <span id="nodeCount">187</span> components, grouped and coloured by subcategory. Drag to pan, scroll to zoom, click a node to open its component page. Toggle subcategories to focus a stage.</p>
+    <div class="mapwrap">
+      <div class="maptools" id="maptools"><span class="lbl">Filter:</span></div>
+      <svg id="graph"></svg>
+      <div class="ghint" id="ghint">Drag to pan · scroll to zoom · click a node to open it in the component library</div>
+    </div>
+  </section>
+
+  <section class="sec" id="modules">
+    <h2 class="k">03</h2><div class="h">Code modules</div>
+    <p class="body muted">Five managed modules plus native shims and external tools. The Core is Rhino-free, so the algorithms are headless-testable; the GH layer is a thin adapter.</p>
+    <div class="mods">
+      <div class="mod"><div class="mn">Frahan.StonePack.Core</div><div class="mr">Rhino-free algorithm library (packing, NFP, block-cut, masonry, DFN, discontinuity math, readers). Source of truth for the math.</div><div class="md">Clipper2, NetTopologySuite · no RhinoCommon</div></div>
+      <div class="mod"><div class="mn">Frahan.StonePack.GH (.gha)</div><div class="mr">The Grasshopper front end: 187 components, the Frahan ribbon tab, async Run-gated heavy nodes, icons.</div><div class="md">Core, RhinoCommon, Grasshopper</div></div>
+      <div class="mod"><div class="mn">Frahan.StonePack (.rhp)</div><div class="mr">Rhino plugin shell.</div><div class="md">Core, RhinoCommon</div></div>
+      <div class="mod"><div class="mn">Frahan.EdgeMatching.Core</div><div class="mr">Rhino-free edge-matching / fracture-reassembly library.</div><div class="md">Core</div></div>
+      <div class="mod"><div class="mn">Frahan.Kintsugi.Port</div><div class="mr">Learned 6-DoF reassembly, a non-commercial research-only port of PuzzleFusion++. Quarantined, absent from the default install.</div><div class="md">TorchSharp / libtorch (optional)</div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="patterns">
+    <h2 class="k">04</h2><div class="h">Architecture patterns</div>
+    <div class="patterns">
+      <div class="pat"><b>Rhino-free Core.</b><p>All algorithm math lives in <code>Frahan.StonePack.Core</code> with no RhinoCommon dependency, so it is unit-tested headless. The GH layer is a thin adapter.</p></div>
+      <div class="pat"><b>Facade over published primitives.</b><p>Monolith components are a facade over standalone primitives, never a black box; both are kept and cross-linked.</p></div>
+      <div class="pat"><b>Async, Run-gated heavy nodes.</b><p>Reconstruction, GPR migration, block packing, carving, and recovery ship a default-FALSE <code>Run</code> toggle and run on a background task, so the canvas never freezes.</p></div>
+      <div class="pat"><b>Out-of-process workers.</b><p>The heaviest native work (E57 read, discontinuity worker, recon worker, BFF) runs as a separate process over binary IPC, so a native crash never takes Rhino down.</p></div>
+      <div class="pat"><b>Self-describing components.</b><p>Every component carries an <code>[Algorithm]</code> attribute (title + citation) and <code>[RelatedComponent]</code> edges — these drive the auto-generated catalogue and the connection map on this page.</p></div>
+      <div class="pat"><b>Numeric hygiene (one shared layer).</b><p>Recenter geometry before computing, use a scale-relative epsilon, snap booleans through a robust integer kernel. This is the cross-cutting fix that makes site-coordinate (UTM) work reliable.</p></div>
+    </div>
+    <footer class="foot2">FRAHAN STONEPACK · v0.1.0-alpha · GPL-3.0 · default install ships no native DLL and links no copyleft-incompatible code · Kintsugi learned module quarantined</footer>
+  </section>
+</main>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  const C=window.FRAHAN_COMPONENTS, SUB=window.FRAHAN_SUBCATS, G=window.FRAHAN_GRAPH, META=window.FRAHAN_META;
+  const color={}; SUB.forEach(s=>color[s.key]=s.color);
+  const bySlug={}; C.forEach(c=>bySlug[c.slug]=c);
+  document.getElementById('edgeCount').textContent=G.edges.length;
+  document.getElementById('nodeCount').textContent=META.components;
+
+  // nodes that participate in edges
+  const deg={}; G.edges.forEach(e=>{ deg[e.f]=(deg[e.f]||0)+1; deg[e.t]=(deg[e.t]||0)+1; });
+  const nodeSlugs=Object.keys(deg);
+  const nodes=nodeSlugs.map(s=>({slug:s, c:bySlug[s]})).filter(n=>n.c);
+
+  // group by subcat, lay out in vertical columns per subcat (in pipeline order)
+  const subOrder={}; SUB.forEach((s,i)=>subOrder[s.key]=i);
+  const present=[...new Set(nodes.map(n=>n.c.sub))].sort((a,b)=>subOrder[a]-subOrder[b]);
+  const colW=190, rowH=46, padX=70, padY=54;
+  const pos={};
+  present.forEach((sub,ci)=>{
+    const list=nodes.filter(n=>n.c.sub===sub);
+    list.forEach((n,ri)=>{ pos[n.slug]={ x: padX+ci*colW, y: padY+ri*rowH, sub }; });
+  });
+  const maxRows=Math.max(...present.map(sub=>nodes.filter(n=>n.c.sub===sub).length));
+  const W=padX*2+(present.length-1)*colW, H=padY*2+(maxRows-1)*rowH;
+
+  const svg=document.getElementById('graph');
+  const NS='http://www.w3.org/2000/svg';
+  let active={}; SUB.forEach(s=>active[s.key]=true);
+
+  // filter chips
+  const tools=document.getElementById('maptools');
+  present.forEach(sub=>{
+    const c=document.createElement('span'); c.className='chip'; c.style.setProperty('--c',color[sub]);
+    c.innerHTML=`<span class="d"></span>${sub}`;
+    c.onclick=()=>{ active[sub]=!active[sub]; c.classList.toggle('off',!active[sub]); draw(); };
+    tools.appendChild(c);
+  });
+
+  let view={x:0,y:0,k:1};
+  function draw(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const g=document.createElementNS(NS,'g');
+    g.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`);
+    svg.appendChild(g);
+    // edges
+    G.edges.forEach(e=>{
+      const a=pos[e.f], b=pos[e.t]; if(!a||!b) return;
+      if(!active[a.sub]||!active[b.sub]) return;
+      const path=document.createElementNS(NS,'path');
+      const mx=(a.x+b.x)/2;
+      path.setAttribute('d',`M ${a.x+58},${a.y} C ${mx},${a.y} ${mx},${b.y} ${b.x-58},${b.y}`);
+      path.setAttribute('fill','none'); path.setAttribute('stroke', color[a.sub]); path.setAttribute('stroke-opacity','0.28'); path.setAttribute('stroke-width','1.3');
+      g.appendChild(path);
+    });
+    // nodes
+    nodes.forEach(n=>{
+      const p=pos[n.slug]; if(!active[p.sub]) return;
+      const grp=document.createElementNS(NS,'g'); grp.setAttribute('transform',`translate(${p.x},${p.y})`);
+      grp.style.cursor='pointer';
+      const r=document.createElementNS(NS,'rect');
+      r.setAttribute('x',-58); r.setAttribute('y',-15); r.setAttribute('width',116); r.setAttribute('height',30);
+      r.setAttribute('rx',5); r.setAttribute('fill','#ECE3D3'); r.setAttribute('stroke',color[p.sub]); r.setAttribute('stroke-width','1.4');
+      grp.appendChild(r);
+      const dot=document.createElementNS(NS,'circle'); dot.setAttribute('cx',-46); dot.setAttribute('cy',0); dot.setAttribute('r',4); dot.setAttribute('fill',color[p.sub]); grp.appendChild(dot);
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('x',-38); t.setAttribute('y',4); t.setAttribute('font-family','IBM Plex Sans, sans-serif'); t.setAttribute('font-size','10.5'); t.setAttribute('fill','#2A2A2E');
+      const nm=n.c.name.length>16?n.c.name.slice(0,15)+'…':n.c.name; t.textContent=nm;
+      grp.appendChild(t);
+      const ttl=document.createElementNS(NS,'title'); ttl.textContent=n.c.name+'  ('+n.c.sub+')'; grp.appendChild(ttl);
+      grp.addEventListener('click',()=>{ window.location.href='wiki.html#/c/'+n.slug; });
+      g.appendChild(grp);
+    });
+  }
+  // fit
+  function fit(){ const bw=svg.clientWidth, bh=svg.clientHeight; view.k=Math.min(bw/W, bh/H)*0.96; view.x=(bw-W*view.k)/2; view.y=(bh-H*view.k)/2; draw(); }
+  // pan + zoom
+  let drag=null;
+  svg.addEventListener('mousedown',e=>{ drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y}; svg.classList.add('drag'); });
+  window.addEventListener('mousemove',e=>{ if(!drag) return; view.x=drag.vx+(e.clientX-drag.x); view.y=drag.vy+(e.clientY-drag.y); draw(); });
+  window.addEventListener('mouseup',()=>{ drag=null; svg.classList.remove('drag'); });
+  svg.addEventListener('wheel',e=>{ e.preventDefault(); const f=e.deltaY<0?1.1:0.9; const r=svg.getBoundingClientRect();
+    const mx=e.clientX-r.left, my=e.clientY-r.top; view.x=mx-(mx-view.x)*f; view.y=my-(my-view.y)*f; view.k*=f; draw(); }, {passive:false});
+  window.addEventListener('resize',fit);
+  setTimeout(fit,60);
+})();
+</script>
+</body>
+</html>

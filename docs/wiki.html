@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frahan StonePack — Component Library</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .shell{ display:flex; align-items:flex-start; max-width:1440px; margin:0 auto; }
+  aside.side{ position:sticky; top:64px; flex:0 0 280px; height:calc(100vh - 64px); overflow-y:auto;
+    border-right:1px solid var(--hairline); padding:22px 14px 60px; }
+  aside.side::-webkit-scrollbar{ width:9px; } aside.side::-webkit-scrollbar-thumb{ background:var(--hairline-2); border-radius:6px; }
+  .side .home-link{ display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12.5px;
+    letter-spacing:.07em; text-transform:uppercase; color:var(--fg2); padding:9px 10px; border-radius:var(--r-tile); }
+  .side .home-link:hover{ background:var(--bg-panel); color:var(--fg1); }
+  .fam{ }
+  .fam-h{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--r-tile); cursor:pointer; user-select:none; }
+  .fam-h:hover{ background:var(--bg-panel); }
+  .fam-h .d{ width:10px; height:10px; border-radius:50%; background:var(--c); flex:0 0 auto; }
+  .fam-h .nm{ font-weight:600; font-size:14px; letter-spacing:-.005em; }
+  .fam-h .ct{ margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--fg3); }
+  .fam-h .caret{ width:13px; color:var(--fg3); transition:transform .15s ease; font-size:10px; }
+  .fam.open .caret{ transform:rotate(90deg); }
+  .fam-items{ display:none; margin:2px 0 6px 20px; border-left:1px solid var(--hairline); padding-left:8px; }
+  .fam.open .fam-items{ display:block; }
+  .fam-items a{ display:block; font-size:13px; color:var(--fg2); padding:5px 9px; border-radius:5px; line-height:1.3; }
+  .fam-items a:hover{ background:var(--bg-panel); color:var(--fg1); }
+  .fam-items a.on{ background:var(--c); color:#fff; font-weight:500; }
+
+  main.content{ flex:1; min-width:0; padding:34px 44px 110px; }
+
+  .crumb{ font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; color:var(--fg3);
+    display:flex; gap:9px; align-items:center; margin-bottom:22px; flex-wrap:wrap; }
+  .crumb a:hover{ color:var(--fg1); } .crumb .sep{ opacity:.5; } .crumb .cur{ color:var(--fg1); }
+
+  .page-head .eyebrow{ margin-bottom:16px; }
+  .page-head h1{ font-size:44px; font-weight:600; letter-spacing:-.025em; margin:0; line-height:1.04; }
+  .page-head p.intro{ font-size:17px; color:var(--fg2); margin:14px 0 0; max-width:680px; line-height:1.5; }
+
+  /* search */
+  .search{ display:flex; align-items:center; gap:10px; background:var(--bg-panel); border:1px solid var(--hairline);
+    border-radius:var(--r-tile); padding:11px 15px; margin:26px 0 6px; max-width:560px; }
+  .search input{ border:none; background:none; outline:none; font-family:var(--sans); font-size:16px; color:var(--fg1); width:100%; }
+  .search input::placeholder{ color:var(--fg3); }
+  .search .k{ font-family:var(--mono); font-size:12px; color:var(--fg3); border:1px solid var(--hairline); border-radius:4px; padding:2px 7px; white-space:nowrap; }
+
+  /* subcat overview grid */
+  .fam-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:15px; margin-top:34px; }
+  .fam-card{ background:var(--bg-panel); border:1px solid var(--hairline); border-top:3px solid var(--c);
+    border-radius:var(--r-card); padding:19px 21px; box-shadow:var(--shadow-tile); cursor:pointer;
+    transition:border-color .14s ease, transform .06s ease; }
+  .fam-card:hover{ border-color:var(--c); transform:translateY(-1px); }
+  .fam-card .top{ display:flex; align-items:baseline; gap:10px; }
+  .fam-card .nm{ font-size:20px; font-weight:600; letter-spacing:-.01em; }
+  .fam-card .ct{ margin-left:auto; font-family:var(--mono); font-size:12.5px; color:var(--c); }
+  .fam-card .role{ font-size:14px; color:var(--fg2); margin-top:9px; line-height:1.45; min-height:38px; }
+  .fam-card .strip{ display:flex; gap:8px; margin-top:15px; }
+  .fam-card .strip .t{ width:38px; height:38px; border-radius:var(--r-tile); background:var(--bg);
+    border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; }
+  .fam-card .strip .more{ font-family:var(--mono); font-size:12px; color:var(--fg3); align-self:center; }
+
+  /* subcat page header */
+  .fp-head{ display:flex; align-items:flex-start; gap:18px; padding-bottom:22px; border-bottom:1px solid var(--hairline); }
+  .fp-head .bar-c{ width:6px; align-self:stretch; border-radius:3px; background:var(--c); }
+  .fp-head h1{ font-size:36px; font-weight:600; letter-spacing:-.02em; margin:0; }
+  .fp-head .role{ font-size:15.5px; color:var(--fg2); margin:9px 0 0; max-width:600px; line-height:1.5; }
+  .fp-head .ct{ margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--fg3); text-align:right; white-space:nowrap; }
+
+  /* component cards */
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:13px; margin-top:24px; }
+  .card{ display:flex; gap:14px; align-items:flex-start; background:var(--bg-panel); border:1px solid var(--hairline);
+    border-radius:var(--r-card); padding:15px 16px; box-shadow:var(--shadow-tile); cursor:pointer; transition:border-color .14s ease; }
+  .card:hover{ border-color:var(--c); }
+  .card .tile{ width:52px; height:52px; flex:0 0 auto; }
+  .card .cn{ font-weight:600; font-size:15.5px; letter-spacing:-.005em; }
+  .card .cnick{ font-family:var(--mono); font-size:11.5px; color:var(--c); margin-left:6px; font-weight:500; }
+  .card .cd{ font-size:13.5px; color:var(--fg2); line-height:1.4; margin-top:4px; text-wrap:pretty;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card .csub{ font-family:var(--mono); font-size:11px; color:var(--fg3); margin-top:7px; }
+
+  /* component article */
+  .art-head{ display:flex; gap:24px; align-items:flex-start; }
+  .art-head .big-tile{ width:104px; height:104px; flex:0 0 auto; border-radius:10px; background:var(--bg-panel);
+    border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-card); }
+  .art-head h1{ font-size:38px; font-weight:600; letter-spacing:-.02em; margin:2px 0 0; }
+  .art-head .badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:13px; align-items:center; }
+  .badge{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12.5px;
+    border-radius:var(--r-pill); padding:5px 12px 5px 10px; border:1px solid var(--hairline-2); color:var(--fg2); }
+  .badge .d{ width:10px; height:10px; border-radius:50%; background:var(--c); }
+  .badge.solid{ background:var(--c); border-color:var(--c); color:#fff; }
+  .badge.mono{ color:var(--fg2); }
+  .art-lead{ font-size:18px; line-height:1.55; color:var(--fg1); margin:28px 0 0; max-width:760px; }
+
+  .art-sec{ margin-top:40px; }
+  .art-sec h2{ font-size:13px; font-family:var(--mono); font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--fg2); margin:0 0 16px; padding-bottom:10px; border-bottom:1px solid var(--hairline); }
+  .algo{ background:var(--bg-panel); border:1px solid var(--hairline); border-left:3px solid var(--c);
+    border-radius:var(--r-tile); padding:14px 17px; }
+  .algo .t{ font-weight:600; font-size:16px; letter-spacing:-.005em; }
+  .algo .c{ font-family:var(--mono); font-size:12.5px; color:var(--fg2); margin-top:6px; line-height:1.5; }
+
+  .io{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .io-h{ font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--c); margin-bottom:10px; }
+  .port{ border-bottom:1px solid var(--hairline); padding:9px 0; display:grid; grid-template-columns:auto 1fr; gap:3px 12px; }
+  .port .pl{ display:flex; align-items:center; gap:8px; }
+  .port .ptype{ font-family:var(--mono); font-size:11px; color:var(--c); border:1px solid var(--hairline-2); border-radius:3px; padding:1px 6px; }
+  .port .pname{ font-weight:600; font-size:14px; }
+  .port .pnick{ font-family:var(--mono); font-size:11.5px; color:var(--fg3); }
+  .port .pacc{ font-family:var(--mono); font-size:10.5px; color:var(--fg3); margin-left:auto; text-transform:uppercase; letter-spacing:.04em; }
+  .port .pdesc{ grid-column:1 / -1; font-size:13px; color:var(--fg2); line-height:1.45; }
+  .io-note{ font-family:var(--mono); font-size:12px; color:var(--fg3); margin-top:14px; }
+
+  .rel{ display:grid; grid-template-columns:1fr; gap:10px; }
+  .rel a{ display:flex; gap:13px; align-items:flex-start; background:var(--bg-panel); border:1px solid var(--hairline);
+    border-radius:var(--r-tile); padding:13px 15px; transition:border-color .14s ease; }
+  .rel a:hover{ border-color:var(--c); }
+  .rel .t{ width:42px; height:42px; flex:0 0 auto; border-radius:var(--r-tile); background:var(--bg);
+    border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; }
+  .rel .rn{ font-weight:600; font-size:15px; }
+  .rel .rr{ font-size:13px; color:var(--fg2); line-height:1.45; margin-top:3px; }
+
+  .kv{ display:grid; grid-template-columns:150px 1fr; gap:11px 22px; font-size:14.5px; }
+  .kv dt{ color:var(--fg3); font-family:var(--mono); font-size:12.5px; letter-spacing:.02em; padding-top:1px; }
+  .kv dd{ margin:0; color:var(--fg1); word-break:break-word; }
+
+  .pager{ display:flex; justify-content:space-between; gap:14px; margin-top:52px; padding-top:24px; border-top:1px solid var(--hairline); }
+  .pager a{ flex:1; background:var(--bg-panel); border:1px solid var(--hairline); border-radius:var(--r-card); padding:14px 17px; transition:border-color .14s ease; }
+  .pager a:hover{ border-color:var(--fg2); }
+  .pager .lab{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg3); }
+  .pager .nm{ font-weight:600; font-size:15px; margin-top:5px; }
+  .pager a.next{ text-align:right; } .pager a.disabled{ opacity:.35; pointer-events:none; }
+
+  .empty{ padding:50px 0; color:var(--fg3); font-family:var(--mono); font-size:14px; }
+  @media (max-width:880px){ aside.side{ display:none; } main.content{ padding:26px 22px 80px; } .io{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="index.html"><span class="mk"><img class="ico" src="assets/icons/QuarryBlock.png" width="24" height="24" alt=""></span>Frahan StonePack <span class="v">v0.1.0-alpha</span></a>
+    <nav class="top">
+      <a href="index.html">Overview</a>
+      <a href="wiki.html" class="on">Components</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="research.html">Research</a>
+      <a href="deck.html">Deck</a>
+    </nav>
+    <div class="bar-cta">
+      <a class="btn ghost" href="https://github.com/libishm1/Frahan" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn" href="https://www.food4rhino.com/en/app/frahans" target="_blank" rel="noopener">Install</a>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main class="content" id="content"></main>
+</div>
+
+<footer class="foot"><div class="foot-in">
+  <span class="fmono" id="footMeta">FRAHAN STONEPACK</span>
+  <span>Auto-generated from component source · <a href="https://github.com/libishm1/Frahan" target="_blank" rel="noopener">github.com/libishm1/Frahan</a></span>
+</div></footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  const C = window.FRAHAN_COMPONENTS, SUB = window.FRAHAN_SUBCATS, META = window.FRAHAN_META;
+  const ICON = "assets/icons/";
+  const color = {}; SUB.forEach(s=>color[s.key]=s.color);
+  const bySlug = {}; C.forEach(c=>bySlug[c.slug]=c);
+  const order = {}; SUB.forEach((s,i)=>order[s.key]=i);
+  // components grouped by subcat, in subcat order
+  const groups = SUB.map(s=>({ ...s, items:C.filter(c=>c.sub===s.key) }));
+  // flat list in sidebar order for prev/next
+  const FLAT = []; groups.forEach(g=>g.items.forEach(c=>FLAT.push(c)));
+
+  document.getElementById('footMeta').textContent =
+    `FRAHAN STONEPACK · ${META.version} · ${META.components} components · ${META.subcategories} subcategories · ${META.inputs}/${META.outputs} ports`;
+
+  const sideEl=document.getElementById('side'), contentEl=document.getElementById('content'), qEl=document.getElementById('q');
+
+  function tile(icon,sz){ return `<div class="tile"><img class="ico" src="${ICON}${icon}" width="${sz}" height="${sz}" alt="" loading="lazy"></div>`; }
+
+  // ---------- sidebar ----------
+  function buildSide(){
+    let h = `<a class="home-link" href="#/"><span>◆</span> All subcategories</a>`;
+    groups.forEach(g=>{
+      h += `<div class="fam" data-fam="${g.key}" style="--c:${g.color}">
+        <div class="fam-h" onclick="this.parentNode.classList.toggle('open')">
+          <span class="d"></span><span class="nm">${g.key}</span><span class="ct">${g.items.length}</span><span class="caret">▶</span>
+        </div>
+        <div class="fam-items">${g.items.map(c=>`<a href="#/c/${c.slug}" data-slug="${c.slug}">${c.name}</a>`).join('')}</div>
+      </div>`;
+    });
+    sideEl.innerHTML=h;
+  }
+  function syncSide(slug,famKey){
+    sideEl.querySelectorAll('.fam').forEach(f=>{ if(f.dataset.fam===famKey) f.classList.add('open'); });
+    sideEl.querySelectorAll('.fam-items a').forEach(a=>a.classList.toggle('on', a.dataset.slug===slug));
+  }
+
+  // ---------- routes ----------
+  function home(){
+    let h=`<div class="crumb"><span class="cur">Components</span></div>
+      <div class="page-head"><div class="eyebrow"><span class="tick"></span>Component library · ${META.components} components</div>
+      <h1>Eighteen subcategories,<br>one fabrication spine.</h1>
+      <p class="intro">Every Frahan StonePack component, grouped by its Grasshopper ribbon subcategory and colour-keyed to its pipeline stage. Pick a subcategory or search by name, nickname, or algorithm.</p></div>
+      <div class="search"><img class="ico" src="${ICON}MarkerDetect.png" width="18" height="18" style="opacity:.5"><input id="q" type="text" placeholder="Search ${META.components} components…" autocomplete="off"><span class="k" id="qcount"></span></div>
+      <div id="results"></div>
+      <div class="fam-grid" id="famGrid">`;
+    groups.forEach(g=>{
+      const strip=g.items.slice(0,5).map(c=>`<div class="t"><img class="ico" src="${ICON}${c.icon}" width="26" height="26" loading="lazy"></div>`).join('');
+      const more=g.items.length>5?`<span class="more">+${g.items.length-5}</span>`:'';
+      h+=`<div class="fam-card" style="--c:${g.color}" onclick="location.hash='#/s/${encodeURIComponent(g.key)}'">
+        <div class="top"><span class="nm">${g.key}</span><span class="ct">${g.items.length}</span></div>
+        <div class="role">${g.role}</div><div class="strip">${strip}${more}</div></div>`;
+    });
+    h+=`</div>`;
+    contentEl.innerHTML=h; syncSide(null,null); window.scrollTo(0,0);
+    wireSearch();
+  }
+
+  function subcat(key){
+    const g=groups.find(x=>x.key===key); if(!g) return home();
+    let h=`<div class="crumb"><a href="#/">Components</a><span class="sep">/</span><span class="cur">${g.key}</span></div>
+      <div class="fp-head" style="--c:${g.color}"><span class="bar-c"></span>
+        <div><h1>${g.key}</h1><div class="role">${g.role}</div></div>
+        <div class="ct">${g.items.length}<br>components</div></div>
+      <div class="cards">`;
+    g.items.forEach(c=>{
+      h+=`<div class="card" style="--c:${g.color}" onclick="location.hash='#/c/${c.slug}'">${tile(c.icon,36)}
+        <div><div class="cn">${c.name}<span class="cnick">${c.nick}</span></div><div class="cd">${c.desc}</div></div></div>`;
+    });
+    h+=`</div>`;
+    contentEl.innerHTML=h; syncSide(null,key); window.scrollTo(0,0);
+  }
+
+  function ports(list){
+    return list.map(p=>`<div class="port"><div class="pl"><span class="ptype">${p[0]}</span><span class="pname">${p[1]}</span><span class="pnick">${p[2]}</span><span class="pacc">${p[3]}</span></div>${p[4]?`<div class="pdesc">${p[4]}</div>`:''}</div>`).join('');
+  }
+
+  function component(slug){
+    const c=bySlug[slug]; if(!c) return home();
+    const col=color[c.sub]||'var(--fg2)';
+    const idx=FLAT.indexOf(c), prev=FLAT[idx-1], next=FLAT[idx+1];
+    // upstream/downstream from related (this comp's related = downstream-ish); also find who relates TO this
+    const out=c.rel;
+    const inn=C.filter(x=>x.rel.some(r=>r.s===slug)).map(x=>({s:x.slug,n:x.name,r:(x.rel.find(r=>r.s===slug)||{}).r}));
+    function relBlock(title,arr){ if(!arr.length) return ''; return `<div class="art-sec" style="--c:${col}"><h2>${title}</h2><div class="rel">`+
+      arr.map(r=>{ const t=bySlug[r.s]; return `<a href="#/c/${r.s}" style="--c:${col}">${tile(t?t.icon:'QuarryBlock.png',28)}<div><div class="rn">${r.n}</div>${r.r?`<div class="rr">${r.r}</div>`:''}</div></a>`; }).join('')+`</div></div>`; }
+
+    let h=`<div class="crumb"><a href="#/">Components</a><span class="sep">/</span><a href="#/s/${encodeURIComponent(c.sub)}">${c.sub}</a><span class="sep">/</span><span class="cur">${c.name}</span></div>
+      <div class="art-head" style="--c:${col}"><div class="big-tile"><img class="ico" src="${ICON}${c.icon}" width="70" height="70" alt="${c.name}"></div>
+        <div><h1>${c.name}</h1><div class="badges">
+          <a class="badge solid" href="#/s/${encodeURIComponent(c.sub)}" style="--c:${col}"><span class="d" style="background:#fff;opacity:.85"></span>${c.sub}</a>
+          <span class="badge mono">${c.nick}</span>
+          <span class="badge mono">${c.inp.length} in · ${c.out.length} out</span>
+        </div></div></div>
+      <p class="art-lead">${c.desc}</p>`;
+
+    if(c.algo) h+=`<div class="art-sec" style="--c:${col}"><h2>Algorithm</h2><div class="algo"><div class="t">${c.algo.t||'—'}</div>${c.algo.c?`<div class="c">${c.algo.c}</div>`:''}</div></div>`;
+
+    h+=`<div class="art-sec" style="--c:${col}"><h2>Inputs &amp; outputs</h2><div class="io">
+        <div><div class="io-h">Inputs · ${c.inp.length}</div>${c.inp.length?ports(c.inp):'<div class="io-note">No inputs.</div>'}</div>
+        <div><div class="io-h">Outputs · ${c.out.length}</div>${c.out.length?ports(c.out):'<div class="io-note">No outputs.</div>'}</div></div></div>`;
+
+    h+=relBlock('Downstream / related',out);
+    h+=relBlock('Upstream',inn);
+
+    h+=`<div class="art-sec" style="--c:${col}"><h2>Reference</h2><dl class="kv">
+        <dt>Component</dt><dd>${c.name}</dd>
+        <dt>Nickname</dt><dd><code>${c.nick}</code></dd>
+        <dt>Class</dt><dd><code>${c.cls}</code></dd>
+        <dt>GUID</dt><dd><code>${c.guid}</code></dd>
+        <dt>Subcategory</dt><dd><a href="#/s/${encodeURIComponent(c.sub)}" style="color:${col};font-weight:500">${c.sub}</a></dd>
+        <dt>Icon</dt><dd><code>${c.icon}</code></dd>
+        <dt>Source</dt><dd><code>${c.file}</code></dd></dl></div>`;
+
+    h+=`<div class="pager">
+        ${prev?`<a class="prev" href="#/c/${prev.slug}"><div class="lab">← Previous</div><div class="nm">${prev.name}</div></a>`:`<a class="prev disabled"><div class="lab">← Previous</div><div class="nm">—</div></a>`}
+        ${next?`<a class="next" href="#/c/${next.slug}"><div class="lab">Next →</div><div class="nm">${next.name}</div></a>`:`<a class="next disabled"><div class="lab">Next →</div><div class="nm">—</div></a>`}</div>`;
+
+    contentEl.innerHTML=h; syncSide(slug,c.sub); window.scrollTo(0,0);
+  }
+
+  // ---------- search (on home) ----------
+  function wireSearch(){
+    const q=document.getElementById('q'); if(!q) return;
+    const results=document.getElementById('results'), grid=document.getElementById('famGrid'), cnt=document.getElementById('qcount');
+    q.addEventListener('input',()=>{
+      const t=q.value.trim().toLowerCase();
+      if(!t){ results.innerHTML=''; grid.style.display=''; cnt.textContent=''; return; }
+      grid.style.display='none';
+      const hits=C.filter(c=>(c.name+' '+c.nick+' '+c.desc+' '+(c.algo?c.algo.t:'')+' '+c.sub).toLowerCase().includes(t));
+      cnt.textContent=hits.length+' / '+C.length;
+      if(!hits.length){ results.innerHTML='<div class="empty">No components match “'+t+'”.</div>'; return; }
+      results.innerHTML='<div class="cards">'+hits.map(c=>`<div class="card" style="--c:${color[c.sub]}" onclick="location.hash='#/c/${c.slug}'">${tile(c.icon,36)}<div><div class="cn">${c.name}<span class="cnick">${c.nick}</span></div><div class="cd">${c.desc}</div><div class="csub" style="color:${color[c.sub]}">${c.sub}</div></div></div>`).join('')+'</div>';
+    });
+  }
+
+  function route(){
+    const m=(location.hash||'#/').match(/^#\/(s|c)\/(.+)$/);
+    if(m){ if(m[1]==='s') subcat(decodeURIComponent(m[2])); else component(decodeURIComponent(m[2])); }
+    else home();
+  }
+  buildSide();
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+</body>
+</html>

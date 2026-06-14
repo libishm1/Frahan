@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frahan StonePack — Research &amp; Benchmarks</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .shell{ display:flex; align-items:flex-start; max-width:1180px; margin:0 auto; }
+  aside.toc{ position:sticky; top:64px; flex:0 0 236px; height:calc(100vh - 64px); overflow-y:auto; padding:32px 14px 60px; border-right:1px solid var(--hairline); }
+  aside.toc .lbl{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg3); padding:0 10px 10px; }
+  aside.toc a{ display:block; font-size:13.5px; color:var(--fg2); padding:7px 10px; border-radius:6px; line-height:1.3; border-left:2px solid transparent; }
+  aside.toc a:hover{ background:var(--bg-panel); color:var(--fg1); }
+  main{ flex:1; min-width:0; padding:40px 48px 120px; }
+
+  h1.title{ font-size:44px; font-weight:600; letter-spacing:-.025em; line-height:1.04; margin:18px 0 0; max-width:780px; }
+  .sub{ font-size:17px; color:var(--fg2); margin-top:14px; max-width:720px; line-height:1.5; }
+  .meta{ font-family:var(--mono); font-size:12.5px; color:var(--fg3); margin-top:20px; display:flex; gap:16px; flex-wrap:wrap; }
+
+  section.sec{ scroll-margin-top:84px; padding-top:52px; }
+  section.sec > h2{ font-size:13px; font-family:var(--mono); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--c-masonry); margin:0 0 6px; }
+  section.sec > h2 + .h{ font-size:29px; font-weight:600; letter-spacing:-.02em; margin:0 0 18px; }
+  p.body{ font-size:15.5px; line-height:1.62; color:var(--fg1); margin:0 0 15px; max-width:770px; text-wrap:pretty; }
+  p.body.muted{ color:var(--fg2); }
+
+  .stats{ display:flex; gap:13px; flex-wrap:wrap; margin:6px 0 10px; }
+  .stat{ background:var(--bg-panel); border:1px solid var(--hairline); border-radius:var(--r-card); padding:15px 19px; min-width:118px; }
+  .stat b{ font-family:var(--mono); font-weight:600; font-size:26px; letter-spacing:-.02em; display:block; }
+  .stat span{ font-size:12.5px; color:var(--fg3); }
+
+  .area{ border:1px solid var(--hairline); border-left:3px solid var(--c); border-radius:var(--r-card); background:var(--bg-panel);
+    padding:20px 22px; margin:14px 0; }
+  .area h3{ font-size:19px; font-weight:600; margin:0 0 3px; letter-spacing:-.01em; }
+  .area .tagline{ font-family:var(--mono); font-size:12px; color:var(--c); letter-spacing:.02em; margin-bottom:12px; }
+  .area p{ font-size:14.5px; line-height:1.55; color:var(--fg1); margin:0 0 10px; }
+  .area .label{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg3); margin:12px 0 6px; }
+  .area ul{ margin:0; padding-left:18px; } .area li{ font-size:14px; line-height:1.5; color:var(--fg1); margin-bottom:6px; }
+  .area li b{ font-weight:600; }
+  .area code{ color:var(--fg2); }
+
+  table.t{ width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 10px; }
+  table.t th{ text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--fg3); font-weight:500; padding:9px 10px; border-bottom:1px solid var(--hairline-2); }
+  table.t td{ padding:9px 10px; border-bottom:1px solid var(--hairline); vertical-align:top; line-height:1.45; }
+  table.t td.mono{ font-family:var(--mono); font-size:12px; color:var(--fg2); }
+  table.t tr:hover td{ background:rgba(236,227,211,.4); }
+  .hl{ color:var(--fg1); font-weight:600; }
+
+  footer.foot2{ border-top:1px solid var(--hairline); margin-top:56px; padding-top:28px; font-family:var(--mono); font-size:12px; color:var(--fg3); line-height:1.7; }
+  /* hero render */
+  figure.hero-fig{ margin:34px 0 0; }
+  figure.hero-fig .frame{ position:relative; border:1px solid var(--hairline); border-radius:var(--r-card); overflow:hidden;
+    background:linear-gradient(160deg,#FBF8F1,#ECE3D3); box-shadow:var(--shadow-card); }
+  figure.hero-fig img{ display:block; width:100%; height:auto; }
+  figure.hero-fig .tag{ position:absolute; left:18px; top:16px; font-family:var(--mono); font-size:11.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--fg2); background:rgba(244,238,226,.82); backdrop-filter:blur(4px);
+    border:1px solid var(--hairline); border-radius:var(--r-pill); padding:5px 13px; }
+  figure.hero-fig figcaption{ font-size:14px; color:var(--fg2); margin-top:13px; line-height:1.55; max-width:780px; }
+  figure.hero-fig figcaption b{ color:var(--fg1); font-weight:600; }
+  figure.hero-fig .legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:11px; font-family:var(--mono); font-size:12px; color:var(--fg2); }
+  figure.hero-fig .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  figure.hero-fig .legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+  @media (max-width:880px){ aside.toc{ display:none; } main{ padding:30px 22px 80px; } nav.top{ display:none; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="index.html"><span class="mk"><img class="ico" src="assets/icons/QuarryBlock.png" width="24" height="24" alt=""></span>Frahan StonePack <span class="v">v0.1.0-alpha</span></a>
+    <nav class="top">
+      <a href="index.html">Overview</a>
+      <a href="wiki.html">Components</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="research.html" class="on">Research</a>
+      <a href="deck.html">Deck</a>
+    </nav>
+    <div class="bar-cta">
+      <a class="btn ghost" href="https://github.com/libishm1/Frahan" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn" href="https://www.food4rhino.com/en/app/frahans" target="_blank" rel="noopener">Install</a>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="lbl">On this page</div>
+    <a href="#summary">Method</a>
+    <a href="#benchmarks">Benchmarks at a glance</a>
+    <a href="#a-2d">2D nesting &amp; NFP</a>
+    <a href="#b-3d">3D block packing</a>
+    <a href="#c-blockcut">BlockCutOpt &amp; recovery</a>
+    <a href="#d-discontinuity">Discontinuity &amp; DFN</a>
+    <a href="#e-gpr">GPR fracture mapping</a>
+    <a href="#f-masonry">Masonry CRA &amp; Λ/J</a>
+    <a href="#g-edge">Edge-matching</a>
+    <a href="#h-kintsugi">Kintsugi learned</a>
+    <a href="#i-surface">Surface packing &amp; BFF</a>
+    <a href="#j-mesh">Mesh &amp; reconstruction</a>
+    <a href="#datasets">Datasets</a>
+    <a href="#cite">Cite &amp; reproduce</a>
+  </aside>
+
+  <main>
+    <div class="eyebrow"><span class="tick"></span>Research preview · v0.1.0-alpha</div>
+    <h1 class="title">Research-grade by construction.</h1>
+    <p class="sub">Every kept algorithm is a measured delta over a named, shipping baseline — benchmarked on the same instances, citation-tagged on the component, and validated live in Rhino. This page is the source-cited research summary; every number names the file it came from.</p>
+    <div class="meta"><span>github.com/libishm1/Frahan</span><span>·</span><span>GPL-3.0</span><span>·</span><span>Zenodo DOI minted</span><span>·</span><span>Bull. Eng. Geol. Environ. (submitted)</span></div>
+
+    <figure class="hero-fig">
+      <div class="frame"><span class="tag">Pack3D · heightmap deepest-bottom-left</span>
+        <img src="assets/research/block_pack_hero.png" alt="3D irregular block pack: stacked blue blocks seated on a green container surface, with orange overflow blocks below, viewed in isometric."></div>
+      <figcaption>
+        <b>3D irregular block packing into a container.</b> Blocks settle layer-by-layer onto the heightmap surface (green) by the deepest-bottom-left core; orange marks pieces that overflow the container envelope. The DLBF best-of-orientation packer reaches <b>70.4% volumetric fill</b> vs a 66.4% baseline at zero overlap, deterministic — and heightmap-to-settle moves compactness 17.0% → 33.2%, 19/30 → 30/30 stones.
+        <div class="legend"><span><i style="background:#2E8BE6"></i>placed blocks</span><span><i style="background:#2FBF8F"></i>container heightmap</span><span><i style="background:#F2A33C"></i>overflow / unplaced</span></div>
+      </figcaption>
+    </figure>
+
+    <section class="sec" id="summary">
+      <h2>01</h2><div class="h">Method — the V4 framework: PRISMA + SLM + ROSES</div>
+      <p class="body">Frahan StonePack is a Rhino 8 / Grasshopper plugin for stone-fabrication readiness — the bridge layer between design intent and machine-ready fabrication for dimension stone, monuments, and dry-stone masonry. It covers one pipeline: GPR / scan to fracture mapping and point-cloud discontinuity extraction, then 3D reconstruction, discrete fracture network (DFN), block packing and cutting, masonry equilibrium, and fabrication export.</p>
+      <p class="body muted">Every kept algorithm clears four bars: a <b>measured benchmark</b> over a shipping baseline (truth criterion = live visual validation, not a self-reported number); an <b>SLM</b> math derivation with named citations and an <code>[Algorithm]</code> attribute on the component; a <b>PRISMA</b> statistics review scoped to head-to-head benchmarks; and a <b>ROSES</b> interdisciplinary synthesis (recenter before computing, scale-relative epsilon, robust boolean kernel). Originality is classified, not asserted: clean-room (59), facade-over-primitives (20), evolved-fork (9), original-research (8), wrapper-of-native (5), vendored-library (5), direct-port (3). The default install ships no native DLL and links no GPL/AGPL/non-commercial code; the learned Kintsugi module is quarantined out of it.</p>
+      <div class="stats">
+        <div class="stat"><b>187</b><span>components</span></div>
+        <div class="stat"><b>18</b><span>subcategories</span></div>
+        <div class="stat"><b>10</b><span>research areas</span></div>
+        <div class="stat"><b>1034</b><span>tests pass / 0 fail</span></div>
+        <div class="stat"><b>10</b><span>real datasets</span></div>
+      </div>
+    </section>
+
+    <section class="sec" id="benchmarks">
+      <h2>02</h2><div class="h">Benchmarks at a glance</div>
+      <p class="body muted">Headline machine-measured results. Ratios are not cross-comparable across domains: guillotine yield, mesh-honest container fill, and recovery percentages measure different quantities.</p>
+      <table class="t">
+        <thead><tr><th style="width:20%">Area</th><th>Headline measured result</th><th style="width:26%">Source</th></tr></thead>
+        <tbody>
+          <tr><td>2D nesting</td><td><span class="hl">53.9%</span> mean wasted-area cut vs V506 baseline, at 0 overlap</td><td class="mono">01_two-d-nesting.md</td></tr>
+          <tr><td>2D nesting</td><td>Only 0-overlap packer over 80% utilisation with holes (82.0 / 84.7 / 89.6%)</td><td class="mono">PACK2D_STUDY_REPORT §0a</td></tr>
+          <tr><td>Hole-aware NFP</td><td>HoleNest 12/12 placed, 4 holes filled, valid + deterministic; Sparrow invalid on same input</td><td class="mono">HOLE_PACKER_MATH §2a</td></tr>
+          <tr><td>3D packing</td><td>DLBF best-of-orientation <span class="hl">70.4%</span> fill vs 66.4% baseline</td><td class="mono">PACK3D_STUDY_REPORT §3</td></tr>
+          <tr><td>3D packing</td><td>Compactness 17.0% → 33.2%, 19/30 → 30/30 stones</td><td class="mono">02_three-d-packing.md</td></tr>
+          <tr><td>BlockCutOpt</td><td>Mode 5 guillotine <span class="hl">49.3%</span> yield at 100% saw-separable</td><td class="mono">docs/results/RESULTS.md</td></tr>
+          <tr><td>Recovery cascade</td><td><span class="hl">+21%</span> recovery over single-scale BlockCutOpt</td><td class="mono">docs/results/RESULTS.md</td></tr>
+          <tr><td>Quarry georeference</td><td>Oblique bed-following <span class="hl">+59% / +$11,287</span> net per ~50 m³ bench</td><td class="mono">03_quarry-blockcut.md</td></tr>
+          <tr><td>Discontinuity worker</td><td>k=24 normals ~10.2 s, ~1.4× faster than Open3D KD-tree (14.8 s)</td><td class="mono">discontinuity_worker/README</td></tr>
+          <tr><td>Discontinuity</td><td>Tongjiang 7.86M pts → 4 joint sets, Jv 7.20, Vb 0.352 m³</td><td class="mono">VALIDATION_REPORT.md</td></tr>
+          <tr><td>GPR fracture</td><td>Grimsel granite: 1472 / 1485 picks (AU / VE)</td><td class="mono">03_gpr_fracture_granite</td></tr>
+          <tr><td>Masonry CRA</td><td><span class="hl">5/5</span> parity vs compas_cra incl. H-model rejection</td><td class="mono">CRA_COMPAS_PARITY.md</td></tr>
+          <tr><td>Masonry Λ</td><td>Hungarian 0.18–0.23 vs greedy/random 0.59–0.64 (~2.9×), datum 0.27</td><td class="mono">LAMBDA_STUDY.md</td></tr>
+          <tr><td>Edge-matching</td><td>Overlap 12–25% → 0%, 8/8 placed, 100% coverage</td><td class="mono">08_edge-matching.md</td></tr>
+          <tr><td>Kintsugi</td><td>Verifier pair score <span class="hl">0.7068</span> STRONG, 2/2 placed</td><td class="mono">14_kintsugi/README.md</td></tr>
+          <tr><td>Surface packing</td><td>130° twist, 6 regions, 176-shard mosaic, live-validated</td><td class="mono">07_surface-packing.md</td></tr>
+          <tr><td>Reconstruction</td><td>59,971 v / 111,973 t in 3.9 s, out-of-process</td><td class="mono">12_ingestion.md</td></tr>
+          <tr><td>Test battery</td><td><span class="hl">1034 PASS / 0 FAIL / 147 SKIP</span> (2026-06-14)</td><td class="mono">RESULTS.md</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="sec" id="areas">
+      <h2>03</h2><div class="h">Research areas — method, citation, result</div>
+
+      <div class="area" id="a-2d" style="--c:var(--c-pack2d)">
+        <h3>(a) 2D nesting and hole-aware NFP</h3>
+        <div class="tagline">Exact No-Fit-Polygon Bottom-Left-Fill · Clipper2 integer back end</div>
+        <p>Place irregular 2D parts into a sheet that may carry defect holes, with zero overlap, and nest small parts inside the holes of larger placed parts to cut saw-able stock around defects. The feasible set is the sheet inner-fit polygon minus the union of NFPs against placed parts and holes; placement is the bottom-left vertex of that exact region — 0-overlap by construction and deterministic.</p>
+        <div class="label">Citations</div>
+        <p>Bennell &amp; Oliveira 2009 (JORS, NFP/IFP); Burke et al. 2006/2007 (BLF); Clipper2 (Johnson, BSL-1.0); Lloyd 1982 + Kuhn 1955 (Trencadís Voronoi + Hungarian).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Evolved NFP-BLF cuts mean wasted area <b>53.9%</b> vs the V506 overlap-then-trim baseline, at zero overlap.</li>
+          <li>Only 0-overlap packer in the study to cross 80% utilisation with holes: <b>82.0% / 84.7% / 89.6%</b>.</li>
+          <li>HoleNest places 12/12 and fills 4 part-holes, valid + deterministic, where the Sparrow / OpenNest reference is structurally invalid on the same input; wins the rect fast-path (5.2 ms vs 71 ms).</li>
+        </ul>
+      </div>
+
+      <div class="area" id="b-3d" style="--c:var(--c-pack3d)">
+        <h3>(b) 3D block packing</h3>
+        <div class="tagline">Heightmap deepest-bottom-left core · guillotine forest · physics settle</div>
+        <p>Pack 3D items into containers under varying constraints: heightmap stacking, saw-cuttable guillotine cuts, revenue-weighted mixed sizing, or physical settling into a stable non-interpenetrating pile.</p>
+        <div class="label">Citations</div>
+        <p>Kim 2025 (guillotine forest); Jalalian et al. 2023 (cut-surface cost); Chehrazad/Roose/Wauters 2025 (DLBF); Bullet sequential-impulse + CoACD (Wei et al. 2022); Heyman 1966 (CoM-over-support).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>DLBF best-of-orientation reaches <b>70.4%</b> volumetric fill vs 66.4% baseline, 28 vs 27 pieces, 0 overlap.</li>
+          <li>Heightmap-to-settle moved compactness 17.0% → <b>33.2%</b>, 19/30 → 30/30 stones; 80% → 100% COM-stable with the stability-seat pass.</li>
+          <li>Statue-to-blocks decomposition recovers a volume ratio of exactly <b>1.0000</b> over 173 CGAL booleans, zero failures.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="c-blockcut" style="--c:var(--c-quarry)">
+        <h3>(c) BlockCutOpt, recovery cascade, wire-saw guillotine</h3>
+        <div class="tagline">Brute-force 5-D pose-grid argmax · 13-axis SAT · multi-scale recovery</div>
+        <p>Maximise count and value of marketable fixed-size blocks cuttable from a fractured quarry bench by optimising the cutting-lattice pose to avoid fractures, then recovering value from fracture-crossed blocks at finer scales, rendered as a fabricable straight-saw guillotine plan.</p>
+        <div class="label">Citations</div>
+        <p>Elkarmoty et al. 2020 (clean-room, extended yaw-only → full-3D tilt); Akenine-Möller 2001 (SAT); Yarahmadi 2018, Cherri 2009, Gilmore &amp; Gomory 1965 (recovery); Graham 1969 (LPT scheduling).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Mode 5 staged wire-saw guillotine recovery: <b>49.3% yield at 100% saw-separable</b>, vs mode 4 voxel-DLBF 53.3% but not saw-cuttable.</li>
+          <li>RecoveryCascade recovers <b>+21%</b> over single-scale BlockCutOpt by re-cutting cracked blocks at finer scales.</li>
+          <li>Real Botticino marble bench: 280 GPR picks → 3 dipping beds; oblique bed-following plan recovers <b>+11.90 m³ (+59%) / +$11,287</b> per ~50 m³ bench.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="d-discontinuity" style="--c:var(--c-quarry)">
+        <h3>(d) Point-cloud discontinuity, joint sets, DFN</h3>
+        <div class="tagline">Out-of-process worker · PCA normals · FACETS region-grow · DSE clustering</div>
+        <p>Turn a raw UAV/TLS cloud of a rock face into planar facets, cluster their poles into joint sets, and report normal spacing and block size so a quarry can orient cuts away from dominant sets.</p>
+        <div class="label">Citations</div>
+        <p>Pauly 2002 (surface variation); Dewez/Girardeau-Montaut 2016 (qFacets); Riquelme et al. 2014/2015 (DSE); Hoetzlein 2014 (cell lists); Priest 1993 + Baecher/Veneziano (DFN). No CloudCompare/CCCoreLib GPL source read.</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>k=24 PCA normals on the 7,858,334-point Tongjiang cloud: ~10.2 s, ~<b>1.4× faster</b> than Open3D's KD-tree; whole pipeline ~14.7 s. (Earlier "215×/265× vs CloudCompare" framing retracted — different neighbourhood scale.)</li>
+          <li>Live: 4 joint sets (dip 19/79/72/84, spacing 0.25/0.23/0.67/1.11 m), <b>Jv 7.20, RQD 92, Vb 0.352 m³, Deq 0.71 m</b>.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="e-gpr" style="--c:var(--c-fracture)">
+        <h3>(e) GPR fracture mapping</h3>
+        <div class="tagline">Time-to-depth · dewow → migration → Hilbert energy · managed FFT</div>
+        <p>Turn a raw GPR B-scan into a fracture and cavity map, then into a quantified, uncertainty-bounded keep-out volume of intact rock, in dependency-light managed code.</p>
+        <div class="label">Citations</div>
+        <p>Cooley-Tukey 1965 (FFT) + Bluestein fallback; Taner/Koehler/Sheriff 1979 (Hilbert energy); Stolt 1978 (f-k migration); USGS Mirror Lake continuity; Kazhdan &amp; Hoppe 2013 (Poisson); Cressie 1993 / Rasmussen &amp; Williams 2006 (kriging).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Granite spine, real Grimsel ISC data (MALA GX160, CC-BY-4.0): granite_160 preset extracts <b>1472 picks (AU) / 1485 (VE)</b>.</li>
+          <li>Loviisa surface fractures (real ESRI Shapefile): reader returns <b>708 traces / 6483 vertices / 1593.5 m</b> in EPSG:3067, two conjugate sets near 15° and 105–120°.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="f-masonry" style="--c:var(--c-masonry)">
+        <h3>(f) Masonry CRA equilibrium and Λ / J metrics</h3>
+        <div class="tagline">Rigid-Block Equilibrium QP · Coupled Rigid-Block Analysis · Hungarian Λ</div>
+        <p>Decide whether a dry masonry assembly stands under self-weight, and measure how much an inventory of found stones must be carved to fit a target wall. RBE is the permissive force-only check; CRA couples statics with virtual kinematics and rejects self-stressed states RBE accepts (the H-model).</p>
+        <div class="label">Citations</div>
+        <p>Kao et al. 2022 (CAD 146:103216, clean-room; MIT compas_cra as structural model); Clifford &amp; McGee 2018 (interlock J); Frézier 1737 / Monge 1798 / Heyman 1966 / Rippmann &amp; Block 2011 (stereotomy).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>CRA vs compas_cra parity: <b>5/5</b> on exact ports incl. the H-model where RBE accepts and CRA correctly rejects. No "faster than" claim — their RBE beats ours on the arch (102–123 ms vs 159 ms).</li>
+          <li>Λ on 60 real ETH1100 stones: Hungarian shape-aware matcher lands <b>0.18–0.23</b> vs greedy/random 0.59–0.64 (~2.9×); flagship single-instance Λ = <b>0.194</b>, beating the Cyclopean datum of 0.27.</li>
+          <li>Voussoir coverage: arch 11/11 trims, 94.9%; pendentive vault 36/36 trims, 98.3%.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="g-edge" style="--c:var(--c-edgematch)">
+        <h3>(g) Edge-matching</h3>
+        <div class="tagline">5-stage deterministic: segment → hash → phase → ICP → beam</div>
+        <p>Fracture reassembly: recover the rigid motion that brings every mating boundary of broken pieces back into contact without interpenetration.</p>
+        <div class="label">Citations</div>
+        <p>Arkin et al. 1991 (turning-angle); Besl &amp; McKay 1992 (ICP); Kabsch 1976 + Umeyama 1991 (Procrustes); Myronenko &amp; Song 2010 (CPD soft-ICP); Horn 1987 (absolute orientation).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>R1 partial matching + R2 global non-overlap drove measured 2D overlap from 12–25% to <b>0%</b>, 8/8 placed, 100% coverage.</li>
+          <li>Projection bootstrap on a 6-shard fixture: 67 cross-panel 2D matches where the prior path had 0; placed 6/6 via agglomerative spanning tree (honest caveat: 2 of 5 interfaces in full contact).</li>
+        </ul>
+      </div>
+
+      <div class="area" id="h-kintsugi" style="--c:var(--c-kintsugi)">
+        <h3>(h) Kintsugi learned 6-DoF reassembly</h3>
+        <div class="tagline">Managed C# port of PuzzleFusion++ · non-commercial, quarantined</div>
+        <p>Recover each fragment's rigid 6-DoF pose so broken fragments snap back into the original solid, including the smooth fracture surfaces where the geometric matcher finds no rim correspondences.</p>
+        <div class="label">Citations</div>
+        <p>Wang/Chen/Furukawa 2025 (PuzzleFusion++, ICLR; arXiv:2406.00259); Qi et al. 2017 (PointNet++); van den Oord 2017 (VQ-VAE); Ho/Jain/Abbeel 2020 (DDPM); Vaswani 2017 + Peebles &amp; Xie 2023 (DiT). Trained on Breaking Bad (Sellan et al. 2022).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Example 14 live HITL: two Breaking Bad fragments reassembled at verifier pair score <b>0.7068</b> (STRONG, above the 0.5 gate), zero unplaced, 20 diffusion steps.</li>
+          <li>The geometric-only path places only 1 of 6 fragments on a smooth Voronoi sphere shatter — which motivates the learned path. Pure-C# denoiser drifts ~3–5% from libtorch.</li>
+          <li><b>License-critical:</b> port + weights (~255 MB) are non-commercial research-only, quarantined and absent from the default install.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="i-surface" style="--c:var(--c-surface)">
+        <h3>(i) Surface packing and BFF</h3>
+        <div class="tagline">Boundary First Flattening · barycentric inverse map · 10-step pipeline</div>
+        <p>Flatten a curved 3D stone surface to a planar chart, pack 2D parts into the chart, and lift them back onto the surface so a flat-cut tile field follows the surface and butts edge-to-edge in 3D. Load-bearing invariant: flat face i corresponds exactly to surface face i.</p>
+        <div class="label">Citations</div>
+        <p>Sawhney &amp; Crane 2017 (BFF, ACM TOG 36(4):109, shipped as external static exe); Floater 2003 (MVC, cited as background — no MVC code present).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Example 13 live-validated: a twisted monument (<b>130°</b> over its height) split into 6 regions, then a <b>176-shard</b> Trencadís mosaic mapped onto the curved surface through the BFF chart + barycentric inverse map.</li>
+          <li>The static BFF build folds 17 third-party DLLs into one 38 MB self-contained exe, byte-identical to upstream.</li>
+        </ul>
+      </div>
+
+      <div class="area" id="j-mesh" style="--c:var(--c-mesh)">
+        <h3>(j) Mesh and reconstruction</h3>
+        <div class="tagline">CGAL corefinement · out-of-process workers · managed fallback</div>
+        <p>Turn raw scan clouds and dirty meshes into clean, watertight, boolean-ready geometry, and do the heavy native geometry without crashing Rhino.</p>
+        <div class="label">Citations</div>
+        <p>Botsch et al. 2010 (PMP); Lindstrom &amp; Turk 1998 (decimation); Shapira et al. 2008 (SDF segmentation); Edelsbrunner &amp; Mücke 1994 / Kazhdan &amp; Hoppe 2013 / Cohen-Steiner &amp; Da (reconstruction); Geogram (BSD-3) + CGAL vendored; MeshCsg = csg.js port (MIT).</p>
+        <div class="label">Key results</div>
+        <ul>
+          <li>Advancing-front reconstruction out-of-process: <b>59,971 verts / 111,973 tris in 3.9 s</b>.</li>
+          <li>Statue-to-blocks recovered-volume identity ρ = <b>1.0000</b>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sec" id="datasets">
+      <h2>04</h2><div class="h">Datasets — real data drives the benchmarks</div>
+      <p class="body muted">Full provenance, DOIs and licences in <code>data/ATTRIBUTION.md</code>. Code is GPL-3.0; datasets carry their own upstream licences. Total bundle ~6.3 GB.</p>
+      <table class="t">
+        <thead><tr><th>Dataset</th><th>Source / DOI</th><th>Licence</th><th>Used by</th></tr></thead>
+        <tbody>
+          <tr><td>ETH1100 dry-stone (1100 meshes + labels)</td><td class="mono">Zenodo 10038881 (ETH Zürich)</td><td class="mono">CC-BY-4.0</td><td>2D/3D packing, masonry Λ</td></tr>
+          <tr><td>Tongjiang limestone quarry UAV clouds</td><td class="mono">Zenodo 15614501</td><td class="mono">CC-BY-4.0</td><td>discontinuity, reconstruction</td></tr>
+          <tr><td>Granite Dells TLS rock-face</td><td class="mono">OpenTopography OT.122010.26912.1</td><td class="mono">attribution</td><td>scan ingest, discontinuity</td></tr>
+          <tr><td>Grimsel ISC GPR (MALA GX160, granite)</td><td class="mono">DOI 10.3929/ethz-b-000420930</td><td class="mono">CC-BY-4.0</td><td>granite GPR fracture</td></tr>
+          <tr><td>Bonduà Botticino marble GPR grids</td><td class="mono">DOI 10.17632/w26n6nftxs.3</td><td class="mono">CC-BY-4.0</td><td>marble GPR, block-cut</td></tr>
+          <tr><td>TU1208 IFSTTAR multi-rock GPR</td><td class="mono">Zenodo 1211173</td><td class="mono">CC-BY</td><td>GPR reader validation</td></tr>
+          <tr><td>Loviisa rapakivi-granite fracture traces</td><td class="mono">Zenodo 7077494 (Chudasama 2022)</td><td class="mono">CC-BY-4.0</td><td>surface fracture example</td></tr>
+          <tr><td>Breaking Bad</td><td class="mono">Sellan et al. 2022</td><td class="mono">dataset terms</td><td>Kintsugi parity</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="sec" id="cite">
+      <h2>05</h2><div class="h">Cite &amp; reproduce</div>
+      <p class="body"><b>Cite:</b> use <code>CITATION.cff</code> (Libish Murugesan, ORCID 0009-0004-3238-4202; GPL-3.0-only; v0.1.0-alpha; a Zenodo DOI is minted for this release). The companion paper is submitted to the Bulletin of Engineering Geology and the Environment.</p>
+      <p class="body"><b>Reproduce:</b> build <code>dotnet build src/Frahan.StonePack.GH -c Release</code> (net48); test <code>tests/Frahan.StonePack.Tests</code> (<b>1034 PASS / 0 FAIL / 147 SKIP</b>, clean clone, headless); benchmarks via <code>tools/Frahan.StonePack.Harness --pack2dstudy</code>. Truth criterion is visual validation in Rhino/Grasshopper; examples under <code>examples/</code> are live-built at correct physical scale and reproduce on cold reopen.</p>
+      <footer class="foot2">
+        FRAHAN STONEPACK · v0.1.0-alpha · research preview · every quantitative claim names its source file<br>
+        Repository github.com/libishm1/Frahan · GPL-3.0 · companion paper Zenodo DOI 10.5281/zenodo.20608279
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script>
+  const links=[...document.querySelectorAll('aside.toc a')];
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){
+    links.forEach(l=>{ l.style.borderLeftColor='transparent'; l.style.color=''; });
+    const a=map[e.target.id]; if(a){ a.style.borderLeftColor='var(--c-masonry)'; a.style.color='var(--fg1)'; } } }); },{rootMargin:'-60px 0px -72% 0px'});
+  document.querySelectorAll('section.sec, .area').forEach(s=>{ if(s.id) obs.observe(s); });
+</script>
+</body>
+</html>
