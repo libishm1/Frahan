@@ -51,7 +51,9 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
         public List<double> DipDir = new List<double>();
         public List<double> Spacing = new List<double>();
         public List<int> FacetCount = new List<int>();
+        public List<double> Share = new List<double>();
         public List<Vector3d> _poles = new List<Vector3d>();
+        public string FacetsPath = "";
         public string Report = "";
         public bool Ok;
     }
@@ -67,6 +69,7 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
         pManager.AddIntegerParameter("Min set facets", "Ms", "Minimum facets per joint set.", GH_ParamAccess.item, 4);
         pManager.AddIntegerParameter("Max points", "Mx", "Work budget; clouds larger than this are stride-downsampled. Runs off-process so the canvas never blocks -- higher resolves more joint sets (6M ~ 10 s, full 8M ~ 15 s).", GH_ParamAccess.item, 6000000);
         pManager.AddBooleanParameter("Run", "R", "Set true to segment (runs off-process, async).", GH_ParamAccess.item, false);
+        pManager.AddBooleanParameter("Keep facets", "Kf", "Copy the worker's facets.csv (per-facet pole + set id) to a stable path and expose it on the 'Facets path' output, for the Stereonet + Block Size card.", GH_ParamAccess.item, false);
         pManager[0].Optional = true;
         pManager[1].Optional = true;
     }
@@ -80,6 +83,8 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
         pManager.AddNumberParameter("Spacing", "Sp", "Per-set mean normal spacing.", GH_ParamAccess.list);
         pManager.AddIntegerParameter("Facets/set", "Nf", "Per-set facet count.", GH_ParamAccess.list);
         pManager.AddTextParameter("Report", "Re", "Summary + timings.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Share", "Sh", "Per-set fraction of facet points (set dominance).", GH_ParamAccess.list);
+        pManager.AddTextParameter("Facets path", "Fp", "Path to the copied facets.csv (empty unless 'Keep facets' is true). Feed the Stereonet + Block Size card.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess da)
@@ -95,6 +100,7 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
             int minSf = 4; da.GetData(6, ref minSf);
             int maxPts = 6000000; da.GetData(7, ref maxPts);
             bool run = false; da.GetData(8, ref run);
+            bool keep = false; da.GetData(9, ref keep);
             if (!run) { TaskList.Add(Task.FromResult(new DiscResult { Ok = false, Report = "Run is false." })); return; }
 
             var worker = FindWorker();
@@ -103,9 +109,9 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
             // capture points (if a PointCloud was given) off the goo before the task
             List<Point3d> pts = goo != null ? ReadPoints(goo) : null;
             string capFile = file; int ck = Math.Max(6, k), cmf = Math.Max(10, minFp), cms = Math.Max(1, minSf), cmx = Math.Max(50000, maxPts);
-            double ca = ang, cb = bw;
+            double ca = ang, cb = bw; bool ckeep = keep;
 
-            TaskList.Add(Task.Run(() => RunWorker(worker, pts, capFile, ck, ca, cmf, cb, cms, cmx)));
+            TaskList.Add(Task.Run(() => RunWorker(worker, pts, capFile, ck, ca, cmf, cb, cms, cmx, ckeep)));
             return;
         }
 
@@ -122,11 +128,12 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
             int minSf = 4; da.GetData(6, ref minSf);
             int maxPts = 6000000; da.GetData(7, ref maxPts);
             bool run = false; da.GetData(8, ref run);
+            bool keep = false; da.GetData(9, ref keep);
             if (!run) { da.SetData(6, "Run is false."); return; }
             var w = FindWorker();
             if (w == null) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Worker exe not found."); da.SetData(6, "Worker not found."); return; }
             var pts = goo != null ? ReadPoints(goo) : null;
-            r = RunWorker(w, pts, file, Math.Max(6, k), ang, Math.Max(10, minFp), bw, Math.Max(1, minSf), Math.Max(50000, maxPts));
+            r = RunWorker(w, pts, file, Math.Max(6, k), ang, Math.Max(10, minFp), bw, Math.Max(1, minSf), Math.Max(50000, maxPts), keep);
         }
         if (r == null) return;
         if (!r.Ok)
@@ -142,11 +149,13 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
         da.SetDataList(4, r.Spacing);
         da.SetDataList(5, r.FacetCount);
         da.SetData(6, r.Report);
+        da.SetDataList(7, r.Share);
+        da.SetData(8, r.FacetsPath);
     }
 
     // ---- runs on a background thread; blocks only this task, not the canvas ----
     private static DiscResult RunWorker(string worker, List<Point3d> pts, string file,
-        int k, double ang, int minFp, double bw, int minSf, int maxPts)
+        int k, double ang, int minFp, double bw, int minSf, int maxPts, bool keepFacets = false)
     {
         string tmp = Path.Combine(Path.GetTempPath(), "frahan_disc_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tmp);
@@ -182,6 +191,16 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
 
             var res = ParseJson(File.ReadAllText(jsonPath));
             if (File.Exists(segPath)) res.Segmented = ReadSegPly(segPath);
+            // optionally keep facets.csv (the temp dir is deleted in finally)
+            if (keepFacets)
+            {
+                string facetsSrc = Path.Combine(tmp, "facets.csv");
+                if (File.Exists(facetsSrc))
+                {
+                    string stable = Path.Combine(Path.GetTempPath(), "frahan_facets_" + Guid.NewGuid().ToString("N") + ".csv");
+                    try { File.Copy(facetsSrc, stable, true); res.FacetsPath = stable; } catch { }
+                }
+            }
             // pole lines through the segmented-cloud centroid
             if (res.Segmented != null && res.Segmented.Count > 0)
             {
@@ -244,6 +263,7 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
             r.Dip.Add(D(1)); r.DipDir.Add(D(2));
             r._poles.Add(new Vector3d(D(3), D(4), D(5)));
             r.FacetCount.Add(int.Parse(m.Groups[6].Value));
+            r.Share.Add(D(7));
             r.Spacing.Add(D(8));
         }
         var rf = Regex.Match(json, @"\""facets\"":\s*(\d+),\s*\""sets\"":\s*(\d+)");

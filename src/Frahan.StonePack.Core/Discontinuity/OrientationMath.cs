@@ -45,6 +45,28 @@ public static class OrientationMath
 
     public static double Strike(double dipDirDeg) => (dipDirDeg - 90.0 + 360.0) % 360.0;
 
+    private const double D2R = Math.PI / 180.0;
+
+    // Inverse of DipDipDir: build the lower-hemisphere unit pole for a measured
+    // (dip, dipDir). Used by CSV / GeoJSON ingest where orientations are recorded
+    // as dip/dip-direction rather than a normal vector.
+    //
+    // DipDipDir reads the LOWER-hemisphere normal m (mz <= 0) as
+    //   dip = acos(|mz|),  dipDir = atan2(mx, my) mod 360.
+    // Inverting that requires mz = -cos(dip) (down), and the horizontal part
+    // aligned with the dip azimuth: (mx, my) = sin(dip) * (sin dipDir, cos dipDir).
+    // NB: this is NOT (.., .., +cos dip) folded — folding a +z normal negates the
+    // horizontal part too and yields a dipDir off by 180 deg. The z sign is the
+    // only thing that flips. LowerHemisphere() below is a safe normaliser /
+    // equator tie-break for the vertical (dip = 90) case.
+    public static Vector3d NormalFromDipDipDir(double dipDeg, double dipDirDeg)
+    {
+        double dip = dipDeg * D2R, dd = dipDirDeg * D2R;
+        double s = Math.Sin(dip);
+        var n = new Vector3d(s * Math.Sin(dd), s * Math.Cos(dd), -Math.Cos(dip));
+        return LowerHemisphere(n);
+    }
+
     // Acute angle (deg) between two orientations treated as AXES (n and -n equal).
     public static double AxialAngleDeg(Vector3d a, Vector3d b)
     {
