@@ -50,6 +50,14 @@ layer (study section 5B), relevant only when packing on real-world coordinates, 
 0-overlap packer crossing 80% with holes (82.0% oversub, 84.7% L+hole, 89.6% hard 3-hole).
 
 ![oversub bars](../../wiki/research/packing/figures/study_bars_oversub.png)
+
+![hole-aware h2h](../../wiki/research/packing/figures/fig_holepack_h2h.png)
+Hole-aware nesting (HoleNest / ContactNfpHoleNester) vs the OpenNest reference physics nester,
+independently shapely-validated (2026-06-13 h2h). HoleNest wins the rect fast-path (5.2 vs 71 ms)
+and the tight density contest (0.74 vs 0.56; 12 vs 9 placed) and matches validity everywhere; it
+trades slower general-irregular NFP time. Real packed sheets:
+![hole-aware layouts](../../wiki/research/packing/figures/holepack_layouts.png)
+
 ![3d volumetric](../../wiki/research/packing/figures/pack3d_volumetric.png)
 3D volumetric: Dlbf best-of-orientation 70.4% (vs 66.4% baseline); TreePackForest 37.2% (100% guillotine);
 masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.

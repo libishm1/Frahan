@@ -27,6 +27,14 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 | `12_trencadis/` | Trencadis mosaic (Catalog Pack, CVD-Lloyd + Hungarian) | broken-tile cladding panel | synthetic shards (in the .gh); MILLIMETERS, panel ~1100 mm |
 | `13_surface_mapping/` | twisted block -> CGAL split-by-angle -> Trencadis cladding | surfaces from a solid + surface mosaic | synthetic twisted monument (in the .gh); MILLIMETERS, 1.2x1.2x3.5 m |
 | `14_kintsugi/` | fractured-vessel reassembly (PuzzleFusion++ Port mode) | restoration on Breaking Bad parity data | `14_kintsugi/data/bb_sample_*.bin`; natural network scale (auto-scale off), point-cloud display |
+| `28_hole_nest/` | hole-aware 2D nesting (HoleNest / ContactNfpHoleNester) | pack parts INTO sheet-holes + part-holes, 0-overlap, deterministic | synthetic cut-list + holed sheet (in the .gh) |
+| `29_liveedge_floor/` | live-edge flooring from irregular outlines (classify -> match+scribe -> brick-bond) | wavy-river irregular-board layout | synthetic boards (in the .gh, C# Script comp) |
+| `30_discontinuity_sets/` | point cloud -> PCA normals -> FACETS facets -> Watson joint sets + stereonet | scan-to-joint-sets (Discontinuity Sets D5F10048) | `data/granite_dells_tls/` (clean granite) or `data/tongjiang/` |
+| `31_discontinuity_ingest/` | measured-orientation ingest (CSV/GeoJSON/DXF/SHP) -> stereonet + Palmstrom block size | bring field/Compass/DSE measurements into Frahan | derived orientation tables (in the folder) |
+| `32_scan_to_blocks/` | joint sets -> DFN bridge (D5F1004B/4C) -> BlockCutOpt Omni block yield | scan/DFN -> dimension-stone block packing | DFN from example 30 joint sets |
+
+> Examples 15-27 (statue-to-blocks, surface packers, voussoirs 21/22, slab/marble 23-25,
+> polygonal masonry 27) also ship in their folders; see `../docs/PERSONA_MAP.md` for the full map.
 
 ## Digital-fabrication entrypoint renders (examples 10-14)
 Built and solved live, then captured. Each is at correct per-application physical scale (meters for

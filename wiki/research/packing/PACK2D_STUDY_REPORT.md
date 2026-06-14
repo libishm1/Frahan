@@ -120,6 +120,26 @@ Nestings (bug-checked: red outline = out-of-sheet, red hatch = hole):
 ![bmode2](figures/study_V506_bmode2_ring_boundary.png)
 ![quality-sat](figures/study_V506_quality_saturated.png)
 
+### 3a. Hole-aware nesting evolution (HoleNest / ContactNfpHoleNester, 2026-06-12/13)
+
+This study (2026-06-06) covered the V506 / NFP-BLF lane. The hole-aware engine that grew out
+of it — **ContactNfpHoleNester (HoleNest)**, which packs parts INTO sheet-holes and part-holes,
+not just around them — was benchmarked head-to-head against the OpenNest reference physics
+nester. Diagrams (real placements + independently shapely-validated, regenerated 2026-06-14):
+
+![hole-aware h2h](figures/fig_holepack_h2h.png)
+
+Reference physics nester vs HoleNest on four instances (median ms log, independent density,
+parts placed; green = VALID). HoleNest wins the **rect fast-path** (5.2 ms vs 71 ms) and the
+**tight density contest** (0.74 vs 0.56; 12 vs 9 placed), **matches validity everywhere**, and
+trades slower general-irregular NFP time. The actual packed sheets it produces:
+
+![hole-aware layouts](figures/holepack_layouts.png)
+
+Red hatch = sheet-hole the packer must avoid; dashed = part cavities it fills into; green title
+= independently valid. Full write-up: `outputs/2026-06-13/twod_decision/THREE_WAY_HEAD_TO_HEAD.md`
+and `.../h2h/H2H_RESULTS.md`; math + timing: `outputs/2026-06-12/hole_packer_evolution/`.
+
 ## 4. Fabrication selection guide (tolerance / accuracy / speed)
 Pick by the job, not by a single number:
 

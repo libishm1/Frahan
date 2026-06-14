@@ -5,6 +5,11 @@ datasets for testing an automated joint-set / discontinuity-extraction
 worker (per-facet normals -> region-grow facets -> cluster joint sets by
 orientation + spacing).
 
+**Google Drive (staged sets + result JSONs + stereonets):**
+https://drive.google.com/drive/folders/1mDj1Z20BB70SrkjQKnU6O3kDbfuA-mcS
+(master `Frahan-data` > `Data`; the run outputs are under
+`Data/_discontinuity_analysis_2026-06-14/`). Per-set folders + sizes: `../data/DATA_ACCESS.md`.
+
 ## What the worker needs
 
 The discontinuity worker consumes **clean in-situ rock-face point clouds**:

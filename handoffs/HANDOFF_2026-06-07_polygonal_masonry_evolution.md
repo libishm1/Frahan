@@ -67,7 +67,9 @@ Full list: `handoffs/EXAMPLES_PUNCHLIST_2026-06-07.md`. Do not resume without us
 - **Migration 29** edge matching v2 -> `examples/29_edge_matching`. EdgeMatch Solve d5f10001 live. 3 cards.
   CAVEAT: set MinSegmentLength=0.3 on the no-match card (default 8.0 mm filters all mm-scale segments).
 - **Migration 30** blockcutopt A4 -> `examples/30_blockcutopt_validation`. BlockCutOpt Solve f2d0bc02 live,
-  A4 PASS (N=163). BLOCKER: live `.gitattributes` does NOT LFS-track `*.3dm`; the 19.4 + 44.7 MB result
+  A4 PASS (N=158, per the 2026-06-08 results.csv anchor run; a prior log recorded 163 — a ~3% float
+  round-trip on the re-exported fracture mesh, see scripts/paper/HANDOFF_PAPER_SUBMISSION.md).
+  BLOCKER: live `.gitattributes` does NOT LFS-track `*.3dm`; the 19.4 + 44.7 MB result
   `.3dm` would commit as raw blobs. Decide an LFS rule (HITL) before committing item 30.
 - **Heavy regens** (need the live Rhino slot): 01 stub, 03_gpr, 07 (not self-reproducible), 23/24 (no
   `.3dm`/`.gh`), 02 (no README/PNG). Drift: 12 (.3dm=100 shards vs README 28), 18 (height 1.95 vs 3.06 +

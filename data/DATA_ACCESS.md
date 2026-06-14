@@ -22,9 +22,17 @@ are never lost. Style: short sentences, no em dashes.
 | ETH1100 dry-stone | `eth1100/` | 113 MB | https://drive.google.com/drive/folders/1mcFl7oiyh4wQHyOlL6f_WLplxFRDQkfO | Zenodo 10038881 (ETH dry-stone, 1100 meshes + labels) |
 | Misc PLY | `misc_ply/` | 27 MB | https://drive.google.com/drive/folders/1imtAVqaAhjP9WQdFFmxi_oVfU4wRhg4b | assorted (see ATTRIBUTION.md) |
 | Marble grids | `marbles/` | 13 MB | https://drive.google.com/drive/folders/1HcSuWLGBWHSi5ewkqyeO_B4TtZnfNcrw | marble GPR grids (see ATTRIBUTION.md) |
-| Granite Dells TLS | `granite_dells_tls/` | 5.4 MB | https://drive.google.com/drive/folders/1OVqu7hzPF8__vR4rX2Res1LWd5VILBFS | OpenTopography / TLS (see ATTRIBUTION.md) |
+| Granite Dells TLS | `granite_dells_tls/` | 5.4 MB LAZ + 60 MB f32 PLY | https://drive.google.com/drive/folders/1OVqu7hzPF8__vR4rX2Res1LWd5VILBFS | OpenTopography OT.122010.26912.1 (clean in-situ granite; + discontinuity_result.json) |
 | Research reports | `research_reports/` | 80 KB | https://drive.google.com/drive/folders/1U03dm_ZZY5_-n8fNe4uh2UhFjL8FsNwO | curated reports |
 | Loviisa fracture maps | `loviisa/` | 2.1 MB | in-git (small, LFS) | Chudasama 2022 rapakivi-granite surface fracture traces, Zenodo 10.5281/zenodo.7077494, CC-BY 4.0 |
+| Finestrat rock slope | `finestrat/` | 62 MB | https://drive.google.com/drive/folders/1Y40u9sQgfxAW-WTqzPnmuPDOK1fHfjwh | Riquelme/DSE gypsum slope, Zenodo 7576524, CC-BY 4.0 (complete-face discontinuity demo) |
+| RockCloud-Align crops | `rockcloud_align/` | 200 KB sample (7.4 GB full) | https://drive.google.com/drive/folders/1vwat2M_KH_LOCi_YZnwfCy_-h4-5h0sc | Wang et al. RS 2025; registration benchmark (crops, not full faces) |
+
+The discontinuity-analysis outputs (result JSONs, stereonets, dataset README + catalog) live under the
+master folder's `Data/_discontinuity_analysis_2026-06-14/`:
+https://drive.google.com/drive/folders/13I5hiauANeryzL2OR3qXYzo2q9MOTfVC . The heavy clouds
+(`granite_dells_f32.ply` 60 MB, `finestrat_2011.txt` 62 MB, the 7.4 GB RockCloud-Align rar) upload
+separately. Full annotated catalog: `../docs/rockfaces_dataset.md`.
 
 Total ~6.3 GB on Drive plus the small in-git Loviisa shapefiles. Full provenance + licenses:
 `ATTRIBUTION.md` and `loviisa/DATASET.md`. Loviisa is small enough to live in git (LFS), so example 26

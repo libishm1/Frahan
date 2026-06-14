@@ -8,9 +8,10 @@ for all benchmarks + process results, no Grasshopper required.*
 
 A Rhino / Grasshopper plugin for stone-fabrication readiness: the bridge layer between design intent and
 machine-ready fabrication for dimension stone, monuments, and dry-stone masonry. It covers the pipeline
-GPR / scan -> fracture mapping -> 3D reconstruction -> block packing + cutting -> masonry assembly ->
-fabrication export, plus a research-grade algorithm library (2D/3D packing, no-fit-polygon nesting,
-block-cut optimization, masonry equilibrium, edge-matching, surface mosaicing).
+GPR / scan -> fracture mapping + point-cloud discontinuity / joint-set extraction -> 3D reconstruction ->
+discrete fracture network (DFN) -> block packing + cutting -> masonry assembly -> fabrication export, plus
+a research-grade algorithm library (2D/3D packing, hole-aware no-fit-polygon nesting, block-cut
+optimization, masonry equilibrium, edge-matching, surface mosaicing, joint-set + Baecher DFN).
 
 License: GPL-3.0 (see LICENSE). The plugin links `Frahan.Kintsugi.Port` (a GPL-3.0 port), so the whole
 distribution is GPL-3.0.
@@ -45,8 +46,9 @@ distribution is GPL-3.0.
 
 ## Results at a glance (no Grasshopper required)
 See [docs/results/RESULTS.md](docs/results/RESULTS.md) for the measured benchmark + process figures: the 2D
-stock-utilization study (evolved NFP-BLF crosses the 80% bar at 0 overlap with holes), the 3D volumetric
-ratios (Dlbf best-of-orientation 70.4%), the fracture recovery / block-packing captures, and the
+stock-utilization study (evolved NFP-BLF crosses the 80% bar at 0 overlap with holes), the hole-aware
+nester (HoleNest / ContactNfpHoleNester) head-to-head vs the OpenNest reference physics nester, the 3D
+volumetric ratios (Dlbf best-of-orientation 70.4%), the fracture recovery / block-packing captures, and the
 masonry/quarry decision. Test battery (2026-06-11): 1012 PASS / 0 FAIL / 131 SKIP from a clean clone
 (skips = Rhino-runtime + optional-dataset gates).
 

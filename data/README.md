@@ -18,5 +18,10 @@ Layout:
 - `geocrack/` — GeoCrack fracture dataset (digitisation / GeoFractNet).
 - `marbles/`, `misc_ply/` — Open3D Marbles + maintainer PLY assets.
 - `research_reports/` — market-study reports.
+- Rock-face / discontinuity clouds (joint-set extraction, Discontinuity Sets D5F10048):
+  Granite Dells AZ clean in-situ granite (OpenTopography OT.122010.26912.1), Finestrat gypsum
+  slope (Zenodo 7576524, CC-BY 4.0), RockCloud-Align registration crops (Wang et al. RS 2025).
+  Full annotated catalog of these + ~15 more: `../docs/rockfaces_dataset.md`. Google Drive +
+  per-set links: `DATA_ACCESS.md`.
 
 Total on-disk: ~6.3 GB.
