@@ -1,0 +1,319 @@
+```mermaid
+graph LR
+  subgraph 2D_Packing[2D Packing]
+    n0["2D Bottom Left Pack"]
+    n1["2D Freeform Sheet Pack"]
+    n2["2D Freeform Sheet Pack V3"]
+    n3["2D Irregular Sheet Pack"]
+    n4["2D NFP Pack"]
+    n5["CSV Parts Reader"]
+    n6["Frahan Residual Voids"]
+    n7["Frahan Sheet Pack (Unified Async)"]
+    n8["Frahan Sheet Pack (Unified)"]
+    n9["Freeform Sheet Nest"]
+    n10["Freeform Sheet Nest (Exact NFP)"]
+    n11["NFP Test"]
+    n12["Sheet Nest (Hole-Aware)"]
+  end
+  subgraph 3D_Packing[3D Packing]
+    n13["CoM In-Container Check"]
+    n14["Frahan Stone Descriptor"]
+    n15["Pack3D Irregular"]
+    n16["Pack3D Irregular Container"]
+    n17["Pack3D Mesh Heightmap"]
+    n18["Packed-Pile Stability"]
+    n19["Per-Stone Overlap"]
+    n20["Settle 3D (Physics)"]
+    n21["Validate Packed Transform"]
+  end
+  subgraph Analysis[Analysis]
+    n22["Frahan Boundary Rail Index"]
+    n23["Frahan Fragment Descriptors"]
+    n24["Frahan Fragment Edge Match"]
+  end
+  subgraph EdgeMatch[EdgeMatch]
+    n25["Adaptive Block Match 3D"]
+    n26["Block Chain Along Thrust Line"]
+    n27["Block Pair Match 3D"]
+    n28["Cyclopean Recipe Coursing"]
+    n29["EdgeMatch Options"]
+    n30["EdgeMatch Segments"]
+    n31["EdgeMatch Solve"]
+    n32["Live Edge Classify"]
+    n33["Live Edge Match"]
+    n34["Live Edge Stagger Layup"]
+    n35["Live Edge Trim"]
+    n36["Mesh Template Match"]
+    n37["Soft ICP 3D"]
+    n38["Template Block Match 3D"]
+  end
+  subgraph Fabricate[Fabricate]
+    n39["Fabrication Prep Report"]
+    n40["Frahan Monument Inventory"]
+    n41["G-code Parser"]
+    n42["G-code to Planes"]
+    n43["Planes to KUKAprc Commands"]
+    n44["Planes to Robot Targets"]
+    n45["Staggered Block Decompose"]
+    n46["Stone-Aware Cut Export"]
+    n47["Wire-Saw Toolpath"]
+  end
+  subgraph Fracture[Fracture]
+    n48["Brick-Pattern Fracture Planes"]
+    n49["Fracture Plane Filter"]
+    n50["Fracture Polygon From Curve"]
+    n51["Grid Fracture Planes"]
+    n52["Jittered Grid Fracture Planes"]
+    n53["Layered Fracture Planes"]
+    n54["Radial Fracture Planes"]
+    n55["Random Fracture Planes"]
+    n56["Slab Cut By Fracture Polygons"]
+    n57["Voronoi Fracture Planes"]
+  end
+  subgraph Ingest[Ingest]
+    n58["GPR File Loader"]
+    n59["GPR Picks From Points"]
+    n60["GPR Radargram Mesh"]
+    n61["Import Photo Markers"]
+    n62["Vector Fractures Loader"]
+  end
+  subgraph Kintsugi[Kintsugi]
+    n63["Contact Settle"]
+    n64["Fracture Roughen"]
+    n65["Frahan Fragment Shatter"]
+    n66["Frahan Kintsugi"]
+    n67["Load BB Sample"]
+    n68["Load Scan Fragments"]
+    n69["Synthetic Block"]
+  end
+  subgraph Lab[Lab]
+    n70["Download Frahan Data"]
+    n71["Frahan Pareto Front Inspector"]
+    n72["Mesh CSG (CGAL)"]
+    n73["Mesh Decimate (Geogram)"]
+    n74["Mesh Decompose (CoACD)"]
+    n75["Mesh Repair (Auto)"]
+  end
+  subgraph Masonry[Masonry]
+    n76["Ashlar Pack"]
+    n77["Ashlar Pack Options"]
+    n78["Assembly Preview"]
+    n79["Auto Interfaces"]
+    n80["Best Fit Pack"]
+    n81["Block Build Order"]
+    n82["Block Graph Coloring"]
+    n83["Block Ground Transforms"]
+    n84["Block Pack (Tree)"]
+    n85["Block Size Distribution"]
+    n86["Build Sequence JSON"]
+    n87["Build Step Preview"]
+    n88["Build-Order Stability Stream"]
+    n89["Cut Validation"]
+    n90["Fragment Merger"]
+    n91["IFC Export (Building)"]
+    n92["IFC Export (Stone Assembly)"]
+    n93["Masonry Assembly"]
+    n94["Masonry Block"]
+    n95["Masonry Stability (RBE)"]
+    n96["Masonry Stability Check"]
+    n97["Match Block Transform"]
+    n98["Mesh Planar Polygon Extractor"]
+    n99["Mesh Quality Report"]
+    n100["Pack Diagnostics"]
+    n101["Pack Preview"]
+    n102["Pick Place Frames"]
+    n103["Polygon Sanitize"]
+    n104["Polygonal Masonry Sequence"]
+    n105["Polygonal Masonry Sequence 3D"]
+    n106["Polygonal Wall (Generator)"]
+    n107["Robust Auto Interfaces"]
+    n108["Rubble Wall Settle"]
+    n109["Stone-Cell Match (Λ)"]
+    n110["Wall Frame"]
+  end
+  subgraph Mesh[Mesh]
+    n111["Bench From Mesh"]
+    n112["Clip Boxes By Mesh"]
+    n113["Cloud ICP"]
+    n114["Estimate Cloud Normals"]
+    n115["Frahan Mesh Diagnostics"]
+    n116["Frahan Mesh Repair"]
+    n117["Georeference"]
+    n118["Georeference (Align by Points)"]
+    n119["Load Cloud"]
+    n120["Load E57 Cloud"]
+    n121["Load Metashape Dense Cloud"]
+    n122["Load Photo Set"]
+    n123["Marker Registration"]
+    n124["Mesh AABB"]
+    n125["Mesh PCA"]
+    n126["Move to Origin"]
+    n127["Read LAS Cloud"]
+    n128["Read Metashape Project"]
+    n129["Sanitize Mesh"]
+    n130["Scan Read"]
+    n131["Scan Reconstruct"]
+    n132["Scan Scale Calibrate"]
+    n133["Stone Prep (Scan)"]
+    n134["Voxel Downsample"]
+  end
+  subgraph Quarry[Quarry]
+    n135["BlockCutOpt Extract Grid"]
+    n136["BlockCutOpt Load Fractures"]
+    n137["Box To Mesh"]
+    n138["Clean Scan Mesh"]
+    n139["Convex Hull Slab"]
+    n140["Discontinuity Ingest"]
+    n141["Discontinuity Sets (Async)"]
+    n142["Discontinuity Sets (Cloud)"]
+    n143["Fracture Block Pack"]
+    n144["Frahan GPR Radargram Reader"]
+    n145["Frahan Mixed-Size Block Pack 3D"]
+    n146["Frahan Photo Detect → PLY"]
+    n147["Frahan Quarry Inventory"]
+    n148["Frahan Slab Yield Optimizer"]
+    n149["GPR Bedrock Surface"]
+    n150["GPR Fracture Extract"]
+    n151["GPR Fracture Surfaces 3D"]
+    n152["GPR Fractures on Mesh"]
+    n153["Joint Set"]
+    n154["Joint Sets to DFN"]
+    n155["Mesh Shell Split"]
+    n156["Overburden To Rock Face"]
+    n157["Quarry DFN"]
+    n158["Quarry Decompose"]
+    n159["Quarry Decompose By CoACD"]
+    n160["Scan to Block Inventory"]
+    n161["Stereonet + Block Size"]
+    n162["Stochastic DFN (Baecher)"]
+  end
+  subgraph Reports[Reports]
+    n163["Frahan Packing Plan Report"]
+    n164["Frahan Packing Report"]
+    n165["Frahan Report / Export"]
+  end
+  subgraph Sculpt[Sculpt]
+    n166["Carving Stages"]
+    n167["Enlarge Sculpture"]
+    n168["Fit In Block"]
+  end
+  subgraph Slab[Slab]
+    n169["Slab Cut By Fractures"]
+    n170["Slab Cut By Tool Mesh (CGAL)"]
+    n171["Slab From Mesh"]
+    n172["Vertical Fracture Planes From Curves"]
+  end
+  subgraph Surface_Packing[Surface Packing]
+    n173["Frahan Chart Flatness Report"]
+    n174["Pack On Surface"]
+    n175["Pack Surfaces"]
+    n176["Surface Chart"]
+  end
+  subgraph Trencadis[Trencadis]
+    n177["Frahan Trencadís Catalog Pack"]
+    n178["Frahan Trencadís Dynamic Settle"]
+    n179["Frahan Trencadís EdgeMatch"]
+    n180["Frahan Trencadís Pack"]
+    n181["Frahan Trencadís Pipeline"]
+  end
+  subgraph Voussoir[Voussoir]
+    n182["Arch Voussoirs"]
+    n183["Pendentive Vault Voussoirs"]
+    n184["Voussoir Ingest"]
+    n185["Voussoir Pack Into Block"]
+    n186["Voussoir Stone Matcher"]
+  end
+  n0 --> n10
+  n1 --> n10
+  n2 --> n10
+  n3 --> n10
+  n9 --> n10
+  n12 --> n10
+  n15 --> n20
+  n15 --> n84
+  n16 --> n20
+  n16 --> n84
+  n17 --> n20
+  n17 --> n84
+  n27 --> n109
+  n29 --> n31
+  n29 --> n66
+  n32 --> n34
+  n33 --> n34
+  n34 --> n32
+  n35 --> n32
+  n35 --> n34
+  n59 --> n60
+  n59 --> n152
+  n60 --> n58
+  n60 --> n136
+  n63 --> n66
+  n63 --> n68
+  n69 --> n65
+  n69 --> n64
+  n69 --> n66
+  n70 --> n66
+  n71 --> n153
+  n71 --> n111
+  n71 --> n76
+  n71 --> n80
+  n72 --> n169
+  n72 --> n169
+  n72 --> n50
+  n72 --> n99
+  n72 --> n56
+  n72 --> n103
+  n72 --> n99
+  n72 --> n99
+  n72 --> n98
+  n72 --> n157
+  n72 --> n153
+  n73 --> n111
+  n73 --> n157
+  n73 --> n153
+  n73 --> n157
+  n73 --> n153
+  n74 --> n93
+  n74 --> n79
+  n75 --> n129
+  n75 --> n111
+  n79 --> n107
+  n95 --> n96
+  n108 --> n76
+  n108 --> n80
+  n108 --> n95
+  n118 --> n113
+  n118 --> n152
+  n118 --> n126
+  n126 --> n111
+  n126 --> n127
+  n129 --> n131
+  n129 --> n129
+  n129 --> n131
+  n138 --> n156
+  n138 --> n131
+  n140 --> n141
+  n140 --> n153
+  n141 --> n142
+  n142 --> n120
+  n144 --> n58
+  n144 --> n150
+  n145 --> n145
+  n149 --> n150
+  n149 --> n156
+  n149 --> n138
+  n150 --> n60
+  n150 --> n152
+  n150 --> n156
+  n152 --> n60
+  n152 --> n136
+  n152 --> n126
+  n154 --> n141
+  n154 --> n140
+  n154 --> n143
+  n161 --> n141
+  n162 --> n141
+  n162 --> n154
+  n172 --> n62
+  n172 --> n169
+```
