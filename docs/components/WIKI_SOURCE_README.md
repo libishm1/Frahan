@@ -18,6 +18,7 @@ Regenerate: `python extract_components.py` then `python make_icon_sheet.py`.
 | `connection_map.graphml` | The graph as GraphML | Import into yEd / Gephi / Cytoscape |
 | `ICON_LIBRARY.md` | Component->icon table + coverage (0 missing; 50 unused on disk) | Icon reference + cleanup list |
 | `icon_library_sheet.png` | Contact sheet of all 128 icons, labelled with usage | Icon gallery image |
+| `icons/` | The **128 individual icon PNGs** (the actual icons). Filename matches each component's `icon` field in `components.json` | Per-component icon images for the wiki/site |
 
 ## Counts
 - 187 components across 18 subcategories (Masonry 35, Quarry 28, Mesh 24, EdgeMatch 14,
