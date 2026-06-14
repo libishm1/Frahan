@@ -24,7 +24,7 @@ turn them into oriented Rhino planes coloured by set.
 | file | what | rows |
 |---|---|---|
 | `survey_discontinuities.csv` | synthetic field-compass survey (5 sets, jittered) | 26 measured planes |
-| `tongjiang_real_sets.csv` | the **real** 5 joint sets discovered from the Tongjiang scan (Example 30 output) | 5 sets |
+| `tongjiang_real_sets.csv` | the **real** joint sets discovered from the Tongjiang scan (Example 30 output, honest ISRM spacings) | 4 sets |
 
 Swap the `File` panel to `tongjiang_real_sets.csv` to ingest the real discovered
 orientations, or point it at your own export:

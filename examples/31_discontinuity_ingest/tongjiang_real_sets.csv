@@ -1,8 +1,7 @@
-# Tongjiang quarry — 5 joint sets discovered by Discontinuity Sets (Async) / CSR worker
-# real run 2026-06-14 on detail_cloudXB.ply (7,858,334 pts). dip,dipdir in degrees; x,y,z = set centroid proxy
+# Tongjiang quarry - real joint sets discovered by the CSR worker (full-res, ISRM spacing)
+# dip,dipdir deg; set id; spacing m (honest, no fudge); x,y,z = set index proxy
 dip,dipdir,set,x,y,z
-18.94,74.75,1,0,0,0
-49.55,323.13,2,5,0,0
-73.56,247.35,3,10,0,0
-45.41,19.45,4,15,0,0
-79.43,183.81,5,20,0,0
+19.30,35.41,1,0,0,0
+78.75,321.56,2,5,0,0
+72.27,245.27,3,10,0,0
+83.47,196.48,4,15,0,0

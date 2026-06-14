@@ -78,14 +78,17 @@ reload → Run → capture):
 joint set (5 set colours + grey unassigned); rendered the rock face coloured by set
 (`segmented_cloud_byset_clean.png`) and as oriented facet tiles.
 
-**Real datasets (the studies are data-driven, not preset):**
-| scan | points | joint sets |
+**Real datasets (data-driven, not preset; bw 14, honest ISRM spacing — see
+`SPACING_FIX.md`):**
+| scan | points | joint sets (spacing) |
 |---|---|---|
-| Tongjiang `detail_cloudXB.ply` | 7,858,334 | 5 (18.9/49.6/73.6/45.4/79.4) |
-| Tongjiang `detail_cloudAB.ply` | 6,857,772 | 6 (50.8/8.2/37.6/52.5/69.2/84.8) |
+| Tongjiang `detail_cloudXB.ply` | 7,858,334 | 4: dip 19/79/72/84, spacing 0.25/0.23/0.67/1.11 m |
+| Tongjiang `detail_cloudAB.ply` | 6,857,772 | 5: spacing 0.39/0.21/0.28/0.23/0.41 m |
 
-Each real exposure yields its own site-specific sets (`segmented_AB_byset.png`).
-LAZ scans (Granite Dells TLS) need a LAZ→PLY conversion first (laspy/CloudCompare).
+Each real exposure yields its own site-specific sets with decimeter spacings
+(`segmented_AB_byset.png`). LAZ scans (Granite Dells TLS) need a LAZ→PLY conversion
+first (laspy/CloudCompare). The earlier ×100 "unit scale" is removed — the worker now
+reports honest metres after the spacing-estimator fix.
 
 ## 5. Observations / follow-ups (non-blocking)
 - The reader's broad `catch (Exception)` swallows even environment-fatal errors
