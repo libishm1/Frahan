@@ -1,9 +1,20 @@
 # Rigorous DFN of the Tongjiang quarry face
 
-Date: 2026-06-14. A defensible discrete fracture network (DFN) for the real Tongjiang
+> ⚠️ **DATA-VALIDITY CAVEAT (added 2026-06-14): this scan is NOT a clean in-situ face.**
+> Edge-on and plan views show a **vegetated loose-rock slope / muck pile** (trees,
+> 74 % of points not on any coherent surface, a sloped mound rather than a vertical
+> bench). The "joint sets" extracted here are largely the orientations of **loose block
+> faces in a pile**, not an in-situ fracture network, so the **DFN / block-yield
+> interpretation below does NOT hold for dimension-stone extraction.** The methods
+> (Fisher κ, ISRM spacing, persistence clustering) are sound; the **input is invalid**
+> for this purpose. For the valid analysis on clean in-situ granite, see
+> **`CLEAN_GRANITE_DELLS.md`**. This file is kept as a method record + a cautionary
+> example of validating the input before interpreting.
+
+Date: 2026-06-14. A defensible discrete fracture network (DFN) for the Tongjiang
 quarry scan (`detail_cloudXB.ply`, 7.86 M pts), with every parameter **estimated from
 the scan**, finite persistence, and an honest uncertainty treatment — not the crude
-infinite-plane model.
+infinite-plane model. (See the validity caveat above.)
 
 ![DFN in the quarry](images/dfn_in_quarry.png)
 
