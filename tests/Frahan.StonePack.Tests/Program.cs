@@ -1347,6 +1347,9 @@ var tests = new List<(string Name, Action Body)>
     ("BlockCutOpt parallel matches serial and is faster (DFN)", BlockCutOptParallelTests.Parallel_MatchesSerial_AndIsFaster),
     // 2026-06-15 - Phase 4 evolution: Omni Pareto coarse-to-fine (12->3->0.5 deg) wired for real
     ("BlockCutOpt Omni coarse-to-fine: fewer evals, deterministic, near-optimal", BlockCutOptCoarseToFineParetoTests.CoarseToFine_FewerEvals_Deterministic_NearOptimal),
+    // 2026-06-15 - Phase A measure-debt: tests for real-but-untested quarry engines
+    ("Baecher DFN deterministic + P32 rises with intensity", QuarryDfnKrigingTests.Baecher_Deterministic_And_P32_RisesWithIntensity),
+    ("Kriging exact at samples + variance >= 0 + deterministic", QuarryDfnKrigingTests.Kriging_ExactAtSamples_VarianceNonNegative_Deterministic),
 
     // 2026-06-04 - GPR processing chain port (RadargramProcessor + FractureExtractor + Fft)
     ("GPR Fft forward/inverse round-trips", RadargramProcessingTests.Fft_ForwardInverse_RoundTrips),

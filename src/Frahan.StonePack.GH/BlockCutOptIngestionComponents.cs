@@ -34,11 +34,12 @@ namespace Frahan.GH.Quarry
         public FrahanPhotoToPlyComponent()
             : base(
                 "Frahan Photo Detect → PLY", "Photo2Ply",
-                "Run a fracture detector on a calibrated image and emit the " +
-                "vertical-extruded PLY consumable by BlockCutOpt. v1 backend " +
-                "is CsvFractureTraceSource: x1, y1, x2, y2 in world metres. " +
-                "Pair with GFNInfer to write the CSV from a GeoFractNet run, " +
-                "or hand-author the CSV from QGIS / AutoCAD digitisation.",
+                "v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2 " +
+                "in world metres) and emits the vertical-extruded PLY consumable by " +
+                "BlockCutOpt. The on-image fracture detector is not yet wired (the " +
+                "Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer " +
+                "to write the CSV from a GeoFractNet run, or hand-author the CSV from " +
+                "QGIS / AutoCAD digitisation.",
                 "Frahan", "Quarry")
         { }
 

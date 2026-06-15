@@ -325,9 +325,18 @@ public sealed class GeogramTetQuarryDecomposeComponent : FrahanComponentBase
         }
         catch (Exception ex)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                $"Tet decompose: {ex.GetType().Name}: {ex.Message}");
-            da.SetData(3, $"FAILED: {ex.Message}");
+            // The default Geogram shim ships with GEOGRAM_WITH_TETGEN=OFF, so
+            // Tetrahedralize returns rc=-210. Surface that as actionable guidance
+            // (a default-throwing ribbon node is worse than a clear redirect).
+            string m = ex.Message ?? "";
+            bool backendOff = m.IndexOf("210", StringComparison.Ordinal) >= 0
+                || m.IndexOf("tetgen", StringComparison.OrdinalIgnoreCase) >= 0;
+            string msg = backendOff
+                ? "Tetrahedralisation backend not built (the Geogram shim needs GEOGRAM_WITH_TETGEN=ON). " +
+                  "Use 'Quarry Decompose By CoACD' (nearly-convex) or 'By Voronoi' (cell partition) instead."
+                : $"Tet decompose: {ex.GetType().Name}: {ex.Message}";
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, msg);
+            da.SetData(3, $"UNAVAILABLE: {msg}");
         }
     }
 
