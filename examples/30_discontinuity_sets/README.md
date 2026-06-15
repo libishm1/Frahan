@@ -25,6 +25,28 @@ Grasshopper components.
 The **Segmented** output is the scanned rock coloured by which joint set each point
 belongs to. This is the headline view for a quarry geologist: the wall, colour-coded.
 
+### Bundled segmentation results (open in Rhino, no run needed)
+
+The pre-computed colour-by-set clouds are bundled so you can see the segmentation without running
+the worker. `File > Import` any of these into Rhino (they carry per-point colours, one colour per
+joint set, grey = unassigned).
+
+**Clean in-situ rock faces (the showcases):**
+
+| Granite Dells AZ — clean granite, 3 sets | RockCloud-Align — real rock-face crop |
+|---|---|
+| ![Granite Dells](30_segmentation_granite_dells.jpg) | ![RockCloud-Align](30_segmentation_rockalign.jpg) |
+| `30_segmented_granite_dells_decim.ply` | `30_segmented_rockalign.ply` |
+
+Granite Dells is the textbook in-situ granite case: one sub-horizontal sheeting set (red) plus two
+near-vertical sets (blue / olive), each rock face segmenting crisply. RockCloud-Align is a real
+exposed-rock-face scan crop. These are the valid in-situ exposures, the headline view for a quarry
+geologist: the wall, colour-coded by joint set.
+
+**Cautionary sample (the bundled input):** the Tongjiang detail scan
+(`30_segmented_tongjiang_decim.ply`) is a loose-rock muck pile, not an in-situ face, so it
+exercises the worker end to end but is not a valid dimension-stone deposit. Its per-set segmentation:
+
 | Tongjiang detail_cloudXB — 4 sets | Tongjiang detail_cloudAB — 5 sets |
 |---|---|
 | ![XB](segmentation_tongjiang_XB.png) | ![AB](segmentation_tongjiang_AB.png) |
