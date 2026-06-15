@@ -84,7 +84,11 @@ public sealed class BedBlockLayoutComponent : FrahanComponentBase
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
     {
-        p.AddBoxParameter("Blocks", "B", "Placed dimension blocks (Boxes), bed-bounded.", GH_ParamAccess.list);
+        p.AddMeshParameter("Blocks", "B",
+            "Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top " +
+            "face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no " +
+            "block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes.",
+            GH_ParamAccess.list);
         p.AddTextParameter("Class", "C", "Catalogue class (A/B/C/D...) of each block, aligned to Blocks.", GH_ParamAccess.list);
         p.AddNumberParameter("Volume", "V", "Total recovered block volume (m3).", GH_ParamAccess.item);
         p.AddNumberParameter("Net Value", "Net", "Net value (USD) = block sale price - diamond-saw cut cost.", GH_ParamAccess.item);
@@ -122,54 +126,125 @@ public sealed class BedBlockLayoutComponent : FrahanComponentBase
         double x0 = bb.Min.X, y0 = bb.Min.Y, Wx = bb.Max.X - bb.Min.X, Wy = bb.Max.Y - bb.Min.Y;
         double zTopBench = bb.Max.Z, zBotBench = bb.Min.Z;
 
-        // per-bed mean / shallowest(maxZ) / deepest(minZ), sorted shallow (z high) -> deep (z low)
-        var bedStats = beds.Select(m => {
-            var b = m.GetBoundingBox(true);
-            double mean = 0; int nv = m.Vertices.Count;
-            for (int i = 0; i < nv; i++) mean += m.Vertices[i].Z;
-            mean = nv > 0 ? mean / nv : (b.Min.Z + b.Max.Z) / 2;
-            return new { Mean = mean, ShallowZ = b.Max.Z, DeepZ = b.Min.Z };
-        }).Where(s => s.Mean < zTopBench - 1e-6 && s.Mean > zBotBench + 1e-6)
-          .OrderByDescending(s => s.Mean).ToList();
-
-        // build layers (zTop, thickness)
-        var layers = new List<(double zTop, double thicknessM)>();
-        var rpt = new System.Text.StringBuilder();
-        rpt.AppendLine($"bench {Wx:0.##} x {Wy:0.##} x {(zTopBench - zBotBench):0.##} m | beds {bedStats.Count} | " +
-                       $"{(oblique ? "OBLIQUE (bed-following)" : "FLAT (dip-safe)")} | W={W:0} cut=${cut:0}/m2 keepout={keepout:0.###}m");
-        if (oblique)
+        // --- sample each bed onto a common grid -> single-valued height field (shallow -> deep) ---
+        int gr = 30;
+        int Nx = Wx >= Wy ? gr : Math.Max(4, (int)Math.Round(gr * Wx / Wy));
+        int Ny = Wy >= Wx ? gr : Math.Max(4, (int)Math.Round(gr * Wy / Wx));
+        double SampleBed(Mesh m, double gx, double gy)
         {
-            double prev = zTopBench;
-            foreach (var s in bedStats) { layers.Add((prev - keepout, (prev - keepout) - (s.Mean + keepout))); prev = s.Mean; }
-            layers.Add((prev - keepout, (prev - keepout) - zBotBench));
+            var ray = new Ray3d(new Point3d(gx, gy, zTopBench + 2.0), new Vector3d(0, 0, -1));
+            double t = Rhino.Geometry.Intersect.Intersection.MeshRay(m, ray);
+            if (t >= 0) return ray.PointAt(t).Z;
+            var mp = m.ClosestMeshPoint(new Point3d(gx, gy, (zTopBench + zBotBench) * 0.5), 0.0);
+            return mp != null ? m.PointAt(mp).Z : (zTopBench + zBotBench) * 0.5;
         }
-        else // flat dip-safe: top = deepest of upper bed, bottom = shallowest of lower bed
+        double[,] HField(Mesh m)
         {
-            double prevDeep = zTopBench;
-            foreach (var s in bedStats) { layers.Add((prevDeep - keepout, (prevDeep - keepout) - (s.ShallowZ + keepout))); prevDeep = s.DeepZ; }
-            layers.Add((prevDeep - keepout, (prevDeep - keepout) - zBotBench));
+            var h = new double[Nx, Ny];
+            for (int i = 0; i < Nx; i++) for (int j = 0; j < Ny; j++)
+                h[i, j] = SampleBed(m, x0 + Wx * i / (Nx - 1), y0 + Wy * j / (Ny - 1));
+            return h;
+        }
+        double FieldMean(double[,] h) { double s = 0; foreach (var v in h) s += v; return s / (Nx * Ny); }
+        // bilinear sample of a height field at world (gx, gy)
+        double SampleField(double[,] h, double gx, double gy)
+        {
+            double fx = (gx - x0) / Wx * (Nx - 1), fy = (gy - y0) / Wy * (Ny - 1);
+            int i0 = Math.Max(0, Math.Min(Nx - 2, (int)Math.Floor(fx)));
+            int j0 = Math.Max(0, Math.Min(Ny - 2, (int)Math.Floor(fy)));
+            double tx = Math.Max(0, Math.Min(1, fx - i0)), ty = Math.Max(0, Math.Min(1, fy - j0));
+            return (1 - tx) * (1 - ty) * h[i0, j0] + tx * (1 - ty) * h[i0 + 1, j0]
+                 + (1 - tx) * ty * h[i0, j0 + 1] + tx * ty * h[i0 + 1, j0 + 1];
+        }
+
+        var fields = beds.Select(m => { var h = HField(m); return new { H = h, Mean = FieldMean(h) }; })
+                         .Where(f => f.Mean < zTopBench - 1e-6 && f.Mean > zBotBench + 1e-6)
+                         .OrderByDescending(f => f.Mean).ToList();
+
+        // boundary fields: bench top (flat), each bed, bench bottom (flat). Layer k = bounds[k]..bounds[k+1].
+        var topFlat = new double[Nx, Ny]; var botFlat = new double[Nx, Ny];
+        for (int i = 0; i < Nx; i++) for (int j = 0; j < Ny; j++) { topFlat[i, j] = zTopBench; botFlat[i, j] = zBotBench; }
+        var bounds = new List<double[,]> { topFlat };
+        foreach (var f in fields) bounds.Add(f.H);
+        bounds.Add(botFlat);
+
+        var rpt = new System.Text.StringBuilder();
+        rpt.AppendLine($"bench {Wx:0.##} x {Wy:0.##} x {(zTopBench - zBotBench):0.##} m | beds {fields.Count} | " +
+                       $"{(oblique ? "OBLIQUE (bed-following hexahedra, dip-tilted)" : "FLAT (axis-aligned)")} | " +
+                       $"W={W:0} cut=${cut:0}/m2 keepout={keepout:0.###}m");
+
+        // representative flat layers fed to the catalogue packer (the tiling decision); the blocks are
+        // then SHEARED to the actual bed fields below.
+        var layers = new List<(double zTop, double thicknessM)>();
+        for (int k = 0; k < bounds.Count - 1; k++)
+        {
+            double zt = FieldMean(bounds[k]) - (k > 0 ? keepout : 0);
+            double zbm = FieldMean(bounds[k + 1]) + (k < bounds.Count - 2 ? keepout : 0);
+            layers.Add((zt, zt - zbm));
         }
 
         var opt = new CatalogueLayoutOptions { VolumeWeightW = W, CutUsdPerM2 = cut, KerfM = 0.0 };
         var result = CatalogueBlockLayout.Pack(layers, x0, y0, Wx, Wy, catalogue, opt);
 
-        var boxes = new List<Box>(result.Blocks.Count);
+        // build each block: OBLIQUE -> a sheared hexahedron whose top rides the upper bed and bottom the
+        // lower bed (sampled at the 4 footprint corners), so it tilts with the dip and never crosses a bed.
+        // FLAT -> a flat box. Economics recomputed on the ACTUAL recovered volume (oblique recovers the wedge).
+        var meshes = new List<Mesh>(result.Blocks.Count);
         var classes = new List<string>(result.Blocks.Count);
+        var price = catalogue.ToDictionary(b => b.Name, b => b.PricePerM3);
+        double totVol = 0, gross = 0, cutArea = 0;
         foreach (var pb in result.Blocks)
         {
-            var b = new Box(Plane.WorldXY, new Interval(pb.X, pb.X + pb.Lx),
-                new Interval(pb.Y, pb.Y + pb.Ly), new Interval(pb.Z, pb.Z + pb.Lz));
-            boxes.Add(b); classes.Add(pb.ClassName);
+            int li = Math.Max(0, Math.Min(bounds.Count - 2, pb.LayerIndex));
+            var up = bounds[li]; var lo = bounds[li + 1];
+            double upKO = li > 0 ? keepout : 0, loKO = li < bounds.Count - 2 ? keepout : 0;
+            double[] cx = { pb.X, pb.X + pb.Lx, pb.X + pb.Lx, pb.X };
+            double[] cy = { pb.Y, pb.Y, pb.Y + pb.Ly, pb.Y + pb.Ly };
+            var top = new double[4]; var bot = new double[4];
+            for (int c = 0; c < 4; c++)
+            {
+                if (oblique)
+                {
+                    double zt = SampleField(up, cx[c], cy[c]) - upKO;
+                    double zb = SampleField(lo, cx[c], cy[c]) + loKO;
+                    if (zt < zb + 0.03) zt = zb + 0.03;
+                    top[c] = zt; bot[c] = zb;
+                }
+                else { top[c] = pb.Z + pb.Lz; bot[c] = pb.Z; }
+            }
+            meshes.Add(Hexahedron(cx, cy, top, bot));
+            classes.Add(pb.ClassName);
+            double meanThk = ((top[0] - bot[0]) + (top[1] - bot[1]) + (top[2] - bot[2]) + (top[3] - bot[3])) / 4.0;
+            double vol = pb.Lx * pb.Ly * meanThk;
+            totVol += vol; gross += vol * (price.TryGetValue(pb.ClassName, out var pr) ? pr : 0);
+            cutArea += 2.0 * (pb.Lx * pb.Ly + (pb.Lx + pb.Ly) * meanThk);
         }
+        double cutUsd = cut * cutArea, net = gross - cutUsd;
         string mix = string.Join(", ", result.Mix.OrderBy(k => k.Key).Select(k => $"{k.Key}:{k.Value}"));
-        rpt.AppendLine($"-> {result.BlockCount} blocks, {result.TotalVolumeM3:0.##} m3, " +
-                       $"gross ${result.GrossUsd:0}, cut ${result.CutUsd:0}, NET ${result.NetUsd:0} | mix {{{mix}}}");
+        rpt.AppendLine($"-> {result.BlockCount} blocks, {totVol:0.##} m3, gross ${gross:0}, cut ${cutUsd:0}, " +
+                       $"NET ${net:0} | mix {{{mix}}}");
 
-        da.SetDataList(0, boxes);
+        da.SetDataList(0, meshes);
         da.SetDataList(1, classes);
-        da.SetData(2, result.TotalVolumeM3);
-        da.SetData(3, result.NetUsd);
+        da.SetData(2, totVol);
+        da.SetData(3, net);
         da.SetData(4, result.BlockCount);
         da.SetData(5, rpt.ToString().TrimEnd());
+    }
+
+    // Closed sheared hexahedron from 4 footprint corners (cx,cy) with per-corner top + bottom Z.
+    private static Mesh Hexahedron(double[] cx, double[] cy, double[] top, double[] bot)
+    {
+        var m = new Mesh();
+        for (int c = 0; c < 4; c++) m.Vertices.Add(cx[c], cy[c], top[c]);   // 0..3 top (CCW)
+        for (int c = 0; c < 4; c++) m.Vertices.Add(cx[c], cy[c], bot[c]);   // 4..7 bottom
+        m.Faces.AddFace(0, 1, 2, 3);       // top  (+Z out)
+        m.Faces.AddFace(4, 7, 6, 5);       // bottom (-Z out)
+        m.Faces.AddFace(0, 4, 5, 1);       // y-min wall (-Y out)
+        m.Faces.AddFace(1, 5, 6, 2);       // x-max wall (+X out)
+        m.Faces.AddFace(2, 6, 7, 3);       // y-max wall (+Y out)
+        m.Faces.AddFace(3, 7, 4, 0);       // x-min wall (-X out)
+        m.RebuildNormals(); m.UnifyNormals(); m.Compact();
+        return m;
     }
 }
