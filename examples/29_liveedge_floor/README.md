@@ -63,6 +63,6 @@ the brick-bond stagger sequencer are original 2D logic built for this workflow. 
 the exact fragment reassembler (`Frahan.EdgeMatching.AssemblySolver`): that targets exact jigsaw
 reassembly with a tight residual gate and a penetration rejection, which is the wrong objective for
 approximate live-edge matching with a trim allowance. Material practice references: scribe-and-fill / river
-gap-fill and brick-bond staggered layup (standard live-edge and plank-flooring methods). See the full study
-at `../../../code_ws/outputs/2026-06-13/liveedge_research/LIVE_EDGE_FLOORING_RESEARCH.md` and the debug
-handoff at `../../../code_ws/outputs/2026-06-13/edgematch_debug/HANDOFF_EDGE_MATCHING.md`.
+gap-fill and brick-bond staggered layup (standard live-edge and plank-flooring methods). The full
+live-edge flooring study and the edge-matching debug handoff are kept in the project research archive
+(development-side, not bundled with this repo).

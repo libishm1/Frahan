@@ -59,32 +59,32 @@ research-only assembly, so the default install links no copyleft code.
 
 ### Front matter
 
-- [Chapter 0 — Repository Overview and Cross-Cutting Foundations](00_overview.md)
+- [Chapter 0 — Repository Overview and Cross-Cutting Foundations](thesis/00_overview.md)
 
 ### Chapters
 
-- [01. Two-Dimensional Nesting and Trencadís](chapters/01_two-d-nesting.md)
-- [02. Three-Dimensional Packing and Settling](chapters/02_three-d-packing.md)
-- [03. Quarry Block-Cutting Optimization](chapters/03_quarry-blockcut.md)
-- [03b. Point-Cloud Discontinuity Extraction, Joint Sets, and the DFN](chapters/03b_discontinuity-dfn.md)
-- [04. GPR Fracture and Cavity Mapping](chapters/04_gpr-fracture.md)
-- [05. Masonry Equilibrium and Cyclopean Reassembly (CRA)](chapters/05_masonry-cra.md)
-- [06. Voussoir Geometry and Stereotomy](chapters/06_voussoir-stereotomy.md)
-- [07. Surface Packing and Conformal Unwrapping](chapters/07_surface-packing.md)
-- [08. Edge-Matching and Fragment Reassembly](chapters/08_edge-matching.md)
-- [09. Kintsugi and Learned 6-DoF Pose](chapters/09_kintsugi-pose.md)
-- [10. Mesh Processing and Surface Reconstruction](chapters/10_mesh-reconstruction.md)
-- [11. Fabrication, Sculpting and Carving](chapters/11_fabrication-sculpt.md)
-- [12. Data Ingestion and Format Readers](chapters/12_ingestion.md)
-- [13. Lab, Analysis and Reporting](chapters/13_lab-reports.md)
-- [14. Workflow Architecture and Data-Flow Connections](chapters/14_workflow-architecture.md)
-- [15. Evolution: From Baselines to the Current System](chapters/15_evolution.md)
+- [01. Two-Dimensional Nesting and Trencadís](thesis/chapters/01_two-d-nesting.md)
+- [02. Three-Dimensional Packing and Settling](thesis/chapters/02_three-d-packing.md)
+- [03. Quarry Block-Cutting Optimization](thesis/chapters/03_quarry-blockcut.md)
+- [03b. Point-Cloud Discontinuity Extraction, Joint Sets, and the DFN](thesis/chapters/03b_discontinuity-dfn.md)
+- [04. GPR Fracture and Cavity Mapping](thesis/chapters/04_gpr-fracture.md)
+- [05. Masonry Equilibrium and Cyclopean Reassembly (CRA)](thesis/chapters/05_masonry-cra.md)
+- [06. Voussoir Geometry and Stereotomy](thesis/chapters/06_voussoir-stereotomy.md)
+- [07. Surface Packing and Conformal Unwrapping](thesis/chapters/07_surface-packing.md)
+- [08. Edge-Matching and Fragment Reassembly](thesis/chapters/08_edge-matching.md)
+- [09. Kintsugi and Learned 6-DoF Pose](thesis/chapters/09_kintsugi-pose.md)
+- [10. Mesh Processing and Surface Reconstruction](thesis/chapters/10_mesh-reconstruction.md)
+- [11. Fabrication, Sculpting and Carving](thesis/chapters/11_fabrication-sculpt.md)
+- [12. Data Ingestion and Format Readers](thesis/chapters/12_ingestion.md)
+- [13. Lab, Analysis and Reporting](thesis/chapters/13_lab-reports.md)
+- [14. Workflow Architecture and Data-Flow Connections](thesis/chapters/14_workflow-architecture.md)
+- [15. Evolution: From Baselines to the Current System](thesis/chapters/15_evolution.md)
 
 ### Back matter
 
-- [Originality Matrix](90_originality.md)
-- [What Is Left: Roadmap](91_roadmap.md)
-- [Consolidated Bibliography](99_references.md)
+- [Originality Matrix](thesis/90_originality.md)
+- [What Is Left: Roadmap](thesis/91_roadmap.md)
+- [Consolidated Bibliography](thesis/99_references.md)
 
 ---
 

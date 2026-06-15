@@ -20,8 +20,8 @@ boundary is preserved, not because the code is wrong.
 | Subsystem | Item | Action |
 |---|---|---|
 | Licensing (E1) | Kintsugi / PuzzleFusion++ is NON-COMMERCIAL, not plain GPL; covers the ported C# and the ~255 MB `kintsugi.bin` weights. | Keep Kintsugi as a separately distributed, optional, research-only package outside the default install; verify root LICENSE, port README, and any repo-root statement say research-only non-commercial, not plain GPL. |
-| Licensing | Root LICENSE is a placeholder header, not full GPL text, while the dist links Kintsugi.Port. | Replace root LICENSE with canonical `gpl-3.0.txt`; isolate Kintsugi.Port behind a separate build so the rest can be relicensed if desired. |
-| Licensing (spec 16) | No `THIRD_PARTY_NOTICES.md` and no `frahan_reference_register.md` at audit time; BFF + SuiteSparse + OpenBLAS + GFortran, csg.js, NTS, laszip.net, pye57, and any copied source lack attribution rows; per-file SPDX headers missing on copied source. | Create `THIRD_PARTY_NOTICES.md` (one row per dependency) and `docs/index/frahan_reference_register.md`, with per-file SPDX headers on copied source, before external review. |
+| Licensing (RESOLVED 2026-06-15) | Root LICENSE is now full canonical GPL-3.0 text; the dist links Kintsugi.Port (research-only). | DONE. |
+| Licensing (spec 16, PARTIAL 2026-06-15) | `THIRD_PARTY_NOTICES.md` now exists (BFF, CGAL, GMP, Geogram, CoACD, Bullet, Clipper2, NTS, PuzzleFusion++, csg.js). STILL OPEN: SuiteSparse / OpenBLAS / libgfortran rows for the static BFF exe; `docs/index/frahan_reference_register.md` not yet created; per-file SPDX headers on copied source. | Add the remaining notice rows + create the reference register before external review. |
 
 ---
 

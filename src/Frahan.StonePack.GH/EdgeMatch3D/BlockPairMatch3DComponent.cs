@@ -62,8 +62,8 @@ public sealed class BlockPairMatch3DComponent : FrahanComponentBase
 {
     public BlockPairMatch3DComponent()
         : base("Block Pair Match 3D", "BlkMatch3D",
-            "SKELETON: the full face-pair search is not implemented yet; the " +
-            "current build scores candidates with an AABB-containment proxy. " +
+            "First-cut matcher: VSA segmentation + plane-to-plane mating scored by sampled " +
+            "Hausdorff distance. The full exhaustive face-pair search is a planned refinement. " +
             "For a practically-tested matcher use Stone-Cell Match (Λ) " +
             "(ETH1100 Lambda=0.194, card 27_07). " +
             "Atomic 3D edge-matching primitive: given two scanned stone meshes, " +
@@ -80,7 +80,7 @@ public sealed class BlockPairMatch3DComponent : FrahanComponentBase
     public override Guid ComponentGuid =>
         new Guid("D5F10008-ED9E-4ED9-A008-ED9EED9E0008");
 
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.hidden;  // first-cut matcher; hidden to match the two sibling 3D stubs
 
     protected override Bitmap Icon => IconProvider.Load("EdgeMatchSolve.png"); // reuse until 3D icon ships
 

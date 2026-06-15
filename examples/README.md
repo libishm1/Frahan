@@ -50,7 +50,7 @@ scale + tolerance basis.
 | Surfaces from a solid | Trencadis on the twist | Kintsugi reassembly |
 |---|---|---|
 | ![surf](13_surface_mapping/13_surface_segments.png) | ![clad](13_surface_mapping/13_surface_trencadis.png) | ![kintsugi](14_kintsugi/14_kintsugi_result.png) |
-| 6 surfaces (CGAL angle split) | 408 shards, 4 mm grout | 2/2 placed, verifier 0.71 |
+| 6 surfaces (CGAL angle split) | 176 shards, 4 mm grout | 2/2 placed, verifier 0.71 |
 
 ## Data freshness (the links)
 All datasets are in `../data/` with provenance in `../data/ATTRIBUTION.md`. The blobs are staged on disk

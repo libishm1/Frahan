@@ -13,7 +13,7 @@ using Rhino.Geometry;
 namespace Frahan.GH;
 
 /// <summary>
-/// Skeleton GH component for the Trencadís packer (F-2D-002).
+/// GH component for the Trencadís packer (F-2D-002).
 ///
 /// Trencadís is the "broken-tile" mosaic technique (Gaudí). Pieces
 /// overlap slightly and get chipped (boolean-differenced) to fit;
@@ -29,10 +29,9 @@ namespace Frahan.GH;
 ///   • The user wants a one-click "trencadís mode" without having to
 ///     remember which V506 inputs to set. UX is the deliverable.
 ///
-/// Status (2026-05-06): SKELETON. Inputs/outputs registered, solver
-/// returns an empty result with a "not implemented" report. See
-/// <see cref="TrencadisFill"/> TODO list for the implementation
-/// roadmap.
+/// Status: implemented and Run-gated. The solver places overlapping pieces,
+/// boolean-trims the overlaps, and emits trimmed curves + placement transforms
+/// (see SolveSafe). Example 12 demonstrates the related Catalog Pack variant.
 /// </summary>
 [Algorithm("Trencadis greedy pack basic", "Gaudi Park Guell broken-tile mosaic technique")]
 [Algorithm("NFP boundary slide", "Minkowski-difference arc-length sampler")]
@@ -49,7 +48,7 @@ public sealed class Pack2DTrencadisComponent : FrahanComponentBase
             "pieces with bounded overlap, then boolean-differences " +
             "the overlapping bits so pieces butt edge-to-edge with " +
             "characteristic chipped fits. Optional grout offset leaves " +
-            "the mortar gap. SKELETON — returns empty result.",
+            "the mortar gap. Run-gated (set Run=true to pack).",
             "Frahan", "Trencadis")
     {
     }

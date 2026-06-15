@@ -788,7 +788,7 @@ Related:
 
 - GUID: `D5F10008-ED9E-4ED9-A008-ED9EED9E0008`  |  icon: `EdgeMatchSolve.png`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/BlockPairMatch3DComponent.cs`
 - Algorithm: **Variational Shape Approximation (face partitioning)** - Cohen-Steiner, Alliez, Desbrun 2004 SIGGRAPH; Frahan stub implementation
-- SKELETON: the full face-pair search is not implemented yet; the  current build scores candidates with an AABB-containment proxy.  For a practically-tested matcher use Stone-Cell Match (Λ)  (ETH1100 Lambda=0.194, card 27_07).  Atomic 3D edge-matching primitive: given two scanned stone meshes,  find the rigid 3D pose where their planar face patches mate.  VsaSegmenter -> face filtering -> per-pair PhaseCorrelator +  ConstrainedIcp3D refinement -> top-N candidates ranked by  patch-pair Hausdorff residual + match-length. Foundational  primitive for the 3D EdgeMatch family (Block Chain, Adaptive  Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]
+- First-cut matcher: VSA segmentation + plane-to-plane mating scored by sampled  Hausdorff distance. The full exhaustive face-pair search is a planned refinement.  For a practically-tested matcher use Stone-Cell Match (Λ)  (ETH1100 Lambda=0.194, card 27_07).  Atomic 3D edge-matching primitive: given two scanned stone meshes,  find the rigid 3D pose where their planar face patches mate.  VsaSegmenter -> face filtering -> per-pair PhaseCorrelator +  ConstrainedIcp3D refinement -> top-N candidates ranked by  patch-pair Hausdorff residual + match-length. Foundational  primitive for the 3D EdgeMatch family (Block Chain, Adaptive  Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]
 
 | in | type | access | description |
 |---|---|---|---|
@@ -4326,7 +4326,7 @@ Related:
 
 - GUID: `F2D00002-CADC-4F2D-9001-7E60CADA15A0`  |  icon: `Trencadis.png`  |  source: `src/Frahan.StonePack.GH/Pack2DTrencadisComponent.cs`
 - Algorithm: **Trencadis greedy pack basic** - Gaudi Park Guell broken-tile mosaic technique
-- Trencadís ('broken-tile') 2D mosaic packer. Places irregular  pieces with bounded overlap, then boolean-differences  the overlapping bits so pieces butt edge-to-edge with  characteristic chipped fits. Optional grout offset leaves  the mortar gap. SKELETON — returns empty result.
+- Trencadís ('broken-tile') 2D mosaic packer. Places irregular  pieces with bounded overlap, then boolean-differences  the overlapping bits so pieces butt edge-to-edge with  characteristic chipped fits. Optional grout offset leaves  the mortar gap. Run-gated (set Run=true to pack).
 
 | in | type | access | description |
 |---|---|---|---|

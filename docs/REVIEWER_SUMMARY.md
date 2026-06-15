@@ -32,6 +32,10 @@ university or company product. Author: Libish Murugesan (ORCID 0009-0004-3238-42
 - Component resilience: all 173 synchronous components route through a base that converts any
   uncaught exception to an orange warning, so bad/empty/missing input never red-crashes.
 - Data-structure audit: 2028 ports, 0 custom types, one type defect found and fixed.
+- Deep pre-release review (6 dimensions, adversarially verified; `docs/DEEP_REVIEW_2026-06-15.md`):
+  0 critical, 0 high. The code is sound - build green, battery reproduces 1034/0/147 from a clean
+  clone, no secrets/keys/private paths in any tracked file, corrected benchmark framings reproduce
+  live. The remaining release work is documentation reconciliation, not code.
 
 ## Licensing posture (please sanity-check this)
 - GPL-3.0, released for educational and research use (`LICENSE`, `NOTICE.md`).
@@ -52,6 +56,16 @@ university or company product. Author: Libish Murugesan (ORCID 0009-0004-3238-42
 - Kintsugi: the pure-C# diffusion denoiser drifts ~3-5% from libtorch kernels; it is the only
   direct-port and is quarantined out of the default install.
 - A few example timings lack machine/date provenance (minor, noted for cleanup).
+- The hole-packer rect fast-path multiplier in the benchmark doc/thesis (146x native, ~22,000x
+  Sparrow, 0.148 ms) reflects an earlier run; the shipped bench test reproduces ~62x / ~9,400x
+  (0.347 ms) on the test machine. The qualitative result (fastest valid hole packer, valid where
+  Sparrow is invalid) is unchanged. This figure is on the documentation punch-list.
+- A documentation punch-list remains from the deep review (`docs/DEEP_REVIEW_2026-06-15.md`): some
+  thesis/benchmark citations point at dev-side `outputs/` study folders not bundled here, and the
+  SuiteSparse/OpenBLAS/libgfortran notices owed by the statically-linked BFF exe are pending. The
+  clearest items are already fixed: stale licensing BLOCKER rows in the originality register (LICENSE
+  + THIRD_PARTY are resolved), an out-of-repo example link, a CC-BY-NC-ND marble-GPR mislabel (it is
+  CC BY 4.0), 20 broken thesis TOC links, and a stale "SKELETON" label on two now-working components.
 
 ## How to build and run
 - Build: `dotnet build src/Frahan.StonePack.GH/Frahan.StonePack.GH.csproj -c Release` (net48).
