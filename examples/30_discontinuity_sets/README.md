@@ -33,15 +33,17 @@ joint set, grey = unassigned).
 
 **Clean in-situ rock faces (the showcases):**
 
-| Granite Dells AZ — clean granite, 3 sets | RockCloud-Align — real rock-face crop |
-|---|---|
-| ![Granite Dells](30_segmentation_granite_dells.jpg) | ![RockCloud-Align](30_segmentation_rockalign.jpg) |
-| `30_segmented_granite_dells_decim.ply` | `30_segmented_rockalign.ply` |
+| Granite Dells AZ — granite, 3 sets | Finestrat — gypsum slope, 3 sets | RockCloud-Align — rock-face crop |
+|---|---|---|
+| ![Granite Dells](30_segmentation_granite_dells.jpg) | ![Finestrat](30_segmentation_finestrat.jpg) | ![RockCloud-Align](30_segmentation_rockalign.jpg) |
+| `30_segmented_granite_dells_decim.ply` | `30_segmented_finestrat_decim.ply` | `30_segmented_rockalign.ply` |
 
 Granite Dells is the textbook in-situ granite case: one sub-horizontal sheeting set (red) plus two
-near-vertical sets (blue / olive), each rock face segmenting crisply. RockCloud-Align is a real
-exposed-rock-face scan crop. These are the valid in-situ exposures, the headline view for a quarry
-geologist: the wall, colour-coded by joint set.
+near-vertical sets (blue / olive). Finestrat is a gypsum rock slope (Riquelme / DSE, Zenodo 7576524,
+CC-BY 4.0), the cleanest **complete-face** case here, a full exposed slope rather than a crop
+(3 sets: red dip 85, olive dip 38, blue dip 87). RockCloud-Align is a real exposed-rock-face scan
+crop. These are the valid in-situ exposures, the headline view for a quarry geologist: the wall,
+colour-coded by joint set.
 
 **Cautionary sample (the bundled input):** the Tongjiang detail scan
 (`30_segmented_tongjiang_decim.ply`) is a loose-rock muck pile, not an in-situ face, so it
