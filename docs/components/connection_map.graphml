@@ -44,153 +44,196 @@
 <node id="n37"><data key="name">Soft ICP 3D</data><data key="sub">EdgeMatch</data></node>
 <node id="n38"><data key="name">Template Block Match 3D</data><data key="sub">EdgeMatch</data></node>
 <node id="n39"><data key="name">Fabrication Prep Report</data><data key="sub">Fabricate</data></node>
-<node id="n40"><data key="name">Frahan Monument Inventory</data><data key="sub">Fabricate</data></node>
-<node id="n41"><data key="name">G-code Parser</data><data key="sub">Fabricate</data></node>
-<node id="n42"><data key="name">G-code to Planes</data><data key="sub">Fabricate</data></node>
-<node id="n43"><data key="name">Planes to KUKAprc Commands</data><data key="sub">Fabricate</data></node>
-<node id="n44"><data key="name">Planes to Robot Targets</data><data key="sub">Fabricate</data></node>
-<node id="n45"><data key="name">Staggered Block Decompose</data><data key="sub">Fabricate</data></node>
-<node id="n46"><data key="name">Stone-Aware Cut Export</data><data key="sub">Fabricate</data></node>
-<node id="n47"><data key="name">Wire-Saw Toolpath</data><data key="sub">Fabricate</data></node>
-<node id="n48"><data key="name">Brick-Pattern Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n49"><data key="name">Fracture Plane Filter</data><data key="sub">Fracture</data></node>
-<node id="n50"><data key="name">Fracture Polygon From Curve</data><data key="sub">Fracture</data></node>
-<node id="n51"><data key="name">Grid Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n52"><data key="name">Jittered Grid Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n53"><data key="name">Layered Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n54"><data key="name">Radial Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n55"><data key="name">Random Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n56"><data key="name">Slab Cut By Fracture Polygons</data><data key="sub">Fracture</data></node>
-<node id="n57"><data key="name">Voronoi Fracture Planes</data><data key="sub">Fracture</data></node>
-<node id="n58"><data key="name">GPR File Loader</data><data key="sub">Ingest</data></node>
-<node id="n59"><data key="name">GPR Picks From Points</data><data key="sub">Ingest</data></node>
-<node id="n60"><data key="name">GPR Radargram Mesh</data><data key="sub">Ingest</data></node>
-<node id="n61"><data key="name">Import Photo Markers</data><data key="sub">Ingest</data></node>
-<node id="n62"><data key="name">Vector Fractures Loader</data><data key="sub">Ingest</data></node>
-<node id="n63"><data key="name">Contact Settle</data><data key="sub">Kintsugi</data></node>
-<node id="n64"><data key="name">Fracture Roughen</data><data key="sub">Kintsugi</data></node>
-<node id="n65"><data key="name">Frahan Fragment Shatter</data><data key="sub">Kintsugi</data></node>
-<node id="n66"><data key="name">Frahan Kintsugi</data><data key="sub">Kintsugi</data></node>
-<node id="n67"><data key="name">Load BB Sample</data><data key="sub">Kintsugi</data></node>
-<node id="n68"><data key="name">Load Scan Fragments</data><data key="sub">Kintsugi</data></node>
-<node id="n69"><data key="name">Synthetic Block</data><data key="sub">Kintsugi</data></node>
-<node id="n70"><data key="name">Download Frahan Data</data><data key="sub">Lab</data></node>
-<node id="n71"><data key="name">Frahan Pareto Front Inspector</data><data key="sub">Lab</data></node>
-<node id="n72"><data key="name">Mesh CSG (CGAL)</data><data key="sub">Lab</data></node>
-<node id="n73"><data key="name">Mesh Decimate (Geogram)</data><data key="sub">Lab</data></node>
-<node id="n74"><data key="name">Mesh Decompose (CoACD)</data><data key="sub">Lab</data></node>
-<node id="n75"><data key="name">Mesh Repair (Auto)</data><data key="sub">Lab</data></node>
-<node id="n76"><data key="name">Ashlar Pack</data><data key="sub">Masonry</data></node>
-<node id="n77"><data key="name">Ashlar Pack Options</data><data key="sub">Masonry</data></node>
-<node id="n78"><data key="name">Assembly Preview</data><data key="sub">Masonry</data></node>
-<node id="n79"><data key="name">Auto Interfaces</data><data key="sub">Masonry</data></node>
-<node id="n80"><data key="name">Best Fit Pack</data><data key="sub">Masonry</data></node>
-<node id="n81"><data key="name">Block Build Order</data><data key="sub">Masonry</data></node>
-<node id="n82"><data key="name">Block Graph Coloring</data><data key="sub">Masonry</data></node>
-<node id="n83"><data key="name">Block Ground Transforms</data><data key="sub">Masonry</data></node>
-<node id="n84"><data key="name">Block Pack (Tree)</data><data key="sub">Masonry</data></node>
-<node id="n85"><data key="name">Block Size Distribution</data><data key="sub">Masonry</data></node>
-<node id="n86"><data key="name">Build Sequence JSON</data><data key="sub">Masonry</data></node>
-<node id="n87"><data key="name">Build Step Preview</data><data key="sub">Masonry</data></node>
-<node id="n88"><data key="name">Build-Order Stability Stream</data><data key="sub">Masonry</data></node>
-<node id="n89"><data key="name">Cut Validation</data><data key="sub">Masonry</data></node>
-<node id="n90"><data key="name">Fragment Merger</data><data key="sub">Masonry</data></node>
-<node id="n91"><data key="name">IFC Export (Building)</data><data key="sub">Masonry</data></node>
-<node id="n92"><data key="name">IFC Export (Stone Assembly)</data><data key="sub">Masonry</data></node>
-<node id="n93"><data key="name">Masonry Assembly</data><data key="sub">Masonry</data></node>
-<node id="n94"><data key="name">Masonry Block</data><data key="sub">Masonry</data></node>
-<node id="n95"><data key="name">Masonry Stability (RBE)</data><data key="sub">Masonry</data></node>
-<node id="n96"><data key="name">Masonry Stability Check</data><data key="sub">Masonry</data></node>
-<node id="n97"><data key="name">Match Block Transform</data><data key="sub">Masonry</data></node>
-<node id="n98"><data key="name">Mesh Planar Polygon Extractor</data><data key="sub">Masonry</data></node>
-<node id="n99"><data key="name">Mesh Quality Report</data><data key="sub">Masonry</data></node>
-<node id="n100"><data key="name">Pack Diagnostics</data><data key="sub">Masonry</data></node>
-<node id="n101"><data key="name">Pack Preview</data><data key="sub">Masonry</data></node>
-<node id="n102"><data key="name">Pick Place Frames</data><data key="sub">Masonry</data></node>
-<node id="n103"><data key="name">Polygon Sanitize</data><data key="sub">Masonry</data></node>
-<node id="n104"><data key="name">Polygonal Masonry Sequence</data><data key="sub">Masonry</data></node>
-<node id="n105"><data key="name">Polygonal Masonry Sequence 3D</data><data key="sub">Masonry</data></node>
-<node id="n106"><data key="name">Polygonal Wall (Generator)</data><data key="sub">Masonry</data></node>
-<node id="n107"><data key="name">Robust Auto Interfaces</data><data key="sub">Masonry</data></node>
-<node id="n108"><data key="name">Rubble Wall Settle</data><data key="sub">Masonry</data></node>
-<node id="n109"><data key="name">Stone-Cell Match (Λ)</data><data key="sub">Masonry</data></node>
-<node id="n110"><data key="name">Wall Frame</data><data key="sub">Masonry</data></node>
-<node id="n111"><data key="name">Bench From Mesh</data><data key="sub">Mesh</data></node>
-<node id="n112"><data key="name">Clip Boxes By Mesh</data><data key="sub">Mesh</data></node>
-<node id="n113"><data key="name">Cloud ICP</data><data key="sub">Mesh</data></node>
-<node id="n114"><data key="name">Estimate Cloud Normals</data><data key="sub">Mesh</data></node>
-<node id="n115"><data key="name">Frahan Mesh Diagnostics</data><data key="sub">Mesh</data></node>
-<node id="n116"><data key="name">Frahan Mesh Repair</data><data key="sub">Mesh</data></node>
-<node id="n117"><data key="name">Georeference</data><data key="sub">Mesh</data></node>
-<node id="n118"><data key="name">Georeference (Align by Points)</data><data key="sub">Mesh</data></node>
-<node id="n119"><data key="name">Load Cloud</data><data key="sub">Mesh</data></node>
-<node id="n120"><data key="name">Load E57 Cloud</data><data key="sub">Mesh</data></node>
-<node id="n121"><data key="name">Load Metashape Dense Cloud</data><data key="sub">Mesh</data></node>
-<node id="n122"><data key="name">Load Photo Set</data><data key="sub">Mesh</data></node>
-<node id="n123"><data key="name">Marker Registration</data><data key="sub">Mesh</data></node>
-<node id="n124"><data key="name">Mesh AABB</data><data key="sub">Mesh</data></node>
-<node id="n125"><data key="name">Mesh PCA</data><data key="sub">Mesh</data></node>
-<node id="n126"><data key="name">Move to Origin</data><data key="sub">Mesh</data></node>
-<node id="n127"><data key="name">Read LAS Cloud</data><data key="sub">Mesh</data></node>
-<node id="n128"><data key="name">Read Metashape Project</data><data key="sub">Mesh</data></node>
-<node id="n129"><data key="name">Sanitize Mesh</data><data key="sub">Mesh</data></node>
-<node id="n130"><data key="name">Scan Read</data><data key="sub">Mesh</data></node>
-<node id="n131"><data key="name">Scan Reconstruct</data><data key="sub">Mesh</data></node>
-<node id="n132"><data key="name">Scan Scale Calibrate</data><data key="sub">Mesh</data></node>
-<node id="n133"><data key="name">Stone Prep (Scan)</data><data key="sub">Mesh</data></node>
-<node id="n134"><data key="name">Voxel Downsample</data><data key="sub">Mesh</data></node>
-<node id="n135"><data key="name">BlockCutOpt Extract Grid</data><data key="sub">Quarry</data></node>
-<node id="n136"><data key="name">BlockCutOpt Load Fractures</data><data key="sub">Quarry</data></node>
-<node id="n137"><data key="name">Box To Mesh</data><data key="sub">Quarry</data></node>
-<node id="n138"><data key="name">Clean Scan Mesh</data><data key="sub">Quarry</data></node>
-<node id="n139"><data key="name">Convex Hull Slab</data><data key="sub">Quarry</data></node>
-<node id="n140"><data key="name">Discontinuity Ingest</data><data key="sub">Quarry</data></node>
-<node id="n141"><data key="name">Discontinuity Sets (Async)</data><data key="sub">Quarry</data></node>
-<node id="n142"><data key="name">Discontinuity Sets (Cloud)</data><data key="sub">Quarry</data></node>
-<node id="n143"><data key="name">Fracture Block Pack</data><data key="sub">Quarry</data></node>
-<node id="n144"><data key="name">Frahan GPR Radargram Reader</data><data key="sub">Quarry</data></node>
-<node id="n145"><data key="name">Frahan Mixed-Size Block Pack 3D</data><data key="sub">Quarry</data></node>
-<node id="n146"><data key="name">Frahan Photo Detect → PLY</data><data key="sub">Quarry</data></node>
-<node id="n147"><data key="name">Frahan Quarry Inventory</data><data key="sub">Quarry</data></node>
-<node id="n148"><data key="name">Frahan Slab Yield Optimizer</data><data key="sub">Quarry</data></node>
-<node id="n149"><data key="name">GPR Bedrock Surface</data><data key="sub">Quarry</data></node>
-<node id="n150"><data key="name">GPR Fracture Extract</data><data key="sub">Quarry</data></node>
-<node id="n151"><data key="name">GPR Fracture Surfaces 3D</data><data key="sub">Quarry</data></node>
-<node id="n152"><data key="name">GPR Fractures on Mesh</data><data key="sub">Quarry</data></node>
-<node id="n153"><data key="name">Joint Set</data><data key="sub">Quarry</data></node>
-<node id="n154"><data key="name">Joint Sets to DFN</data><data key="sub">Quarry</data></node>
-<node id="n155"><data key="name">Mesh Shell Split</data><data key="sub">Quarry</data></node>
-<node id="n156"><data key="name">Overburden To Rock Face</data><data key="sub">Quarry</data></node>
-<node id="n157"><data key="name">Quarry DFN</data><data key="sub">Quarry</data></node>
-<node id="n158"><data key="name">Quarry Decompose</data><data key="sub">Quarry</data></node>
-<node id="n159"><data key="name">Quarry Decompose By CoACD</data><data key="sub">Quarry</data></node>
-<node id="n160"><data key="name">Scan to Block Inventory</data><data key="sub">Quarry</data></node>
-<node id="n161"><data key="name">Stereonet + Block Size</data><data key="sub">Quarry</data></node>
-<node id="n162"><data key="name">Stochastic DFN (Baecher)</data><data key="sub">Quarry</data></node>
-<node id="n163"><data key="name">Frahan Packing Plan Report</data><data key="sub">Reports</data></node>
-<node id="n164"><data key="name">Frahan Packing Report</data><data key="sub">Reports</data></node>
-<node id="n165"><data key="name">Frahan Report / Export</data><data key="sub">Reports</data></node>
-<node id="n166"><data key="name">Carving Stages</data><data key="sub">Sculpt</data></node>
-<node id="n167"><data key="name">Enlarge Sculpture</data><data key="sub">Sculpt</data></node>
-<node id="n168"><data key="name">Fit In Block</data><data key="sub">Sculpt</data></node>
-<node id="n169"><data key="name">Slab Cut By Fractures</data><data key="sub">Slab</data></node>
-<node id="n170"><data key="name">Slab Cut By Tool Mesh (CGAL)</data><data key="sub">Slab</data></node>
-<node id="n171"><data key="name">Slab From Mesh</data><data key="sub">Slab</data></node>
-<node id="n172"><data key="name">Vertical Fracture Planes From Curves</data><data key="sub">Slab</data></node>
-<node id="n173"><data key="name">Frahan Chart Flatness Report</data><data key="sub">Surface Packing</data></node>
-<node id="n174"><data key="name">Pack On Surface</data><data key="sub">Surface Packing</data></node>
-<node id="n175"><data key="name">Pack Surfaces</data><data key="sub">Surface Packing</data></node>
-<node id="n176"><data key="name">Surface Chart</data><data key="sub">Surface Packing</data></node>
-<node id="n177"><data key="name">Frahan Trencadís Catalog Pack</data><data key="sub">Trencadis</data></node>
-<node id="n178"><data key="name">Frahan Trencadís Dynamic Settle</data><data key="sub">Trencadis</data></node>
-<node id="n179"><data key="name">Frahan Trencadís EdgeMatch</data><data key="sub">Trencadis</data></node>
-<node id="n180"><data key="name">Frahan Trencadís Pack</data><data key="sub">Trencadis</data></node>
-<node id="n181"><data key="name">Frahan Trencadís Pipeline</data><data key="sub">Trencadis</data></node>
-<node id="n182"><data key="name">Arch Voussoirs</data><data key="sub">Voussoir</data></node>
-<node id="n183"><data key="name">Pendentive Vault Voussoirs</data><data key="sub">Voussoir</data></node>
-<node id="n184"><data key="name">Voussoir Ingest</data><data key="sub">Voussoir</data></node>
-<node id="n185"><data key="name">Voussoir Pack Into Block</data><data key="sub">Voussoir</data></node>
-<node id="n186"><data key="name">Voussoir Stone Matcher</data><data key="sub">Voussoir</data></node>
+<node id="n40"><data key="name">Frahan Bench Monument Pack</data><data key="sub">Fabricate</data></node>
+<node id="n41"><data key="name">Frahan Monument Inventory</data><data key="sub">Fabricate</data></node>
+<node id="n42"><data key="name">Frahan Pack Monuments In Cell</data><data key="sub">Fabricate</data></node>
+<node id="n43"><data key="name">G-code Parser</data><data key="sub">Fabricate</data></node>
+<node id="n44"><data key="name">G-code to Planes</data><data key="sub">Fabricate</data></node>
+<node id="n45"><data key="name">Planes to KUKAprc Commands</data><data key="sub">Fabricate</data></node>
+<node id="n46"><data key="name">Planes to Robot Targets</data><data key="sub">Fabricate</data></node>
+<node id="n47"><data key="name">Staggered Block Decompose</data><data key="sub">Fabricate</data></node>
+<node id="n48"><data key="name">Stone-Aware Cut Export</data><data key="sub">Fabricate</data></node>
+<node id="n49"><data key="name">Wire-Saw Toolpath</data><data key="sub">Fabricate</data></node>
+<node id="n50"><data key="name">Brick-Pattern Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n51"><data key="name">Fracture Plane Filter</data><data key="sub">Fracture</data></node>
+<node id="n52"><data key="name">Fracture Polygon From Curve</data><data key="sub">Fracture</data></node>
+<node id="n53"><data key="name">Grid Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n54"><data key="name">Jittered Grid Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n55"><data key="name">Layered Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n56"><data key="name">Radial Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n57"><data key="name">Random Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n58"><data key="name">Slab Cut By Fracture Polygons</data><data key="sub">Fracture</data></node>
+<node id="n59"><data key="name">Voronoi Fracture Planes</data><data key="sub">Fracture</data></node>
+<node id="n60"><data key="name">GPR File Loader</data><data key="sub">Ingest</data></node>
+<node id="n61"><data key="name">GPR Picks From Points</data><data key="sub">Ingest</data></node>
+<node id="n62"><data key="name">GPR Radargram Mesh</data><data key="sub">Ingest</data></node>
+<node id="n63"><data key="name">Import Photo Markers</data><data key="sub">Ingest</data></node>
+<node id="n64"><data key="name">Vector Fractures Loader</data><data key="sub">Ingest</data></node>
+<node id="n65"><data key="name">Contact Settle</data><data key="sub">Kintsugi</data></node>
+<node id="n66"><data key="name">Fracture Roughen</data><data key="sub">Kintsugi</data></node>
+<node id="n67"><data key="name">Frahan Fragment Shatter</data><data key="sub">Kintsugi</data></node>
+<node id="n68"><data key="name">Frahan Kintsugi</data><data key="sub">Kintsugi</data></node>
+<node id="n69"><data key="name">Load BB Sample</data><data key="sub">Kintsugi</data></node>
+<node id="n70"><data key="name">Load Scan Fragments</data><data key="sub">Kintsugi</data></node>
+<node id="n71"><data key="name">Synthetic Block</data><data key="sub">Kintsugi</data></node>
+<node id="n72"><data key="name">CVT Seeds (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n73"><data key="name">Download Frahan Data</data><data key="sub">Lab</data></node>
+<node id="n74"><data key="name">Frahan Density-Watershed Zones</data><data key="sub">Lab</data></node>
+<node id="n75"><data key="name">Frahan Fisher-Robust BCO</data><data key="sub">Lab</data></node>
+<node id="n76"><data key="name">Frahan Mixed-Size Block Pack</data><data key="sub">Lab</data></node>
+<node id="n77"><data key="name">Frahan Pareto Front Inspector</data><data key="sub">Lab</data></node>
+<node id="n78"><data key="name">Frahan VTU Export</data><data key="sub">Lab</data></node>
+<node id="n79"><data key="name">Geodesic Voronoi (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n80"><data key="name">Mesh CSG (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n81"><data key="name">Mesh Decimate (Auto)</data><data key="sub">Lab</data></node>
+<node id="n82"><data key="name">Mesh Decimate (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n83"><data key="name">Mesh Decimate (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n84"><data key="name">Mesh Decompose (CoACD)</data><data key="sub">Lab</data></node>
+<node id="n85"><data key="name">Mesh Fill Holes (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n86"><data key="name">Mesh Remesh (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n87"><data key="name">Mesh Repair (Auto)</data><data key="sub">Lab</data></node>
+<node id="n88"><data key="name">Mesh Repair (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n89"><data key="name">Mesh Repair (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n90"><data key="name">Mesh Segmentation (CGAL SDF)</data><data key="sub">Lab</data></node>
+<node id="n91"><data key="name">Mesh Segmentation by Angle (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n92"><data key="name">OBB (Auto)</data><data key="sub">Lab</data></node>
+<node id="n93"><data key="name">OBB (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n94"><data key="name">Polygon Partition (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n95"><data key="name">Straight Skeleton (CGAL)</data><data key="sub">Lab</data></node>
+<node id="n96"><data key="name">Tetrahedralize (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n97"><data key="name">Voronoi Block Partition (Geogram)</data><data key="sub">Lab</data></node>
+<node id="n98"><data key="name">Ashlar Pack</data><data key="sub">Masonry</data></node>
+<node id="n99"><data key="name">Ashlar Pack Options</data><data key="sub">Masonry</data></node>
+<node id="n100"><data key="name">Assembly Preview</data><data key="sub">Masonry</data></node>
+<node id="n101"><data key="name">Auto Interfaces</data><data key="sub">Masonry</data></node>
+<node id="n102"><data key="name">Best Fit Pack</data><data key="sub">Masonry</data></node>
+<node id="n103"><data key="name">Block Build Order</data><data key="sub">Masonry</data></node>
+<node id="n104"><data key="name">Block Graph Coloring</data><data key="sub">Masonry</data></node>
+<node id="n105"><data key="name">Block Ground Transforms</data><data key="sub">Masonry</data></node>
+<node id="n106"><data key="name">Block Pack (Tree)</data><data key="sub">Masonry</data></node>
+<node id="n107"><data key="name">Block Size Distribution</data><data key="sub">Masonry</data></node>
+<node id="n108"><data key="name">Build Sequence JSON</data><data key="sub">Masonry</data></node>
+<node id="n109"><data key="name">Build Step Preview</data><data key="sub">Masonry</data></node>
+<node id="n110"><data key="name">Build-Order Stability Stream</data><data key="sub">Masonry</data></node>
+<node id="n111"><data key="name">Cut Validation</data><data key="sub">Masonry</data></node>
+<node id="n112"><data key="name">Fragment Merger</data><data key="sub">Masonry</data></node>
+<node id="n113"><data key="name">IFC Export (Building)</data><data key="sub">Masonry</data></node>
+<node id="n114"><data key="name">IFC Export (Stone Assembly)</data><data key="sub">Masonry</data></node>
+<node id="n115"><data key="name">Masonry Assembly</data><data key="sub">Masonry</data></node>
+<node id="n116"><data key="name">Masonry Block</data><data key="sub">Masonry</data></node>
+<node id="n117"><data key="name">Masonry Stability (RBE)</data><data key="sub">Masonry</data></node>
+<node id="n118"><data key="name">Masonry Stability Check</data><data key="sub">Masonry</data></node>
+<node id="n119"><data key="name">Match Block Transform</data><data key="sub">Masonry</data></node>
+<node id="n120"><data key="name">Mesh Planar Polygon Extractor</data><data key="sub">Masonry</data></node>
+<node id="n121"><data key="name">Mesh Quality Report</data><data key="sub">Masonry</data></node>
+<node id="n122"><data key="name">Pack Diagnostics</data><data key="sub">Masonry</data></node>
+<node id="n123"><data key="name">Pack Preview</data><data key="sub">Masonry</data></node>
+<node id="n124"><data key="name">Pick Place Frames</data><data key="sub">Masonry</data></node>
+<node id="n125"><data key="name">Polygon Sanitize</data><data key="sub">Masonry</data></node>
+<node id="n126"><data key="name">Polygonal Masonry Sequence</data><data key="sub">Masonry</data></node>
+<node id="n127"><data key="name">Polygonal Masonry Sequence 3D</data><data key="sub">Masonry</data></node>
+<node id="n128"><data key="name">Polygonal Wall (Generator)</data><data key="sub">Masonry</data></node>
+<node id="n129"><data key="name">Robust Auto Interfaces</data><data key="sub">Masonry</data></node>
+<node id="n130"><data key="name">Rubble Wall Settle</data><data key="sub">Masonry</data></node>
+<node id="n131"><data key="name">Stone-Cell Match (Λ)</data><data key="sub">Masonry</data></node>
+<node id="n132"><data key="name">Wall Frame</data><data key="sub">Masonry</data></node>
+<node id="n133"><data key="name">Bench From Mesh</data><data key="sub">Mesh</data></node>
+<node id="n134"><data key="name">Clip Boxes By Mesh</data><data key="sub">Mesh</data></node>
+<node id="n135"><data key="name">Close Holes</data><data key="sub">Mesh</data></node>
+<node id="n136"><data key="name">Cloud ICP</data><data key="sub">Mesh</data></node>
+<node id="n137"><data key="name">Estimate Cloud Normals</data><data key="sub">Mesh</data></node>
+<node id="n138"><data key="name">Frahan Mesh Diagnostics</data><data key="sub">Mesh</data></node>
+<node id="n139"><data key="name">Frahan Mesh Repair</data><data key="sub">Mesh</data></node>
+<node id="n140"><data key="name">Georeference</data><data key="sub">Mesh</data></node>
+<node id="n141"><data key="name">Georeference (Align by Points)</data><data key="sub">Mesh</data></node>
+<node id="n142"><data key="name">Load Cloud</data><data key="sub">Mesh</data></node>
+<node id="n143"><data key="name">Load E57 Cloud</data><data key="sub">Mesh</data></node>
+<node id="n144"><data key="name">Load Metashape Dense Cloud</data><data key="sub">Mesh</data></node>
+<node id="n145"><data key="name">Load Photo Set</data><data key="sub">Mesh</data></node>
+<node id="n146"><data key="name">Marker Registration</data><data key="sub">Mesh</data></node>
+<node id="n147"><data key="name">Mesh AABB</data><data key="sub">Mesh</data></node>
+<node id="n148"><data key="name">Mesh PCA</data><data key="sub">Mesh</data></node>
+<node id="n149"><data key="name">Move to Origin</data><data key="sub">Mesh</data></node>
+<node id="n150"><data key="name">Read LAS Cloud</data><data key="sub">Mesh</data></node>
+<node id="n151"><data key="name">Read Metashape Project</data><data key="sub">Mesh</data></node>
+<node id="n152"><data key="name">Sanitize Mesh</data><data key="sub">Mesh</data></node>
+<node id="n153"><data key="name">Scan Read</data><data key="sub">Mesh</data></node>
+<node id="n154"><data key="name">Scan Reconstruct</data><data key="sub">Mesh</data></node>
+<node id="n155"><data key="name">Scan Scale Calibrate</data><data key="sub">Mesh</data></node>
+<node id="n156"><data key="name">Stone Prep (Scan)</data><data key="sub">Mesh</data></node>
+<node id="n157"><data key="name">Voxel Downsample</data><data key="sub">Mesh</data></node>
+<node id="n158"><data key="name">BlockCutOpt AMRR Plan</data><data key="sub">Quarry</data></node>
+<node id="n159"><data key="name">BlockCutOpt Extract Grid</data><data key="sub">Quarry</data></node>
+<node id="n160"><data key="name">BlockCutOpt Load Fractures</data><data key="sub">Quarry</data></node>
+<node id="n161"><data key="name">BlockCutOpt Omni Solve</data><data key="sub">Quarry</data></node>
+<node id="n162"><data key="name">BlockCutOpt Solve</data><data key="sub">Quarry</data></node>
+<node id="n163"><data key="name">Box To Mesh</data><data key="sub">Quarry</data></node>
+<node id="n164"><data key="name">Clean Scan Mesh</data><data key="sub">Quarry</data></node>
+<node id="n165"><data key="name">Convex Hull Slab</data><data key="sub">Quarry</data></node>
+<node id="n166"><data key="name">Discontinuity Ingest</data><data key="sub">Quarry</data></node>
+<node id="n167"><data key="name">Discontinuity Sets (Async)</data><data key="sub">Quarry</data></node>
+<node id="n168"><data key="name">Discontinuity Sets (Cloud)</data><data key="sub">Quarry</data></node>
+<node id="n169"><data key="name">Fracture Block Pack</data><data key="sub">Quarry</data></node>
+<node id="n170"><data key="name">Frahan Algebraic Convex Polyhedron</data><data key="sub">Quarry</data></node>
+<node id="n171"><data key="name">Frahan BenchBlock Cut → Slabs</data><data key="sub">Quarry</data></node>
+<node id="n172"><data key="name">Frahan Billet Cutter</data><data key="sub">Quarry</data></node>
+<node id="n173"><data key="name">Frahan Block Candidate Generator</data><data key="sub">Quarry</data></node>
+<node id="n174"><data key="name">Frahan Block Graph</data><data key="sub">Quarry</data></node>
+<node id="n175"><data key="name">Frahan Crack Graph (manual)</data><data key="sub">Quarry</data></node>
+<node id="n176"><data key="name">Frahan Extraction Order Optimizer</data><data key="sub">Quarry</data></node>
+<node id="n177"><data key="name">Frahan GPR Radargram Reader</data><data key="sub">Quarry</data></node>
+<node id="n178"><data key="name">Frahan GeoFractNet Inference</data><data key="sub">Quarry</data></node>
+<node id="n179"><data key="name">Frahan Heterogeneous Quarry Extraction</data><data key="sub">Quarry</data></node>
+<node id="n180"><data key="name">Frahan Mesh → Fracture Planes</data><data key="sub">Quarry</data></node>
+<node id="n181"><data key="name">Frahan Mixed-Size Block Pack 3D</data><data key="sub">Quarry</data></node>
+<node id="n182"><data key="name">Frahan Photo Detect → PLY</data><data key="sub">Quarry</data></node>
+<node id="n183"><data key="name">Frahan Quarry Inventory</data><data key="sub">Quarry</data></node>
+<node id="n184"><data key="name">Frahan Quarry Report</data><data key="sub">Quarry</data></node>
+<node id="n185"><data key="name">Frahan Quarry Yield Estimator</data><data key="sub">Quarry</data></node>
+<node id="n186"><data key="name">Frahan Saw-Bed Schedule</data><data key="sub">Quarry</data></node>
+<node id="n187"><data key="name">Frahan Slab Yield Optimizer</data><data key="sub">Quarry</data></node>
+<node id="n188"><data key="name">Frahan Synthetic TN Granite</data><data key="sub">Quarry</data></node>
+<node id="n189"><data key="name">GPR Bedrock Surface</data><data key="sub">Quarry</data></node>
+<node id="n190"><data key="name">GPR Fracture Extract</data><data key="sub">Quarry</data></node>
+<node id="n191"><data key="name">GPR Fracture Surfaces 3D</data><data key="sub">Quarry</data></node>
+<node id="n192"><data key="name">GPR Fractures on Mesh</data><data key="sub">Quarry</data></node>
+<node id="n193"><data key="name">Joint Set</data><data key="sub">Quarry</data></node>
+<node id="n194"><data key="name">Joint Sets to DFN</data><data key="sub">Quarry</data></node>
+<node id="n195"><data key="name">Mesh Shell Split</data><data key="sub">Quarry</data></node>
+<node id="n196"><data key="name">Overburden To Rock Face</data><data key="sub">Quarry</data></node>
+<node id="n197"><data key="name">Quarry DFN</data><data key="sub">Quarry</data></node>
+<node id="n198"><data key="name">Quarry Decompose</data><data key="sub">Quarry</data></node>
+<node id="n199"><data key="name">Quarry Decompose By CoACD</data><data key="sub">Quarry</data></node>
+<node id="n200"><data key="name">Quarry Decompose By Mesh (CGAL)</data><data key="sub">Quarry</data></node>
+<node id="n201"><data key="name">Quarry Decompose By Tet</data><data key="sub">Quarry</data></node>
+<node id="n202"><data key="name">Quarry Decompose By Voronoi</data><data key="sub">Quarry</data></node>
+<node id="n203"><data key="name">Scan to Block Inventory</data><data key="sub">Quarry</data></node>
+<node id="n204"><data key="name">Stereonet + Block Size</data><data key="sub">Quarry</data></node>
+<node id="n205"><data key="name">Stochastic DFN (Baecher)</data><data key="sub">Quarry</data></node>
+<node id="n206"><data key="name">Frahan Packing Plan Report</data><data key="sub">Reports</data></node>
+<node id="n207"><data key="name">Frahan Packing Report</data><data key="sub">Reports</data></node>
+<node id="n208"><data key="name">Frahan Report / Export</data><data key="sub">Reports</data></node>
+<node id="n209"><data key="name">Carving Stages</data><data key="sub">Sculpt</data></node>
+<node id="n210"><data key="name">Enlarge Sculpture</data><data key="sub">Sculpt</data></node>
+<node id="n211"><data key="name">Fit In Block</data><data key="sub">Sculpt</data></node>
+<node id="n212"><data key="name">Slab Cut By Fractures</data><data key="sub">Slab</data></node>
+<node id="n213"><data key="name">Slab Cut By Tool Mesh (CGAL)</data><data key="sub">Slab</data></node>
+<node id="n214"><data key="name">Slab From Mesh</data><data key="sub">Slab</data></node>
+<node id="n215"><data key="name">Vertical Fracture Planes From Curves</data><data key="sub">Slab</data></node>
+<node id="n216"><data key="name">Frahan Chart Flatness Report</data><data key="sub">Surface Packing</data></node>
+<node id="n217"><data key="name">Pack On Surface</data><data key="sub">Surface Packing</data></node>
+<node id="n218"><data key="name">Pack Surfaces</data><data key="sub">Surface Packing</data></node>
+<node id="n219"><data key="name">Surface Chart</data><data key="sub">Surface Packing</data></node>
+<node id="n220"><data key="name">Frahan Trencadís Catalog Pack</data><data key="sub">Trencadis</data></node>
+<node id="n221"><data key="name">Frahan Trencadís Dynamic Settle</data><data key="sub">Trencadis</data></node>
+<node id="n222"><data key="name">Frahan Trencadís EdgeMatch</data><data key="sub">Trencadis</data></node>
+<node id="n223"><data key="name">Frahan Trencadís Pack</data><data key="sub">Trencadis</data></node>
+<node id="n224"><data key="name">Frahan Trencadís Pipeline</data><data key="sub">Trencadis</data></node>
+<node id="n225"><data key="name">Arch Voussoirs</data><data key="sub">Voussoir</data></node>
+<node id="n226"><data key="name">Pendentive Vault Voussoirs</data><data key="sub">Voussoir</data></node>
+<node id="n227"><data key="name">Voussoir Ingest</data><data key="sub">Voussoir</data></node>
+<node id="n228"><data key="name">Voussoir Pack Into Block</data><data key="sub">Voussoir</data></node>
+<node id="n229"><data key="name">Voussoir Stone Matcher</data><data key="sub">Voussoir</data></node>
 <edge id="e0" source="n0" target="n10"><data key="reason">SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) &#x27;FreeNestX&#x27; — mean 53.9% waste-cut vs V506 at strict 0-overlap.</data></edge>
 <edge id="e1" source="n1" target="n10"><data key="reason">SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) &#x27;FreeNestX&#x27; — mean 53.9% waste-cut vs V506 at strict 0-overlap.</data></edge>
 <edge id="e2" source="n2" target="n10"><data key="reason">SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) &#x27;FreeNestX&#x27; — mean 53.9% waste-cut vs V506 at strict 0-overlap.</data></edge>
@@ -198,91 +241,107 @@
 <edge id="e4" source="n9" target="n10"><data key="reason">SUPERSEDED BY: Freeform Sheet Nest (Exact NFP) &#x27;FreeNestX&#x27; — mean 53.9% waste-cut vs V506 at strict 0-overlap.</data></edge>
 <edge id="e5" source="n12" target="n10"><data key="reason">Multi-sheet exact NFP-BLF production sibling without part-in-part-hole nesting; use it when parts have no usable holes.</data></edge>
 <edge id="e6" source="n15" target="n20"><data key="reason">EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.</data></edge>
-<edge id="e7" source="n15" target="n84"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
+<edge id="e7" source="n15" target="n106"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
 <edge id="e8" source="n16" target="n20"><data key="reason">EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.</data></edge>
-<edge id="e9" source="n16" target="n84"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
+<edge id="e9" source="n16" target="n106"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
 <edge id="e10" source="n17" target="n20"><data key="reason">EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.</data></edge>
-<edge id="e11" source="n17" target="n84"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
-<edge id="e12" source="n27" target="n109"><data key="reason">The practically-tested matcher: Hungarian stone-to-cell assignment, ETH1100 Lambda=0.194 (card 27_07). Use it for real stone-to-target matching today.</data></edge>
+<edge id="e11" source="n17" target="n106"><data key="reason">EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).</data></edge>
+<edge id="e12" source="n27" target="n131"><data key="reason">The practically-tested matcher: Hungarian stone-to-cell assignment, ETH1100 Lambda=0.194 (card 27_07). Use it for real stone-to-target matching today.</data></edge>
 <edge id="e13" source="n29" target="n31"><data key="reason">Consumes this Options DTO on its optional Opt input to override the advanced fields</data></edge>
-<edge id="e14" source="n29" target="n66"><data key="reason">3D fragment reassembly that shares the agglomerative + Soft-ICP refine machinery these knobs tune</data></edge>
+<edge id="e14" source="n29" target="n68"><data key="reason">3D fragment reassembly that shares the agglomerative + Soft-ICP refine machinery these knobs tune</data></edge>
 <edge id="e15" source="n32" target="n34"><data key="reason">End-to-end floor that consumes classified offcuts.</data></edge>
 <edge id="e16" source="n33" target="n34"><data key="reason">Builds the floor geometry from this assignment.</data></edge>
 <edge id="e17" source="n34" target="n32"><data key="reason">Produces the live/sawn split each offcut is laid by.</data></edge>
 <edge id="e18" source="n35" target="n32"><data key="reason">Provides the live/sawn split this trims by.</data></edge>
 <edge id="e19" source="n35" target="n34"><data key="reason">Applies this trim across a whole staggered floor.</data></edge>
-<edge id="e20" source="n59" target="n60"><data key="reason">Snap points onto its section, then convert them here; the CSV out reloads via its Picks CSV input.</data></edge>
-<edge id="e21" source="n59" target="n152"><data key="reason">Feed Pick Points + Labels straight into the overlay.</data></edge>
-<edge id="e22" source="n60" target="n58"><data key="reason">Same GPR file; this draws the radargram instead of just trace origins.</data></edge>
-<edge id="e23" source="n60" target="n136"><data key="reason">Picked reflectors become fracture inputs for block-cut optimisation.</data></edge>
-<edge id="e24" source="n63" target="n66"><data key="reason">Produces the placed fragments this pass de-penetrates</data></edge>
-<edge id="e25" source="n63" target="n68"><data key="reason">Source of real (open) scan shards that need closing before the inside test</data></edge>
-<edge id="e26" source="n69" target="n65"><data key="reason">Shatter the generated block into fragments for training / round-trip</data></edge>
-<edge id="e27" source="n69" target="n64"><data key="reason">Give the shards worn fracture surfaces before assembly</data></edge>
-<edge id="e28" source="n69" target="n66"><data key="reason">Reassemble the shards (round-trip test of the target)</data></edge>
-<edge id="e29" source="n70" target="n66"><data key="reason">Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.</data></edge>
-<edge id="e30" source="n71" target="n153"><data key="reason">Source of fracture-orientation distribution used here.</data></edge>
-<edge id="e31" source="n71" target="n111"><data key="reason">Bench mesh source for the tested area whose density is partitioned here.</data></edge>
-<edge id="e32" source="n71" target="n76"><data key="reason">Production 3D packer; this mixed-size variant is the heterogeneous-block research path.</data></edge>
-<edge id="e33" source="n71" target="n80"><data key="reason">Production rubble packer for varied-height inputs.</data></edge>
-<edge id="e34" source="n72" target="n169"><data key="reason">Production cutting pipeline for slab + fracture inputs.</data></edge>
-<edge id="e35" source="n72" target="n169"><data key="reason">Skeleton-based cutting paths feed into the production fracture-cutting pipeline.</data></edge>
-<edge id="e36" source="n72" target="n50"><data key="reason">Polygon ingest sibling for fracture inputs.</data></edge>
-<edge id="e37" source="n72" target="n99"><data key="reason">Diagnose mesh quality before deciding to repair.</data></edge>
-<edge id="e38" source="n72" target="n56"><data key="reason">Production polygon-based slab cutting; uses partitioned polygons as input.</data></edge>
-<edge id="e39" source="n72" target="n103"><data key="reason">Pre-clean polygons before partitioning.</data></edge>
-<edge id="e40" source="n72" target="n99"><data key="reason">Production mesh analysis; SDF segmentation is a research probe.</data></edge>
-<edge id="e41" source="n72" target="n99"><data key="reason">Production mesh analysis; angle-based segmentation is a research probe.</data></edge>
-<edge id="e42" source="n72" target="n98"><data key="reason">Planar-face extraction shares the angle-clustering primitive.</data></edge>
-<edge id="e43" source="n72" target="n157"><data key="reason">Production Voronoi-based DFN generator; this geodesic variant is the research path.</data></edge>
-<edge id="e44" source="n72" target="n153"><data key="reason">Joint-set seeds for DFN generation.</data></edge>
-<edge id="e45" source="n73" target="n111"><data key="reason">Quarry-bench mesh inputs benefit from OBB analysis.</data></edge>
-<edge id="e46" source="n73" target="n157"><data key="reason">Production DFN generator consumes CVT seeds.</data></edge>
-<edge id="e47" source="n73" target="n153"><data key="reason">Joint-set parameters drive CVT seed distribution.</data></edge>
-<edge id="e48" source="n73" target="n157"><data key="reason">Production DFN partitioner; this Geogram Voronoi is the research-grade alternative.</data></edge>
-<edge id="e49" source="n73" target="n153"><data key="reason">Joint-set fracture statistics feed Voronoi partitioning.</data></edge>
-<edge id="e50" source="n74" target="n93"><data key="reason">Convex decomposition feeds collision-detection for masonry block assembly.</data></edge>
-<edge id="e51" source="n74" target="n79"><data key="reason">Convex parts simplify interface auto-detection between non-convex blocks.</data></edge>
-<edge id="e52" source="n75" target="n129"><data key="reason">SUPERSEDED BY: Sanitize Mesh (Backend = Auto) does the same Geogram-&gt;CGAL repair plus a CGAL-Ready verdict.</data></edge>
-<edge id="e53" source="n75" target="n111"><data key="reason">Quarry-bench mesh OBB analysis.</data></edge>
-<edge id="e54" source="n79" target="n107"><data key="reason">Vertex-proximity detection for scan-derived meshes (slight gaps, non-planar contacts); use it when this polygon-based detector misses contacts.</data></edge>
-<edge id="e55" source="n95" target="n96"><data key="reason">Certification path: CRA (Kao 2022) rejects self-stressed states that RBE accepts (H-model); certify via Masonry Stability Check + CRA.</data></edge>
-<edge id="e56" source="n108" target="n76"><data key="reason">production coursed layout; this settle drops rough rubble into the dimples instead of a regular grid</data></edge>
-<edge id="e57" source="n108" target="n80"><data key="reason">inventory-aware ashlar packer for the same stone inventory</data></edge>
-<edge id="e58" source="n108" target="n95"><data key="reason">full rigid-block equilibrium; this component does only the per-stone COM-over-support gate</data></edge>
-<edge id="e59" source="n118" target="n113"><data key="reason">Feed this Transform into Cloud ICP&#x27;s Initial Guess for coarse-georef then fine-ICP.</data></edge>
-<edge id="e60" source="n118" target="n152"><data key="reason">Georeference GPR picks into the scan/bench frame before overlaying.</data></edge>
-<edge id="e61" source="n118" target="n126"><data key="reason">Move to Origin recenters; this aligns to another dataset via control points.</data></edge>
-<edge id="e62" source="n126" target="n111"><data key="reason">Bench built from a UTM scan lands far from origin; recenter it here.</data></edge>
-<edge id="e63" source="n126" target="n127"><data key="reason">LAS/LAZ clouds are in real-world (UTM) coordinates.</data></edge>
-<edge id="e64" source="n129" target="n131"><data key="reason">Alpha-Shape / reconstruction output usually needs sanitation before use.</data></edge>
-<edge id="e65" source="n129" target="n129"><data key="reason">Sanitize first (weld/triangulate), then close holes.</data></edge>
-<edge id="e66" source="n129" target="n131"><data key="reason">Alpha-Shape output is open; close holes to get a watertight tool mesh.</data></edge>
-<edge id="e67" source="n138" target="n156"><data key="reason">Cleaned ground TIN feeds the overburden volume.</data></edge>
-<edge id="e68" source="n138" target="n131"><data key="reason">Cleans the over-triangulated reconstruction output.</data></edge>
-<edge id="e69" source="n140" target="n141"><data key="reason">Discovers joint sets from a scan; this ingests measured ones.</data></edge>
-<edge id="e70" source="n140" target="n153"><data key="reason">Author a single set by hand instead of reading a file.</data></edge>
-<edge id="e71" source="n141" target="n142"><data key="reason">The in-process managed twin (small clouds).</data></edge>
-<edge id="e72" source="n142" target="n120"><data key="reason">Produces the point cloud this segments.</data></edge>
-<edge id="e73" source="n144" target="n58"><data key="reason">SUPERSEDED BY: GPR File Loader — native multi-format ingest (CSV / SEG-Y / RD3 / DT1 / DZT / IDS .dt), no external conversion needed.</data></edge>
-<edge id="e74" source="n144" target="n150"><data key="reason">SUPERSEDED BY: GPR Fracture Extract — full processing chain (f-k migration + Hilbert energy + continuity) with stone/frequency presets.</data></edge>
-<edge id="e75" source="n145" target="n145"><data key="reason">Standalone 3D DLBF mixed-size packer (F2D0BC18); the same engine this facade composes.</data></edge>
-<edge id="e76" source="n149" target="n150"><data key="reason">Source of the reflector picks (deepest = bedrock).</data></edge>
-<edge id="e77" source="n149" target="n156"><data key="reason">This bedrock mesh is its Bedrock input.</data></edge>
-<edge id="e78" source="n149" target="n138"><data key="reason">Clean the ground TIN first.</data></edge>
-<edge id="e79" source="n150" target="n60"><data key="reason">Alternative radargram visual; this one adds processing + extraction.</data></edge>
-<edge id="e80" source="n150" target="n152"><data key="reason">Drape these extracted picks onto a bench/block mesh.</data></edge>
-<edge id="e81" source="n150" target="n156"><data key="reason">The deepest continuous reflector = bedrock surface z_r for the overburden strip.</data></edge>
-<edge id="e82" source="n152" target="n60"><data key="reason">Source of the reflector picks this overlays.</data></edge>
-<edge id="e83" source="n152" target="n136"><data key="reason">Fracture meshes are the BlockCutOpt fracture input.</data></edge>
-<edge id="e84" source="n152" target="n126"><data key="reason">Bring GPR picks + the bench mesh into one coordinate frame first.</data></edge>
-<edge id="e85" source="n154" target="n141"><data key="reason">Upstream: discovers dip/dipdir/spacing from a scan.</data></edge>
-<edge id="e86" source="n154" target="n140"><data key="reason">Upstream: ingests measured dip/dipdir orientations.</data></edge>
-<edge id="e87" source="n154" target="n143"><data key="reason">Downstream: wire-saw staged guillotine packing against this DFN.</data></edge>
-<edge id="e88" source="n161" target="n141"><data key="reason">Upstream source of dip/dipdir/spacing/share + facets.csv.</data></edge>
-<edge id="e89" source="n162" target="n141"><data key="reason">Upstream: dip/dipdir/spacing per set.</data></edge>
-<edge id="e90" source="n162" target="n154"><data key="reason">The infinite-plane (deterministic) sibling; this is finite-persistence + stochastic.</data></edge>
-<edge id="e91" source="n172" target="n62"><data key="reason">Source of the real fracture trace curves (.shp / .geojson).</data></edge>
-<edge id="e92" source="n172" target="n169"><data key="reason">Consumes these vertical planes to cut a block into slabs.</data></edge>
+<edge id="e20" source="n61" target="n62"><data key="reason">Snap points onto its section, then convert them here; the CSV out reloads via its Picks CSV input.</data></edge>
+<edge id="e21" source="n61" target="n192"><data key="reason">Feed Pick Points + Labels straight into the overlay.</data></edge>
+<edge id="e22" source="n62" target="n60"><data key="reason">Same GPR file; this draws the radargram instead of just trace origins.</data></edge>
+<edge id="e23" source="n62" target="n160"><data key="reason">Picked reflectors become fracture inputs for block-cut optimisation.</data></edge>
+<edge id="e24" source="n65" target="n68"><data key="reason">Produces the placed fragments this pass de-penetrates</data></edge>
+<edge id="e25" source="n65" target="n70"><data key="reason">Source of real (open) scan shards that need closing before the inside test</data></edge>
+<edge id="e26" source="n71" target="n67"><data key="reason">Shatter the generated block into fragments for training / round-trip</data></edge>
+<edge id="e27" source="n71" target="n66"><data key="reason">Give the shards worn fracture surfaces before assembly</data></edge>
+<edge id="e28" source="n71" target="n68"><data key="reason">Reassemble the shards (round-trip test of the target)</data></edge>
+<edge id="e29" source="n72" target="n197"><data key="reason">Production DFN generator consumes CVT seeds.</data></edge>
+<edge id="e30" source="n72" target="n193"><data key="reason">Joint-set parameters drive CVT seed distribution.</data></edge>
+<edge id="e31" source="n73" target="n68"><data key="reason">Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.</data></edge>
+<edge id="e32" source="n74" target="n162"><data key="reason">Density-watershed sub-zones feed the production solver&#x27;s I10 sub-division pass.</data></edge>
+<edge id="e33" source="n74" target="n133"><data key="reason">Bench mesh source for the tested area whose density is partitioned here.</data></edge>
+<edge id="e34" source="n75" target="n162"><data key="reason">Production single-best-fit solver; Fisher-robust extension reports stability of that optimum under fracture-orientation noise.</data></edge>
+<edge id="e35" source="n75" target="n193"><data key="reason">Source of fracture-orientation distribution used here.</data></edge>
+<edge id="e36" source="n76" target="n98"><data key="reason">Production 3D packer; this mixed-size variant is the heterogeneous-block research path.</data></edge>
+<edge id="e37" source="n76" target="n102"><data key="reason">Production rubble packer for varied-height inputs.</data></edge>
+<edge id="e38" source="n76" target="n162"><data key="reason">Upstream source of the block inventory this packer consumes.</data></edge>
+<edge id="e39" source="n77" target="n162"><data key="reason">Production solver; this inspector visualises the Pareto front of a solver run.</data></edge>
+<edge id="e40" source="n77" target="n161"><data key="reason">Multi-objective production solver.</data></edge>
+<edge id="e41" source="n78" target="n162"><data key="reason">Source of the optimised cutting grid being exported to VTU for external visualisation.</data></edge>
+<edge id="e42" source="n79" target="n197"><data key="reason">Production Voronoi-based DFN generator; this geodesic variant is the research path.</data></edge>
+<edge id="e43" source="n79" target="n193"><data key="reason">Joint-set seeds for DFN generation.</data></edge>
+<edge id="e44" source="n80" target="n212"><data key="reason">Production cutting pipeline for slab + fracture inputs.</data></edge>
+<edge id="e45" source="n84" target="n115"><data key="reason">Convex decomposition feeds collision-detection for masonry block assembly.</data></edge>
+<edge id="e46" source="n84" target="n101"><data key="reason">Convex parts simplify interface auto-detection between non-convex blocks.</data></edge>
+<edge id="e47" source="n87" target="n152"><data key="reason">SUPERSEDED BY: Sanitize Mesh (Backend = Auto) does the same Geogram-&gt;CGAL repair plus a CGAL-Ready verdict.</data></edge>
+<edge id="e48" source="n88" target="n121"><data key="reason">Diagnose mesh quality before deciding to repair.</data></edge>
+<edge id="e49" source="n90" target="n121"><data key="reason">Production mesh analysis; SDF segmentation is a research probe.</data></edge>
+<edge id="e50" source="n90" target="n162"><data key="reason">Segmented mesh regions can feed the BlockCutOpt sub-zone partition (I10).</data></edge>
+<edge id="e51" source="n91" target="n121"><data key="reason">Production mesh analysis; angle-based segmentation is a research probe.</data></edge>
+<edge id="e52" source="n91" target="n120"><data key="reason">Planar-face extraction shares the angle-clustering primitive.</data></edge>
+<edge id="e53" source="n92" target="n162"><data key="reason">OBB feeds BlockCutOpt I2 BVH pruning; this auto-dispatcher selects CGAL or Geogram.</data></edge>
+<edge id="e54" source="n92" target="n133"><data key="reason">Quarry-bench mesh OBB analysis.</data></edge>
+<edge id="e55" source="n93" target="n162"><data key="reason">OBB primitive is used inside the BlockCutOpt solver inner loop (I2 BVH pruning).</data></edge>
+<edge id="e56" source="n93" target="n133"><data key="reason">Quarry-bench mesh inputs benefit from OBB analysis.</data></edge>
+<edge id="e57" source="n94" target="n58"><data key="reason">Production polygon-based slab cutting; uses partitioned polygons as input.</data></edge>
+<edge id="e58" source="n94" target="n125"><data key="reason">Pre-clean polygons before partitioning.</data></edge>
+<edge id="e59" source="n95" target="n212"><data key="reason">Skeleton-based cutting paths feed into the production fracture-cutting pipeline.</data></edge>
+<edge id="e60" source="n95" target="n52"><data key="reason">Polygon ingest sibling for fracture inputs.</data></edge>
+<edge id="e61" source="n97" target="n197"><data key="reason">Production DFN partitioner; this Geogram Voronoi is the research-grade alternative.</data></edge>
+<edge id="e62" source="n97" target="n193"><data key="reason">Joint-set fracture statistics feed Voronoi partitioning.</data></edge>
+<edge id="e63" source="n101" target="n129"><data key="reason">Vertex-proximity detection for scan-derived meshes (slight gaps, non-planar contacts); use it when this polygon-based detector misses contacts.</data></edge>
+<edge id="e64" source="n117" target="n118"><data key="reason">Certification path: CRA (Kao 2022) rejects self-stressed states that RBE accepts (H-model); certify via Masonry Stability Check + CRA.</data></edge>
+<edge id="e65" source="n130" target="n98"><data key="reason">production coursed layout; this settle drops rough rubble into the dimples instead of a regular grid</data></edge>
+<edge id="e66" source="n130" target="n102"><data key="reason">inventory-aware ashlar packer for the same stone inventory</data></edge>
+<edge id="e67" source="n130" target="n117"><data key="reason">full rigid-block equilibrium; this component does only the per-stone COM-over-support gate</data></edge>
+<edge id="e68" source="n135" target="n152"><data key="reason">Sanitize first (weld/triangulate), then close holes.</data></edge>
+<edge id="e69" source="n135" target="n154"><data key="reason">Alpha-Shape output is open; close holes to get a watertight tool mesh.</data></edge>
+<edge id="e70" source="n141" target="n136"><data key="reason">Feed this Transform into Cloud ICP&#x27;s Initial Guess for coarse-georef then fine-ICP.</data></edge>
+<edge id="e71" source="n141" target="n192"><data key="reason">Georeference GPR picks into the scan/bench frame before overlaying.</data></edge>
+<edge id="e72" source="n141" target="n149"><data key="reason">Move to Origin recenters; this aligns to another dataset via control points.</data></edge>
+<edge id="e73" source="n149" target="n133"><data key="reason">Bench built from a UTM scan lands far from origin; recenter it here.</data></edge>
+<edge id="e74" source="n149" target="n150"><data key="reason">LAS/LAZ clouds are in real-world (UTM) coordinates.</data></edge>
+<edge id="e75" source="n152" target="n135"><data key="reason">Pair sanitation with hole-closing to reach a watertight surface.</data></edge>
+<edge id="e76" source="n152" target="n154"><data key="reason">Alpha-Shape / reconstruction output usually needs sanitation before use.</data></edge>
+<edge id="e77" source="n164" target="n196"><data key="reason">Cleaned ground TIN feeds the overburden volume.</data></edge>
+<edge id="e78" source="n164" target="n154"><data key="reason">Cleans the over-triangulated reconstruction output.</data></edge>
+<edge id="e79" source="n166" target="n167"><data key="reason">Discovers joint sets from a scan; this ingests measured ones.</data></edge>
+<edge id="e80" source="n166" target="n193"><data key="reason">Author a single set by hand instead of reading a file.</data></edge>
+<edge id="e81" source="n167" target="n168"><data key="reason">The in-process managed twin (small clouds).</data></edge>
+<edge id="e82" source="n167" target="n162"><data key="reason">Consumes the discontinuity model.</data></edge>
+<edge id="e83" source="n168" target="n162"><data key="reason">Consumes the discontinuity model this produces.</data></edge>
+<edge id="e84" source="n168" target="n143"><data key="reason">Produces the point cloud this segments.</data></edge>
+<edge id="e85" source="n177" target="n60"><data key="reason">SUPERSEDED BY: GPR File Loader — native multi-format ingest (CSV / SEG-Y / RD3 / DT1 / DZT / IDS .dt), no external conversion needed.</data></edge>
+<edge id="e86" source="n177" target="n190"><data key="reason">SUPERSEDED BY: GPR Fracture Extract — full processing chain (f-k migration + Hilbert energy + continuity) with stone/frequency presets.</data></edge>
+<edge id="e87" source="n179" target="n76"><data key="reason">Standalone 2D DLBF mixed-size packer (F2D0BC17); the same engine this facade composes.</data></edge>
+<edge id="e88" source="n179" target="n181"><data key="reason">Standalone 3D DLBF mixed-size packer (F2D0BC18); the same engine this facade composes.</data></edge>
+<edge id="e89" source="n179" target="n162"><data key="reason">Standalone stage-1 solver: optimum cutting direction + displacement (Elkarmoty 2020).</data></edge>
+<edge id="e90" source="n189" target="n190"><data key="reason">Source of the reflector picks (deepest = bedrock).</data></edge>
+<edge id="e91" source="n189" target="n196"><data key="reason">This bedrock mesh is its Bedrock input.</data></edge>
+<edge id="e92" source="n189" target="n164"><data key="reason">Clean the ground TIN first.</data></edge>
+<edge id="e93" source="n190" target="n62"><data key="reason">Alternative radargram visual; this one adds processing + extraction.</data></edge>
+<edge id="e94" source="n190" target="n192"><data key="reason">Drape these extracted picks onto a bench/block mesh.</data></edge>
+<edge id="e95" source="n190" target="n196"><data key="reason">The deepest continuous reflector = bedrock surface z_r for the overburden strip.</data></edge>
+<edge id="e96" source="n192" target="n62"><data key="reason">Source of the reflector picks this overlays.</data></edge>
+<edge id="e97" source="n192" target="n160"><data key="reason">Fracture meshes are the BlockCutOpt fracture input.</data></edge>
+<edge id="e98" source="n192" target="n149"><data key="reason">Bring GPR picks + the bench mesh into one coordinate frame first.</data></edge>
+<edge id="e99" source="n194" target="n167"><data key="reason">Upstream: discovers dip/dipdir/spacing from a scan.</data></edge>
+<edge id="e100" source="n194" target="n166"><data key="reason">Upstream: ingests measured dip/dipdir orientations.</data></edge>
+<edge id="e101" source="n194" target="n161"><data key="reason">Downstream (evolved): sub-division + coarse-to-fine + Pareto recovery on this DFN.</data></edge>
+<edge id="e102" source="n194" target="n169"><data key="reason">Downstream: wire-saw staged guillotine packing against this DFN.</data></edge>
+<edge id="e103" source="n204" target="n167"><data key="reason">Upstream source of dip/dipdir/spacing/share + facets.csv.</data></edge>
+<edge id="e104" source="n205" target="n167"><data key="reason">Upstream: dip/dipdir/spacing per set.</data></edge>
+<edge id="e105" source="n205" target="n194"><data key="reason">The infinite-plane (deterministic) sibling; this is finite-persistence + stochastic.</data></edge>
+<edge id="e106" source="n205" target="n161"><data key="reason">Downstream: block-cut yield per realisation (Monte-Carlo over seeds).</data></edge>
+<edge id="e107" source="n215" target="n64"><data key="reason">Source of the real fracture trace curves (.shp / .geojson).</data></edge>
+<edge id="e108" source="n215" target="n212"><data key="reason">Consumes these vertical planes to cut a block into slabs.</data></edge>
 </graph>
 </graphml>
