@@ -70,6 +70,24 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
             "sandstone 0.80, marble/travertine 0.75, andesite 0.50, tuff 0.38. ONLY stone-specific detection " +
             "knob; velocity/eps_r/frequency still set sigma_recon + the (now depth-aware) size floor.",
             GH_ParamAccess.item, 0.80);
+        p.AddBooleanParameter("Through Picks", "Xp",
+            "EXACT interpolation: collapse each fracture's picks to one PEAK pick per cell (keep the " +
+            "highest-energy reflector) and krige with a near-zero nugget so the surface passes THROUGH " +
+            "every peak pick (posterior sigma ~0 at picks) and spans the full survey footprint as one " +
+            "continuous dipping sheet. False = smoothing fit (the old behaviour). Default true.",
+            GH_ParamAccess.item, true);
+        p.AddNumberParameter("Pick Energy", "En",
+            "OPTIONAL per-pick energy/confidence (0..1), aligned to Fracture Picks (wire the Confidence " +
+            "output of GPR Survey Grid / GPR Fracture Extract). With Through Picks on, the PEAK (highest- " +
+            "energy) pick is kept per cell. Omit to keep the pick nearest the local trend.",
+            GH_ParamAccess.list);
+        p[p.ParamCount - 1].Optional = true;
+        p.AddBooleanParameter("Peak Dedup", "Dd",
+            "K2 (default true): collapse each cell to its single PEAK reflector before kriging -> smoothest " +
+            "sheet, lowest residual, rides the strong reflectors. False = K1: keep EVERY pick as a hard " +
+            "constraint -> maximum fidelity to the raw cloud, marginally lower posterior sigma, but the " +
+            "surface buckles where near-coincident picks disagree. Only applies when Through Picks is on.",
+            GH_ParamAccess.item, true);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -102,17 +120,21 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
         if (!da.GetDataList(0, pts) || pts.Count < 6)
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 6 fracture picks."); return; }
         int k = -1, gridRes = 36; double v = 0.1, freq = 600, epsR = 9, dEps = 1.0, tol = 0.02;
-        bool assumeOpen = true; double timeZeroNs = 0.0, detectBase = 0.80;
+        bool assumeOpen = true; double timeZeroNs = 0.0, detectBase = 0.80; bool throughPicks = true;
         da.GetData(1, ref k); da.GetData(2, ref gridRes);
         da.GetData(3, ref v); da.GetData(4, ref freq); da.GetData(5, ref epsR);
         da.GetData(6, ref dEps); da.GetData(7, ref tol);
         da.GetData(8, ref assumeOpen); da.GetData(9, ref timeZeroNs); da.GetData(10, ref detectBase);
+        da.GetData(11, ref throughPicks);
+        var energies = new List<double>(); da.GetDataList(12, energies);
+        bool peakDedup = true; da.GetData(13, ref peakDedup);
         gridRes = Math.Max(8, Math.Min(120, gridRes));
 
         // pick cloud as (x, y, depth=-z)
         int n = pts.Count;
-        var X = new double[n]; var Y = new double[n]; var D = new double[n];
-        for (int i = 0; i < n; i++) { X[i] = pts[i].X; Y[i] = pts[i].Y; D[i] = -pts[i].Z; }
+        var X = new double[n]; var Y = new double[n]; var D = new double[n]; var En = new double[n];
+        bool haveEnergy = energies != null && energies.Count == n;
+        for (int i = 0; i < n; i++) { X[i] = pts[i].X; Y[i] = pts[i].Y; D[i] = -pts[i].Z; En[i] = haveEnergy ? energies[i] : 1.0; }
 
         // adaptive depth clustering -> labels (every pick assigned)
         int[] labels = ClusterByDepth(D, k, out int kEff);
@@ -140,21 +162,67 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
             var idx = new List<int>();
             for (int i = 0; i < n; i++) if (labels[i] == c) idx.Add(i);
             if (idx.Count < 4) continue;
-            var cx = idx.Select(i => X[i]).ToArray();
-            var cy = idx.Select(i => Y[i]).ToArray();
-            var cd = idx.Select(i => D[i]).ToArray();
-            double ctr = cd.Average();
+            var cxAll = idx.Select(i => X[i]).ToArray();
+            var cyAll = idx.Select(i => Y[i]).ToArray();
+            var cdAll = idx.Select(i => D[i]).ToArray();
+            var ceAll = idx.Select(i => En[i]).ToArray();
+            double ctr = cdAll.Average();
+            int rawPicks = idx.Count;
 
-            Kriging kr;
-            try { kr = new Kriging(cx, cy, cd); }
-            catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
-                $"fracture {c}: kriging failed ({ex.Message})"); continue; }
+            double[] cx, cy, cd;
+            if (throughPicks && peakDedup)
+            {
+                // K2: collapse to one PEAK pick per cell (highest energy, or nearest the cluster trend if no
+                // energy) so near-coincident conflicting picks cannot fight the exact interpolation.
+                double xs = Span(cxAll), ys = Span(cyAll);
+                double dedup = Math.Max(1e-3, Math.Max(xs, Math.Max(ys, 1e-9)) / Math.Max(8, gridRes));
+                var best = new Dictionary<long, int>();
+                for (int i = 0; i < rawPicks; i++)
+                {
+                    long key = (long)Math.Round(cxAll[i] / dedup) * 100003L + (long)Math.Round(cyAll[i] / dedup);
+                    if (!best.TryGetValue(key, out int b)) best[key] = i;
+                    else
+                    {
+                        bool better = haveEnergy ? ceAll[i] > ceAll[b]
+                                                 : Math.Abs(cdAll[i] - ctr) < Math.Abs(cdAll[b] - ctr);
+                        if (better) best[key] = i;
+                    }
+                }
+                var peak = best.Values.ToArray();
+                cx = peak.Select(i => cxAll[i]).ToArray();
+                cy = peak.Select(i => cyAll[i]).ToArray();
+                cd = peak.Select(i => cdAll[i]).ToArray();
+            }
+            else { cx = cxAll; cy = cyAll; cd = cdAll; }
+            if (cx.Length < 4) continue;
 
-            // grid over the cluster XY bbox; keep cells near data (mask)
             double x0 = cx.Min(), x1 = cx.Max(), y0 = cy.Min(), y1 = cy.Max();
             if (x1 - x0 < 1e-6 || y1 - y0 < 1e-6) continue;
             double cell = Math.Max((x1 - x0), (y1 - y0)) / gridRes;
-            double maskR = Math.Max(2.0 * cell, 0.4);
+            double extent = Math.Max(x1 - x0, y1 - y0);
+
+            Kriging kr;
+            try
+            {
+                if (throughPicks)
+                {
+                    // EXACT: explicit range ~ footprint scale + near-zero nugget so the sheet passes
+                    // THROUGH every peak pick (posterior sigma ~0 at picks); reduces kriging uncertainty.
+                    double mean = cd.Average();
+                    double sill = 0; for (int i = 0; i < cd.Length; i++) sill += (cd[i] - mean) * (cd[i] - mean);
+                    sill = Math.Max(1e-9, sill / Math.Max(1, cd.Length - 1));
+                    double range = Math.Max(1.0, 0.6 * extent);
+                    double nug = peakDedup ? 1e-6 * sill : 1e-5 * sill;  // K2 vs K1 (all-picks needs a touch more for SPD)
+                    kr = new Kriging(cx, cy, cd, range, sill, nug);
+                }
+                else kr = new Kriging(cx, cy, cd);
+            }
+            catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                $"fracture {c}: kriging failed ({ex.Message})"); continue; }
+
+            // mask: generous enough to BRIDGE between scan lines into one continuous sheet (Through Picks);
+            // the old tight blob mask (0.4 m) only when smoothing.
+            double maskR = throughPicks ? Math.Max(2.0 * cell, 0.6 * extent) : Math.Max(2.0 * cell, 0.4);
 
             var mesh = new Mesh();
             var vIndex = new int[gridRes * gridRes];
@@ -203,7 +271,8 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
             detList.Add(pDet);
             effNum += effConf * area; detNum += pDet * area; areaSum += area;
 
-            rpt.AppendLine($"  fracture {c}: depth {ctr:0.##} m, {idx.Count} picks, dip {meanDipDeg:0.}deg, " +
+            string pkNote = throughPicks ? (peakDedup ? $"{rawPicks} picks->{cx.Length} peaks (K2)" : $"{cx.Length} picks exact (K1)") : $"{rawPicks} picks (smooth)";
+            rpt.AppendLine($"  fracture {c}: depth {ctr:0.##} m, {pkNote}, dip {meanDipDeg:0.}deg, " +
                            $"area {area:0.#} m^2, krige range {kr.Range:0.##} m -> mean sigma {meanSig:0.###} m, " +
                            $"confidence {meanConf * 100:0.#}%, detectability {pDet * 100:0.#}%, effective {effConf * 100:0.#}%");
         }
@@ -265,6 +334,13 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
         for (int i = 0; i < n; i++) lab[i] = remap[lab[i]];
         kEff = k;
         return lab;
+    }
+
+    private static double Span(double[] a)
+    {
+        double lo = double.MaxValue, hi = double.MinValue;
+        foreach (var v in a) { if (v < lo) lo = v; if (v > hi) hi = v; }
+        return hi > lo ? hi - lo : 0.0;
     }
 
     private static double NearestDist(double[] x, double[] y, double qx, double qy)
