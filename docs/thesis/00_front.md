@@ -1,10 +1,27 @@
-### Frahan StonePack: An Architectural Thesis
+### Frahan StonePack: An Applied Thesis in Support of the Software
 
 ### Pre-CAM Stone Fabrication-Readiness for Rhino and Grasshopper
 
 Author: Independent Research
 Date: 2026-06-13
 Open data. Open source. No university affiliation.
+
+---
+
+## Nature of this thesis
+
+This is an applied thesis. Its primary contribution is the software itself, the
+Frahan StonePack Grasshopper plug-in, and this document exists to support that
+software development: to derive the mathematics each subsystem implements, to
+classify every component by originality against the published literature, and to
+validate the results on the Rhino canvas. It is not a theoretical treatise that a
+tool happens to accompany. It is the written account of an applied research-and-
+development effort whose deliverable is the running system. The reader should treat
+the code, the benchmarks, and the example definitions as the primary evidence, and
+this document as their structured explanation. Every chapter therefore takes one
+shipping subsystem and answers three engineering questions about it: what published
+method does it implement, how was that method derived and evolved in code, and what
+does the validated result look like in practice.
 
 ---
 
