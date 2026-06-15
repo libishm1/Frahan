@@ -86,7 +86,7 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         var bins = new List<Mesh>();
         if (!da.GetDataList(0, bins) || bins.Count == 0)
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No container meshes."); return; }
-        double Lx = 0.9, Ly = 0.7, Lz = 0.4, kerf = 0.03, clr = 0.0; bool run = true, safe = false; int packer = 1;
+        double Lx = 0.9, Ly = 0.7, Lz = 0.4, kerf = 0.03, clr = 0.0; bool run = true, safe = false; int packer = 4;
         da.GetData(1, ref Lx); da.GetData(2, ref Ly); da.GetData(3, ref Lz);
         da.GetData(4, ref kerf); da.GetData(5, ref clr); da.GetData(6, ref run);
         da.GetData(7, ref safe); da.GetData(8, ref packer);
@@ -104,7 +104,8 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         var yields = new List<double>();
         var rpt = new StringBuilder();
         string pkName = packer <= 0 ? "0 grid" : packer == 1 ? "1 best-of" : packer == 2 ? "2 combined-grid"
-                        : packer == 3 ? "3 voxel-dlbf" : "4 voxel-dlbf-multi";
+                        : packer == 3 ? "3 voxel-dlbf" : packer == 4 ? "4 voxel-dlbf-multi"
+                        : "5 guillotine-separable";
         rpt.AppendLine($"mode: {(safe ? $"UNCERTAINTY-SAFE (clearance {effClr} m = fracture sigma)" : "geometric (clearance ignored)")}" +
                        $" | packer: {pkName}");
         rpt.AppendLine($"dimension block {Lx}x{Ly}x{Lz} m (kerf {kerf}, clearance {effClr}) into {bins.Count} fracture bins:");
