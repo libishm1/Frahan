@@ -1,0 +1,38 @@
+<VERSION>
+           1
+<NAME>
+TA010010
+<DIRECT>
+\
+<CAMP>
+         140         512
+<X_CELL>
+  2.6041601E-02
+<Y_TIME_CELL>
+  1.5625000E-10
+<PROP_VEL>
+  1.0000000E+08
+<T_SOIL_SAMPLE>
+  0.0000000E+00
+<ID_SWAT>
+          10
+<ID_CHANNEL>
+           1
+<ID_SCAN>
+          10
+<TX>
+           1  5.9999999E-02  0.0000000E+00  0.0000000E+00   600.0000    
+<RX>
+           1 -5.9999999E-02  0.0000000E+00  0.0000000E+00   600.0000    
+<X_OFFSET>
+  0.0000000E+00
+<REF_COORD>
+  0.0000000E+00
+<N_REC_DATA>
+          10
+<AD_OFFSET>
+  0.0000000E+00
+<MARKER>
+      1  7
+<MARKER>
+    140  7

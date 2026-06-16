@@ -46,6 +46,12 @@ namespace Frahan.StonePack.Harness
 
         public static int Main(string[] args)
         {
+            // Headless GPR pipeline profiler. Pure Core array math (no Rhino types),
+            // so it runs without the Rhino.Inside boot below. Intercept before Parse
+            // (which requires a fixture path).
+            if (args.Length >= 1 && args[0] == "--gpr")
+                return GprProfile.Run(args);
+
             var opts = HarnessOptions.Parse(args);
             if (opts == null)
             {

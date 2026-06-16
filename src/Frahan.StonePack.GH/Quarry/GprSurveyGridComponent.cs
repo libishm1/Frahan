@@ -86,6 +86,20 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
             "USGS dip gate (deg). < 0 = default 45 (crystalline-rock standard).", GH_ParamAccess.item, -1.0);
         p.AddBooleanParameter("Migrate", "Mig",
             "f-k (Stolt) migration on every line. Default true.", GH_ParamAccess.item, true);
+        p.AddIntegerParameter("Orientation", "Ax",
+            "OPTIONAL per-line axis for a BIDIRECTIONAL grid: 0 = longitudinal (line runs along X, lines " +
+            "stacked in Y), 1 = transverse / cross-line (runs along Y, stacked in X). Empty = auto-detect " +
+            "from the filename (contains 'TA' -> transverse, else longitudinal); a single value applies to " +
+            "all. With BOTH axes present the picks form a true crossing grid and each axis is spaced to fit " +
+            "the other axis' extent (the cross-lines MEASURE the perpendicular dip instead of interpolating " +
+            "it); with one axis it falls back to Line Spacing (parallel lines).",
+            GH_ParamAccess.list);
+        p[p.ParamCount - 1].Optional = true;
+        p.AddGenericParameter("Custom Preset", "CPr",
+            "OPTIONAL constructed GPR preset (from 'Construct GPR Preset'). If provided, it OVERRIDES the named " +
+            "Preset string -- use it for any stone/antenna the two built-in empirical presets do not cover.",
+            GH_ParamAccess.item);
+        p[p.ParamCount - 1].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -118,35 +132,35 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
         var positions = new List<double>(); da.GetDataList(3, positions);
         da.GetData(4, ref vOverride); da.GetData(5, ref qOverride); da.GetData(6, ref dipOverride);
         bool migrateSet = da.GetData(7, ref migrate);
+        var orient = new List<int>(); da.GetDataList(8, orient);
         bool havePositions = positions != null && positions.Count == files.Count;
 
-        if (!GprPresets.TryGet(presetKey, out var preset))
-        { AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-            $"Unknown preset '{presetKey}'. Have: {string.Join(", ", GprPresets.Keys)}"); return; }
-        if (!preset.IsEmpirical)
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
-                $"Preset '{presetKey}' is literature-default (not yet tuned on real data); verify the velocity.");
+        // resolve the preset: a constructed Custom Preset (input 9) OVERRIDES the named key.
+        GprPreset preset = null;
+        Grasshopper.Kernel.Types.IGH_Goo cprGoo = null;
+        if (da.GetData(9, ref cprGoo) && cprGoo is GprPresetGoo cpg && cpg.Value != null)
+            preset = cpg.Value;
+        if (preset == null)
+        {
+            if (!GprPresets.TryGet(presetKey, out preset))
+            { AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                $"Unknown preset '{presetKey}'. Have: {string.Join(", ", GprPresets.Keys)}"); return; }
+            if (!preset.IsEmpirical)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
+                    $"Preset '{presetKey}' is literature-default (not yet tuned on real data); verify the velocity.");
+        }
 
-        var pts = new List<Point3d>();
-        var lineIds = new List<int>();
-        var conf = new List<double>();
-        var depths = new List<double>();
-        var sections = new List<Mesh>();
-        var bedrocks = new List<double>();
         var rpt = new System.Text.StringBuilder();
-        rpt.AppendLine($"GPR survey grid: {files.Count} line(s), preset={presetKey} ({preset.Label}), " +
-                       $"spacing={(havePositions ? "explicit" : spacing.ToString("0.##") + " m")}");
-        int kept = 0;
 
+        // ---- PASS 1: load + process each line; capture picks, energy, length, axis ----
+        var recs = new List<LineRec>(files.Count);
         for (int li = 0; li < files.Count; li++)
         {
             string file = files[li];
-            double yLine = havePositions ? positions[li] : li * spacing;
             if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file))
             { rpt.AppendLine($"  line {li}: SKIP (file not found: {file})"); continue; }
             if (file.EndsWith(".gsf", StringComparison.OrdinalIgnoreCase))
             { rpt.AppendLine($"  line {li}: SKIP (.gsf proprietary -> export to SEG-Y first)"); continue; }
-
             GprRadargram rg;
             try { rg = GprFileReader.Load(file, null); }
             catch (Exception ex) { rpt.AppendLine($"  line {li}: SKIP (load failed: {ex.Message})"); continue; }
@@ -163,28 +177,63 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
             double[,] B; double dtNs, dx;
             try { B = RadargramProcessor.ToGrid(rg, out dtNs, out dx); }
             catch (Exception ex) { rpt.AppendLine($"  line {li}: SKIP (grid build failed: {ex.Message})"); continue; }
-
             double[,] energy; IReadOnlyList<FractureExtractor.FracturePick> picks;
             try { energy = proc.Run(B, dtNs, dx, v); picks = fx.Extract(energy, dtNs, dx, v); }
             catch (Exception ex) { rpt.AppendLine($"  line {li}: SKIP (processing failed: {ex.Message})"); continue; }
 
             int ntr = B.GetLength(1);
-            double bedrock = 0.0;
+            var rec = new LineRec { Energy = energy, DtNs = dtNs, Dx = dx, V = v, FileIndex = li,
+                Fname = System.IO.Path.GetFileName(file) };
+            // axis: explicit list (per-line or single) else auto-detect 'TA' in the filename -> transverse
+            if (orient != null && orient.Count == files.Count) rec.Axis = orient[li] != 0 ? 1 : 0;
+            else if (orient != null && orient.Count == 1) rec.Axis = orient[0] != 0 ? 1 : 0;
+            else rec.Axis = rec.Fname.ToUpperInvariant().Contains("TA") ? 1 : 0;
+            double maxTx = 0;
             foreach (var p in picks)
             {
-                double xpos = rg.Traces[Math.Min(p.TraceIndex, ntr - 1)].X;
-                pts.Add(new Point3d(xpos, yLine, -p.DepthMetres));
-                lineIds.Add(li); conf.Add(p.Energy); depths.Add(p.DepthMetres);
-                if (p.DepthMetres > bedrock) bedrock = p.DepthMetres;
+                double tx = rg.Traces[Math.Min(p.TraceIndex, ntr - 1)].X;
+                rec.Picks.Add(new[] { tx, p.Energy, p.DepthMetres });
+                if (p.DepthMetres > rec.Bedrock) rec.Bedrock = p.DepthMetres;
+                if (tx > maxTx) maxTx = tx;
             }
-            bedrocks.Add(bedrock);
-            sections.Add(BuildEnergyMesh(energy, dx, dtNs, v, yLine));
-            kept += picks.Count;
-            rpt.AppendLine($"  line {li} @ y={yLine:0.##} m: {picks.Count} picks, bedrock {bedrock:0.##} m " +
-                           $"({System.IO.Path.GetFileName(file)})");
+            rec.Length = Math.Max(maxTx, (ntr - 1) * dx);
+            recs.Add(rec);
         }
 
-        rpt.AppendLine($"TOTAL {kept} picks across {bedrocks.Count} ingested line(s) -> feed Picks + Confidence " +
+        // ---- layout: bidirectional grid auto-fits each axis to the crossing axis' extent ----
+        int lonCount = recs.Count(r => r.Axis == 0), traCount = recs.Count(r => r.Axis == 1);
+        double lonLen = recs.Where(r => r.Axis == 0).Select(r => r.Length).DefaultIfEmpty(0).Max();
+        double traLen = recs.Where(r => r.Axis == 1).Select(r => r.Length).DefaultIfEmpty(0).Max();
+        bool bidir = lonCount > 0 && traCount > 0;
+        double lonSpace = bidir && lonCount > 1 ? traLen / (lonCount - 1) : spacing; // long lines stacked in Y
+        double traSpace = bidir && traCount > 1 ? lonLen / (traCount - 1) : spacing; // cross lines stacked in X
+        rpt.Insert(0, $"GPR survey grid: {recs.Count} line(s) ({lonCount} longitudinal + {traCount} transverse, " +
+                      $"{(bidir ? "BIDIRECTIONAL - cross-lines measure the perpendicular dip" : "single-axis")}), " +
+                      $"preset={presetKey} ({preset.Label})\n");
+
+        var pts = new List<Point3d>();
+        var lineIds = new List<int>(); var conf = new List<double>(); var depths = new List<double>();
+        var sections = new List<Mesh>(); var bedrocks = new List<double>();
+        int kept = 0, lonIdx = 0, traIdx = 0;
+        foreach (var rec in recs)
+        {
+            double perp = havePositions ? positions[rec.FileIndex]
+                        : rec.Axis == 0 ? (lonIdx++) * lonSpace : (traIdx++) * traSpace;
+            foreach (var p in rec.Picks)
+            {
+                double tx = p[0]; double depth = p[2];
+                // longitudinal: along X at y=perp. transverse: along Y at x=perp.
+                pts.Add(rec.Axis == 0 ? new Point3d(tx, perp, -depth) : new Point3d(perp, tx, -depth));
+                lineIds.Add(rec.FileIndex); conf.Add(p[1]); depths.Add(depth);
+            }
+            bedrocks.Add(rec.Bedrock);
+            sections.Add(BuildEnergyMesh(rec.Energy, rec.Dx, rec.DtNs, rec.V, perp, rec.Axis));
+            kept += rec.Picks.Count;
+            rpt.AppendLine($"  line {rec.FileIndex} [{(rec.Axis == 0 ? "LON" : "TRA")}] @ {(rec.Axis == 0 ? "y" : "x")}={perp:0.##} m: " +
+                           $"{rec.Picks.Count} picks, bedrock {rec.Bedrock:0.##} m ({rec.Fname})");
+        }
+
+        rpt.AppendLine($"TOTAL {kept} picks across {recs.Count} ingested line(s) -> feed Picks + Confidence " +
                        $"into GPR Fracture Surfaces 3D.");
         if (kept == 0) AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No picks extracted from any line.");
 
@@ -197,8 +246,20 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
         da.SetData(6, rpt.ToString().TrimEnd());
     }
 
-    // depth-converted energy section -> coloured mesh laid at y = yLine (x = distance, z = -depth).
-    private static Mesh BuildEnergyMesh(double[,] e, double dx, double dtNs, double v, double yLine)
+    // per-line scratch record (pass 1 -> placement).
+    private sealed class LineRec
+    {
+        public readonly List<double[]> Picks = new List<double[]>(); // [traceX, energy, depth]
+        public double[,] Energy;
+        public double DtNs, Dx, V, Bedrock, Length;
+        public int Axis;       // 0 = longitudinal (along X), 1 = transverse (along Y)
+        public int FileIndex;
+        public string Fname;
+    }
+
+    // depth-converted energy section -> coloured mesh at perpendicular position perp, oriented by axis
+    // (0 = longitudinal: vertex (t*dx, perp, -depth); 1 = transverse: vertex (perp, t*dx, -depth)).
+    private static Mesh BuildEnergyMesh(double[,] e, double dx, double dtNs, double v, double perp, int axis)
     {
         int ns = e.GetLength(0), ntr = e.GetLength(1);
         double emax = 1e-12; foreach (var x in e) if (x > emax) emax = x;
@@ -207,7 +268,7 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
             for (int i = 0; i < ns; i++)
             {
                 double depth = v * (i * dtNs) / 2.0;
-                m.Vertices.Add(new Point3d(t * dx, yLine, -depth));
+                m.Vertices.Add(axis == 0 ? new Point3d(t * dx, perp, -depth) : new Point3d(perp, t * dx, -depth));
                 double f = Math.Max(0.0, Math.Min(1.0, e[i, t] / emax));
                 m.VertexColors.Add(Jet(f));
             }

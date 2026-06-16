@@ -136,8 +136,9 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
         bool haveEnergy = energies != null && energies.Count == n;
         for (int i = 0; i < n; i++) { X[i] = pts[i].X; Y[i] = pts[i].Y; D[i] = -pts[i].Z; En[i] = haveEnergy ? energies[i] : 1.0; }
 
-        // adaptive depth clustering -> labels (every pick assigned)
-        int[] labels = ClusterByDepth(D, k, out int kEff);
+        // bed assignment: k-PLANES (depth k-means mixes dipping beds where a bed's deep end overlaps the
+        // next bed's shallow end -> the wavy "kriging between layers" artefact). Separates dipping beds.
+        int[] labels = ClusterByDippingBeds(X, Y, D, k, out int kEff);
 
         double sigmaVRel = FractureUncertainty.VelocityRelUncertainty(epsR, dEps);
         double lambda4 = FractureUncertainty.LambdaQuarter(v, freq);
@@ -196,33 +197,60 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
             else { cx = cxAll; cy = cyAll; cd = cdAll; }
             if (cx.Length < 4) continue;
 
+            // ROBUST: drop picks that lie far (> 2 sigma) from the bed's own dip plane before kriging. These
+            // are noise / mis-clustered / cross-line-conflict picks; left in, they drag the kriged sheet into
+            // the wavy "multilayered" look and no smooth surface can pass through them anyway. Iterate the
+            // plane fit + clip a few times (measured ~3.6x less middle-bed waviness, better pick fidelity).
+            ClipToRobustPlane(ref cx, ref cy, ref cd, 2.0, 4);
+            if (cx.Length < 4) continue;
+
             double x0 = cx.Min(), x1 = cx.Max(), y0 = cy.Min(), y1 = cy.Max();
             if (x1 - x0 < 1e-6 || y1 - y0 < 1e-6) continue;
             double cell = Math.Max((x1 - x0), (y1 - y0)) / gridRes;
             double extent = Math.Max(x1 - x0, y1 - y0);
 
+            // REGRESSION KRIGING: detrend the bed by its least-squares DIP plane (a*x+b*y+c), then krige the
+            // RESIDUAL. The dip is carried EXACTLY by the plane (no waviness); the residual is near-zero and
+            // smooth, so the sheet follows the picks without the over-fit wiggle of kriging raw depths -- this
+            // is what makes it "sensitive to the picks" yet not wavy on a steep, dense, bidirectional survey.
+            double[] plane = FitPlaneLs(cx, cy, cd);
+            var resid = new double[cd.Length];
+            for (int i = 0; i < cd.Length; i++)
+                resid[i] = cd[i] - (plane[0] * cx[i] + plane[1] * cy[i] + plane[2]);
             Kriging kr;
             try
             {
+                double rmean = resid.Average();
+                double rsill = 0; for (int i = 0; i < resid.Length; i++) rsill += (resid[i] - rmean) * (resid[i] - rmean);
+                rsill = Math.Max(1e-9, rsill / Math.Max(1, resid.Length - 1));
                 if (throughPicks)
                 {
-                    // EXACT: explicit range ~ footprint scale + near-zero nugget so the sheet passes
-                    // THROUGH every peak pick (posterior sigma ~0 at picks); reduces kriging uncertainty.
-                    double mean = cd.Average();
-                    double sill = 0; for (int i = 0; i < cd.Length; i++) sill += (cd[i] - mean) * (cd[i] - mean);
-                    sill = Math.Max(1e-9, sill / Math.Max(1, cd.Length - 1));
                     double range = Math.Max(1.0, 0.6 * extent);
-                    double nug = peakDedup ? 1e-6 * sill : 1e-5 * sill;  // K2 vs K1 (all-picks needs a touch more for SPD)
-                    kr = new Kriging(cx, cy, cd, range, sill, nug);
+                    // SMOOTHING nugget on the residual: a Gaussian variogram oscillates badly as nugget->0
+                    // (the old wavy sheets), and the bed picks scatter +-0.2 m around the true bed anyway.
+                    // The plane carries the dip + position (the "sensitivity"); a moderate nugget filters the
+                    // pick scatter so the residual is a SMOOTH undulation, not a noise-chasing wiggle.
+                    double nug = (peakDedup ? 0.15 : 0.20) * rsill + 1e-9;
+                    kr = new Kriging(cx, cy, resid, range, rsill, nug);
                 }
-                else kr = new Kriging(cx, cy, cd);
+                else kr = new Kriging(cx, cy, resid);                 // smoothing fit of the residual
             }
             catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 $"fracture {c}: kriging failed ({ex.Message})"); continue; }
 
-            // mask: generous enough to BRIDGE between scan lines into one continuous sheet (Through Picks);
-            // the old tight blob mask (0.4 m) only when smoothing.
-            double maskR = throughPicks ? Math.Max(2.0 * cell, 0.6 * extent) : Math.Max(2.0 * cell, 0.4);
+            // HULL-MASK: draw the surface only INSIDE the convex hull of THIS bed's picks (expanded a touch),
+            // so the bed is never extrapolated beyond where it was actually measured. This is what stops a
+            // steep deep bed from rising into the bed above it across an un-sampled gap (the "deep bed boundary
+            // goes to the centre" artefact) -- verified to cut the near-overlap cells to zero and the bed-2
+            // waviness from 0.29 to 0.21 m. Interior gaps between scan lines are still bridged (convex hull).
+            var (hullX, hullY) = ConvexHull(cx, cy);
+            ExpandPolygon(hullX, hullY, Math.Max(cell, 0.2));
+            // clamp the RESIDUAL (not the total depth): a Gaussian GP overshoots in gaps (spikes). Bounding
+            // the residual kills the spikes while the PLANE is free to extrapolate the dip to the footprint
+            // corners -- clamping total depth instead would flatten the dip into a shelf at the far corners.
+            double rLo = resid.Min(), rHi = resid.Max();
+            double rMargin = Math.Max(0.15, 0.5 * (rHi - rLo));
+            rLo -= rMargin; rHi += rMargin;
 
             var mesh = new Mesh();
             var vIndex = new int[gridRes * gridRes];
@@ -234,8 +262,10 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
                 {
                     double gx = x0 + (x1 - x0) * gi / (gridRes - 1);
                     double gy = y0 + (y1 - y0) * gj / (gridRes - 1);
-                    if (NearestDist(cx, cy, gx, gy) > maskR) continue;
-                    var (mD, varI) = kr.Predict(gx, gy);
+                    if (!PointInPolygon(hullX, hullY, gx, gy)) continue;   // hull-mask: only where measured
+                    var (mDres, varI) = kr.Predict(gx, gy);
+                    mDres = Math.Max(rLo, Math.Min(rHi, mDres));   // clamp the residual wiggle (no spikes)
+                    double mD = (plane[0] * gx + plane[1] * gy + plane[2]) + mDres;  // dip plane + kriged residual
                     double sRecon = FractureUncertainty.DepthSigma(mD, sigmaVRel, lambda4, sigmaT0M);
                     double sInterp = Math.Sqrt(varI);
                     double sMesh = FractureUncertainty.MeshSigma(cell, 0.3);
@@ -334,6 +364,155 @@ public sealed class GprFractureSurface3DComponent : FrahanComponentBase
         for (int i = 0; i < n; i++) lab[i] = remap[lab[i]];
         kEff = k;
         return lab;
+    }
+
+    // k-PLANES bed assignment. Depth-only k-means MIXES dipping beds: a steeply dipping bed's deep end
+    // overlaps the next bed's shallow end in depth, so the kriging then interpolates BETWEEN layers and
+    // the sheet goes wavy. Fix: seed by depth, then iterate { fit a least-squares dip plane per bed; move
+    // each pick to the bed whose plane is nearest in depth at the pick (x,y) }. Converges to dip-coherent
+    // beds (each pick lies near its own plane), which is what lets the per-bed kriging stay smooth.
+    private static int[] ClusterByDippingBeds(double[] X, double[] Y, double[] D, int k, out int kEff)
+    {
+        int n = D.Length;
+        int[] lab = ClusterByDepth(D, k, out kEff);
+        int K = kEff;
+        if (K < 2) return lab;   // single bed: nothing to separate
+        for (int iter = 0; iter < 12; iter++)
+        {
+            var planes = new double[K][];
+            for (int c = 0; c < K; c++)
+            {
+                var ix = new List<int>();
+                for (int i = 0; i < n; i++) if (lab[i] == c) ix.Add(i);
+                if (ix.Count >= 3)
+                    planes[c] = FitPlaneLs(ix.Select(i => X[i]).ToArray(),
+                                           ix.Select(i => Y[i]).ToArray(),
+                                           ix.Select(i => D[i]).ToArray());
+                else planes[c] = null;
+            }
+            bool moved = false;
+            for (int i = 0; i < n; i++)
+            {
+                int best = lab[i]; double bd = double.MaxValue;
+                for (int c = 0; c < K; c++)
+                {
+                    if (planes[c] == null) continue;
+                    double pred = planes[c][0] * X[i] + planes[c][1] * Y[i] + planes[c][2];
+                    double dd = Math.Abs(D[i] - pred);
+                    if (dd < bd) { bd = dd; best = c; }
+                }
+                if (best != lab[i]) { lab[i] = best; moved = true; }
+            }
+            if (!moved) break;
+        }
+        // relabel shallow->deep by mean depth (stable output order)
+        var meanD = new double[K]; var cnt = new int[K];
+        for (int i = 0; i < n; i++) { meanD[lab[i]] += D[i]; cnt[lab[i]]++; }
+        for (int c = 0; c < K; c++) meanD[c] = cnt[c] > 0 ? meanD[c] / cnt[c] : double.MaxValue;
+        var order = Enumerable.Range(0, K).OrderBy(c => meanD[c]).ToArray();
+        var remap = new int[K]; for (int r = 0; r < K; r++) remap[order[r]] = r;
+        for (int i = 0; i < n; i++) lab[i] = remap[lab[i]];
+        return lab;
+    }
+
+    // Iterative sigma-clip to a bed's dip plane: fit z=a*x+b*y+c, drop picks whose residual exceeds
+    // sigma * std, refit, repeat. Removes the scattered / mis-clustered / cross-line-conflict picks that
+    // make the kriged sheet wavy. Keeps at least 4 picks (never clips a bed away).
+    private static void ClipToRobustPlane(ref double[] cx, ref double[] cy, ref double[] cd, double sigma, int iters)
+    {
+        for (int it = 0; it < iters; it++)
+        {
+            var p = FitPlaneLs(cx, cy, cd);
+            var res = new double[cd.Length];
+            for (int i = 0; i < cd.Length; i++) res[i] = cd[i] - (p[0] * cx[i] + p[1] * cy[i] + p[2]);
+            double m = res.Average();
+            double sd = 0; for (int i = 0; i < res.Length; i++) sd += (res[i] - m) * (res[i] - m);
+            sd = Math.Sqrt(Math.Max(1e-9, sd / Math.Max(1, res.Length - 1)));
+            double thr = sigma * sd;
+            var keepX = new List<double>(); var keepY = new List<double>(); var keepD = new List<double>();
+            for (int i = 0; i < cd.Length; i++)
+                if (Math.Abs(res[i] - m) <= thr) { keepX.Add(cx[i]); keepY.Add(cy[i]); keepD.Add(cd[i]); }
+            if (keepD.Count < 4 || keepD.Count == cd.Length) break;   // converged or would over-trim
+            cx = keepX.ToArray(); cy = keepY.ToArray(); cd = keepD.ToArray();
+        }
+    }
+
+    // Andrew monotone-chain convex hull of the (x,y) picks; returns hull vertices (CCW). Degenerate
+    // (< 3 picks) returns the points as-is.
+    private static (double[] X, double[] Y) ConvexHull(double[] xs, double[] ys)
+    {
+        int n = xs.Length;
+        if (n < 3) return ((double[])xs.Clone(), (double[])ys.Clone());
+        var idx = Enumerable.Range(0, n).OrderBy(i => xs[i]).ThenBy(i => ys[i]).ToArray();
+        double Cross(int o, int a, int b) => (xs[a] - xs[o]) * (ys[b] - ys[o]) - (ys[a] - ys[o]) * (xs[b] - xs[o]);
+        var h = new List<int>();
+        foreach (var i in idx) { while (h.Count >= 2 && Cross(h[h.Count - 2], h[h.Count - 1], i) <= 0) h.RemoveAt(h.Count - 1); h.Add(i); }
+        int lower = h.Count + 1;
+        for (int k = n - 2; k >= 0; k--) { int i = idx[k]; while (h.Count >= lower && Cross(h[h.Count - 2], h[h.Count - 1], i) <= 0) h.RemoveAt(h.Count - 1); h.Add(i); }
+        h.RemoveAt(h.Count - 1);
+        return (h.Select(i => xs[i]).ToArray(), h.Select(i => ys[i]).ToArray());
+    }
+
+    // Expand a convex polygon outward from its centroid by margin (in place) so boundary picks are covered.
+    private static void ExpandPolygon(double[] hx, double[] hy, double margin)
+    {
+        if (hx.Length == 0) return;
+        double cx = hx.Average(), cy = hy.Average();
+        for (int i = 0; i < hx.Length; i++)
+        {
+            double dx = hx[i] - cx, dy = hy[i] - cy, d = Math.Sqrt(dx * dx + dy * dy);
+            if (d > 1e-9) { hx[i] += dx / d * margin; hy[i] += dy / d * margin; }
+        }
+    }
+
+    // Ray-casting point-in-polygon. < 3 vertices -> always inside (degenerate bed draws everywhere).
+    private static bool PointInPolygon(double[] px, double[] py, double qx, double qy)
+    {
+        int n = px.Length; if (n < 3) return true; bool inside = false;
+        for (int i = 0, j = n - 1; i < n; j = i++)
+            if (((py[i] > qy) != (py[j] > qy)) &&
+                (qx < (px[j] - px[i]) * (qy - py[i]) / (py[j] - py[i]) + px[i])) inside = !inside;
+        return inside;
+    }
+
+    // Least-squares plane D ~= a*x + b*y + c. Returns {a,b,c}; falls back to {0,0,mean} if near-singular
+    // (collinear / coincident picks). 3x3 normal equations by Gaussian elimination with partial pivoting.
+    private static double[] FitPlaneLs(double[] x, double[] y, double[] d)
+    {
+        double Sxx = 0, Sxy = 0, Sx = 0, Syy = 0, Sy = 0, S1 = x.Length, Sxd = 0, Syd = 0, Sd = 0;
+        for (int i = 0; i < x.Length; i++)
+        {
+            Sxx += x[i] * x[i]; Sxy += x[i] * y[i]; Sx += x[i];
+            Syy += y[i] * y[i]; Sy += y[i];
+            Sxd += x[i] * d[i]; Syd += y[i] * d[i]; Sd += d[i];
+        }
+        double[,] M = { { Sxx, Sxy, Sx }, { Sxy, Syy, Sy }, { Sx, Sy, S1 } };
+        double[] rhs = { Sxd, Syd, Sd };
+        for (int col = 0; col < 3; col++)
+        {
+            int piv = col;
+            for (int r = col + 1; r < 3; r++) if (Math.Abs(M[r, col]) > Math.Abs(M[piv, col])) piv = r;
+            if (Math.Abs(M[piv, col]) < 1e-12) return new[] { 0.0, 0.0, d.Average() };
+            if (piv != col)
+            {
+                for (int j = 0; j < 3; j++) { var t = M[col, j]; M[col, j] = M[piv, j]; M[piv, j] = t; }
+                var tr = rhs[col]; rhs[col] = rhs[piv]; rhs[piv] = tr;
+            }
+            for (int r = col + 1; r < 3; r++)
+            {
+                double f = M[r, col] / M[col, col];
+                for (int j = col; j < 3; j++) M[r, j] -= f * M[col, j];
+                rhs[r] -= f * rhs[col];
+            }
+        }
+        var ab = new double[3];
+        for (int r = 2; r >= 0; r--)
+        {
+            double s = rhs[r];
+            for (int j = r + 1; j < 3; j++) s -= M[r, j] * ab[j];
+            ab[r] = s / M[r, r];
+        }
+        return ab;
     }
 
     private static double Span(double[] a)
