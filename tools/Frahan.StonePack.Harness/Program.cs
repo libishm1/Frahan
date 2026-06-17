@@ -51,6 +51,8 @@ namespace Frahan.StonePack.Harness
             // (which requires a fixture path).
             if (args.Length >= 1 && args[0] == "--gpr")
                 return GprProfile.Run(args);
+            if (args.Length >= 1 && args[0] == "--slabtrim")
+                return SlabTrimProfile.Run(args);
 
             var opts = HarnessOptions.Parse(args);
             if (opts == null)
