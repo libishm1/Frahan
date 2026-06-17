@@ -10,8 +10,9 @@
 ![Fracture modelling to block packing](docs/results/hero_fracture_block_packing.png)
 
 *Fracture modelling -> wire-saw block packing: intact, saw-separable stock (blue/green) recovered from a
-fractured bench around the mapped fracture planes (green). See [docs/results/RESULTS.md](docs/results/RESULTS.md)
-for all benchmarks + process results, no Grasshopper required.*
+fractured bench around the mapped fracture planes (green). The full GPR -> block-yield method is described
+in the paper preprint ([doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1)).
+See [docs/results/RESULTS.md](docs/results/RESULTS.md) for all benchmarks + process results, no Grasshopper required.*
 
 A Rhino / Grasshopper plugin for stone-fabrication readiness: the bridge layer between design intent and
 machine-ready fabrication for dimension stone, monuments, and dry-stone masonry. It covers the pipeline
@@ -25,7 +26,10 @@ The plugin bundles `Frahan.Kintsugi.Port` + `kintsugi.bin`, a port of **PuzzleFu
 research use only (GPLv3 for research, **not for commercial use**) - so this distribution is for research /
 education, not commercial use. A commercial-capable GPL-3.0 subset is obtainable by excluding the Kintsugi
 module. Full attribution + per-component licenses: `NOTICE.md`, `THIRD_PARTY_NOTICES.md`, `data/ATTRIBUTION.md`.
-How to cite: `CITATION.cff` (a Zenodo DOI is minted for v0.1.0-alpha).
+How to cite: the **software** via `CITATION.cff` (a Zenodo DOI is minted for v0.1.0-alpha); the **method**
+via the paper - Murugesan, L. (2026), *A managed, uncertainty-aware pipeline from ground-penetrating radar
+to dimension-stone block yield in fractured quarries*, **Research Square** preprint,
+[https://doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1).
 
 ## Quick start (users)
 1. Rhino 8 (Windows). Build `src/Frahan.StonePack.GH` (net48) -> `Frahan.StonePack.gha`.

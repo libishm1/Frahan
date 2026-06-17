@@ -8,6 +8,10 @@ future-work dip-following cut, realizable by tilting the wire saw. Units: meters
 
 ![Oblique dip-following blocks](marble_oblique_hero.jpg)
 
+**Method paper:** Murugesan, L. (2026), *A managed, uncertainty-aware pipeline from ground-penetrating radar
+to dimension-stone block yield in fractured quarries*, Research Square preprint,
+[doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1).
+
 ## What it shows
 1. **GPR Survey Grid** + **GPR Fracture Surfaces 3D**: the marble scan grid kriged into the dipping bed
    surfaces (same front end as example 33).

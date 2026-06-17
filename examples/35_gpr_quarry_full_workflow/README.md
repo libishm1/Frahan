@@ -6,6 +6,10 @@ guillotine - from raw `.DT` slices to dimension blocks. Units: meters.
 
 ![GPR quarry full workflow](quarry_full_workflow_hero.jpg)
 
+**Method paper:** Murugesan, L. (2026), *A managed, uncertainty-aware pipeline from ground-penetrating radar
+to dimension-stone block yield in fractured quarries*, Research Square preprint,
+[doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1).
+
 ## The pipeline (left to right on the canvas)
 
 1. **Construct GPR Preset** - defines the GPR ingest physics for the stone (velocity, frequency, eps_r,

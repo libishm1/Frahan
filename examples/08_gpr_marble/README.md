@@ -6,6 +6,10 @@ Style: short sentences, no em dashes.
 
 ![Marble GPR radargram (AGC-gained)](08_gpr_radargram_marble.png)
 
+**Method paper:** Murugesan, L. (2026), *A managed, uncertainty-aware pipeline from ground-penetrating radar
+to dimension-stone block yield in fractured quarries*, Research Square preprint,
+[doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1).
+
 ## Data (colocated, works out of the box)
 The GPR files are bundled next to the cards in `gpr_data/` so the workflow runs without external
 downloads:

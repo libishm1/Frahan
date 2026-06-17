@@ -8,6 +8,10 @@ reproduced as one self-presenting canvas. Units: meters. Style: short sentences,
 
 ![Marble guillotine block hero](marble_guillotine_hero.jpg)
 
+**Method paper:** Murugesan, L. (2026), *A managed, uncertainty-aware pipeline from ground-penetrating radar
+to dimension-stone block yield in fractured quarries*, Research Square preprint,
+[doi.org/10.21203/rs.3.rs-10035624/v1](https://doi.org/10.21203/rs.3.rs-10035624/v1).
+
 ## What it shows
 The diamond wire saw can only make full-span (guillotine) cuts. So a block layout is manufacturable iff
 it is guillotine-separable. This workflow:
