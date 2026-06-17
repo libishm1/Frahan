@@ -9,6 +9,12 @@ shape with the fewest straight tangential wire-cuts (least time). Anchored on AS
 > reconstructed from its title + the surrounding, well-developed literature. Findings below are
 > adversarially verified (3-vote) from the deep-research run (104 agents, 2026-06-18).
 
+![Slab Trim core demo](slab_trim_demo.jpg)
+
+*Headless validation of the Rhino-free core (`tools/Frahan.StonePack.Harness --slabtrim`): an irregular
+slab blob trimmed to a convex blank by 5 straight tangential wire-cuts (left), recovering 90.3% of the
+area (right). Greedy: clip the deepest reflex vertex with a half-plane cut until convex / cut-budget.*
+
 ## 1. Two objectives that do NOT coincide (high confidence)
 
 Yield (recovery ratio, geo-environmental) and value (revenue, economic) are **distinct objectives**: the
