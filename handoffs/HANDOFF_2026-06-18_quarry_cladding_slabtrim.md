@@ -62,6 +62,21 @@ usable convex blank with the FEWEST straight tangential wire-cuts (least time). 
   recovered-area %, cut length, cut count) + a small example. Skip the heavy MCP/Grasshopper validation
   to save tokens; rely on the headless harness + matplotlib (the proven reliable path this session).
 
+## Update (end of session) — Slab Trim modes + concave nesting DONE
+
+- **Slab Trim core: BOTH target modes** implemented + validated headless (`--slabtrim` runs both):
+  convex blank (5 cuts, 90.3% yield) + **concave kerf-follow** (Imai-Iri min-# shortcut-DAG, 11 cuts,
+  96.5% yield, eps=0.06). `research/slab_trim_modes.jpg`. Commit f16a0bf.
+- **Example 39 (concave_nest)**: concave-in-concave nesting on **Sheet Nest (Hole-Aware)**, validated on
+  canvas: **6/6 placed, density 0.523, Valid, ~2.3 s** + headless raster twin (52% fill). Commit f780131.
+- The **trim trio** is complete and pushed: convex blank | concave kerf-follow | concave-in-concave nesting.
+- **Math derivations of all session algorithms in LaTeX** (for later Lean formalization):
+  `D:/code_ws/proofs/frahan_algorithm_derivations.tex` (definitions + theorems + proof-sketches:
+  regression kriging, k-planes, hull mask, best-fit-plane planarity, Sutherland-Hodgman convex trim,
+  Imai-Iri min-#, NFP/raster nesting).
+- STILL TODO (deferred, tokens): wrap the validated Slab Trim core into a `Slab Trim (Greedy Convex Hull)`
+  GH component with the target-mode toggle {convex blank | concave kerf-follow}. Mechanical port.
+
 ## Audit context (from the quarry/slab tab audit)
 - GREEN (validated, has example): the GPR->blocks spine (Survey Grid, Surfaces 3D, Fracture Bounded Slabs,
   Fracture Block Pack, Bed Block Layout, Construct Preset, Panel Tile Surface, planning chain).
