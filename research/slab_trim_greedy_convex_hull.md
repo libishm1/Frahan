@@ -103,6 +103,27 @@ A 2D component on the slab outline with **target = convex hull** (or min-area re
 3–5 cuts, kerf offset, and the three metrics. Hull + rotating-calipers + Clipper2 booleans only — no exact
 solver. Add the Imai–Iri baseline + potato-peel target as v2.
 
+## Honest caveat — convex trim is one of TWO target modes
+
+Trimming to the convex hull is **lossy**: it discards the concave usable material to get a clean convex
+blank. That is right only when the next step needs a convex/rectangular blank. For **yield** (what the
+factory optimizes) the better targets are:
+- **concave kerf-follow** — approximate the actual (concave) boundary with the minimum straight tangent
+  kerfs (Imai-Iri min-#, finding 4 above), keeping the irregular shape. A handheld wire CAN cut concave.
+- **concave-into-concave nesting** — fit irregular parts into the irregular sheet/offcut, which is the
+  hole-aware NFP problem Frahan already solves with `Sheet Nest (Hole-Aware)`.
+
+So the component should expose a **target mode**: `convex blank` (the greedy hull trim above) **or**
+`concave kerf-follow` (Imai-Iri). The high-yield nesting path is shown below (raster / pixel heuristic,
+which handles arbitrary concavity of both sheet and parts; cf. the "stone -> voxels -> heuristic" row of
+ReWeave, MRAC IAAC).
+
+![Concave-in-concave nesting demo](concave_nest_demo.jpg)
+
+*`research/concave_nest_demo.py` (headless, numpy + matplotlib): 5 of 6 irregular/concave parts nested into
+a concave offcut sheet (deep bay + step), 52% area used, with kerf clearance. The honest high-yield
+counterpart to convex trim; the canvas version is `Sheet Nest (Hole-Aware)`.*
+
 ## References
 - Elkarmoty, Bonduà, Bruno (2020) Resources Policy 65:101533 — SlabCutOpt (yield vs value).
 - Goodman (1981) Geom. Dedicata 11:99–106 — potato peeling.
