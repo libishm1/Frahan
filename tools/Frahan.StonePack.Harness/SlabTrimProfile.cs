@@ -21,19 +21,21 @@ namespace Frahan.StonePack.Harness
             double kerf = args.Length > 3 ? double.Parse(args[3]) : 0.01;
             Directory.CreateDirectory(outDir);
 
+            double eps = args.Length > 4 ? double.Parse(args[4]) : 0.06;
             var blob = MakeBlob();
-            var r = GreedyConvexTrim(blob, maxCuts, kerf, 1.0);
+            var r = GreedyConvexTrim(blob, maxCuts, kerf, 1.0);          // mode: convex blank
+            var k = KerfFollow(blob, eps);                              // mode: concave kerf-follow
             var hull = ConvexHull(blob);
 
-            File.WriteAllLines(Path.Combine(outDir, "blob.csv"), blob.Select(p => $"{p[0]:F4},{p[1]:F4}"));
-            File.WriteAllLines(Path.Combine(outDir, "hull.csv"), hull.Select(p => $"{p[0]:F4},{p[1]:F4}"));
-            File.WriteAllLines(Path.Combine(outDir, "trimmed.csv"), r.Trimmed.Select(p => $"{p[0]:F4},{p[1]:F4}"));
-            File.WriteAllLines(Path.Combine(outDir, "cuts.csv"),
-                r.Cuts.Select(c => $"{c.Item1[0]:F4},{c.Item1[1]:F4},{c.Item2[0]:F4},{c.Item2[1]:F4}"));
+            void Dump(string f, IEnumerable<double[]> pts) => File.WriteAllLines(Path.Combine(outDir, f), pts.Select(p => $"{p[0]:F4},{p[1]:F4}"));
+            void DumpCuts(string f, IEnumerable<(double[], double[])> cs) => File.WriteAllLines(Path.Combine(outDir, f), cs.Select(c => $"{c.Item1[0]:F4},{c.Item1[1]:F4},{c.Item2[0]:F4},{c.Item2[1]:F4}"));
+            Dump("blob.csv", blob); Dump("hull.csv", hull);
+            Dump("convex_trimmed.csv", r.Trimmed); DumpCuts("convex_cuts.csv", r.Cuts);
+            Dump("kerf_trimmed.csv", k.Simplified); DumpCuts("kerf_cuts.csv", k.Cuts);
 
             Console.WriteLine($"blob area={Area(blob):F3} verts={blob.Count}  hull verts={hull.Count}");
-            Console.WriteLine($"TRIM: cuts={r.CutCount} recovered={r.RecoveredPct:F1}% cutLength={r.TotalCutLength:F3} " +
-                              $"convex={r.IsConvex} trimmedArea={Area(r.Trimmed):F3}");
+            Console.WriteLine($"CONVEX blank : cuts={r.CutCount} recovered={r.RecoveredPct:F1}% cutLength={r.TotalCutLength:F2} convex={r.IsConvex}");
+            Console.WriteLine($"KERF-follow  : cuts={k.CutCount} recovered={k.RecoveredPct:F1}% cutLength={k.TotalCutLength:F2} (eps={eps})");
             Console.WriteLine($"DUMP -> {outDir}");
             return 0;
         }
@@ -98,6 +100,36 @@ namespace Frahan.StonePack.Harness
             double cutLen = cuts.Sum(c => Len(Sub(c.Item2, c.Item1)));
             bool convex = IsConvex(P);
             return (P, cuts, recovered, cutLen, cuts.Count, convex);
+        }
+
+        // ---- concave KERF-FOLLOW: fewest straight kerfs that stay within eps of the boundary
+        // (Imai-Iri min-# polygonal approximation via a fewest-edges shortcut path). Keeps the concave
+        // shape, recovers nearly all the area, at the cost of more cuts than the convex trim. ----
+        private static (List<double[]> Simplified, List<(double[], double[])> Cuts, double RecoveredPct,
+                        double TotalCutLength, int CutCount) KerfFollow(List<double[]> poly, double eps)
+        {
+            var P = EnsureCcw(poly); int n = P.Count;
+            var minSeg = Enumerable.Repeat(int.MaxValue, n).ToArray();
+            var pred = Enumerable.Repeat(-1, n).ToArray();
+            minSeg[0] = 0;
+            for (int j = 1; j < n; j++)
+                for (int i = 0; i < j; i++)
+                    if (minSeg[i] != int.MaxValue && minSeg[i] + 1 < minSeg[j] && Admissible(P, i, j, eps))
+                    { minSeg[j] = minSeg[i] + 1; pred[j] = i; }
+            var idx = new List<int>(); int c = n - 1; while (c >= 0) { idx.Add(c); c = pred[c]; } idx.Reverse();
+            var simp = idx.Select(i => P[i]).ToList();
+            var cuts = new List<(double[], double[])>();
+            for (int i = 0; i < simp.Count; i++) cuts.Add((simp[i], simp[(i + 1) % simp.Count]));
+            double rec = Math.Abs(Area(simp)) / Math.Abs(Area(P)) * 100.0;
+            double len = cuts.Sum(cc => Len(Sub(cc.Item2, cc.Item1)));
+            return (simp, cuts, rec, len, cuts.Count);
+        }
+        // chord P[i]->P[j] admissible if every boundary point between is within eps of the chord
+        private static bool Admissible(List<double[]> P, int i, int j, double eps)
+        {
+            var a = P[i]; var b = P[j]; var d = Sub(b, a); double dl = Len(d); if (dl < 1e-9) return true;
+            for (int k = i + 1; k < j; k++) { double dist = Math.Abs(Cross(Sub(P[k], a), d)) / dl; if (dist > eps) return false; }
+            return true;
         }
 
         // Sutherland-Hodgman clip of a polygon by the half-plane { x : n.(x-p) >= 0 }
