@@ -15,6 +15,7 @@ namespace Frahan.Masonry.Quarry.Ingestion;
 //   .dt1          -> GprDt1Reader.Load   (Sensors & Software pulseEKKO)
 //   .dt           -> GprIdsDtReader.Load (IDS GeoRadar GRED HD + companion .hdr_dt)
 //   .dzt          -> GprDztReader.Load
+//   .gsf          -> GsfReader.Load     (Geoscanners Akula; layout from GPRSoft Viewer)
 //
 // Two-CSV form (traces.csv + picks.csv) is not handled by this dispatcher;
 // for that, call GprRadargramReader.Load directly.
@@ -44,15 +45,12 @@ public static class GprFileReader
             case ".dzt":
                 return GprDztReader.Load(path, id);
             case ".gsf":
-                // Geoscanners GSF: proprietary, no open binary spec (confirmed). Bridge, not guess.
-                throw new NotSupportedException(
-                    "GSF (Geoscanners AKULA) is a proprietary format with no open binary spec, " +
-                    "so it is not read natively. Convert it to SEG-Y with GPRSoft or RGPR, then load " +
-                    "the resulting .sgy with this reader (GprSegYReader).");
+                // Geoscanners GSF (Akula): binary layout reverse-engineered from GPRSoft Viewer and
+                // verified on the Bonduà Carpinis travertine survey. See GsfReader.
+                return GsfReader.Load(path, id);
             default:
                 throw new NotSupportedException(
-                    $"GPR format '{ext}' not supported. Use .csv / .sgy / .segy / .rd3 / .dt1 / .dt / .dzt. " +
-                    "Proprietary formats (.gsf): convert to SEG-Y first.");
+                    $"GPR format '{ext}' not supported. Use .csv / .sgy / .segy / .rd3 / .dt1 / .dt / .dzt / .gsf.");
         }
     }
 }

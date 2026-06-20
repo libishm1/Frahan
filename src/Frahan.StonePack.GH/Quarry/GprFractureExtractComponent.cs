@@ -57,7 +57,7 @@ public sealed class GprFractureExtractComponent : FrahanComponentBase
             "USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for " +
             "tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use " +
             "the preset). Outputs fracture picks, depths, confidence, and a depth-converted " +
-            "energy mesh. Note: Geoscanners .gsf must be exported to SEG-Y (GPRSoft) first. " +
+            "energy mesh. Reads Geoscanners .gsf natively (GsfReader). " +
             "Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.",
             "Frahan", "Quarry")
     {
@@ -173,13 +173,6 @@ public sealed class GprFractureExtractComponent : FrahanComponentBase
 
         if (!System.IO.File.Exists(file))
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "File not found: " + file); return; }
-        if (file.EndsWith(".gsf", StringComparison.OrdinalIgnoreCase))
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                "Geoscanners .gsf is proprietary (embedded per-trace GPS). Export to SEG-Y with " +
-                "GPRSoft first, then load the .sgy here.");
-            return;
-        }
 
         if (!GprPresets.TryGet(presetKey, out var preset))
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error,

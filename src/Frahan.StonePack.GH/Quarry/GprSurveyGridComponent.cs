@@ -61,7 +61,8 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
         p.AddTextParameter("Files", "F",
-            "The GRID of GPR scan-line files (one per survey line). .dt / .rd3 / .dzt / .dt1 / .sgy / .csv.",
+            "The GRID of GPR scan-line files (one per survey line). .dt / .rd3 / .dzt / .dt1 / .sgy / .csv / " +
+            ".gsf (Geoscanners Akula -- now read natively).",
             GH_ParamAccess.list);
         p.AddTextParameter("Preset", "Pr",
             "Stone x frequency preset for tuned defaults applied to every line: " +
@@ -159,8 +160,6 @@ public sealed class GprSurveyGridComponent : FrahanComponentBase
             string file = files[li];
             if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file))
             { rpt.AppendLine($"  line {li}: SKIP (file not found: {file})"); continue; }
-            if (file.EndsWith(".gsf", StringComparison.OrdinalIgnoreCase))
-            { rpt.AppendLine($"  line {li}: SKIP (.gsf proprietary -> export to SEG-Y first)"); continue; }
             GprRadargram rg;
             try { rg = GprFileReader.Load(file, null); }
             catch (Exception ex) { rpt.AppendLine($"  line {li}: SKIP (load failed: {ex.Message})"); continue; }
