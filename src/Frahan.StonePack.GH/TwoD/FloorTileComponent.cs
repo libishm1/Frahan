@@ -118,6 +118,11 @@ public sealed class FloorTileComponent : FrahanComponentBase
             "image mapped to the grain (no extra wiring); also emitted as Material for Custom Preview / baking.",
             GH_ParamAccess.item);
         pManager[12].Optional = true;
+        pManager.AddNumberParameter("Rates", "$",
+            "Optional cost rates (defaults kept where omitted). Order: material/m2, overage frac, cut/tile, " +
+            "set-out stack, set-out matched, lay/m2, lay/tile, large-format/m2, premium[per,slip,book], " +
+            "matchLabour[per,slip,book]/m2. Drives the Cost/m2 and Costing outputs.", GH_ParamAccess.list);
+        pManager[13].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -141,6 +146,14 @@ public sealed class FloorTileComponent : FrahanComponentBase
             "match mode and row offset.", GH_ParamAccess.item);
         pManager.AddParameter(new Grasshopper.Kernel.Parameters.Param_OGLShader(), "Material", "Mat",
             "The image material (when an Image path is supplied), for Custom Preview or baking.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Cost/m2", "$/m2",
+            "Estimated installed cost per square metre of floor for the current config (material + cutting + " +
+            "set-out + laying + matching, on the Rates). Illustrative; override Rates with local prices.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Costing", "$R",
+            "Cost report: the material vs operation breakdown and the total $/m2 for the current config, plus a " +
+            "match sweep (PerTile/Slip/Book at this layout) and a size sweep (re-packed tile-size ladder).",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -235,6 +248,29 @@ public sealed class FloorTileComponent : FrahanComponentBase
         else if (!string.IsNullOrEmpty(imgPath))
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Image file not found: " + imgPath);
         da.SetData(6, ghMat);
+
+        // ---- cost: material vs operation, $/m^2, + match and size sweeps -----------------
+        var rates = new List<double>();
+        da.GetDataList(13, rates);
+        var rc = TileRateCard.FromList(rates.Count > 0 ? rates : null);
+        int holeCount = holes.Count;
+        try
+        {
+            var cur = FloorTileCost.Estimate(r, opt, rc, holeCount);
+            if (cur != null)
+            {
+                var modeSweep = FloorTileCost.SweepModes(r, opt, rc, holeCount);
+                var sizeSweep = FloorTileCost.SweepSizes(
+                    outer, holes.Count > 0 ? holes : null, opt, rc,
+                    new double[] { 300, 450, 600, 800, 1000 }, holeCount);
+                da.SetData(7, cur.PerM2);
+                da.SetData(8, FloorTileCost.Report(cur, modeSweep, sizeSweep, rc));
+            }
+        }
+        catch (Exception ex)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Cost estimate skipped: " + ex.Message);
+        }
 
         if (opt.LippageCapApplied)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,

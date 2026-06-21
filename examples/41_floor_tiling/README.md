@@ -32,11 +32,44 @@ Core `Frahan.Packing.TwoD.FloorTileGridLayout`.
 `Start` (0 corner / 1 picked point / 2 centred-symmetric), `Anchor` (for start 1), `Grain` (degrees),
 `GrainField` (0 monolithic / 1 quarter-turn / 2 random), `Sliver` (no-sliver fraction, 0.5 ANSI),
 `Match` (0 per-tile / 1 slip-match / 2 book-match), `Stagger` (0 stack / 1 third / 2 half running bond),
-`Image` (stone-texture file path — drawn on screen).
+`Image` (stone-texture file path — drawn on screen), `Rates` (optional cost rates; defaults kept where omitted).
 
 **Outputs:** `Tiles` (trimmed boundaries), `Direction` (per-tile grain line — the arrows), `Full?` (full vs
 cut), `TexMesh` (grain-aligned texture coordinates), `MapFrame` (per-tile planar texture-mapping plane),
-`Report`, `Material` (the image material, for Custom Preview / baking).
+`Report`, `Material` (the image material, for Custom Preview / baking), `Cost/m2` (estimated installed
+$/m^2), `Costing` (the material-vs-operation breakdown + a match sweep + a size sweep).
+
+## Cost: material vs operation, live on the canvas
+
+The layout's own tile/cut/waste counts drive a cost estimate. `Cost/m2` is the installed cost per square metre
+for the current config; `Costing` is the full report — a material/cutting/set-out/laying/matching breakdown,
+a **match sweep** (Per-tile / Slip / Book at this same layout) and a **size sweep** (the component re-packs a
+tile-size ladder to show the waste-vs-labour trade-off). The panel in the `.gh` shows it on open:
+
+```
+FLOOR-TILING COST (illustrative rates; floor 12.5 m^2)
+Current: 600x600 mm, PerTile, 35 tiles (20 cut), waste 4.0%
+  material $1,247 | cutting $144 | set-out $150 | laying $606 | matching $0
+  TOTAL $2,147  =  $172/m^2  (material 58% of total)
+
+Match sweep (same layout):
+  PerTile  $   2,147  $ 172/m^2  1.00x
+  Slip     $   2,921  $ 233/m^2  1.36x
+  Book     $   3,395  $ 271/m^2  1.58x
+
+Size sweep (current match mode):
+  tile mm    tiles  waste%     total     /m^2
+  300          140    7.8 $  2,606 $   208
+  450           70   16.1 $  2,468 $   197
+  600           35    4.0 $  2,147 $   172
+  800           24   20.7 $  2,488 $   199
+  1000          15   18.2 $  2,402 $   192
+```
+
+Material dominates (~58%); the biggest single lever is the **match mode** (book-match +58%), then how well the
+tile **size** divides the room (waste). The rates are illustrative — feed `Rates` a list to use local prices
+(order: material/m2, overage, cut/tile, set-out stack, set-out matched, lay/m2, lay/tile, large-format/m2,
+premium[per,slip,book], matchLabour[per,slip,book]). Full model: `outputs/2026-06-20/floor_tiling/COST_ANALYSIS.md`.
 
 ![book-match texture](figure_floor_bookmatch.png)
 
