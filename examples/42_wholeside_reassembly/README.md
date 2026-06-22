@@ -27,6 +27,19 @@ Two layers:
 
 All parts are closed polylines, coplanar in **world XY** (the solver is 2D).
 
+## Try it live
+
+Two ways to reproduce the assembly:
+
+1. **Shipped component (recommended).** Drop the **`Whole-Side Assemble`** component
+   (Frahan ▸ EdgeMatch), feed the anchor curve to `A` and the part curves to `P`, set
+   `Run` true. Wiring is below. *(A ready-made `.gh` wiring this component will be added
+   once the plugin is redeployed — see the repo issue / next release.)*
+2. **No-plugin GhPython demo.** Paste [`wholeside_reassembly_demo.py`](wholeside_reassembly_demo.py)
+   into a GhPython / Python 3 Script component. It regenerates this jigsaw, calls the
+   Core `BestFirstAssembler`, and outputs `a` = reassembled, `b` = scattered input. Set
+   `CORE_DIR` at the top to your `Frahan.EdgeMatching.Core` build folder.
+
 ## How the component is wired
 
 ```
