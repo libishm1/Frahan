@@ -1,12 +1,12 @@
 # Frahan StonePack - icon library
 
-Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons referenced by 236 components.
+Resources dir: `src/Frahan.StonePack.GH/Resources` (132 PNGs). 89 distinct icons referenced by 236 components.
 
 ## Coverage
 
 - Components WITHOUT an explicit icon: **0**.
-- Referenced icons with NO file on disk: **1**.
-- Icons on disk NOT referenced: **49**.
+- Referenced icons with NO file on disk: **0**.
+- Icons on disk NOT referenced: **43**.
 
 ## Component -> icon
 
@@ -18,7 +18,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | 2D Irregular Sheet Pack | 2D Packing | Pack2D.png | yes |
 | 2D NFP Pack | 2D Packing | NoFitPolygon.png | yes |
 | CSV Parts Reader | 2D Packing | CurveToPolygon.png | yes |
-| Floor Tile (Boundary-Trimmed) | 2D Packing | FloorTile.png | MISSING FILE |
+| Floor Tile (Boundary-Trimmed) | 2D Packing | FloorTile.png | yes |
 | Freeform Sheet Nest | 2D Packing | Pack2D.png | yes |
 | Freeform Sheet Nest (Exact NFP) | 2D Packing | Pack2D.png | yes |
 | NFP Test | 2D Packing | NoFitPolygon.png | yes |
@@ -27,8 +27,8 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Sheet Pack (Unified Async) | 2D Packing | IrregularSheet.png | yes |
 | Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
 | CoM In-Container Check | 3D Packing | StabilityCheck.png | yes |
-| Pack3D Irregular | 3D Packing | Pack3D.png | yes |
-| Pack3D Irregular Container | 3D Packing | PackIntoBlock.png | yes |
+| Pack3D Irregular | 3D Packing | pack3d_irregular.png | yes |
+| Pack3D Irregular Container | 3D Packing | pack3d_irregular_container.png | yes |
 | Pack3D Mesh Heightmap | 3D Packing | LayeredPack.png | yes |
 | Packed-Pile Stability | 3D Packing | StabilityCheck.png | yes |
 | Per-Stone Overlap | 3D Packing | Pack3DNfp.png | yes |
@@ -80,19 +80,19 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Live Edge Stagger Layup | EdgeMatch | LiveEdgeStagger.png | yes |
 | Live Edge Trim | EdgeMatch | LiveEdgeTrim.png | yes |
 | Mesh Template Match | EdgeMatch | EdgeMatchSolve.png | yes |
-| Soft ICP 3D | EdgeMatch | EdgeMatchSolve.png | yes |
+| Soft ICP 3D | EdgeMatch | SoftIcp.png | yes |
 | Template Block Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Bench Monument Pack | Fabricate | BinPack.png | yes |
 | Fabrication Prep Report | Fabricate | StockpileManager.png | yes |
-| G-code Parser | Fabricate | StoneCutExport.png | yes |
+| G-code Parser | Fabricate | CncFinishing.png | yes |
 | G-code to Planes | Fabricate | StoneCutExport.png | yes |
 | Monument Inventory | Fabricate | StockpileManager.png | yes |
 | Pack Monuments In Cell | Fabricate | PackIntoBlock.png | yes |
-| Planes to KUKAprc Commands | Fabricate | StoneCutExport.png | yes |
+| Planes to KUKAprc Commands | Fabricate | RobotProgram.png | yes |
 | Planes to Robot Targets | Fabricate | StoneCutExport.png | yes |
 | Staggered Block Decompose | Fabricate | BondPattern.png | yes |
 | Stone-Aware Cut Export | Fabricate | GcodeExport.png | yes |
-| Wire-Saw Toolpath | Fabricate | StoneCutExport.png | yes |
+| Wire-Saw Toolpath | Fabricate | Toolpath.png | yes |
 | Brick-Pattern Fracture Planes | Fracture | BondPattern.png | yes |
 | Fracture Plane Filter | Fracture | DefectMap.png | yes |
 | Fracture Polygon From Curve | Fracture | DefectMap.png | yes |
@@ -182,7 +182,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Cloud ICP | Mesh | PointCloudIcp.png | yes |
 | Estimate Cloud Normals | Mesh | NormalEstimation.png | yes |
 | Georeference | Mesh | GeoreferenceMarker.png | yes |
-| Georeference (Align by Points) | Mesh | Downsample.png | yes |
+| Georeference (Align by Points) | Mesh | AlignToReference.png | yes |
 | Load Cloud | Mesh | Downsample.png | yes |
 | Load E57 Cloud | Mesh | Downsample.png | yes |
 | Load Metashape Dense Cloud | Mesh | Downsample.png | yes |
@@ -248,7 +248,3 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Voussoir Ingest | Voussoir | EdgeMatchSolve.png | yes |
 | Voussoir Pack Into Block | Voussoir | EdgeMatchSolve.png | yes |
 | Voussoir Stone Matcher | Voussoir | EdgeMatchSolve.png | yes |
-
-## Referenced icons with NO file (canvas shows default)
-
-- Floor Tile (Boundary-Trimmed) (2D Packing) -> `FloorTile.png`

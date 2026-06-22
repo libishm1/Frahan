@@ -471,7 +471,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Pack3D Irregular  (`Pack3D`)
 
-- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `Pack3D.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
+- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `pack3d_irregular.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
 - Algorithm: **Heightmap-greedy 3D bin packing (deepest-bottom-left family)** - Chehrazad, R., Roose, D., Wauters, T. (2025). "A fast and scalable deepest-left-bottom-fill algorithm." Int. J. Production Research 63:6606-6629
 - EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Deterministic heightmap packer for early irregular 3D packing workflows. Implements deepest-left-bottom-fill packing (Chehrazad et al. 2025).
 
@@ -495,7 +495,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Pack3D Irregular Container  (`Pack3DContainer`)
 
-- GUID: `B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7`  |  icon: `PackIntoBlock.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs`
+- GUID: `B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7`  |  icon: `pack3d_irregular_container.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs`
 - Algorithm: **Heightmap-greedy 3D bin packing** - Park and Han 2024 tree-packing for 3D-BPP / orthogonal-block packing
 - EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume. [Park & Han 2024]
 
@@ -1697,7 +1697,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Soft ICP 3D  (`SoftICP3D`)
 
-- GUID: `D5F1000E-ED9E-4ED9-A00E-ED9EED9E000E`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/SoftIcp3DComponent.cs`
+- GUID: `D5F1000E-ED9E-4ED9-A00E-ED9EED9E000E`  |  icon: `SoftIcp.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/SoftIcp3DComponent.cs`
 - Algorithm: **Penetration hinge (smooth non-penetration)** - Mesh.IsPointInside inside-test + smooth quadratic hinge per SettleContactComponent / OverlapResolver2D
 - Refine the poses of 3D fragment meshes so their rims come into  CONTACT while their solids do not interpenetrate. EM weighted- Kabsch over CPD soft correspondence + smooth penetration hinge.  The standalone primitive that EdgeMatch Solve / Kintsugi / Trencadis  / Cyclopean Recipe / Voussoir Match all invoke internally; surface  on the canvas to chain into any custom workflow. [Myronenko & Song 2010]
 
@@ -1793,7 +1793,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### G-code Parser  (`GCode`)
 
-- GUID: `D5F10030-ED9E-4ED9-A030-ED9EED9E0030`  |  icon: `StoneCutExport.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/GCodeParserComponent.cs`
+- GUID: `D5F10030-ED9E-4ED9-A030-ED9EED9E0030`  |  icon: `CncFinishing.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/GCodeParserComponent.cs`
 - Algorithm: **ISO 6983-1 G-code tokenizer + modal state machine** - Frahan-original; ISO 6983-1:2009 standard for CNC numerical control
 - Parse an ISO 6983-1-subset G-code file (.nc / .gcode / .cnc) into  a typed CutPath record. Phase B Stage 1 of the scan-to-mill  architecture per wiki/specs/scan_to_mill_architecture.md §1.6.  First production component bridging Stone-Aware Cut Export ->  KUKAprc / Robots / SprutCAM / RhinoCAM. Supports the RhinoCAM  3-axis dialect observed in the MRAC 2023 workshop.
 
@@ -1870,7 +1870,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Planes to KUKAprc Commands  (`Pl2KUKAprc`)
 
-- GUID: `D5F10032-ED9E-4ED9-A032-ED9EED9E0032`  |  icon: `StoneCutExport.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/PlanesToKukaPrcCommandsComponent.cs`
+- GUID: `D5F10032-ED9E-4ED9-A032-ED9EED9E0032`  |  icon: `RobotProgram.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/PlanesToKukaPrcCommandsComponent.cs`
 - Algorithm: **CutSegmentKind -> KUKAprc Motion mapping** - Frahan-original; standard CAM-to-KRL motion-type convention (Rapid->PTP, Linear/Arc->LIN)
 - Tag a Plane[] (from GCodeToPlanes or WireSawToolpath) with  KUKAprc-compatible motion-type (LIN / PTP) and feed metadata.  Thin wrapper -- Frahan stops here; KUKAprc Pro owns the final  Plane->LIN/PTP/CIRC command construction + KRL code generation.  This wrapper IS the first FREE open-source G-code path into  KUKAprc (paid Generic NC Import is the only alternative).
 
@@ -1960,7 +1960,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Wire-Saw Toolpath  (`WireSaw`)
 
-- GUID: `D5F10034-ED9E-4ED9-A034-ED9EED9E0034`  |  icon: `StoneCutExport.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/WireSawToolpathAdapterComponent.cs`
+- GUID: `D5F10034-ED9E-4ED9-A034-ED9EED9E0034`  |  icon: `Toolpath.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/WireSawToolpathAdapterComponent.cs`
 - Algorithm: **Moult2018PortableWireBandsaw** - Moult, Weir, Fernando 2018 University of Sydney KUKA + portable diamond-wire bandsaw end-effector
 - Generate a Plane[] toolpath for a robot-mounted diamond-wire saw  to cut stone along a designed curve. Frahan-original component  closing the toolchain gap left by Zhang 2024 + Moult 2018 (neither  has KUKAprc / Robots plugin integration). v1 supports planar cuts;  v1.x adds ruled-surface decomposition + variable wire tension.  Outputs feed directly into KUKAprc / Robots downstream.
 
@@ -3840,7 +3840,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Georeference (Align by Points)  (`GeorefPts`)
 
-- GUID: `F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/GeoreferenceComponent.cs`
+- GUID: `F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06`  |  icon: `AlignToReference.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/GeoreferenceByPointsComponent.cs`
 - Algorithm: **Absolute orientation (Horn 1987)** - Horn, 'Closed-form solution of absolute orientation using unit quaternions', JOSA A 4(4) 1987
 - Best-fit transform from 3+ corresponding control points (Horn's  absolute orientation). Aligns GPR / scan / quarry geometry into one  georeferenced frame: Source = control points in the frame you move,  Target = matching points in the reference frame. Rigid by default;  enable Scale for similarity. Feed the Transform into Cloud ICP's  Initial Guess for fine registration.  Sibling: GeorefPts is the local fit via Horn from matched points;  'GeorefCRS' (Georeference) handles WGS84/UTM/ENU datum conversion.
 

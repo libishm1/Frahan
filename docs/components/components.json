@@ -2226,7 +2226,7 @@
       }
     ],
     "related": [],
-    "icon": "Pack3D.png",
+    "icon": "pack3d_irregular.png",
     "file": "src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs"
   },
   {
@@ -2387,7 +2387,7 @@
       }
     ],
     "related": [],
-    "icon": "PackIntoBlock.png",
+    "icon": "pack3d_irregular_container.png",
     "file": "src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs"
   },
   {
@@ -7452,7 +7452,7 @@
       }
     ],
     "related": [],
-    "icon": "EdgeMatchSolve.png",
+    "icon": "SoftIcp.png",
     "file": "src/Frahan.StonePack.GH/EdgeMatch3D/SoftIcp3DComponent.cs"
   },
   {
@@ -7813,7 +7813,7 @@
       }
     ],
     "related": [],
-    "icon": "StoneCutExport.png",
+    "icon": "CncFinishing.png",
     "file": "src/Frahan.StonePack.GH/Fabrication/GCodeParserComponent.cs"
   },
   {
@@ -8118,7 +8118,7 @@
       }
     ],
     "related": [],
-    "icon": "StoneCutExport.png",
+    "icon": "RobotProgram.png",
     "file": "src/Frahan.StonePack.GH/Fabrication/PlanesToKukaPrcCommandsComponent.cs"
   },
   {
@@ -8500,7 +8500,7 @@
       }
     ],
     "related": [],
-    "icon": "StoneCutExport.png",
+    "icon": "Toolpath.png",
     "file": "src/Frahan.StonePack.GH/Fabrication/WireSawToolpathAdapterComponent.cs"
   },
   {
@@ -15886,7 +15886,7 @@
   },
   {
     "guid": "F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06",
-    "class": "GeoreferenceComponent",
+    "class": "GeoreferenceByPointsComponent",
     "name": "Georeference (Align by Points)",
     "nickname": "GeorefPts",
     "category": "Frahan",
@@ -15965,8 +15965,8 @@
       }
     ],
     "related": [],
-    "icon": "Downsample.png",
-    "file": "src/Frahan.StonePack.GH/GeoreferenceComponent.cs"
+    "icon": "AlignToReference.png",
+    "file": "src/Frahan.StonePack.GH/GeoreferenceByPointsComponent.cs"
   },
   {
     "guid": "E4F5A6B7-3210-4F5E-A6B7-C8D9E0F12345",

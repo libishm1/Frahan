@@ -32,7 +32,7 @@ public sealed class Pack3DIrregularContainerComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7");
-    protected override Bitmap? Icon => IconProvider.Load("PackIntoBlock.png");
+    protected override Bitmap? Icon => IconProvider.Load("pack3d_irregular_container.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {

@@ -74,7 +74,7 @@ public sealed class SoftIcp3DComponent : FrahanComponentBase
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
-    protected override Bitmap Icon => IconProvider.Load("EdgeMatchSolve.png"); // placeholder
+    protected override Bitmap Icon => IconProvider.Load("SoftIcp.png"); // placeholder
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

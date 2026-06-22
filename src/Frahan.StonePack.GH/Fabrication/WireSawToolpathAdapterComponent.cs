@@ -85,7 +85,7 @@ public sealed class WireSawToolpathAdapterComponent : FrahanComponentBase
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
-    protected override Bitmap Icon => IconProvider.Load("StoneCutExport.png"); // placeholder
+    protected override Bitmap Icon => IconProvider.Load("Toolpath.png"); // placeholder
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
