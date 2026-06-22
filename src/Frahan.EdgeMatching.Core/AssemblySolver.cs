@@ -365,6 +365,66 @@ namespace Frahan.EdgeMatching
                 }
             }
 
+            // --- 1b. Phase 1 consensus: cycle-consistency outlier penalty. ---
+            // Close every triangle of the pair graph (compose the three relative poses
+            // around the loop; a consistent loop returns to identity). Edges whose loops
+            // persistently fail to close are penalized so the greedy seed/MST avoids the
+            // tight-but-wrong matches it would otherwise lock in. Opt-in; null = legacy.
+            Dictionary<string, double>? cyclePenalty = null;
+            if (_opt.UseCycleConsistency && edges.Count >= 3)
+            {
+                // Low-local -> High-local relative pose per undirected pair.
+                var rel = new Dictionary<string, Transform>(StringComparer.Ordinal);
+                foreach (var e in edges)
+                {
+                    Transform lowToHigh;
+                    if (string.Equals(e.ChildId, e.LowId, StringComparison.Ordinal))
+                        lowToHigh = e.Relative;                       // child=Low,parent=High: maps Low->High
+                    else if (!e.Relative.TryGetInverse(out lowToHigh))
+                        lowToHigh = Transform.Identity;               // child=High: invert High->Low
+                    rel[e.LowId + "|" + e.HighId] = lowToHigh;
+                }
+                var devs = new Dictionary<string, List<double>>(StringComparer.Ordinal);
+                foreach (var e in edges) devs[e.LowId + "|" + e.HighId] = new List<double>();
+
+                // Directed relative pose from->to via the Low|High table.
+                Func<string, string, Transform> relDir = (from, to) =>
+                {
+                    bool fromLow = string.CompareOrdinal(from, to) <= 0;
+                    var lh = rel[fromLow ? from + "|" + to : to + "|" + from];
+                    if (fromLow) return lh;
+                    lh.TryGetInverse(out var inv); return inv;
+                };
+
+                var nodeIds = nodes.Select(p => p.Id).ToList();       // already id-sorted
+                for (int i = 0; i < nodeIds.Count; i++)
+                for (int j = i + 1; j < nodeIds.Count; j++)
+                {
+                    string a = nodeIds[i], b = nodeIds[j];
+                    if (!rel.ContainsKey(a + "|" + b)) continue;
+                    for (int k = j + 1; k < nodeIds.Count; k++)
+                    {
+                        string c = nodeIds[k];
+                        if (!rel.ContainsKey(b + "|" + c) || !rel.ContainsKey(a + "|" + c)) continue;
+                        // loop a->b->c->a; consistent => identity.
+                        var loop = Transform.Multiply(relDir(c, a), Transform.Multiply(relDir(b, c), relDir(a, b)));
+                        double dev = LoopDeviation(loop, _scale);
+                        devs[a + "|" + b].Add(dev);
+                        devs[b + "|" + c].Add(dev);
+                        devs[a + "|" + c].Add(dev);
+                    }
+                }
+                cyclePenalty = new Dictionary<string, double>(StringComparer.Ordinal);
+                foreach (var kv in devs)
+                {
+                    var list = kv.Value;
+                    if (list.Count == 0) { cyclePenalty[kv.Key] = 0.0; continue; }
+                    list.Sort();
+                    double median = list[list.Count / 2];   // robust: a correct edge is bad only in loops with a wrong edge
+                    cyclePenalty[kv.Key] = median > _opt.CycleConsistencyTolerance ? _opt.CycleConsistencyPenalty : 0.0;
+                }
+            }
+
             // --- 2. Global resolve: minimum-residual spanning tree from a seed. ---
             // Adjacency: for each node, the edges incident to it. Iterate edges in
             // their fixed insertion order (pairs sorted by (i,j) panel id) so the
@@ -405,8 +465,9 @@ namespace Frahan.EdgeMatching
                 var bestEdge = edges[0];
                 foreach (var e in edges)
                 {
-                    if (e.Weight < bestEdge.Weight
-                        || (e.Weight == bestEdge.Weight && CompareEdgeId(e, bestEdge) < 0))
+                    double we = e.Weight + EdgePenalty(cyclePenalty, e);
+                    double wb = bestEdge.Weight + EdgePenalty(cyclePenalty, bestEdge);
+                    if (we < wb || (we == wb && CompareEdgeId(e, bestEdge) < 0))
                         bestEdge = e;
                 }
                 // Lower-id endpoint of the best edge is the seed (deterministic).
@@ -477,7 +538,7 @@ namespace Frahan.EdgeMatching
                             childAbs = Transform.Multiply(absolute[inId], inv);
                         }
 
-                        double score = e.Weight;
+                        double score = e.Weight + EdgePenalty(cyclePenalty, e);
                         if (placedContours != null)
                         {
                             var childCurve = TransformedContour(byId[other], childAbs);
@@ -589,6 +650,22 @@ namespace Frahan.EdgeMatching
             c = string.CompareOrdinal(x.B.PanelId, y.B.PanelId);
             if (c != 0) return c;
             return x.B.Index.CompareTo(y.B.Index);
+        }
+
+        // Phase 1: cycle-consistency penalty for an edge (0 when off or consistent).
+        private static double EdgePenalty(Dictionary<string, double>? cyclePenalty, PairEdge e)
+            => cyclePenalty != null && cyclePenalty.TryGetValue(e.LowId + "|" + e.HighId, out var p) ? p : 0.0;
+
+        // Deviation of a loop-closure transform from identity: rotation angle (rad,
+        // trace-based, valid for 2D Z-rotations and 3D) + scale-relative translation.
+        private static double LoopDeviation(Transform t, double scale)
+        {
+            double cos = (t.M00 + t.M11 + t.M22 - 1.0) * 0.5;
+            if (cos > 1.0) cos = 1.0; else if (cos < -1.0) cos = -1.0;
+            double ang = Math.Acos(cos);
+            double tmag = Math.Sqrt(t.M03 * t.M03 + t.M13 * t.M13 + t.M23 * t.M23);
+            double s = scale > 1e-9 ? scale : 1.0;
+            return ang + tmag / s;
         }
 
         // Ordinal compare on the (LowId, HighId) endpoint pair: a stable,

@@ -49,6 +49,22 @@ namespace Frahan.EdgeMatching
         /// </summary>
         public int NonCrossingMaxGap { get; set; } = 0;
 
+        // --- Phase 1: cycle-consistency consensus on the Agglomerative pair graph (opt-in) ---
+        // Greedy MST commits to the lowest-residual edge per pair and never re-checks it
+        // against the global graph, so one tight-but-wrong match locks in and propagates.
+        // When enabled, every triangle of the pair graph is closed (compose the three
+        // relative poses around the loop; a consistent loop returns to identity). Edges
+        // whose triangles persistently fail to close (median loop deviation above the
+        // tolerance) get CycleConsistencyPenalty added to their MST/seed weight, so the
+        // assembly avoids them. Default off = byte-identical legacy MST.
+        public bool UseCycleConsistency { get; set; } = false;
+
+        /// <summary>Scale-relative loop-closure tolerance: |rotation (rad)| + |translation|/scale.</summary>
+        public double CycleConsistencyTolerance { get; set; } = 0.12;
+
+        /// <summary>Weight added to an edge sitting in inconsistent loops (soft rejection; preserves connectivity).</summary>
+        public double CycleConsistencyPenalty { get; set; } = 1.0e6;
+
         // --- A1: scale-relative acceptance gates (opt-in) ---------------------
         // The original gates are ABSOLUTE: the phase-correlation similarity gate
         // is a fixed 0.5 and ResidualThreshold is a fixed model-unit distance.
