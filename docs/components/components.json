@@ -644,7 +644,7 @@
     "category": "Frahan",
     "subcategory": "2D Packing",
     "description": "NFP-assisted 2D irregular packing with diagnostics and optional sequence optimization. [Burke et al. 2007]",
-    "exposure": "secondary",
+    "exposure": "hidden",
     "algorithm": {
       "title": "No-fit polygon construction",
       "citation": "Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem"
@@ -1859,7 +1859,7 @@
     "category": "Frahan",
     "subcategory": "2D Packing",
     "description": "Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]",
-    "exposure": "primary",
+    "exposure": "hidden",
     "algorithm": {
       "title": "No-fit polygon construction",
       "citation": "Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem"

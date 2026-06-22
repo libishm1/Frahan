@@ -157,7 +157,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### 2D NFP Pack  (`NFP Pack`)
 
-- GUID: `0B164F89-A199-4264-88FD-A91E508DBEC3`  |  icon: `NoFitPolygon.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/NfpPack2DComponent.cs`
+- GUID: `0B164F89-A199-4264-88FD-A91E508DBEC3`  |  icon: `NoFitPolygon.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/NfpPack2DComponent.cs`
 - Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
 - NFP-assisted 2D irregular packing with diagnostics and optional sequence optimization. [Burke et al. 2007]
 
@@ -411,7 +411,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Sheet Pack (Unified)  (`FreeNestU`)
 
-- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
+- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
 - Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
 - Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]
 

@@ -50,7 +50,7 @@ public sealed class IrregularSheetFillComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B");
     protected override Bitmap? Icon => IconProvider.Load("IrregularSheet.png");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
