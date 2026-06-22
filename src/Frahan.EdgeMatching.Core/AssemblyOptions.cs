@@ -65,6 +65,28 @@ namespace Frahan.EdgeMatching
         /// <summary>Weight added to an edge sitting in inconsistent loops (soft rejection; preserves connectivity).</summary>
         public double CycleConsistencyPenalty { get; set; } = 1.0e6;
 
+        // --- Phase 1b: contact-seam-length match discriminator (opt-in) ---
+        // The ICP residual cannot tell a true neighbour (shares a long contiguous
+        // complementary seam) from a spurious match (one coincidental short fragment) --
+        // spurious matches can have residuals AS LOW AS or lower than true ones. After
+        // the ICP pose, measure what fraction of the candidate perimeter lands within
+        // ContactToleranceFraction*scale of the hit boundary; reject matches below
+        // MinContactFraction and rank survivors by contact (then residual). This removes
+        // the spurious fragment matches at the source, before the pair graph is built.
+        // Default off = legacy residual-only behaviour (all current tests unchanged).
+        public bool UseContactScore { get; set; } = false;
+
+        /// <summary>Contact band as a fraction of object scale (median panel bbox diagonal).</summary>
+        public double ContactToleranceFraction { get; set; } = 0.02;
+
+        /// <summary>Minimum fraction of candidate perimeter in contact to accept a match (0 = no gate).
+        /// 0.18 default tuned on the jigsaw harness (true seams ~0.25-0.36, spurious fragments ~0.14-0.17);
+        /// raise toward 0.24 to cut more false edges, but above ~0.30 it starts dropping true seams.</summary>
+        public double MinContactFraction { get; set; } = 0.18;
+
+        /// <summary>Number of arc-length samples along the candidate perimeter for the contact test.</summary>
+        public int ContactSamples { get; set; } = 64;
+
         // --- A1: scale-relative acceptance gates (opt-in) ---------------------
         // The original gates are ABSOLUTE: the phase-correlation similarity gate
         // is a fixed 0.5 and ResidualThreshold is a fixed model-unit distance.

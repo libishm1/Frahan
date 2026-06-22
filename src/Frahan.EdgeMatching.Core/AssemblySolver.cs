@@ -346,7 +346,9 @@ namespace Frahan.EdgeMatching
                         var mB = BestMatchOrdered(pj, pi);
 
                         // Pick the lower-residual direction; strict id tie-break keeps
-                        // determinism if residuals are exactly equal.
+                        // determinism if residuals are exactly equal. (The spurious-match
+                        // filtering happens upstream in BestMatchOrdered via the contact
+                        // gate + ranking; the surviving edges are weighted by residual.)
                         PairEdge? best = null;
                         if (mA != null)
                             best = new PairEdge(pi.Id, pj.Id, childId: pi.Id, parentId: pj.Id, mA.AontoB, mA.Residual, mA);
@@ -601,6 +603,7 @@ namespace Frahan.EdgeMatching
                 : BoundarySegmenter.Segment(candidate, _segOpt);
 
             MatchResult? best = null;
+            double bestContact = -1.0;
             foreach (var cs in candSegments)
             {
                 var hits = _index.QueryComplement(cs);
@@ -629,16 +632,65 @@ namespace Frahan.EdgeMatching
 
                     if (refined.Residual > residualGate) continue;
 
-                    // Lowest residual wins; strict segment-index tie-break for
-                    // determinism (candidate id is fixed, hit id is fixed here).
-                    if (best == null
-                        || refined.Residual < best.Residual
-                        || (refined.Residual == best.Residual
-                            && SegmentTieBreak(refined, best) < 0))
-                        best = refined;
+                    // Phase 1b: contact-seam-length discriminator. A true neighbour
+                    // shares a long contiguous complementary seam; a spurious match
+                    // shares one coincidental fragment with an equally-low residual.
+                    // Reject below the contact floor and rank survivors by contact
+                    // first (then residual). When off, contact = 1.0 (no gate) and the
+                    // ranking falls back to lowest-residual exactly as before.
+                    double contact = 1.0;
+                    if (_opt.UseContactScore)
+                    {
+                        contact = ContactFraction(candidate, hitPanel, refined.AontoB);
+                        if (contact < _opt.MinContactFraction) continue;
+                    }
+
+                    bool take;
+                    if (best == null) take = true;
+                    else if (_opt.UseContactScore)
+                    {
+                        int cc = contact.CompareTo(bestContact);
+                        if (cc != 0) take = cc > 0;                       // higher contact wins
+                        else
+                        {
+                            int rc = refined.Residual.CompareTo(best.Residual);
+                            take = rc != 0 ? rc < 0 : SegmentTieBreak(refined, best) < 0;
+                        }
+                    }
+                    else
+                    {
+                        take = refined.Residual < best.Residual
+                            || (refined.Residual == best.Residual && SegmentTieBreak(refined, best) < 0);
+                    }
+
+                    if (take) { best = refined; bestContact = contact; }
                 }
             }
             return best;
+        }
+
+        // Phase 1b: fraction of the candidate perimeter that lands within a scale-relative
+        // band of the hit boundary once the candidate is moved by the match pose. Both
+        // contours are panel-local; AontoB maps candidate-local -> hit-local, so the
+        // transformed candidate shares the hit's frame. A true mate touches along one
+        // whole seam (~1/sides of the perimeter); a spurious fragment touches a sliver.
+        private double ContactFraction(Panel candidate, Panel hitPanel, Transform aontoB)
+        {
+            var cc = (PolylineCurve)candidate.SourceContour.DuplicateCurve();
+            cc.Transform(aontoB);
+            var hit = hitPanel.SourceContour;
+            double eps = Math.Max(1e-6, _opt.ContactToleranceFraction * (_scale > 1e-9 ? _scale : 1.0));
+            int n = Math.Max(8, _opt.ContactSamples);
+            var ts = cc.DivideByCount(n, true);
+            if (ts == null || ts.Length == 0) return 0.0;
+            int within = 0;
+            foreach (var t in ts)
+            {
+                var pt = cc.PointAt(t);
+                if (hit.ClosestPoint(pt, out double hp) && pt.DistanceTo(hit.PointAt(hp)) <= eps)
+                    within++;
+            }
+            return (double)within / ts.Length;
         }
 
         private static int SegmentTieBreak(MatchResult x, MatchResult y)
