@@ -12,9 +12,9 @@ using Rhino.Geometry;
 namespace Frahan.GH;
 
 [RelatedComponent("Frahan > 3D Packing > Settle 3D (Physics)",
-    Reason = "EVOLVED PATH: the canonical volume packer; physically settles real geometry into contact.")]
+    Reason = "Downstream refinement: feed the placed meshes into Settle 3D to physically settle them into contact.")]
 [RelatedComponent("Frahan > Masonry > Block Pack (Tree)",
-    Reason = "EVOLVED PATH: saw-cuttable guillotine subdivision (Kim 2025).")]
+    Reason = "Alternative: saw-cuttable guillotine subdivision (Kim 2025).")]
 [Algorithm("Heightmap-greedy 3D bin packing", "Park and Han 2024 tree-packing for 3D-BPP / orthogonal-block packing", Note = "Mesh-derived top/bottom heightmap with vertical-column collision; greedy XY/orientation search", WikiPath = "wiki/papers/kim2025_tree_packing.md")]
 [DesignApplication(
     "Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume",
@@ -25,14 +25,14 @@ public sealed class Pack3DIrregularContainerComponent : FrahanComponentBase
 {
     public Pack3DIrregularContainerComponent()
         : base("Pack3D Irregular Container", "Pack3DContainer",
-            "EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline. " +
-            "Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume. [Park & Han 2024]",
+            "The basic 3D packer: nest irregular meshes into an irregular container (mesh footprint + per-cell height) or a QuarryBlock, via mesh-heightmap placement. " +
+            "Feed the placed meshes into Settle 3D (Physics) for contact settling, or Block Pack (Tree) for saw-cuttable subdivision. [Park & Han 2024]",
             "Frahan", "3D Packing")
     {
     }
 
     public override Guid ComponentGuid => new Guid("B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7");
-    protected override Bitmap? Icon => IconProvider.Load("pack3d_irregular_container.png");
+    protected override Bitmap? Icon => IconProvider.Load("Pack3DContainer.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {

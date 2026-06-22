@@ -1,12 +1,12 @@
 # Frahan StonePack - icon library
 
-Resources dir: `src/Frahan.StonePack.GH/Resources` (132 PNGs). 89 distinct icons referenced by 236 components.
+Resources dir: `src/Frahan.StonePack.GH/Resources` (133 PNGs). 89 distinct icons referenced by 236 components.
 
 ## Coverage
 
 - Components WITHOUT an explicit icon: **0**.
 - Referenced icons with NO file on disk: **0**.
-- Icons on disk NOT referenced: **43**.
+- Icons on disk NOT referenced: **44**.
 
 ## Component -> icon
 
@@ -28,7 +28,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (132 PNGs). 89 distinct icons
 | Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
 | CoM In-Container Check | 3D Packing | StabilityCheck.png | yes |
 | Pack3D Irregular | 3D Packing | pack3d_irregular.png | yes |
-| Pack3D Irregular Container | 3D Packing | pack3d_irregular_container.png | yes |
+| Pack3D Irregular Container | 3D Packing | Pack3DContainer.png | yes |
 | Pack3D Mesh Heightmap | 3D Packing | LayeredPack.png | yes |
 | Packed-Pile Stability | 3D Packing | StabilityCheck.png | yes |
 | Per-Stone Overlap | 3D Packing | Pack3DNfp.png | yes |

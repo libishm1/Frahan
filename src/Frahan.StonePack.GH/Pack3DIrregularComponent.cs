@@ -34,6 +34,9 @@ public sealed class Pack3DIrregularComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("E36C3F7D-7E2C-495E-9E2A-59312C5CF990");
+    // Consolidated: Pack3D Irregular Container is the single basic 3D packer (it handles a box
+    // container too, via a container mesh). Hidden from the ribbon; GUID frozen so old .gh load.
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
     protected override Bitmap? Icon => IconProvider.Load("pack3d_irregular.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

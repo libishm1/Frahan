@@ -471,7 +471,7 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Pack3D Irregular  (`Pack3D`)
 
-- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `pack3d_irregular.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
+- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `pack3d_irregular.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
 - Algorithm: **Heightmap-greedy 3D bin packing (deepest-bottom-left family)** - Chehrazad, R., Roose, D., Wauters, T. (2025). "A fast and scalable deepest-left-bottom-fill algorithm." Int. J. Production Research 63:6606-6629
 - EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Deterministic heightmap packer for early irregular 3D packing workflows. Implements deepest-left-bottom-fill packing (Chehrazad et al. 2025).
 
@@ -495,9 +495,9 @@ Source of truth = the component source; regenerate after any component change.
 
 ### Pack3D Irregular Container  (`Pack3DContainer`)
 
-- GUID: `B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7`  |  icon: `pack3d_irregular_container.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs`
+- GUID: `B3E8A42F-F67E-42B5-B3C3-1D1A5A1195C7`  |  icon: `Pack3DContainer.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs`
 - Algorithm: **Heightmap-greedy 3D bin packing** - Park and Han 2024 tree-packing for 3D-BPP / orthogonal-block packing
-- EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume. [Park & Han 2024]
+- The basic 3D packer: nest irregular meshes into an irregular container (mesh footprint + per-cell height) or a QuarryBlock, via mesh-heightmap placement.  Feed the placed meshes into Settle 3D (Physics) for contact settling, or Block Pack (Tree) for saw-cuttable subdivision. [Park & Han 2024]
 
 | in | type | access | description |
 |---|---|---|---|

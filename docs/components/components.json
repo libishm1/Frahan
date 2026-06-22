@@ -2132,7 +2132,7 @@
     "category": "Frahan",
     "subcategory": "3D Packing",
     "description": "EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Deterministic heightmap packer for early irregular 3D packing workflows. Implements deepest-left-bottom-fill packing (Chehrazad et al. 2025).",
-    "exposure": "secondary",
+    "exposure": "hidden",
     "algorithm": {
       "title": "Heightmap-greedy 3D bin packing (deepest-bottom-left family)",
       "citation": "Chehrazad, R., Roose, D., Wauters, T. (2025). \"A fast and scalable deepest-left-bottom-fill algorithm.\" Int. J. Production Research 63:6606-6629"
@@ -2236,7 +2236,7 @@
     "nickname": "Pack3DContainer",
     "category": "Frahan",
     "subcategory": "3D Packing",
-    "description": "EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Mesh-heightmap packer inside a mesh-derived irregular container footprint and height volume. [Park & Han 2024]",
+    "description": "The basic 3D packer: nest irregular meshes into an irregular container (mesh footprint + per-cell height) or a QuarryBlock, via mesh-heightmap placement.  Feed the placed meshes into Settle 3D (Physics) for contact settling, or Block Pack (Tree) for saw-cuttable subdivision. [Park & Han 2024]",
     "exposure": "secondary",
     "algorithm": {
       "title": "Heightmap-greedy 3D bin packing",
@@ -2387,7 +2387,7 @@
       }
     ],
     "related": [],
-    "icon": "pack3d_irregular_container.png",
+    "icon": "Pack3DContainer.png",
     "file": "src/Frahan.StonePack.GH/Pack3DIrregularContainerComponent.cs"
   },
   {
