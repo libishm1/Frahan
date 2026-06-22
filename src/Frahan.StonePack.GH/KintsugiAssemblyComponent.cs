@@ -83,7 +83,7 @@ namespace Frahan.GH.Kintsugi;
 public sealed class KintsugiAssemblyComponent : FrahanComponentBase
 {
     public KintsugiAssemblyComponent()
-        : base("Frahan Kintsugi",
+        : base("Kintsugi",
             "Kintsugi",
             "3D mesh fracture-assembly via naked-edge rim matching. " +
             "Each fragment's open-boundary loops are treated as 3D " +

@@ -45,7 +45,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanParetoFrontInspectorComponent()
             : base(
-                "Frahan Pareto Front Inspector", "BCOPareto",
+                "Pareto Front Inspector", "BCOPareto",
                 "Run BlockCutOpt with 4-axis Pareto optimisation and emit the " +
                 "recovery-max, revenue-max, kerf-time-min and BCSdbBV-min " +
                 "points side-by-side, per sub-zone. Use when the BCOOmni " +
@@ -182,7 +182,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanFisherRobustComponent()
             : base(
-                "Frahan Fisher-Robust BCO", "BCORobust",
+                "Fisher-Robust BCO", "BCORobust",
                 "Run BlockCutOpt M times against M Fisher-perturbed DFN " +
                 "realisations of the same joint sets; return p10 / p50 / p90 " +
                 "recovery percent and the median psi. The robust optimum " +
@@ -305,7 +305,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanDensityWatershedZonesComponent()
             : base(
-                "Frahan Density-Watershed Zones", "BCOWatershed",
+                "Density-Watershed Zones", "BCOWatershed",
                 "Adaptive sub-division of the tested area by 2D fracture-" +
                 "density watershed (synthesis I5). Each zone boundary snaps " +
                 "to high-density ridges so the unavoidable boundary penalty " +
@@ -396,7 +396,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanVtuExportComponent()
             : base(
-                "Frahan VTU Export", "VtuOut",
+                "VTU Export", "VtuOut",
                 "Run BlockCutOpt then dump the optimal cutting grid to a " +
                 "ParaView .vtu file. Two cell sets: cell_status=1 (non-" +
                 "intersected, ready-to-quarry), cell_status=0 (intersected, " +
@@ -517,7 +517,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanMixedSizeBlockPackComponent()
             : base(
-                "Frahan Mixed-Size Block Pack", "BCOMixedPack",
+                "Mixed-Size Block Pack", "BCOMixedPack",
                 "Pack a catalogue of mixed-size blocks (multiple Width x " +
                 "Depth pairs each with its own revenue) into the tested " +
                 "area using the DLBF greedy heuristic (Chehrazad 2025, " +

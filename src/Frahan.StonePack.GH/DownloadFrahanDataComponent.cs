@@ -32,7 +32,7 @@ namespace Frahan.GH;
 // with a matching hash are skipped.
 // =============================================================================
 
-[RelatedComponent("Frahan > Kintsugi > Frahan Kintsugi", Reason = "Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.")]
+[RelatedComponent("Frahan > Kintsugi > Kintsugi", Reason = "Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.")]
 [Algorithm("On-demand data fetch + SHA-256 verify",
     "Frahan-original distribution helper",
     Note = "Downloads optional large assets (Port weights/runtime, examples) from a release manifest; verifies hashes.")]

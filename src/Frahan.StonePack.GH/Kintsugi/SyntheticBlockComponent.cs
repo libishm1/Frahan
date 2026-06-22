@@ -43,11 +43,11 @@ namespace Frahan.GH.Kintsugi;
            "Ridged 7, Stepped 9) and featureless ones (Boulder 0, Slab 1, Gem 5) stay " +
            "ambiguous (measured: drum did not beat the featureless baseline). All shapes " +
            "are clean closed meshes (no booleans).")]
-[RelatedComponent("Frahan > Kintsugi > Frahan Fragment Shatter",
+[RelatedComponent("Frahan > Kintsugi > Fragment Shatter",
     Reason = "Shatter the generated block into fragments for training / round-trip")]
 [RelatedComponent("Frahan > Kintsugi > Fracture Roughen",
     Reason = "Give the shards worn fracture surfaces before assembly")]
-[RelatedComponent("Frahan > Kintsugi > Frahan Kintsugi",
+[RelatedComponent("Frahan > Kintsugi > Kintsugi",
     Reason = "Reassemble the shards (round-trip test of the target)")]
 [DesignApplication(
     "Generate parametric closed stone-block meshes (10 shapes) as  targets for synthetic fracture-assembly training",

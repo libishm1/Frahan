@@ -36,7 +36,7 @@ namespace Frahan.GH;
 public sealed class FragmentEdgeMatchComponent : FrahanComponentBase
 {
     public FragmentEdgeMatchComponent()
-        : base("Frahan Fragment Edge Match", "FragMatch",
+        : base("Fragment Edge Match", "FragMatch",
             "Diagnostic component. Match each fragment curve's polyline edges " +
             "against a populated BoundaryRailIndex; returns ranked affinity " +
             "scores per fragment per edge. The unified Frahan Sheet Pack now " +

@@ -45,7 +45,7 @@ namespace Frahan.GH.Kintsugi;
     Note = "Run AFTER placement (Frahan Kintsugi). For rim re-alignment too, run " +
            "ConstrainedIcp3D first. Open meshes that will not close fall back to " +
            "surface-proximity repulsion (flagged in the report).")]
-[RelatedComponent("Frahan > Kintsugi > Frahan Kintsugi",
+[RelatedComponent("Frahan > Kintsugi > Kintsugi",
     Reason = "Produces the placed fragments this pass de-penetrates")]
 [RelatedComponent("Frahan > Kintsugi > Load Scan Fragments",
     Reason = "Source of real (open) scan shards that need closing before the inside test")]

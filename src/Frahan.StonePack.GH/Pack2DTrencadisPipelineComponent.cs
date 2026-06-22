@@ -73,7 +73,7 @@ public sealed class Pack2DTrencadisPipelineComponent : FrahanComponentBase, IGH_
     private bool _showPhysics;
     private bool _showAnimation;
     public Pack2DTrencadisPipelineComponent()
-        : base("Frahan Trencadís Pipeline", "TrencadisPipe",
+        : base("Trencadís Pipeline", "TrencadisPipe",
             "All-in-one trencadís pipeline. Deterministic boundary " +
             "pack first; if residual overlap remains, Kangaroo 2 " +
             "settle fills the gaps. Exposes solver controls (kinetic " +

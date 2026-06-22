@@ -44,7 +44,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanSlabYieldOptimizerComponent()
             : base(
-                "Frahan Slab Yield Optimizer", "SlabYield",
+                "Slab Yield Optimizer", "SlabYield",
                 "Pick the best SlabPlan (axis + thickness) for one block. " +
                 "Enumerates three axis-aligned candidates at the given " +
                 "thickness; score = yield - conflictPenalty * crackConflicts.",
@@ -171,7 +171,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBilletCutterComponent()
             : base(
-                "Frahan Billet Cutter", "Billets",
+                "Billet Cutter", "Billets",
                 "Sub-divide slabs into billets along an axis at a target " +
                 "billet width. Kerf-aware. Frahan-original method.",
                 "Frahan", "Quarry")
@@ -248,7 +248,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanCrackGraphBuilderComponent()
             : base(
-                "Frahan Crack Graph (manual)", "CrkGraph",
+                "Crack Graph (manual)", "CrkGraph",
                 "Wrap a user-supplied list of FracturePlanes (and optional " +
                 "confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.",
                 "Frahan", "Quarry")
@@ -319,7 +319,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBlockGraphBuilderComponent()
             : base(
-                "Frahan Block Graph", "BlkGraph",
+                "Block Graph", "BlkGraph",
                 "Partition a bench (Box or Mesh) into BlockCells using a " +
                 "CrackGraph. Each cell is a convex Slab; small cells are " +
                 "dropped under Min Cell Volume. Frahan-original method.",
@@ -387,7 +387,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBlockCandidateGeneratorComponent()
             : base(
-                "Frahan Block Candidate Generator", "BCand",
+                "Block Candidate Generator", "BCand",
                 "Emit one BlockCandidate per BlockCell using the cell's AABB " +
                 "as the BenchBlock footprint. Also returns a QuarryInventory " +
                 "ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.",

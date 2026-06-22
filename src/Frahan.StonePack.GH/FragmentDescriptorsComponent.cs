@@ -32,7 +32,7 @@ namespace Frahan.GH;
 public sealed class FragmentDescriptorsComponent : FrahanComponentBase
 {
     public FragmentDescriptorsComponent()
-        : base("Frahan Fragment Descriptors", "FragDesc",
+        : base("Fragment Descriptors", "FragDesc",
             "Diagnostic component. Convert closed planar Rhino curves into " +
             "FragmentDescriptors with per-edge EdgeDescriptors. The unified " +
             "Frahan Sheet Pack now builds these internally when Boundary Mode " +

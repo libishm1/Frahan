@@ -25,7 +25,7 @@ namespace Frahan.GH;
 public sealed class PackingPlanReportComponent : FrahanComponentBase
 {
     public PackingPlanReportComponent()
-        : base("Frahan Packing Plan Report", "PackPlanRpt",
+        : base("Packing Plan Report", "PackPlanRpt",
             "Aggregate PackingMetricsReport + residual voids + edge-match scores " +
             "into one PackingPlanReport. All inputs come from upstream Frahan " +
             "components (Pack3D, Residual Voids, Fragment Edge Match).",

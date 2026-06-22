@@ -39,7 +39,7 @@ namespace Frahan.GH;
 [RelatedComponent("Frahan > EdgeMatch > EdgeMatch Solve",
     Reason = "Consumes this Options DTO on its optional Opt input to override the advanced fields",
     ComponentGuid = "D5F10001-ED9E-4ED9-A001-ED9EED9E0001")]
-[RelatedComponent("Frahan > Kintsugi > Frahan Kintsugi",
+[RelatedComponent("Frahan > Kintsugi > Kintsugi",
     Reason = "3D fragment reassembly that shares the agglomerative + Soft-ICP refine machinery these knobs tune")]
 [RelatedComponent("Frahan > EdgeMatch > Trencadis EdgeMatch",
     Reason = "2D Trencadís edge-matching that runs the same FrameAnchored beam these options tune")]

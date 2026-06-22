@@ -37,7 +37,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanGprRadargramReaderComponent()
             : base(
-                "Frahan GPR Radargram Reader", "GprRead",
+                "GPR Radargram Reader", "GprRead",
                 "SUPERSEDED BY: GPR File Loader + GPR Fracture Extract, which read " +
                 "vendor formats natively and run the validated processing chain. " +
                 "Kept loadable for old canvases. " +
@@ -50,7 +50,7 @@ namespace Frahan.GH.Quarry
         public override Guid ComponentGuid =>
             new Guid("F7A12001-0001-4F2D-A0B0-7E60CADA17B1");
 
-        public override GH_Exposure Exposure => Frahan.GH.Attributes.LabConfig.EffectiveExposure(ComponentGuid, GH_Exposure.primary);
+        public override GH_Exposure Exposure => Frahan.GH.Attributes.LabConfig.EffectiveExposure(ComponentGuid, GH_Exposure.hidden);
 
         protected override Bitmap Icon => IconProvider.Load("GprIngest.png");
 
@@ -124,7 +124,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanGeoFractNetInferenceComponent()
             : base(
-                "Frahan GeoFractNet Inference", "GFNInfer",
+                "GeoFractNet Inference", "GFNInfer",
                 "Load pre-computed GeoFractNet fracture predictions from CSV " +
                 "and emit a BlockCutOpt-ready fracture Mesh clipped to a bench " +
                 "AABB. Inference itself runs externally (net48 cannot host " +

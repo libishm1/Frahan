@@ -414,7 +414,7 @@ public sealed class CgalMeshRepairComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("F2D000A4-CADC-4F2D-A0A4-7E60CADA15A0");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
     protected override Bitmap Icon => IconProvider.Load("PoissonReconstruct.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -524,7 +524,7 @@ public sealed class CgalMeshDecimateComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("F2D000A5-CADC-4F2D-A0A5-7E60CADA15A0");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
     protected override Bitmap Icon => IconProvider.Load("Downsample.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

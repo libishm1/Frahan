@@ -33,7 +33,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanPhotoToPlyComponent()
             : base(
-                "Frahan Photo Detect → PLY", "Photo2Ply",
+                "Photo Detect → PLY", "Photo2Ply",
                 "v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2 " +
                 "in world metres) and emits the vertical-extruded PLY consumable by " +
                 "BlockCutOpt. The on-image fracture detector is not yet wired (the " +
@@ -115,7 +115,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanAlgebraicConvexPolyComponent()
             : base(
-                "Frahan Algebraic Convex Polyhedron", "AlgConv",
+                "Algebraic Convex Polyhedron", "AlgConv",
                 "Build a convex polyhedron from N half-space inequalities " +
                 "Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14). " +
                 "Each parallel-list row defines one face's outward normal " +
@@ -196,7 +196,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanSyntheticTnGraniteComponent()
             : base(
-                "Frahan Synthetic TN Granite", "TnGran",
+                "Synthetic TN Granite", "TnGran",
                 "Generate a deterministic synthetic discrete fracture network " +
                 "for Tamil Nadu granite (three joint sets: NE-SW, NW-SE, " +
                 "sub-horizontal bedding). Outputs a CSV of 2D traces at " +

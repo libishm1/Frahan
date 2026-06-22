@@ -134,7 +134,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBenchBlockToSlabsComponent()
             : base(
-                "Frahan BenchBlock Cut → Slabs", "QCut",
+                "BenchBlock Cut → Slabs", "QCut",
                 "Run BlockCutOpt per BenchBlock in the ExtractionPlan order " +
                 "and emit the winning cut-grid as Slabs (Mesh form). " +
                 "Closes the Layer 7 → Layer 5 / 6 handoff.",
@@ -260,7 +260,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanMeshFacesToFracturePlanesComponent()
             : base(
-                "Frahan Mesh → Fracture Planes", "Mesh2FxPl",
+                "Mesh → Fracture Planes", "Mesh2FxPl",
                 "Convert a hand-drawn Rhino Mesh into a List<FracturePlane> " +
                 "consumable by Slab Cut By Fractures. One plane per face " +
                 "(centroid + face normal). Lets you author fractures on the " +
