@@ -100,6 +100,14 @@ namespace Frahan.EdgeMatching
         /// <summary>Weight added to a non-mutual-best edge (soft; keeps the graph connected as a fallback).</summary>
         public double BestBuddyPenalty { get; set; } = 1.0e3;
 
+        // --- Whole-side best-first assembler (BestFirstAssembler; standalone solver) ---
+        /// <summary>Acceptance gate for the whole-side best-first assembler: the maximum
+        /// length-normalized side-fit cost (dimensionless L1/maxLen) admitted to the
+        /// frontier. Default 2.5 (validated 9/9 on the jigsaw harness; must exceed the
+        /// highest TRUE seam cost, e.g. ~1.86, or a far part column can orphan). Only
+        /// read by <see cref="BestFirstAssembler"/>.</summary>
+        public double WholeSideFitGate { get; set; } = 2.5;
+
         // --- A1: scale-relative acceptance gates (opt-in) ---------------------
         // The original gates are ABSOLUTE: the phase-correlation similarity gate
         // is a fixed 0.5 and ResidualThreshold is a fixed model-unit distance.

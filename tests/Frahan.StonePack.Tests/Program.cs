@@ -1040,6 +1040,8 @@ var tests = new List<(string Name, Action Body)>
     ("edgematch Dispatch mixed solver runs without crash (Rhino)", EdgeMatchingDispatchTests.AssemblySolver_MixedPanels_RunsWithoutCrash),
     ("edgematch Determinism two runs same input → same output (Rhino)", EdgeMatchingDeterminismTests.TwoRuns_SameInput_SameOutput),
     ("edgematch Determinism hash identical across runs (Rhino)", EdgeMatchingDeterminismTests.TwoRuns_HashIdentical),
+    ("edgematch WholeSide best-first reassembles 2x2 jigsaw (Rhino)", WholeSideAssemblerTests.WholeSide_WavyJigsaw_AllPlaced),
+    ("edgematch WholeSide best-first deterministic (Rhino)", WholeSideAssemblerTests.WholeSide_Deterministic),
     ("edgematch component EdgeMatchSolve GUID parses", EdgeMatchingComponentGuidTests.EdgeMatchSolveComponent_GuidParses),
     ("edgematch component EdgeMatchSegments GUID parses", EdgeMatchingComponentGuidTests.EdgeMatchSegmentsComponent_GuidParses),
     ("edgematch component TrencadisEdgeMatch GUID parses", EdgeMatchingComponentGuidTests.TrencadisEdgeMatchComponent_GuidParses),
