@@ -427,6 +427,38 @@ namespace Frahan.EdgeMatching
                 }
             }
 
+            // --- 1c. Phase 1c best-buddies: penalize non-mutual-best edges. ---
+            // An edge is trustworthy only if it is the lowest-weight edge for BOTH its
+            // endpoints. The impostor (a non-adjacent piece that mates ~as well locally)
+            // is some other piece's true neighbour, so it is not mutual-best -> penalize
+            // it so the MST/seed prefers mutual edges, falling back to non-mutual only
+            // when a node has no mutual edge. Folded into the same penalty dict.
+            if (_opt.UseBestBuddies && edges.Count > 0)
+            {
+                var bestKey = new Dictionary<string, string>(StringComparer.Ordinal);
+                var bestW = new Dictionary<string, double>(StringComparer.Ordinal);
+                // Edges are in deterministic (LowId,HighId) order; strict < keeps the
+                // first-seen lowest as the unique best (deterministic tie-break).
+                foreach (var e in edges)
+                {
+                    string k = e.LowId + "|" + e.HighId;
+                    if (!bestW.TryGetValue(e.LowId, out var wl) || e.Weight < wl) { bestW[e.LowId] = e.Weight; bestKey[e.LowId] = k; }
+                    if (!bestW.TryGetValue(e.HighId, out var wh) || e.Weight < wh) { bestW[e.HighId] = e.Weight; bestKey[e.HighId] = k; }
+                }
+                cyclePenalty = cyclePenalty ?? new Dictionary<string, double>(StringComparer.Ordinal);
+                foreach (var e in edges)
+                {
+                    string k = e.LowId + "|" + e.HighId;
+                    bool mutual = bestKey.TryGetValue(e.LowId, out var kl) && kl == k
+                               && bestKey.TryGetValue(e.HighId, out var kh) && kh == k;
+                    if (!mutual)
+                    {
+                        cyclePenalty.TryGetValue(k, out var cur);
+                        cyclePenalty[k] = cur + _opt.BestBuddyPenalty;
+                    }
+                }
+            }
+
             // --- 2. Global resolve: minimum-residual spanning tree from a seed. ---
             // Adjacency: for each node, the edges incident to it. Iterate edges in
             // their fixed insertion order (pairs sorted by (i,j) panel id) so the

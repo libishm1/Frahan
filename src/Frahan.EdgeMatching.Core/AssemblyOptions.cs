@@ -87,6 +87,19 @@ namespace Frahan.EdgeMatching
         /// <summary>Number of arc-length samples along the candidate perimeter for the contact test.</summary>
         public int ContactSamples { get; set; } = 64;
 
+        // --- Phase 1c: best-buddies mutual-best-match gate (opt-in) ---
+        // Local edge scores (residual / contact / chamfer) cannot separate a true seam
+        // from a non-adjacent piece that mates ~as well locally (real jigsaw ambiguity).
+        // Best-Buddies (Gallagher 2012 / Paikin-Tal 2015, the same fix ryan-puzzle-solver
+        // relies on): an edge (A,B) is trustworthy only if B is A's lowest-weight match
+        // AND A is B's lowest-weight match. The impostor edge is some OTHER piece's true
+        // neighbour, so it is not mutual -> it gets BestBuddyPenalty added to its MST
+        // weight and is used only when a node has no mutual-best edge. Default off.
+        public bool UseBestBuddies { get; set; } = false;
+
+        /// <summary>Weight added to a non-mutual-best edge (soft; keeps the graph connected as a fallback).</summary>
+        public double BestBuddyPenalty { get; set; } = 1.0e3;
+
         // --- A1: scale-relative acceptance gates (opt-in) ---------------------
         // The original gates are ABSOLUTE: the phase-correlation similarity gate
         // is a fixed 0.5 and ResidualThreshold is a fixed model-unit distance.
