@@ -120,7 +120,7 @@ namespace Frahan.GH.Quarry
                 "Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14). " +
                 "Each parallel-list row defines one face's outward normal " +
                 "and offset. Returns a triangulated Rhino Mesh. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>

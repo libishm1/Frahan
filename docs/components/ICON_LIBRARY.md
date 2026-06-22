@@ -38,6 +38,36 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Boundary Rail Index | Analysis | BoundarySegmenter.png | yes |
 | Fragment Descriptors | Analysis | FragmentCluster.png | yes |
 | Fragment Edge Match | Analysis | EdgeMatchSolve.png | yes |
+| Algebraic Convex Polyhedron | Block Cutting | CoacdDecompose.png | yes |
+| Bed Block Layout | Block Cutting | BlockPackTree.png | yes |
+| BenchBlock Cut → Slabs | Block Cutting | QuarryCutOpt.png | yes |
+| Billet Cutter | Block Cutting | QuarryCutOpt.png | yes |
+| Block Candidate Generator | Block Cutting | BlockCutOpt.png | yes |
+| Block Graph | Block Cutting | Voronoi.png | yes |
+| BlockCutOpt AMRR Plan | Block Cutting | QuarryCutOpt.png | yes |
+| BlockCutOpt Extract Grid | Block Cutting | BlockCutOpt.png | yes |
+| BlockCutOpt Load Fractures | Block Cutting | DefectMap.png | yes |
+| BlockCutOpt Omni Solve | Block Cutting | BlockCutOpt.png | yes |
+| BlockCutOpt Solve | Block Cutting | BlockCutOpt.png | yes |
+| Box To Mesh | Block Cutting | QuarryBlock.png | yes |
+| Convex Hull Slab | Block Cutting | ConvexHull2D.png | yes |
+| Crack Graph (manual) | Block Cutting | DefectMap.png | yes |
+| Fracture Block Pack | Block Cutting | BlockCutOpt.png | yes |
+| Fracture Bounded Slabs | Block Cutting | Box2Mesh.png | yes |
+| Heterogeneous Quarry Extraction | Block Cutting | QuarryBlock.png | yes |
+| Mesh Shell Split | Block Cutting | CoacdDecompose.png | yes |
+| Mesh → Fracture Planes | Block Cutting | DefectMap.png | yes |
+| Mixed-Size Block Pack 3D | Block Cutting | BinPack.png | yes |
+| Quarry Decompose | Block Cutting | QuarryCutOpt.png | yes |
+| Quarry Decompose By CoACD | Block Cutting | CoacdDecompose.png | yes |
+| Quarry Decompose By Mesh (CGAL) | Block Cutting | CoacdDecompose.png | yes |
+| Quarry Decompose By Tet | Block Cutting | CoacdDecompose.png | yes |
+| Quarry Decompose By Voronoi | Block Cutting | Voronoi.png | yes |
+| Slab Cut By Fractures | Block Cutting | BlockCutOpt.png | yes |
+| Slab Cut By Tool Mesh (CGAL) | Block Cutting | BlockCutOpt.png | yes |
+| Slab From Mesh | Block Cutting | QuarryBlock.png | yes |
+| Slab Yield Optimizer | Block Cutting | YieldEstimator.png | yes |
+| Vertical Fracture Planes From Curves | Block Cutting | PoissonReconstruct.png | yes |
 | Adaptive Block Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Block Chain Along Thrust Line | EdgeMatch | EdgeMatchSolve.png | yes |
 | Block Pair Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
@@ -171,28 +201,12 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Scan Scale Calibrate | Mesh | CalibrationBoard.png | yes |
 | Stone Prep (Scan) | Mesh | OutlierRemoval.png | yes |
 | Voxel Downsample | Mesh | Downsample.png | yes |
-| Algebraic Convex Polyhedron | Quarry | CoacdDecompose.png | yes |
-| Bed Block Layout | Quarry | BlockPackTree.png | yes |
-| BenchBlock Cut → Slabs | Quarry | QuarryCutOpt.png | yes |
-| Billet Cutter | Quarry | QuarryCutOpt.png | yes |
-| Block Candidate Generator | Quarry | BlockCutOpt.png | yes |
-| Block Graph | Quarry | Voronoi.png | yes |
-| BlockCutOpt AMRR Plan | Quarry | QuarryCutOpt.png | yes |
-| BlockCutOpt Extract Grid | Quarry | BlockCutOpt.png | yes |
-| BlockCutOpt Load Fractures | Quarry | DefectMap.png | yes |
-| BlockCutOpt Omni Solve | Quarry | BlockCutOpt.png | yes |
-| BlockCutOpt Solve | Quarry | BlockCutOpt.png | yes |
-| Box To Mesh | Quarry | QuarryBlock.png | yes |
 | Clean Scan Mesh | Quarry | QuarryBlock.png | yes |
 | Construct GPR Preset | Quarry | GprIngest.png | yes |
-| Convex Hull Slab | Quarry | ConvexHull2D.png | yes |
-| Crack Graph (manual) | Quarry | DefectMap.png | yes |
 | Discontinuity Ingest | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Async) | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Cloud) | Quarry | DiscontinuitySets.png | yes |
 | Extraction Order Optimizer | Quarry | QuarryCutOpt.png | yes |
-| Fracture Block Pack | Quarry | BlockCutOpt.png | yes |
-| Fracture Bounded Slabs | Quarry | Box2Mesh.png | yes |
 | GPR Bedrock Surface | Quarry | GprIngest.png | yes |
 | GPR Fracture Extract | Quarry | GprIngest.png | yes |
 | GPR Fracture Surfaces 3D | Quarry | Stratigraphy.png | yes |
@@ -200,26 +214,16 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | GPR Radargram Reader | Quarry | GprIngest.png | yes |
 | GPR Survey Grid | Quarry | GprIngest.png | yes |
 | GeoFractNet Inference | Quarry | DefectMap.png | yes |
-| Heterogeneous Quarry Extraction | Quarry | QuarryBlock.png | yes |
 | Joint Set | Quarry | Stratigraphy.png | yes |
 | Joint Sets to DFN | Quarry | DiscontinuitySets.png | yes |
-| Mesh Shell Split | Quarry | CoacdDecompose.png | yes |
-| Mesh → Fracture Planes | Quarry | DefectMap.png | yes |
-| Mixed-Size Block Pack 3D | Quarry | BinPack.png | yes |
 | Overburden To Rock Face | Quarry | QuarryBlock.png | yes |
 | Photo Detect → PLY | Quarry | PlyReader.png | yes |
 | Quarry DFN | Quarry | DefectMap.png | yes |
-| Quarry Decompose | Quarry | QuarryCutOpt.png | yes |
-| Quarry Decompose By CoACD | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Mesh (CGAL) | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Tet | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Voronoi | Quarry | Voronoi.png | yes |
 | Quarry Inventory | Quarry | StockpileManager.png | yes |
 | Quarry Report | Quarry | PackDiagnostics.png | yes |
 | Quarry Yield Estimator | Quarry | YieldEstimator.png | yes |
 | Saw-Bed Schedule | Quarry | CncRoughing.png | yes |
 | Scan to Block Inventory | Quarry | QuarryBlock.png | yes |
-| Slab Yield Optimizer | Quarry | YieldEstimator.png | yes |
 | Stereonet + Block Size | Quarry | DiscontinuitySets.png | yes |
 | Stochastic DFN (Baecher) | Quarry | DiscontinuitySets.png | yes |
 | Synthetic TN Granite | Quarry | Stratigraphy.png | yes |
@@ -229,10 +233,6 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (131 PNGs). 83 distinct icons
 | Carving Stages | Sculpt | CncRoughing.png | yes |
 | Enlarge Sculpture | Sculpt | MorphCorrect.png | yes |
 | Fit In Block | Sculpt | PackIntoBlock.png | yes |
-| Slab Cut By Fractures | Slab | BlockCutOpt.png | yes |
-| Slab Cut By Tool Mesh (CGAL) | Slab | BlockCutOpt.png | yes |
-| Slab From Mesh | Slab | QuarryBlock.png | yes |
-| Vertical Fracture Planes From Curves | Slab | PoissonReconstruct.png | yes |
 | Chart Flatness Report | Surface Packing | DistortionMap.png | yes |
 | Pack On Surface | Surface Packing | SurfaceTile.png | yes |
 | Pack Surfaces | Surface Packing | SurfaceUnroll.png | yes |

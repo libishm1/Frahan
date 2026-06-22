@@ -49,7 +49,7 @@ public sealed class FractureBoundedSlabsComponent : FrahanComponentBase
             "gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a " +
             "block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack " +
             "(packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     { }
 
     public override Guid ComponentGuid => new Guid("A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05");

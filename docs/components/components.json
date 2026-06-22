@@ -3302,6 +3302,2704 @@
     "file": "src/Frahan.StonePack.GH/FragmentEdgeMatchComponent.cs"
   },
   {
+    "guid": "F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5",
+    "class": "FrahanAlgebraicConvexPolyComponent",
+    "name": "Algebraic Convex Polyhedron",
+    "nickname": "AlgConv",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Build a convex polyhedron from N half-space inequalities  Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14).  Each parallel-list row defines one face's outward normal  and offset. Returns a triangulated Rhino Mesh. Frahan-original method.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Half-space intersection convex polyhedron",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "B",
+        "nick": "B",
+        "type": "Number",
+        "access": "list",
+        "desc": "Right-hand side b per inequality."
+      },
+      {
+        "name": "Nx",
+        "nick": "Nx",
+        "type": "Number",
+        "access": "list",
+        "desc": "Outward-normal X per inequality."
+      },
+      {
+        "name": "Ny",
+        "nick": "Ny",
+        "type": "Number",
+        "access": "list",
+        "desc": "Outward-normal Y per inequality."
+      },
+      {
+        "name": "Nz",
+        "nick": "Nz",
+        "type": "Number",
+        "access": "list",
+        "desc": "Outward-normal Z per inequality."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Polyhedron",
+        "nick": "P",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Triangulated CPH as Rhino Mesh."
+      },
+      {
+        "name": "Vertex Count",
+        "nick": "V",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Vertex count."
+      },
+      {
+        "name": "Face Count",
+        "nick": "F",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Face count."
+      },
+      {
+        "name": "Volume (m^3)",
+        "nick": "Vol",
+        "type": "Number",
+        "access": "item",
+        "desc": "Polyhedron volume."
+      }
+    ],
+    "related": [],
+    "icon": "CoacdDecompose.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs"
+  },
+  {
+    "guid": "A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06",
+    "class": "BedBlockLayoutComponent",
+    "name": "Bed Block Layout",
+    "nickname": "BedBlocks",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling",
+      "citation": "Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)"
+    },
+    "inputs": [
+      {
+        "name": "Bench",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m). The XY footprint + Z range to lay blocks in."
+      },
+      {
+        "name": "Bed Surfaces",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom)."
+      },
+      {
+        "name": "Volume Weight",
+        "nick": "W",
+        "type": "Number",
+        "access": "item",
+        "desc": "Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0."
+      },
+      {
+        "name": "Oblique",
+        "nick": "Ob",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste)."
+      },
+      {
+        "name": "Cut Cost",
+        "nick": "Cut",
+        "type": "Number",
+        "access": "item",
+        "desc": "Diamond-saw cost (USD/m2 of sawn block face). Default 200."
+      },
+      {
+        "name": "Keep-out",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05."
+      },
+      {
+        "name": "Catalogue",
+        "nick": "Cat",
+        "type": "Number",
+        "access": "list",
+        "desc": "OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes."
+      },
+      {
+        "name": "Class",
+        "nick": "C",
+        "type": "Text",
+        "access": "list",
+        "desc": "Catalogue class (A/B/C/D...) of each block, aligned to Blocks."
+      },
+      {
+        "name": "Volume",
+        "nick": "V",
+        "type": "Number",
+        "access": "item",
+        "desc": "Total recovered block volume (m3)."
+      },
+      {
+        "name": "Net Value",
+        "nick": "Net",
+        "type": "Number",
+        "access": "item",
+        "desc": "Net value (USD) = block sale price - diamond-saw cut cost."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of blocks placed."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Mix + economics + per-layer summary."
+      }
+    ],
+    "related": [],
+    "icon": "BlockPackTree.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs"
+  },
+  {
+    "guid": "F7A13002-0001-4F2D-A0B0-7E60CADA17C2",
+    "class": "FrahanBenchBlockToSlabsComponent",
+    "name": "BenchBlock Cut → Slabs",
+    "nickname": "QCut",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Run BlockCutOpt per BenchBlock in the ExtractionPlan order  and emit the winning cut-grid as Slabs (Mesh form).  Closes the Layer 7 → Layer 5 / 6 handoff.",
+    "exposure": "secondary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Inventory",
+        "nick": "Inv",
+        "type": "Generic",
+        "access": "item",
+        "desc": "QuarryInventory."
+      },
+      {
+        "name": "Plan",
+        "nick": "P",
+        "type": "Generic",
+        "access": "item",
+        "desc": "ExtractionPlan (accepted blocks are cut in plan order)."
+      },
+      {
+        "name": "Fractures",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Fracture mesh."
+      },
+      {
+        "name": "Product X (m)",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block target X."
+      },
+      {
+        "name": "Product Y (m)",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block target Y."
+      },
+      {
+        "name": "Product Z (m)",
+        "nick": "Lz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block target Z."
+      },
+      {
+        "name": "Kerf (m)",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Saw kerf."
+      },
+      {
+        "name": "Psi Step (deg)",
+        "nick": "Pdeg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Angular search step."
+      },
+      {
+        "name": "Dx Max",
+        "nick": "Dx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dx (m)."
+      },
+      {
+        "name": "Dx Step",
+        "nick": "DxS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dx step (m)."
+      },
+      {
+        "name": "Dy Max",
+        "nick": "Dy",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dy (m)."
+      },
+      {
+        "name": "Dy Step",
+        "nick": "DyS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dy step (m)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Per-BenchBlock cut slabs concatenated in plan order. Wire into Ashlar Pack."
+      },
+      {
+        "name": "Block Ids",
+        "nick": "I",
+        "type": "Text",
+        "access": "list",
+        "desc": "BenchBlock id parallel to each slab."
+      },
+      {
+        "name": "Counts",
+        "nick": "N",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Slab count per BenchBlock (parallel to ExtractionPlan.Accepted)."
+      },
+      {
+        "name": "Cut Results",
+        "nick": "C",
+        "type": "Generic",
+        "access": "list",
+        "desc": "List of BenchBlockCutResult objects."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
+  },
+  {
+    "guid": "F7A14002-0001-4F2D-A0B0-7E60CADA17D2",
+    "class": "FrahanBilletCutterComponent",
+    "name": "Billet Cutter",
+    "nickname": "Billets",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Sub-divide slabs into billets along an axis at a target  billet width. Kerf-aware. Frahan-original method.",
+    "exposure": "quarternary",
+    "algorithm": {
+      "title": "Axis-parallel kerf-aware slab sub-division",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Slab inventory (one mesh per slab)."
+      },
+      {
+        "name": "Axis",
+        "nick": "A",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Billet axis: 0=X, 1=Y, 2=Z."
+      },
+      {
+        "name": "Billet Width (m)",
+        "nick": "W",
+        "type": "Number",
+        "access": "item",
+        "desc": "Target billet width."
+      },
+      {
+        "name": "Kerf (m)",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Saw kerf."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Billets",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Billet meshes (one per cut piece)."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Total billet count."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
+  },
+  {
+    "guid": "F7A15003-0001-4F2D-A0B0-7E60CADA17E3",
+    "class": "FrahanBlockCandidateGeneratorComponent",
+    "name": "Block Candidate Generator",
+    "nickname": "BCand",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Emit one BlockCandidate per BlockCell using the cell's AABB  as the BenchBlock footprint. Also returns a QuarryInventory  ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.",
+    "exposure": "quarternary",
+    "algorithm": {
+      "title": "Per-cell AABB block-candidate generator",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Block Graph",
+        "nick": "Bg",
+        "type": "Generic",
+        "access": "item",
+        "desc": "BlockGraph from Frahan Block Graph."
+      },
+      {
+        "name": "Bench Id",
+        "nick": "B",
+        "type": "Text",
+        "access": "item",
+        "desc": "Bench identifier for the QuarryInventory. bench-1"
+      },
+      {
+        "name": "Geology Grade",
+        "nick": "G",
+        "type": "Number",
+        "access": "item",
+        "desc": "Per-cell geology grade 0..1."
+      },
+      {
+        "name": "Uncertainty Buffer (m)",
+        "nick": "U",
+        "type": "Number",
+        "access": "item",
+        "desc": "Buffer applied to each candidate."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Inventory",
+        "nick": "Inv",
+        "type": "Generic",
+        "access": "item",
+        "desc": "QuarryInventory for the Layer 7 pipeline."
+      },
+      {
+        "name": "Candidates",
+        "nick": "C",
+        "type": "Generic",
+        "access": "list",
+        "desc": "List<BlockCandidate>."
+      },
+      {
+        "name": "Candidate Boxes",
+        "nick": "Bx",
+        "type": "Box",
+        "access": "list",
+        "desc": "Footprint of each candidate as a Rhino Box."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of candidates."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
+  },
+  {
+    "guid": "F7A15002-0001-4F2D-A0B0-7E60CADA17E2",
+    "class": "FrahanBlockGraphBuilderComponent",
+    "name": "Block Graph",
+    "nickname": "BlkGraph",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Partition a bench (Box or Mesh) into BlockCells using a  CrackGraph. Each cell is a convex Slab; small cells are  dropped under Min Cell Volume. Frahan-original method.",
+    "exposure": "quarternary",
+    "algorithm": {
+      "title": "CrackGraph to BlockGraph partition",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Bench Mesh",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Bench geometry (convex mesh)."
+      },
+      {
+        "name": "Crack Graph",
+        "nick": "G",
+        "type": "Generic",
+        "access": "item",
+        "desc": "CrackGraph from Frahan Crack Graph."
+      },
+      {
+        "name": "Min Cell Volume (m^3)",
+        "nick": "Mv",
+        "type": "Number",
+        "access": "item",
+        "desc": "Cells below this volume are dropped."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Block Graph",
+        "nick": "Bg",
+        "type": "Generic",
+        "access": "item",
+        "desc": "BlockGraph object."
+      },
+      {
+        "name": "Cells",
+        "nick": "C",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One mesh per BlockCell."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of cells."
+      },
+      {
+        "name": "Total Volume (m^3)",
+        "nick": "V",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sum of cell volumes."
+      }
+    ],
+    "related": [],
+    "icon": "Voronoi.png",
+    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
+  },
+  {
+    "guid": "F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3",
+    "class": "BlockCutOptAmrrPlanComponent",
+    "name": "BlockCutOpt AMRR Plan",
+    "nickname": "BCOAmrr",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Plan a sequence of plane cuts (Shao 2022) that reduces the  starting block toward a target bounding sphere. Maximises  the average material removal rate. Implements AMRR in-block plane-sequence cutting (Shao 2022).",
+    "exposure": "tertiary",
+    "algorithm": {
+      "title": "AMRR in-block plane-sequence cutting",
+      "citation": "Shao, Liu, Gao 2022, AMRR in-block plane-sequence cutting strategy, Processes (MDPI)"
+    },
+    "inputs": [
+      {
+        "name": "Blank Block",
+        "nick": "B",
+        "type": "Box",
+        "access": "item",
+        "desc": "Starting block (m)."
+      },
+      {
+        "name": "Target Center",
+        "nick": "C",
+        "type": "Point",
+        "access": "item",
+        "desc": "Target sphere centre."
+      },
+      {
+        "name": "Target Radius",
+        "nick": "R",
+        "type": "Number",
+        "access": "item",
+        "desc": "Target sphere radius (m)."
+      },
+      {
+        "name": "Sawblade Radius (mm)",
+        "nick": "SBR",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sawblade radius in mm."
+      },
+      {
+        "name": "Feed Speed (mm/min)",
+        "nick": "FS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Feed speed in mm/min."
+      },
+      {
+        "name": "Max Cuts",
+        "nick": "MC",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Iteration cap."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Cut Planes",
+        "nick": "P",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Sequence of cutting planes."
+      },
+      {
+        "name": "Removed Volume (m^3)",
+        "nick": "V",
+        "type": "Number",
+        "access": "list",
+        "desc": "Removed volume per step."
+      },
+      {
+        "name": "Cutting Time (min)",
+        "nick": "T",
+        "type": "Number",
+        "access": "list",
+        "desc": "Cutting time per step."
+      },
+      {
+        "name": "Material Removal %",
+        "nick": "MRP",
+        "type": "Number",
+        "access": "item",
+        "desc": "Overall material removal percentage."
+      },
+      {
+        "name": "AMRR (mm^3/min)",
+        "nick": "AMRR",
+        "type": "Number",
+        "access": "item",
+        "desc": "Average material removal rate."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
+  },
+  {
+    "guid": "F7A13001-0001-4F2D-A0B0-7E60CADA17C1",
+    "class": "FrahanBlockCutOptExtractGridComponent",
+    "name": "BlockCutOpt Extract Grid",
+    "nickname": "BCOExtract",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Brute-force search + extract the winning OrientedBlock grid.  Outputs the non-intersected blocks as Rhino Boxes plus the  BlockCutOptResult headline numbers.",
+    "exposure": "secondary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Tested Area",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m)."
+      },
+      {
+        "name": "Fractures",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Fracture mesh."
+      },
+      {
+        "name": "Block X",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block length (m)."
+      },
+      {
+        "name": "Block Y",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block width (m)."
+      },
+      {
+        "name": "Block Z",
+        "nick": "Lz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block height (m)."
+      },
+      {
+        "name": "Kerf",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Material-lost-by-quarrying (m)."
+      },
+      {
+        "name": "Psi Step (deg)",
+        "nick": "Pdeg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Angular search step."
+      },
+      {
+        "name": "Dx Max",
+        "nick": "Dx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dx (m)."
+      },
+      {
+        "name": "Dx Step",
+        "nick": "DxS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dx step (m)."
+      },
+      {
+        "name": "Dy Max",
+        "nick": "Dy",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dy (m)."
+      },
+      {
+        "name": "Dy Step",
+        "nick": "DyS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dy step (m)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Boxes",
+        "nick": "B",
+        "type": "Box",
+        "access": "list",
+        "desc": "Non-intersected blocks as Rhino Boxes."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of non-intersected blocks."
+      },
+      {
+        "name": "Recovery %",
+        "nick": "R",
+        "type": "Number",
+        "access": "item",
+        "desc": "Recovery percentage."
+      },
+      {
+        "name": "Best Psi (deg)",
+        "nick": "Psi",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum cutting direction."
+      },
+      {
+        "name": "Best Dx (m)",
+        "nick": "Dx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum dx."
+      },
+      {
+        "name": "Best Dy (m)",
+        "nick": "Dy",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum dy."
+      },
+      {
+        "name": "Elapsed (ms)",
+        "nick": "T",
+        "type": "Number",
+        "access": "item",
+        "desc": "Wall-clock duration."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
+  },
+  {
+    "guid": "F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1",
+    "class": "BlockCutOptLoadFracturesComponent",
+    "name": "BlockCutOpt Load Fractures",
+    "nickname": "BCOLoadFx",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Load fractures from disk (PLY, CSV, .lines, .txt). World  coordinates in metres. For 2D-trace formats, zMin / zMax  define the vertical extrusion range. Output is a Rhino  Mesh consumable by BlockCutOpt Solve.",
+    "exposure": "primary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Path",
+        "nick": "P",
+        "type": "Text",
+        "access": "item",
+        "desc": "File path. .ply / .csv / .lines / .txt"
+      },
+      {
+        "name": "Z Min",
+        "nick": "Zmin",
+        "type": "Number",
+        "access": "item",
+        "desc": "Bottom of vertical extrusion (m). Ignored for PLY."
+      },
+      {
+        "name": "Z Max",
+        "nick": "Zmax",
+        "type": "Number",
+        "access": "item",
+        "desc": "Top of vertical extrusion (m). Ignored for PLY."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Fractures",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Rhino Mesh of fracture triangles."
+      },
+      {
+        "name": "Triangle Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of fracture triangles."
+      }
+    ],
+    "related": [],
+    "icon": "DefectMap.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
+  },
+  {
+    "guid": "F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4",
+    "class": "BlockCutOptOmniSolveComponent",
+    "name": "BlockCutOpt Omni Solve",
+    "nickname": "BCOOmni",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Run the omni-solver: uniform (mx, my) sub-division per zone,  4-axis Pareto multi-objective (recovery, revenue, kerf-time,  BCSdbBV). Returns one row per zone. Implements BlockCutOpt omni-solve (Elkarmoty 2020; Jalalian 2023).",
+    "exposure": "tertiary",
+    "algorithm": {
+      "title": "BlockCutOpt omni-solve (Pareto over recovery/revenue/risk/cut-area)",
+      "citation": "Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761"
+    },
+    "inputs": [
+      {
+        "name": "Tested Area",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m)."
+      },
+      {
+        "name": "Fractures",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Fracture mesh."
+      },
+      {
+        "name": "Mx",
+        "nick": "Mx",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Sub-divisions in X."
+      },
+      {
+        "name": "My",
+        "nick": "My",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Sub-divisions in Y."
+      },
+      {
+        "name": "Block X",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block length (m)."
+      },
+      {
+        "name": "Block Y",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block width (m)."
+      },
+      {
+        "name": "Block Z",
+        "nick": "Lz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block height (m)."
+      },
+      {
+        "name": "Kerf",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Material-lost-by-quarrying (m)."
+      },
+      {
+        "name": "Psi Step (deg)",
+        "nick": "Pdeg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Angular search step."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Execute the solve (the search is expensive; bound it before running)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Zone Id",
+        "nick": "Z",
+        "type": "Text",
+        "access": "list",
+        "desc": "Sub-zone identifier (i, j)."
+      },
+      {
+        "name": "Best Recovery Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Best recovery count per zone."
+      },
+      {
+        "name": "Best Revenue",
+        "nick": "Pi",
+        "type": "Number",
+        "access": "list",
+        "desc": "Best revenue per zone."
+      },
+      {
+        "name": "Best BCSdbBV",
+        "nick": "BCS",
+        "type": "Number",
+        "access": "list",
+        "desc": "Best BCSdbBV cost per zone."
+      },
+      {
+        "name": "Best Psi (deg)",
+        "nick": "Psi",
+        "type": "Number",
+        "access": "list",
+        "desc": "Recovery-optimal psi per zone."
+      },
+      {
+        "name": "Aggregate Recovery",
+        "nick": "R",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Sum of recovery counts."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
+  },
+  {
+    "guid": "F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2",
+    "class": "BlockCutOptSolveComponent",
+    "name": "BlockCutOpt Solve",
+    "nickname": "BCOSolve",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Brute-force search for the optimum cutting direction +  displacement that maximises the count of non-intersected  blocks. All units in metres. [Elkarmoty et al. 2020]",
+    "exposure": "tertiary",
+    "algorithm": {
+      "title": "BlockCutOpt brute-force search",
+      "citation": "Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761"
+    },
+    "inputs": [
+      {
+        "name": "Tested Area",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m)."
+      },
+      {
+        "name": "Fractures",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Fracture mesh."
+      },
+      {
+        "name": "Block X",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block length (m)."
+      },
+      {
+        "name": "Block Y",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block width (m)."
+      },
+      {
+        "name": "Block Z",
+        "nick": "Lz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Block height (m)."
+      },
+      {
+        "name": "Kerf",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Material-lost-by-quarrying (m)."
+      },
+      {
+        "name": "Psi Step (deg)",
+        "nick": "Pdeg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Angular search step."
+      },
+      {
+        "name": "Dx Max",
+        "nick": "Dx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dx search (m)."
+      },
+      {
+        "name": "Dx Step",
+        "nick": "DxS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dx step (m)."
+      },
+      {
+        "name": "Dy Max",
+        "nick": "Dy",
+        "type": "Number",
+        "access": "item",
+        "desc": "Half-range of dy search (m)."
+      },
+      {
+        "name": "Dy Step",
+        "nick": "DyS",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dy step (m)."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Execute the solve (the search is expensive; bound it before running)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Non-Intersected Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Best non-intersected block count."
+      },
+      {
+        "name": "Recovery %",
+        "nick": "R",
+        "type": "Number",
+        "access": "item",
+        "desc": "Recovery percentage."
+      },
+      {
+        "name": "Best Psi (deg)",
+        "nick": "Psi",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum cutting direction."
+      },
+      {
+        "name": "Best Dx (m)",
+        "nick": "Dx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum dx."
+      },
+      {
+        "name": "Best Dy (m)",
+        "nick": "Dy",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimum dy."
+      },
+      {
+        "name": "Evaluations",
+        "nick": "E",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Total (psi, dx, dy) samples evaluated."
+      },
+      {
+        "name": "Elapsed (ms)",
+        "nick": "T",
+        "type": "Number",
+        "access": "item",
+        "desc": "Wall-clock duration."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
+  },
+  {
+    "guid": "D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345",
+    "class": "BoxToMeshComponent",
+    "name": "Box To Mesh",
+    "nickname": "Box2Mesh",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Convert a Box (e.g. a BlockCutOpt output) into a closed  Mesh (8 vertices, 12 triangles). Bridges the Box->Mesh  adapter gap between BlockCutOpt and SlabFromMesh /  SlabCutByFractures / AshlarPack.",
+    "exposure": "secondary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Box",
+        "nick": "B",
+        "type": "Box",
+        "access": "item",
+        "desc": "Input Box. Typically a single Box from BlockCutOpt's  Boxes output (graft, list-item, or as a single item)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Closed mesh of the box. 8 vertices, 12 triangles."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryBlock.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/BoxToMeshComponent.cs"
+  },
+  {
+    "guid": "ECFDAEBF-CADB-4234-5678-9012345678AB",
+    "class": "ConvexHullSlabComponent",
+    "name": "Convex Hull Slab",
+    "nickname": "HullSlab",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Builds the convex hull of a Rhino mesh's vertices and emits  the hull as a Slab. Loses concavity by definition; opt in  for fast Mesh -> Slab on roughly-convex inputs. Implements QuickHull (Barber-Dobkin-Huhdanpaa 1996).",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "QuickHull convex hull",
+      "citation": "Barber, Dobkin, Huhdanpaa 1996, The Quickhull algorithm for convex hulls, ACM TOMS 22(4):469-483"
+    },
+    "inputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Rhino mesh whose vertices seed the hull. At least 4 non-coplanar vertices required."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slab",
+        "nick": "S",
+        "type": "Generic",
+        "access": "item",
+        "desc": "Convex-hull Slab."
+      },
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Convex hull as a Rhino Mesh (same geometry, fan-triangulated)."
+      }
+    ],
+    "related": [],
+    "icon": "ConvexHull2D.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/ConvexHullSlabComponent.cs"
+  },
+  {
+    "guid": "F7A15001-0001-4F2D-A0B0-7E60CADA17E1",
+    "class": "FrahanCrackGraphBuilderComponent",
+    "name": "Crack Graph (manual)",
+    "nickname": "CrkGraph",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Wrap a user-supplied list of FracturePlanes (and optional  confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.",
+    "exposure": "quarternary",
+    "algorithm": {
+      "title": "Crack-graph DTO builder",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Fracture Planes",
+        "nick": "F",
+        "type": "Generic",
+        "access": "list",
+        "desc": "List<FracturePlane>."
+      },
+      {
+        "name": "Confidences",
+        "nick": "C",
+        "type": "Number",
+        "access": "list",
+        "desc": "Per-plane confidence 0..1 (optional)."
+      },
+      {
+        "name": "Ids",
+        "nick": "I",
+        "type": "Text",
+        "access": "list",
+        "desc": "Per-plane ids (optional)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Crack Graph",
+        "nick": "G",
+        "type": "Generic",
+        "access": "item",
+        "desc": "CrackGraph object."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of cracks."
+      }
+    ],
+    "related": [],
+    "icon": "DefectMap.png",
+    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
+  },
+  {
+    "guid": "A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04",
+    "class": "FractureBlockPackComponent",
+    "name": "Fracture Block Pack",
+    "nickname": "FracBlockPack",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Pack fixed-size dimension blocks into each fracture-bounded slab (bin): tree-pack  coarse subdivision of the AABB + irregular-boundary fit to the slab mesh. Reports  per-bin yield. Managed.",
+    "exposure": "primary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Container Meshes",
+        "nick": "C",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Fracture-bounded slab meshes (closed). Each is one BIN. From the split mesh bench /  fracture surfaces."
+      },
+      {
+        "name": "Block Length",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block length (m)."
+      },
+      {
+        "name": "Block Width",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block width (m)."
+      },
+      {
+        "name": "Block Height",
+        "nick": "Lz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Dimension-block height (m)."
+      },
+      {
+        "name": "Kerf",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Saw-cut gap between blocks (m)."
+      },
+      {
+        "name": "Fracture Clearance",
+        "nick": "Cl",
+        "type": "Number",
+        "access": "item",
+        "desc": "Extra inward margin (m) every block must keep from the fracture boundary. Set it to the  fracture position sigma (GPR Fracture Surfaces 3D) for uncertainty-safe blocks. Default 0."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Compute the packing."
+      },
+      {
+        "name": "Uncertainty Safe",
+        "nick": "US",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Toggle the deep-fracture safety allowance. FALSE = geometric yield (clearance ignored, the  optimistic number). TRUE = enforce the Fracture Clearance (wire it to the fracture sigma  from GPR Fracture Surfaces 3D) so no block sits within the measured GPR uncertainty of a  fracture -> uncertainty-safe yield. Default false."
+      },
+      {
+        "name": "Packer",
+        "nick": "Pk",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Packing strategy. 0 = fixed axis grid. 1 = best-of (6 orientations x grid phase). 2 =  combined multi-size on a global grid. 3 = VOXEL-DLBF: per-block deepest-bottom-left-first  placement on a lattice (each block lands independently, conforming to the wavy boundary --  adopted after a head-to-head where a Mosch-style voxel greedy beat the global grid). 4 =  VOXEL-DLBF + multi-size (max-yield mesh-bench algorithm, DEFAULT): per-block placement plus  the 1.0/0.66/0.5 marketable fill ladder, strict 8-corner irregular fit + kerf. Tops the  head-to-head vs Kim forest and the Mosch-style greedy, but is NOT guaranteed saw-separable.  5 = GUILLOTINE multi-size (MANUFACTURABLE): recursive full-span 3D guillotine so every block  is separable by edge-to-edge saw cuts; reports cutting-surface-area + cut count (Jalalian  I11 / saw-path cost). Trades a little yield for full manufacturability."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Placed dimension-block meshes (closed boxes)."
+      },
+      {
+        "name": "Bin Index",
+        "nick": "Bi",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Container/bin index of each placed block."
+      },
+      {
+        "name": "Block Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Blocks placed per bin."
+      },
+      {
+        "name": "Recovered Volume",
+        "nick": "V",
+        "type": "Number",
+        "access": "list",
+        "desc": "Recovered block volume per bin (m^3)."
+      },
+      {
+        "name": "Yield",
+        "nick": "Y",
+        "type": "Number",
+        "access": "list",
+        "desc": "Recovered / intact volume per bin (0..1)."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Per-bin yield summary."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/FractureBlockPackComponent.cs"
+  },
+  {
+    "guid": "A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05",
+    "class": "FractureBoundedSlabsComponent",
+    "name": "Fracture Bounded Slabs",
+    "nickname": "BedSlabs",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces",
+      "citation": "ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)"
+    },
+    "inputs": [
+      {
+        "name": "Bench",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m). XY footprint + the Z range to slab."
+      },
+      {
+        "name": "Bed Surfaces",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds."
+      },
+      {
+        "name": "Grid Res",
+        "nick": "G",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26."
+      },
+      {
+        "name": "Keep-out",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes."
+      },
+      {
+        "name": "Thickness",
+        "nick": "T",
+        "type": "Number",
+        "access": "list",
+        "desc": "Mean thickness (m) of each slab, aligned to Slabs."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Per-slab summary."
+      }
+    ],
+    "related": [],
+    "icon": "Box2Mesh.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs"
+  },
+  {
+    "guid": "F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9",
+    "class": "FrahanHeterogeneousExtractionComponent",
+    "name": "Heterogeneous Quarry Extraction",
+    "nickname": "HeteroExt",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-size pack  (monuments + dimension stones + slabs) avoiding fractured  regions, plus optional MonumentInventory placement on a  fracture-derived BlockGraph. One component, four outputs  per stage. Frahan-original method.",
+    "exposure": "quinary",
+    "algorithm": {
+      "title": "Heterogeneous quarry extraction pipeline",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Bench",
+        "nick": "B",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m)."
+      },
+      {
+        "name": "Fractures",
+        "nick": "Fx",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Fracture mesh."
+      },
+      {
+        "name": "Prime Block X",
+        "nick": "Plx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Prime (max) block length (m) for BCO stage 1."
+      },
+      {
+        "name": "Prime Block Y",
+        "nick": "Ply",
+        "type": "Number",
+        "access": "item",
+        "desc": "Prime block width (m)."
+      },
+      {
+        "name": "Prime Block Z",
+        "nick": "Plz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Prime block height (m)."
+      },
+      {
+        "name": "Kerf",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Saw kerf (m)."
+      },
+      {
+        "name": "Psi Step (deg)",
+        "nick": "Pdeg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Angular search step."
+      },
+      {
+        "name": "Catalogue Ids",
+        "nick": "Cid",
+        "type": "Text",
+        "access": "list",
+        "desc": "DLBF catalogue ids."
+      },
+      {
+        "name": "Catalogue Widths (m)",
+        "nick": "Cw",
+        "type": "Number",
+        "access": "list",
+        "desc": "DLBF widths."
+      },
+      {
+        "name": "Catalogue Depths (m)",
+        "nick": "Cd",
+        "type": "Number",
+        "access": "list",
+        "desc": "DLBF depths."
+      },
+      {
+        "name": "Catalogue Heights (m)",
+        "nick": "Ch",
+        "type": "Number",
+        "access": "list",
+        "desc": "DLBF heights."
+      },
+      {
+        "name": "Catalogue Revenues",
+        "nick": "Cr",
+        "type": "Number",
+        "access": "list",
+        "desc": "DLBF revenues."
+      },
+      {
+        "name": "Grid Cell (m)",
+        "nick": "Gc",
+        "type": "Number",
+        "access": "item",
+        "desc": "DLBF discretisation cell; 0 = min(W,D,H)/4."
+      },
+      {
+        "name": "Floor Only",
+        "nick": "Fl",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True = pieces on bench floor (no stacking)."
+      },
+      {
+        "name": "Monument Inventory",
+        "nick": "Mon",
+        "type": "Generic",
+        "access": "item",
+        "desc": "Optional MonumentInventory (from MonInv) for stage 4."
+      },
+      {
+        "name": "Monument Grid (m)",
+        "nick": "Mg",
+        "type": "Number",
+        "access": "item",
+        "desc": "Monument-placement grid stride."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Prime Boxes",
+        "nick": "Pb",
+        "type": "Box",
+        "access": "list",
+        "desc": "Non-intersected cells at the prime block dim."
+      },
+      {
+        "name": "Prime Count",
+        "nick": "Pn",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Count of fracture-clean prime cells."
+      },
+      {
+        "name": "Prime Recovery %",
+        "nick": "Pr",
+        "type": "Number",
+        "access": "item",
+        "desc": "BlockCutOpt recovery at the prime dim."
+      },
+      {
+        "name": "Best Psi (deg)",
+        "nick": "Psi",
+        "type": "Number",
+        "access": "item",
+        "desc": "Optimal cutting direction."
+      },
+      {
+        "name": "Forbidden Boxes",
+        "nick": "Fb",
+        "type": "Box",
+        "access": "list",
+        "desc": "Fracture-intersected cells (forbidden for DLBF)."
+      },
+      {
+        "name": "Mixed Boxes",
+        "nick": "Mb",
+        "type": "Box",
+        "access": "list",
+        "desc": "DLBF-placed mixed-size piece boxes."
+      },
+      {
+        "name": "Mixed Ids",
+        "nick": "Mi",
+        "type": "Text",
+        "access": "list",
+        "desc": "Id of each DLBF piece."
+      },
+      {
+        "name": "Mixed Revenue",
+        "nick": "Mr",
+        "type": "Number",
+        "access": "item",
+        "desc": "DLBF total revenue."
+      },
+      {
+        "name": "Mixed Volume",
+        "nick": "Mv",
+        "type": "Number",
+        "access": "item",
+        "desc": "DLBF occupied volume (m^3)."
+      },
+      {
+        "name": "Monument Boxes",
+        "nick": "Mo",
+        "type": "Box",
+        "access": "list",
+        "desc": "Monument-placement AABBs (empty if no inventory)."
+      },
+      {
+        "name": "Monument Ids",
+        "nick": "Moi",
+        "type": "Text",
+        "access": "list",
+        "desc": "Monument ids in placement order."
+      },
+      {
+        "name": "Monument Count",
+        "nick": "Mon",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Total monuments placed."
+      },
+      {
+        "name": "Unplaced Monuments",
+        "nick": "Mou",
+        "type": "Text",
+        "access": "list",
+        "desc": "Monuments that did not fit anywhere."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryBlock.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs"
+  },
+  {
+    "guid": "DBECFDAE-BFCA-4123-4567-89012345678A",
+    "class": "MeshShellSplitComponent",
+    "name": "Mesh Shell Split",
+    "nickname": "ShellSplit",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Separates a multi-shell Rhino mesh into one Slab per  connected shell. Each output shell is assumed convex  (Slab's input requirement). Frahan-original method.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Connected-components labelling",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Multi-shell Rhino mesh."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Generic",
+        "access": "list",
+        "desc": "One Slab per connected shell."
+      },
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One Rhino Mesh per shell (parallel to the Slabs list)."
+      }
+    ],
+    "related": [],
+    "icon": "CoacdDecompose.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/MeshShellSplitComponent.cs"
+  },
+  {
+    "guid": "F7A13003-0001-4F2D-A0B0-7E60CADA17C3",
+    "class": "FrahanMeshFacesToFracturePlanesComponent",
+    "name": "Mesh → Fracture Planes",
+    "nickname": "Mesh2FxPl",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Convert a hand-drawn Rhino Mesh into a List<FracturePlane>  consumable by Slab Cut By Fractures. One plane per face  (centroid + face normal). Lets you author fractures on the  Rhino canvas without going through a PLY file. Frahan-original method.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Mesh-face to fracture-plane conversion",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Rhino mesh whose faces become fracture planes."
+      },
+      {
+        "name": "Unitize Normals",
+        "nick": "U",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Re-normalise face normals (recommended)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Fracture Planes",
+        "nick": "F",
+        "type": "Generic",
+        "access": "list",
+        "desc": "List<FracturePlane> for Slab Cut By Fractures."
+      },
+      {
+        "name": "Rhino Planes",
+        "nick": "Pl",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Same fractures as Rhino Planes for preview."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of fracture planes."
+      }
+    ],
+    "related": [],
+    "icon": "DefectMap.png",
+    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
+  },
+  {
+    "guid": "F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8",
+    "class": "FrahanMixedSizeBlockPack3DComponent",
+    "name": "Mixed-Size Block Pack 3D",
+    "nickname": "BCOMixedPack3D",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "3D generalisation of DLBF (Chehrazad 2025). Each piece has  its own (Width, Depth, Height); pieces sort by revenue-per- volume. Floor-only mode (default) places every piece at  z = bench.MinZ, matching quarry extraction where blocks are  cut OUT of solid rock (no stacking). Disable Floor-Only for  monument storage / slab racking / container loading. Implements Deepest-Left-Bottom-Fill 3D (Chehrazad 2025).",
+    "exposure": "quinary",
+    "algorithm": {
+      "title": "Deepest-Left-Bottom-Fill (3D)",
+      "citation": "Chehrazad, Roose, Wauters 2025, Int. J. Production Research 63:6606-6629"
+    },
+    "inputs": [
+      {
+        "name": "Tested Area",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m)."
+      },
+      {
+        "name": "Piece Ids",
+        "nick": "Id",
+        "type": "Text",
+        "access": "list",
+        "desc": "One id per catalogue entry."
+      },
+      {
+        "name": "Piece Widths (m)",
+        "nick": "W",
+        "type": "Number",
+        "access": "list",
+        "desc": "Width per entry (X)."
+      },
+      {
+        "name": "Piece Depths (m)",
+        "nick": "D",
+        "type": "Number",
+        "access": "list",
+        "desc": "Depth per entry (Y)."
+      },
+      {
+        "name": "Piece Heights (m)",
+        "nick": "H",
+        "type": "Number",
+        "access": "list",
+        "desc": "Height per entry (Z)."
+      },
+      {
+        "name": "Piece Revenues",
+        "nick": "Rev",
+        "type": "Number",
+        "access": "list",
+        "desc": "RMV per entry."
+      },
+      {
+        "name": "Forbidden Boxes",
+        "nick": "X",
+        "type": "Box",
+        "access": "list",
+        "desc": "Optional forbidden regions (e.g. fracture-intersected cells)."
+      },
+      {
+        "name": "Grid Cell (m)",
+        "nick": "Gc",
+        "type": "Number",
+        "access": "item",
+        "desc": "Discretisation cell; 0 = min(W,D,H)/4."
+      },
+      {
+        "name": "Floor Only",
+        "nick": "Fl",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True = pieces sit on bench floor (no stacking)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Placed Boxes",
+        "nick": "B",
+        "type": "Box",
+        "access": "list",
+        "desc": "One Box per placed piece."
+      },
+      {
+        "name": "Placed Ids",
+        "nick": "I",
+        "type": "Text",
+        "access": "list",
+        "desc": "Id of each placed piece (multiplicity preserved)."
+      },
+      {
+        "name": "Total Revenue",
+        "nick": "Pi",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sum of placed-piece revenues."
+      },
+      {
+        "name": "Occupied Volume (m^3)",
+        "nick": "Vol",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sum of placed-piece volumes."
+      },
+      {
+        "name": "Placed Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of placements."
+      }
+    ],
+    "related": [],
+    "icon": "BinPack.png",
+    "file": "src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs"
+  },
+  {
+    "guid": "B9CADBEC-FDAE-4F01-2345-678901234567",
+    "class": "QuarryDecomposeComponent",
+    "name": "Quarry Decompose",
+    "nickname": "QuarryDc",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Cuts a convex quarry Slab into a list of smaller convex Slabs  by an orthogonal grid of fracture planes. Output flows into  Ashlar Pack. Frahan-original method. Selection: convex pieces  -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell  partition -> By Voronoi.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Orthogonal-grid slab decomposition",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Quarry",
+        "nick": "Q",
+        "type": "Generic",
+        "access": "item",
+        "desc": "Convex quarry. Accepts a Frahan Slab DTO (from Slab From Mesh)  OR a Rhino Mesh (auto-converted)."
+      },
+      {
+        "name": "nX",
+        "nick": "nX",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid count along +X (>= 0)."
+      },
+      {
+        "name": "nY",
+        "nick": "nY",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid count along +Y (>= 0)."
+      },
+      {
+        "name": "nZ",
+        "nick": "nZ",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid count along +Z (>= 0)."
+      },
+      {
+        "name": "Eps",
+        "nick": "eps",
+        "type": "Number",
+        "access": "item",
+        "desc": "Cutter floating-point tolerance. Must be >= 0."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Generic",
+        "access": "list",
+        "desc": "Output Slab DTOs. Wire into Ashlar Pack."
+      },
+      {
+        "name": "Parents",
+        "nick": "Pi",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Per-output index back into the input list (always 0 for a  single-quarry call)."
+      },
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Output Slabs as Rhino Meshes (parallel to the Slab list)."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/QuarryDecomposeComponent.cs"
+  },
+  {
+    "guid": "F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0",
+    "class": "CoacdQuarryDecomposeComponent",
+    "name": "Quarry Decompose By CoACD",
+    "nickname": "QuarryDcCoacd",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Decomposes a quarry mesh into nearly-convex blocks via  CoACD (Wei et al, SIGGRAPH 2022). Concavity-driven — block  count and shape come from the input geometry, not a user  grid. Use when the goal is approximate convex pieces for  downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Collision-Aware Approximate Convex Decomposition",
+      "citation": "Wei, Liu, Wang et al. 2022, Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search, SIGGRAPH 2022"
+    },
+    "inputs": [
+      {
+        "name": "Quarry",
+        "nick": "Q",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Quarry mesh. Must be 2-manifold for the lightweight CoACD  build (no OpenVDB preprocess); pre-clean with Mesh Repair  (CGAL) if needed."
+      },
+      {
+        "name": "Threshold",
+        "nick": "Th",
+        "type": "Number",
+        "access": "item",
+        "desc": "Concavity threshold. Lower = more pieces, tighter fit.  Default 0.05."
+      },
+      {
+        "name": "Real Metric",
+        "nick": "RM",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True = treat Threshold as metres rather than normalized  [0..1] units. Recommended for statue-scale input."
+      },
+      {
+        "name": "Max Pieces",
+        "nick": "Mx",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Cap on output piece count. -1 = unlimited."
+      },
+      {
+        "name": "Seed",
+        "nick": "Sd",
+        "type": "Integer",
+        "access": "item",
+        "desc": "RNG seed for reproducibility."
+      },
+      {
+        "name": "Run",
+        "nick": "Run",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to compute. Decomposition is heavy."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One nearly-convex mesh per piece."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of pieces."
+      },
+      {
+        "name": "Available",
+        "nick": "Av",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True iff frahan_coacd.dll is loadable."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Diagnostic report."
+      }
+    ],
+    "related": [],
+    "icon": "CoacdDecompose.png",
+    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
+  },
+  {
+    "guid": "F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0",
+    "class": "CgalQuarryDecomposeByMeshComponent",
+    "name": "Quarry Decompose By Mesh (CGAL)",
+    "nickname": "QuarryDcCgal",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Decomposes a (possibly non-convex) quarry mesh into blocks  by intersecting it against a 3D grid of box cells via CGAL.  Empty cells are dropped automatically. Use this when the  plane-based Quarry Decompose does not apply because the  quarry mesh is not convex. Implements CGAL PMP corefinement.  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "CGAL Polygon Mesh Processing corefinement",
+      "citation": "CGAL Polygon Mesh Processing (corefine_and_compute, EPECK/EPICK hybrid kernel)"
+    },
+    "inputs": [
+      {
+        "name": "Quarry",
+        "nick": "Q",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Quarry mesh. Must be closed and manifold (run Mesh Repair  (CGAL) upstream if in doubt). Need not be convex."
+      },
+      {
+        "name": "Grid Box",
+        "nick": "Gb",
+        "type": "Box",
+        "access": "item",
+        "desc": "Oriented box that defines the grid extent + orientation.  If empty (Box.Empty / Box.Unset), the world-aligned bounding  box of the Quarry mesh is used."
+      },
+      {
+        "name": "nX",
+        "nick": "nX",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid divisions along the box's local +X axis (>= 1)."
+      },
+      {
+        "name": "nY",
+        "nick": "nY",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid divisions along the box's local +Y axis (>= 1)."
+      },
+      {
+        "name": "nZ",
+        "nick": "nZ",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grid divisions along the box's local +Z axis (>= 1)."
+      },
+      {
+        "name": "Hybrid Kernel",
+        "nick": "Hy",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True (default) = HYBRID kernel for robustness on every  cell intersection. False = EPICK only (fastest)."
+      },
+      {
+        "name": "Run",
+        "nick": "Run",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to compute. Cost scales with nX*nY*nZ CGAL calls."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One mesh per non-empty grid cell intersection (Quarry ∩ cell)."
+      },
+      {
+        "name": "Cell Index",
+        "nick": "Ci",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Flat (i + j*nX + k*nX*nY) cell index for each output block,  parallel to the Blocks list. Lets the caller correlate  outputs with their originating cell."
+      },
+      {
+        "name": "Backend",
+        "nick": "B",
+        "type": "Text",
+        "access": "item",
+        "desc": "Which kernel ran on the most recent cell."
+      },
+      {
+        "name": "Available",
+        "nick": "Av",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True iff the CGAL native shim is loadable."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Diagnostic report (cells visited / kept / dropped, runtime)."
+      }
+    ],
+    "related": [],
+    "icon": "CoacdDecompose.png",
+    "file": "src/Frahan.StonePack.GH/CgalCutComponents.cs"
+  },
+  {
+    "guid": "F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0",
+    "class": "GeogramTetQuarryDecomposeComponent",
+    "name": "Quarry Decompose By Tet",
+    "nickname": "QuarryDcTet",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Decomposes a quarry mesh into tetrahedra via Geogram.  Fine-grained, fracture-pattern style. Requires the  Geogram shim to be built with GEOGRAM_WITH_TETGEN=ON  (off by default — TetGen is non-commercial-use). When  off, the component surfaces a clear error and produces no  blocks; use Quarry Decompose By CoACD instead. Implements Geogram tetrahedralisation (Lévy, Geogram v1.9.9).",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Geogram tetrahedralisation",
+      "citation": "Lévy, B. Geogram v1.9.9 (GEO::mesh_tetrahedralize), BSD-3"
+    },
+    "inputs": [
+      {
+        "name": "Quarry",
+        "nick": "Q",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Closed manifold quarry mesh."
+      },
+      {
+        "name": "Preprocess",
+        "nick": "Pp",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Run mesh preprocess (manifold-isation, hole fill) inside  Geogram before tetrahedralizing."
+      },
+      {
+        "name": "Refine",
+        "nick": "Rf",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Refine the tet mesh via Delaunay refinement after the  initial tetrahedralization. Increases tet count."
+      },
+      {
+        "name": "Quality",
+        "nick": "Qu",
+        "type": "Number",
+        "access": "item",
+        "desc": "Tet quality bound for refinement (radius-edge ratio).  Default 1.4. Lower is stricter / more tets."
+      },
+      {
+        "name": "Run",
+        "nick": "Run",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to compute."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Tets",
+        "nick": "T",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One closed tetrahedron mesh per output cell."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of tets."
+      },
+      {
+        "name": "Available",
+        "nick": "Av",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True iff frahan_geogram.dll is loadable."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Diagnostic report. Reports the TetGen-disabled state when  applicable."
+      }
+    ],
+    "related": [],
+    "icon": "CoacdDecompose.png",
+    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
+  },
+  {
+    "guid": "F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0",
+    "class": "VoronoiQuarryDecomposeComponent",
+    "name": "Quarry Decompose By Voronoi",
+    "nickname": "QuarryDcVoro",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Decomposes a (possibly non-convex) quarry mesh into solid  Voronoi blocks. Seeds are sampled inside the quarry and  Lloyd-relaxed for a more uniform cell-area distribution.  Each cell is then CGAL-intersected against the quarry  for the final block geometry. Realistic stone-fracturing  look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Restricted Voronoi diagram",
+      "citation": "Lévy, B. Geogram v1.9.9 restricted Voronoi, BSD-3"
+    },
+    "inputs": [
+      {
+        "name": "Quarry",
+        "nick": "Q",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Closed manifold quarry mesh."
+      },
+      {
+        "name": "Seed Count",
+        "nick": "Ns",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of Voronoi seeds = number of output blocks.  Default 30. Typical 20–200 for masonry-scale work."
+      },
+      {
+        "name": "Lloyd Iters",
+        "nick": "Li",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Lloyd-relaxation iterations on the interior seeds. 0 =  raw rejection-sampled seeds; 5–10 = visibly more uniform."
+      },
+      {
+        "name": "Seed",
+        "nick": "Sd",
+        "type": "Integer",
+        "access": "item",
+        "desc": "RNG seed for reproducibility. Default 1."
+      },
+      {
+        "name": "Hybrid Kernel",
+        "nick": "Hy",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True (default) = CGAL HYBRID kernel for the cell ×  quarry intersection. False = EPICK only (faster, less robust)."
+      },
+      {
+        "name": "Run",
+        "nick": "Run",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to compute."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "One mesh per non-empty Voronoi cell ∩ quarry intersection."
+      },
+      {
+        "name": "Seeds",
+        "nick": "S",
+        "type": "Point",
+        "access": "list",
+        "desc": "The relaxed seed positions actually used (parallel to Blocks)."
+      },
+      {
+        "name": "Available",
+        "nick": "Av",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True iff CGAL shim is loadable."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Diagnostic report."
+      }
+    ],
+    "related": [],
+    "icon": "Voronoi.png",
+    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
+  },
+  {
+    "guid": "C2B3D4E5-6F7A-489B-AC1D-2E3F4A5B6C7D",
+    "class": "SlabCutByFracturesComponent",
+    "name": "Slab Cut By Fractures",
+    "nickname": "SlabCut",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Cuts a list of Slabs by a list of oriented fracture planes.  Each Rhino Plane is interpreted as an infinite plane (Origin, Normal).  Output Slabs carry the input-list parent index so callers can  track 'this fragment came from quarry block #N'.  Managed path is Frahan-original; opt-in CGAL backend uses CGAL PMP booleans (CGAL_PMP).",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Convex polyhedron half-space clipping (managed)",
+      "citation": "Frahan-original"
+    },
+    "inputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Convex meshes to cut. Standard Rhino mesh wires; the cutter  converts to its internal Slab DTO automatically. Multi-shell  meshes should be split with Mesh Shell Split first."
+      },
+      {
+        "name": "Plane",
+        "nick": "P",
+        "type": "Generic",
+        "access": "list",
+        "desc": "Oriented infinite fracture planes. Accepts the Frahan  FracturePlane DTO (from any *Fracture Planes generator) OR a  Rhino Plane (origin + normal). The two are interchangeable."
+      },
+      {
+        "name": "Eps",
+        "nick": "E",
+        "type": "Number",
+        "access": "item",
+        "desc": "Vertex-classification tolerance. Default 1e-9 works for most  metric inputs; raise to 1e-6 for non-metric or noisy meshes."
+      },
+      {
+        "name": "Use CGAL",
+        "nick": "Cg",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Backend. False (default) = managed convex SlabCutter (fast, but  convex-only and explodes combinatorially on large slabs with many  planes). True = route the cut through the CGAL boolean kernel  (CgalMeshBoolean): robust on non-convex / large slabs. CGAL path  returns meshes (the Slab output is empty). Falls back to managed  if the CGAL shim is not loaded."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slab",
+        "nick": "S",
+        "type": "Generic",
+        "access": "list",
+        "desc": "Output Slabs after cutting."
+      },
+      {
+        "name": "Parent",
+        "nick": "P",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Per-output parent index (0-based) into the input Slab list."
+      },
+      {
+        "name": "TotalVolume",
+        "nick": "V",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sum of signed volumes of all output Slabs (sanity check)."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of resulting Slabs."
+      },
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Output Slabs as Rhino Meshes (parallel to the Slab list). Wire  into native components (Move, Bake, Boolean, Volume, etc.)."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/Slab/SlabCutByFracturesComponent.cs"
+  },
+  {
+    "guid": "F2D000C0-CADC-4F2D-A0C0-7E60CADA15A0",
+    "class": "CgalSlabCutByToolMeshComponent",
+    "name": "Slab Cut By Tool Mesh (CGAL)",
+    "nickname": "SlabCutCgal",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Cuts a slab/block mesh by an arbitrary tool mesh via CGAL  exact-predicate booleans. Outputs the outside half  (slab − tool), the inside half (slab ∩ tool), or both.  Use this for non-convex slabs or curved/sculpted fracture  tools where the plane-based cutter does not apply.  Implements CGAL PMP corefinement booleans (CGAL_PMP).",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Exact-predicate mesh-mesh CSG via corefinement",
+      "citation": "CGAL Polygon Mesh Processing corefine_and_compute_difference/intersection (EPICK+EPECK Hybrid kernel)"
+    },
+    "inputs": [
+      {
+        "name": "Slab",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Slab/block mesh to cut. Must be closed and manifold for  predictable output (run Mesh Repair (CGAL) upstream if in  doubt)."
+      },
+      {
+        "name": "Tool",
+        "nick": "T",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Tool mesh used as the cutter. Closed manifold mesh."
+      },
+      {
+        "name": "Mode",
+        "nick": "M",
+        "type": "Integer",
+        "access": "item",
+        "desc": "0 = Outside only (slab − tool).  1 = Inside only  (slab ∩ tool).  2 = Both halves (default)."
+      },
+      {
+        "name": "Hybrid Kernel",
+        "nick": "Hy",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True (default) = HYBRID — EPICK storage + EPECK intersection  construction. Robust on near-tangent contacts and multi-cut  chains at a 2–5x speed cost.  False = EPICK only — fastest, fine for well-conditioned inputs."
+      },
+      {
+        "name": "Run",
+        "nick": "Run",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to compute. Heavy operation on large inputs."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Outside",
+        "nick": "O",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Slab − Tool. The portion of the slab outside the tool.  Empty mesh when the tool fully contains the slab."
+      },
+      {
+        "name": "Inside",
+        "nick": "I",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Slab ∩ Tool. The portion of the slab inside the tool.  Empty mesh when the tool misses the slab entirely."
+      },
+      {
+        "name": "Backend",
+        "nick": "B",
+        "type": "Text",
+        "access": "item",
+        "desc": "Which kernel ran: 'CGAL' or 'ManagedBsp' (BSP fallback)."
+      },
+      {
+        "name": "Available",
+        "nick": "Av",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "True iff the CGAL native shim is loadable."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Diagnostic report (mode, kernel, vertex/face counts, runtime)."
+      }
+    ],
+    "related": [],
+    "icon": "BlockCutOpt.png",
+    "file": "src/Frahan.StonePack.GH/CgalCutComponents.cs"
+  },
+  {
+    "guid": "B1A2C3D4-5E6F-4789-9ABC-1D2E3F4A5B6C",
+    "class": "SlabFromMeshComponent",
+    "name": "Slab From Mesh",
+    "nickname": "Slab",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Wraps a Rhino mesh into a Slab DTO. Quads stay as quads.  Mesh must have at least 4 vertices and 4 faces. Slab assumes  the input is CONVEX; convexity is not verified here.",
+    "exposure": "secondary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Rhino mesh defining a CONVEX polyhedral slab. Quads are  preserved as quads; triangles stay as triangles."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slab",
+        "nick": "S",
+        "type": "Generic",
+        "access": "item",
+        "desc": "Slab DTO. Wire into Slab Cut By Fractures or downstream masonry."
+      },
+      {
+        "name": "Mesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Slab as a Rhino Mesh (re-emitted). Identical geometry to the  input Mesh but fan-triangulated from each polygonal face."
+      }
+    ],
+    "related": [],
+    "icon": "QuarryBlock.png",
+    "file": "src/Frahan.StonePack.GH/Slab/SlabFromMeshComponent.cs"
+  },
+  {
+    "guid": "F7A14001-0001-4F2D-A0B0-7E60CADA17D1",
+    "class": "FrahanSlabYieldOptimizerComponent",
+    "name": "Slab Yield Optimizer",
+    "nickname": "SlabYield",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Pick the best SlabPlan (axis + thickness) for one block.  Enumerates three axis-aligned candidates at the given  thickness; score = yield - conflictPenalty * crackConflicts.",
+    "exposure": "quarternary",
+    "algorithm": {
+      "title": "Per-block slab-plan yield maximisation",
+      "citation": "Frahan-original spec 09 section 2 conflict-penalised yield score"
+    },
+    "inputs": [
+      {
+        "name": "Block",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "item",
+        "desc": "Convex block mesh."
+      },
+      {
+        "name": "Fracture Planes",
+        "nick": "F",
+        "type": "Generic",
+        "access": "list",
+        "desc": "Optional List<FracturePlane>. Wire from Frahan Mesh → Fracture Planes."
+      },
+      {
+        "name": "Thickness (m)",
+        "nick": "T",
+        "type": "Number",
+        "access": "item",
+        "desc": "Target slab thickness."
+      },
+      {
+        "name": "Kerf (m)",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Saw kerf."
+      },
+      {
+        "name": "Conflict Penalty",
+        "nick": "Cp",
+        "type": "Number",
+        "access": "item",
+        "desc": "Score penalty per aligned fracture inside the block."
+      },
+      {
+        "name": "Alignment Tol (deg)",
+        "nick": "At",
+        "type": "Number",
+        "access": "item",
+        "desc": "Normal-axis alignment tolerance for conflict detection."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Best Plan",
+        "nick": "P",
+        "type": "Generic",
+        "access": "item",
+        "desc": "SlabPlan with the highest score."
+      },
+      {
+        "name": "Axis",
+        "nick": "A",
+        "type": "Integer",
+        "access": "item",
+        "desc": "0=X, 1=Y, 2=Z."
+      },
+      {
+        "name": "Slab Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Slabs the block produces under this plan."
+      },
+      {
+        "name": "Yield Fraction",
+        "nick": "Y",
+        "type": "Number",
+        "access": "item",
+        "desc": "slab_total_volume / block_volume."
+      },
+      {
+        "name": "Conflicts",
+        "nick": "C",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Crack conflicts counted."
+      },
+      {
+        "name": "Score",
+        "nick": "S",
+        "type": "Number",
+        "access": "item",
+        "desc": "Yield − penalty × conflicts."
+      },
+      {
+        "name": "Cut Planes",
+        "nick": "Cp",
+        "type": "Generic",
+        "access": "list",
+        "desc": "FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures)."
+      }
+    ],
+    "related": [],
+    "icon": "YieldEstimator.png",
+    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
+  },
+  {
+    "guid": "F2D05A09-1A2B-4C3D-9E4F-5A6B7C8D9E09",
+    "class": "VerticalFracturePlanesFromCurvesComponent",
+    "name": "Vertical Fracture Planes From Curves",
+    "nickname": "FracPlanes",
+    "category": "Frahan",
+    "subcategory": "Block Cutting",
+    "description": "Turn plan-view fracture trace curves (e.g. from Vector Fractures  Loader on a real fracture shapefile) into VERTICAL cutting planes  for Slab Cut By Fractures. Per Segment = a plane per polyline segment  (faithful to wiggly traces); off = one best-fit vertical plane per curve.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Vertical plane per fracture trace",
+      "citation": "Frahan-original: plan-view trace -> vertical cutting plane (contains the trace direction + Z)"
+    },
+    "inputs": [
+      {
+        "name": "Curves",
+        "nick": "T",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Fracture trace curves (plan-view)."
+      },
+      {
+        "name": "Per Segment",
+        "nick": "Sg",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "TRUE = one vertical plane per polyline segment (faithful to curved traces);  FALSE (default) = one best-fit vertical plane per curve (start->end direction)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Planes",
+        "nick": "P",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Vertical fracture planes (feed Slab Cut By Fractures 'Plane')."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of planes produced."
+      }
+    ],
+    "related": [],
+    "icon": "PoissonReconstruct.png",
+    "file": "src/Frahan.StonePack.GH/VerticalFracturePlanesFromCurvesComponent.cs"
+  },
+  {
     "guid": "D5F1000A-ED9E-4ED9-A00A-ED9EED9E000A",
     "class": "AdaptiveBlockMatch3DComponent",
     "name": "Adaptive Block Match 3D",
@@ -14655,1149 +17353,6 @@
     "file": "src/Frahan.StonePack.GH/ScanIngest/VoxelDownsampleComponent.cs"
   },
   {
-    "guid": "F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5",
-    "class": "FrahanAlgebraicConvexPolyComponent",
-    "name": "Algebraic Convex Polyhedron",
-    "nickname": "AlgConv",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Build a convex polyhedron from N half-space inequalities  Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14).  Each parallel-list row defines one face's outward normal  and offset. Returns a triangulated Rhino Mesh. Frahan-original method.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Half-space intersection convex polyhedron",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "B",
-        "nick": "B",
-        "type": "Number",
-        "access": "list",
-        "desc": "Right-hand side b per inequality."
-      },
-      {
-        "name": "Nx",
-        "nick": "Nx",
-        "type": "Number",
-        "access": "list",
-        "desc": "Outward-normal X per inequality."
-      },
-      {
-        "name": "Ny",
-        "nick": "Ny",
-        "type": "Number",
-        "access": "list",
-        "desc": "Outward-normal Y per inequality."
-      },
-      {
-        "name": "Nz",
-        "nick": "Nz",
-        "type": "Number",
-        "access": "list",
-        "desc": "Outward-normal Z per inequality."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Polyhedron",
-        "nick": "P",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Triangulated CPH as Rhino Mesh."
-      },
-      {
-        "name": "Vertex Count",
-        "nick": "V",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Vertex count."
-      },
-      {
-        "name": "Face Count",
-        "nick": "F",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Face count."
-      },
-      {
-        "name": "Volume (m^3)",
-        "nick": "Vol",
-        "type": "Number",
-        "access": "item",
-        "desc": "Polyhedron volume."
-      }
-    ],
-    "related": [],
-    "icon": "CoacdDecompose.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs"
-  },
-  {
-    "guid": "A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06",
-    "class": "BedBlockLayoutComponent",
-    "name": "Bed Block Layout",
-    "nickname": "BedBlocks",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.",
-    "exposure": "primary",
-    "algorithm": {
-      "title": "Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling",
-      "citation": "Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)"
-    },
-    "inputs": [
-      {
-        "name": "Bench",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m). The XY footprint + Z range to lay blocks in."
-      },
-      {
-        "name": "Bed Surfaces",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom)."
-      },
-      {
-        "name": "Volume Weight",
-        "nick": "W",
-        "type": "Number",
-        "access": "item",
-        "desc": "Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0."
-      },
-      {
-        "name": "Oblique",
-        "nick": "Ob",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste)."
-      },
-      {
-        "name": "Cut Cost",
-        "nick": "Cut",
-        "type": "Number",
-        "access": "item",
-        "desc": "Diamond-saw cost (USD/m2 of sawn block face). Default 200."
-      },
-      {
-        "name": "Keep-out",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05."
-      },
-      {
-        "name": "Catalogue",
-        "nick": "Cat",
-        "type": "Number",
-        "access": "list",
-        "desc": "OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Blocks",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes."
-      },
-      {
-        "name": "Class",
-        "nick": "C",
-        "type": "Text",
-        "access": "list",
-        "desc": "Catalogue class (A/B/C/D...) of each block, aligned to Blocks."
-      },
-      {
-        "name": "Volume",
-        "nick": "V",
-        "type": "Number",
-        "access": "item",
-        "desc": "Total recovered block volume (m3)."
-      },
-      {
-        "name": "Net Value",
-        "nick": "Net",
-        "type": "Number",
-        "access": "item",
-        "desc": "Net value (USD) = block sale price - diamond-saw cut cost."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of blocks placed."
-      },
-      {
-        "name": "Report",
-        "nick": "Rpt",
-        "type": "Text",
-        "access": "item",
-        "desc": "Mix + economics + per-layer summary."
-      }
-    ],
-    "related": [],
-    "icon": "BlockPackTree.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs"
-  },
-  {
-    "guid": "F7A13002-0001-4F2D-A0B0-7E60CADA17C2",
-    "class": "FrahanBenchBlockToSlabsComponent",
-    "name": "BenchBlock Cut → Slabs",
-    "nickname": "QCut",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Run BlockCutOpt per BenchBlock in the ExtractionPlan order  and emit the winning cut-grid as Slabs (Mesh form).  Closes the Layer 7 → Layer 5 / 6 handoff.",
-    "exposure": "secondary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Inventory",
-        "nick": "Inv",
-        "type": "Generic",
-        "access": "item",
-        "desc": "QuarryInventory."
-      },
-      {
-        "name": "Plan",
-        "nick": "P",
-        "type": "Generic",
-        "access": "item",
-        "desc": "ExtractionPlan (accepted blocks are cut in plan order)."
-      },
-      {
-        "name": "Fractures",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Fracture mesh."
-      },
-      {
-        "name": "Product X (m)",
-        "nick": "Lx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block target X."
-      },
-      {
-        "name": "Product Y (m)",
-        "nick": "Ly",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block target Y."
-      },
-      {
-        "name": "Product Z (m)",
-        "nick": "Lz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block target Z."
-      },
-      {
-        "name": "Kerf (m)",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Saw kerf."
-      },
-      {
-        "name": "Psi Step (deg)",
-        "nick": "Pdeg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Angular search step."
-      },
-      {
-        "name": "Dx Max",
-        "nick": "Dx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dx (m)."
-      },
-      {
-        "name": "Dx Step",
-        "nick": "DxS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dx step (m)."
-      },
-      {
-        "name": "Dy Max",
-        "nick": "Dy",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dy (m)."
-      },
-      {
-        "name": "Dy Step",
-        "nick": "DyS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dy step (m)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slabs",
-        "nick": "S",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Per-BenchBlock cut slabs concatenated in plan order. Wire into Ashlar Pack."
-      },
-      {
-        "name": "Block Ids",
-        "nick": "I",
-        "type": "Text",
-        "access": "list",
-        "desc": "BenchBlock id parallel to each slab."
-      },
-      {
-        "name": "Counts",
-        "nick": "N",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Slab count per BenchBlock (parallel to ExtractionPlan.Accepted)."
-      },
-      {
-        "name": "Cut Results",
-        "nick": "C",
-        "type": "Generic",
-        "access": "list",
-        "desc": "List of BenchBlockCutResult objects."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
-  },
-  {
-    "guid": "F7A14002-0001-4F2D-A0B0-7E60CADA17D2",
-    "class": "FrahanBilletCutterComponent",
-    "name": "Billet Cutter",
-    "nickname": "Billets",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Sub-divide slabs into billets along an axis at a target  billet width. Kerf-aware. Frahan-original method.",
-    "exposure": "quarternary",
-    "algorithm": {
-      "title": "Axis-parallel kerf-aware slab sub-division",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Slabs",
-        "nick": "S",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Slab inventory (one mesh per slab)."
-      },
-      {
-        "name": "Axis",
-        "nick": "A",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Billet axis: 0=X, 1=Y, 2=Z."
-      },
-      {
-        "name": "Billet Width (m)",
-        "nick": "W",
-        "type": "Number",
-        "access": "item",
-        "desc": "Target billet width."
-      },
-      {
-        "name": "Kerf (m)",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Saw kerf."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Billets",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Billet meshes (one per cut piece)."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Total billet count."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
-  },
-  {
-    "guid": "F7A15003-0001-4F2D-A0B0-7E60CADA17E3",
-    "class": "FrahanBlockCandidateGeneratorComponent",
-    "name": "Block Candidate Generator",
-    "nickname": "BCand",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Emit one BlockCandidate per BlockCell using the cell's AABB  as the BenchBlock footprint. Also returns a QuarryInventory  ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.",
-    "exposure": "quarternary",
-    "algorithm": {
-      "title": "Per-cell AABB block-candidate generator",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Block Graph",
-        "nick": "Bg",
-        "type": "Generic",
-        "access": "item",
-        "desc": "BlockGraph from Frahan Block Graph."
-      },
-      {
-        "name": "Bench Id",
-        "nick": "B",
-        "type": "Text",
-        "access": "item",
-        "desc": "Bench identifier for the QuarryInventory. bench-1"
-      },
-      {
-        "name": "Geology Grade",
-        "nick": "G",
-        "type": "Number",
-        "access": "item",
-        "desc": "Per-cell geology grade 0..1."
-      },
-      {
-        "name": "Uncertainty Buffer (m)",
-        "nick": "U",
-        "type": "Number",
-        "access": "item",
-        "desc": "Buffer applied to each candidate."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Inventory",
-        "nick": "Inv",
-        "type": "Generic",
-        "access": "item",
-        "desc": "QuarryInventory for the Layer 7 pipeline."
-      },
-      {
-        "name": "Candidates",
-        "nick": "C",
-        "type": "Generic",
-        "access": "list",
-        "desc": "List<BlockCandidate>."
-      },
-      {
-        "name": "Candidate Boxes",
-        "nick": "Bx",
-        "type": "Box",
-        "access": "list",
-        "desc": "Footprint of each candidate as a Rhino Box."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of candidates."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
-  },
-  {
-    "guid": "F7A15002-0001-4F2D-A0B0-7E60CADA17E2",
-    "class": "FrahanBlockGraphBuilderComponent",
-    "name": "Block Graph",
-    "nickname": "BlkGraph",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Partition a bench (Box or Mesh) into BlockCells using a  CrackGraph. Each cell is a convex Slab; small cells are  dropped under Min Cell Volume. Frahan-original method.",
-    "exposure": "quarternary",
-    "algorithm": {
-      "title": "CrackGraph to BlockGraph partition",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Bench Mesh",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Bench geometry (convex mesh)."
-      },
-      {
-        "name": "Crack Graph",
-        "nick": "G",
-        "type": "Generic",
-        "access": "item",
-        "desc": "CrackGraph from Frahan Crack Graph."
-      },
-      {
-        "name": "Min Cell Volume (m^3)",
-        "nick": "Mv",
-        "type": "Number",
-        "access": "item",
-        "desc": "Cells below this volume are dropped."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Block Graph",
-        "nick": "Bg",
-        "type": "Generic",
-        "access": "item",
-        "desc": "BlockGraph object."
-      },
-      {
-        "name": "Cells",
-        "nick": "C",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One mesh per BlockCell."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of cells."
-      },
-      {
-        "name": "Total Volume (m^3)",
-        "nick": "V",
-        "type": "Number",
-        "access": "item",
-        "desc": "Sum of cell volumes."
-      }
-    ],
-    "related": [],
-    "icon": "Voronoi.png",
-    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
-  },
-  {
-    "guid": "F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3",
-    "class": "BlockCutOptAmrrPlanComponent",
-    "name": "BlockCutOpt AMRR Plan",
-    "nickname": "BCOAmrr",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Plan a sequence of plane cuts (Shao 2022) that reduces the  starting block toward a target bounding sphere. Maximises  the average material removal rate. Implements AMRR in-block plane-sequence cutting (Shao 2022).",
-    "exposure": "tertiary",
-    "algorithm": {
-      "title": "AMRR in-block plane-sequence cutting",
-      "citation": "Shao, Liu, Gao 2022, AMRR in-block plane-sequence cutting strategy, Processes (MDPI)"
-    },
-    "inputs": [
-      {
-        "name": "Blank Block",
-        "nick": "B",
-        "type": "Box",
-        "access": "item",
-        "desc": "Starting block (m)."
-      },
-      {
-        "name": "Target Center",
-        "nick": "C",
-        "type": "Point",
-        "access": "item",
-        "desc": "Target sphere centre."
-      },
-      {
-        "name": "Target Radius",
-        "nick": "R",
-        "type": "Number",
-        "access": "item",
-        "desc": "Target sphere radius (m)."
-      },
-      {
-        "name": "Sawblade Radius (mm)",
-        "nick": "SBR",
-        "type": "Number",
-        "access": "item",
-        "desc": "Sawblade radius in mm."
-      },
-      {
-        "name": "Feed Speed (mm/min)",
-        "nick": "FS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Feed speed in mm/min."
-      },
-      {
-        "name": "Max Cuts",
-        "nick": "MC",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Iteration cap."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Cut Planes",
-        "nick": "P",
-        "type": "Plane",
-        "access": "list",
-        "desc": "Sequence of cutting planes."
-      },
-      {
-        "name": "Removed Volume (m^3)",
-        "nick": "V",
-        "type": "Number",
-        "access": "list",
-        "desc": "Removed volume per step."
-      },
-      {
-        "name": "Cutting Time (min)",
-        "nick": "T",
-        "type": "Number",
-        "access": "list",
-        "desc": "Cutting time per step."
-      },
-      {
-        "name": "Material Removal %",
-        "nick": "MRP",
-        "type": "Number",
-        "access": "item",
-        "desc": "Overall material removal percentage."
-      },
-      {
-        "name": "AMRR (mm^3/min)",
-        "nick": "AMRR",
-        "type": "Number",
-        "access": "item",
-        "desc": "Average material removal rate."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
-  },
-  {
-    "guid": "F7A13001-0001-4F2D-A0B0-7E60CADA17C1",
-    "class": "FrahanBlockCutOptExtractGridComponent",
-    "name": "BlockCutOpt Extract Grid",
-    "nickname": "BCOExtract",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Brute-force search + extract the winning OrientedBlock grid.  Outputs the non-intersected blocks as Rhino Boxes plus the  BlockCutOptResult headline numbers.",
-    "exposure": "secondary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Tested Area",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m)."
-      },
-      {
-        "name": "Fractures",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Fracture mesh."
-      },
-      {
-        "name": "Block X",
-        "nick": "Lx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block length (m)."
-      },
-      {
-        "name": "Block Y",
-        "nick": "Ly",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block width (m)."
-      },
-      {
-        "name": "Block Z",
-        "nick": "Lz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block height (m)."
-      },
-      {
-        "name": "Kerf",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Material-lost-by-quarrying (m)."
-      },
-      {
-        "name": "Psi Step (deg)",
-        "nick": "Pdeg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Angular search step."
-      },
-      {
-        "name": "Dx Max",
-        "nick": "Dx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dx (m)."
-      },
-      {
-        "name": "Dx Step",
-        "nick": "DxS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dx step (m)."
-      },
-      {
-        "name": "Dy Max",
-        "nick": "Dy",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dy (m)."
-      },
-      {
-        "name": "Dy Step",
-        "nick": "DyS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dy step (m)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Boxes",
-        "nick": "B",
-        "type": "Box",
-        "access": "list",
-        "desc": "Non-intersected blocks as Rhino Boxes."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of non-intersected blocks."
-      },
-      {
-        "name": "Recovery %",
-        "nick": "R",
-        "type": "Number",
-        "access": "item",
-        "desc": "Recovery percentage."
-      },
-      {
-        "name": "Best Psi (deg)",
-        "nick": "Psi",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum cutting direction."
-      },
-      {
-        "name": "Best Dx (m)",
-        "nick": "Dx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum dx."
-      },
-      {
-        "name": "Best Dy (m)",
-        "nick": "Dy",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum dy."
-      },
-      {
-        "name": "Elapsed (ms)",
-        "nick": "T",
-        "type": "Number",
-        "access": "item",
-        "desc": "Wall-clock duration."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
-  },
-  {
-    "guid": "F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1",
-    "class": "BlockCutOptLoadFracturesComponent",
-    "name": "BlockCutOpt Load Fractures",
-    "nickname": "BCOLoadFx",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Load fractures from disk (PLY, CSV, .lines, .txt). World  coordinates in metres. For 2D-trace formats, zMin / zMax  define the vertical extrusion range. Output is a Rhino  Mesh consumable by BlockCutOpt Solve.",
-    "exposure": "primary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Path",
-        "nick": "P",
-        "type": "Text",
-        "access": "item",
-        "desc": "File path. .ply / .csv / .lines / .txt"
-      },
-      {
-        "name": "Z Min",
-        "nick": "Zmin",
-        "type": "Number",
-        "access": "item",
-        "desc": "Bottom of vertical extrusion (m). Ignored for PLY."
-      },
-      {
-        "name": "Z Max",
-        "nick": "Zmax",
-        "type": "Number",
-        "access": "item",
-        "desc": "Top of vertical extrusion (m). Ignored for PLY."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Fractures",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Rhino Mesh of fracture triangles."
-      },
-      {
-        "name": "Triangle Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of fracture triangles."
-      }
-    ],
-    "related": [],
-    "icon": "DefectMap.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
-  },
-  {
-    "guid": "F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4",
-    "class": "BlockCutOptOmniSolveComponent",
-    "name": "BlockCutOpt Omni Solve",
-    "nickname": "BCOOmni",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Run the omni-solver: uniform (mx, my) sub-division per zone,  4-axis Pareto multi-objective (recovery, revenue, kerf-time,  BCSdbBV). Returns one row per zone. Implements BlockCutOpt omni-solve (Elkarmoty 2020; Jalalian 2023).",
-    "exposure": "tertiary",
-    "algorithm": {
-      "title": "BlockCutOpt omni-solve (Pareto over recovery/revenue/risk/cut-area)",
-      "citation": "Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761"
-    },
-    "inputs": [
-      {
-        "name": "Tested Area",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m)."
-      },
-      {
-        "name": "Fractures",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Fracture mesh."
-      },
-      {
-        "name": "Mx",
-        "nick": "Mx",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Sub-divisions in X."
-      },
-      {
-        "name": "My",
-        "nick": "My",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Sub-divisions in Y."
-      },
-      {
-        "name": "Block X",
-        "nick": "Lx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block length (m)."
-      },
-      {
-        "name": "Block Y",
-        "nick": "Ly",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block width (m)."
-      },
-      {
-        "name": "Block Z",
-        "nick": "Lz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block height (m)."
-      },
-      {
-        "name": "Kerf",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Material-lost-by-quarrying (m)."
-      },
-      {
-        "name": "Psi Step (deg)",
-        "nick": "Pdeg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Angular search step."
-      },
-      {
-        "name": "Run",
-        "nick": "R",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Execute the solve (the search is expensive; bound it before running)"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Zone Id",
-        "nick": "Z",
-        "type": "Text",
-        "access": "list",
-        "desc": "Sub-zone identifier (i, j)."
-      },
-      {
-        "name": "Best Recovery Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Best recovery count per zone."
-      },
-      {
-        "name": "Best Revenue",
-        "nick": "Pi",
-        "type": "Number",
-        "access": "list",
-        "desc": "Best revenue per zone."
-      },
-      {
-        "name": "Best BCSdbBV",
-        "nick": "BCS",
-        "type": "Number",
-        "access": "list",
-        "desc": "Best BCSdbBV cost per zone."
-      },
-      {
-        "name": "Best Psi (deg)",
-        "nick": "Psi",
-        "type": "Number",
-        "access": "list",
-        "desc": "Recovery-optimal psi per zone."
-      },
-      {
-        "name": "Aggregate Recovery",
-        "nick": "R",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Sum of recovery counts."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
-  },
-  {
-    "guid": "F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2",
-    "class": "BlockCutOptSolveComponent",
-    "name": "BlockCutOpt Solve",
-    "nickname": "BCOSolve",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Brute-force search for the optimum cutting direction +  displacement that maximises the count of non-intersected  blocks. All units in metres. [Elkarmoty et al. 2020]",
-    "exposure": "tertiary",
-    "algorithm": {
-      "title": "BlockCutOpt brute-force search",
-      "citation": "Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761"
-    },
-    "inputs": [
-      {
-        "name": "Tested Area",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m)."
-      },
-      {
-        "name": "Fractures",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Fracture mesh."
-      },
-      {
-        "name": "Block X",
-        "nick": "Lx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block length (m)."
-      },
-      {
-        "name": "Block Y",
-        "nick": "Ly",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block width (m)."
-      },
-      {
-        "name": "Block Z",
-        "nick": "Lz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Block height (m)."
-      },
-      {
-        "name": "Kerf",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Material-lost-by-quarrying (m)."
-      },
-      {
-        "name": "Psi Step (deg)",
-        "nick": "Pdeg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Angular search step."
-      },
-      {
-        "name": "Dx Max",
-        "nick": "Dx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dx search (m)."
-      },
-      {
-        "name": "Dx Step",
-        "nick": "DxS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dx step (m)."
-      },
-      {
-        "name": "Dy Max",
-        "nick": "Dy",
-        "type": "Number",
-        "access": "item",
-        "desc": "Half-range of dy search (m)."
-      },
-      {
-        "name": "Dy Step",
-        "nick": "DyS",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dy step (m)."
-      },
-      {
-        "name": "Run",
-        "nick": "R",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Execute the solve (the search is expensive; bound it before running)"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Non-Intersected Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Best non-intersected block count."
-      },
-      {
-        "name": "Recovery %",
-        "nick": "R",
-        "type": "Number",
-        "access": "item",
-        "desc": "Recovery percentage."
-      },
-      {
-        "name": "Best Psi (deg)",
-        "nick": "Psi",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum cutting direction."
-      },
-      {
-        "name": "Best Dx (m)",
-        "nick": "Dx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum dx."
-      },
-      {
-        "name": "Best Dy (m)",
-        "nick": "Dy",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimum dy."
-      },
-      {
-        "name": "Evaluations",
-        "nick": "E",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Total (psi, dx, dy) samples evaluated."
-      },
-      {
-        "name": "Elapsed (ms)",
-        "nick": "T",
-        "type": "Number",
-        "access": "item",
-        "desc": "Wall-clock duration."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptComponents.cs"
-  },
-  {
-    "guid": "D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345",
-    "class": "BoxToMeshComponent",
-    "name": "Box To Mesh",
-    "nickname": "Box2Mesh",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Convert a Box (e.g. a BlockCutOpt output) into a closed  Mesh (8 vertices, 12 triangles). Bridges the Box->Mesh  adapter gap between BlockCutOpt and SlabFromMesh /  SlabCutByFractures / AshlarPack.",
-    "exposure": "secondary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Box",
-        "nick": "B",
-        "type": "Box",
-        "access": "item",
-        "desc": "Input Box. Typically a single Box from BlockCutOpt's  Boxes output (graft, list-item, or as a single item)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Closed mesh of the box. 8 vertices, 12 triangles."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryBlock.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/BoxToMeshComponent.cs"
-  },
-  {
     "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE03",
     "class": "CleanScanMeshComponent",
     "name": "Clean Scan Mesh",
@@ -15957,104 +17512,6 @@
     "related": [],
     "icon": "GprIngest.png",
     "file": "src/Frahan.StonePack.GH/Quarry/GprPresetComponents.cs"
-  },
-  {
-    "guid": "ECFDAEBF-CADB-4234-5678-9012345678AB",
-    "class": "ConvexHullSlabComponent",
-    "name": "Convex Hull Slab",
-    "nickname": "HullSlab",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Builds the convex hull of a Rhino mesh's vertices and emits  the hull as a Slab. Loses concavity by definition; opt in  for fast Mesh -> Slab on roughly-convex inputs. Implements QuickHull (Barber-Dobkin-Huhdanpaa 1996).",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "QuickHull convex hull",
-      "citation": "Barber, Dobkin, Huhdanpaa 1996, The Quickhull algorithm for convex hulls, ACM TOMS 22(4):469-483"
-    },
-    "inputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Rhino mesh whose vertices seed the hull. At least 4 non-coplanar vertices required."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slab",
-        "nick": "S",
-        "type": "Generic",
-        "access": "item",
-        "desc": "Convex-hull Slab."
-      },
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Convex hull as a Rhino Mesh (same geometry, fan-triangulated)."
-      }
-    ],
-    "related": [],
-    "icon": "ConvexHull2D.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/ConvexHullSlabComponent.cs"
-  },
-  {
-    "guid": "F7A15001-0001-4F2D-A0B0-7E60CADA17E1",
-    "class": "FrahanCrackGraphBuilderComponent",
-    "name": "Crack Graph (manual)",
-    "nickname": "CrkGraph",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Wrap a user-supplied list of FracturePlanes (and optional  confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.",
-    "exposure": "quarternary",
-    "algorithm": {
-      "title": "Crack-graph DTO builder",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Fracture Planes",
-        "nick": "F",
-        "type": "Generic",
-        "access": "list",
-        "desc": "List<FracturePlane>."
-      },
-      {
-        "name": "Confidences",
-        "nick": "C",
-        "type": "Number",
-        "access": "list",
-        "desc": "Per-plane confidence 0..1 (optional)."
-      },
-      {
-        "name": "Ids",
-        "nick": "I",
-        "type": "Text",
-        "access": "list",
-        "desc": "Per-plane ids (optional)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Crack Graph",
-        "nick": "G",
-        "type": "Generic",
-        "access": "item",
-        "desc": "CrackGraph object."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of cracks."
-      }
-    ],
-    "related": [],
-    "icon": "DefectMap.png",
-    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
   },
   {
     "guid": "D5F10049-ED9E-4ED9-A049-ED9EED9E0049",
@@ -16517,199 +17974,6 @@
     "related": [],
     "icon": "QuarryCutOpt.png",
     "file": "src/Frahan.StonePack.GH/QuarryCutOptComponents.cs"
-  },
-  {
-    "guid": "A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04",
-    "class": "FractureBlockPackComponent",
-    "name": "Fracture Block Pack",
-    "nickname": "FracBlockPack",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Pack fixed-size dimension blocks into each fracture-bounded slab (bin): tree-pack  coarse subdivision of the AABB + irregular-boundary fit to the slab mesh. Reports  per-bin yield. Managed.",
-    "exposure": "primary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Container Meshes",
-        "nick": "C",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Fracture-bounded slab meshes (closed). Each is one BIN. From the split mesh bench /  fracture surfaces."
-      },
-      {
-        "name": "Block Length",
-        "nick": "Lx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block length (m)."
-      },
-      {
-        "name": "Block Width",
-        "nick": "Ly",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block width (m)."
-      },
-      {
-        "name": "Block Height",
-        "nick": "Lz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Dimension-block height (m)."
-      },
-      {
-        "name": "Kerf",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Saw-cut gap between blocks (m)."
-      },
-      {
-        "name": "Fracture Clearance",
-        "nick": "Cl",
-        "type": "Number",
-        "access": "item",
-        "desc": "Extra inward margin (m) every block must keep from the fracture boundary. Set it to the  fracture position sigma (GPR Fracture Surfaces 3D) for uncertainty-safe blocks. Default 0."
-      },
-      {
-        "name": "Run",
-        "nick": "R",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Compute the packing."
-      },
-      {
-        "name": "Uncertainty Safe",
-        "nick": "US",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Toggle the deep-fracture safety allowance. FALSE = geometric yield (clearance ignored, the  optimistic number). TRUE = enforce the Fracture Clearance (wire it to the fracture sigma  from GPR Fracture Surfaces 3D) so no block sits within the measured GPR uncertainty of a  fracture -> uncertainty-safe yield. Default false."
-      },
-      {
-        "name": "Packer",
-        "nick": "Pk",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Packing strategy. 0 = fixed axis grid. 1 = best-of (6 orientations x grid phase). 2 =  combined multi-size on a global grid. 3 = VOXEL-DLBF: per-block deepest-bottom-left-first  placement on a lattice (each block lands independently, conforming to the wavy boundary --  adopted after a head-to-head where a Mosch-style voxel greedy beat the global grid). 4 =  VOXEL-DLBF + multi-size (max-yield mesh-bench algorithm, DEFAULT): per-block placement plus  the 1.0/0.66/0.5 marketable fill ladder, strict 8-corner irregular fit + kerf. Tops the  head-to-head vs Kim forest and the Mosch-style greedy, but is NOT guaranteed saw-separable.  5 = GUILLOTINE multi-size (MANUFACTURABLE): recursive full-span 3D guillotine so every block  is separable by edge-to-edge saw cuts; reports cutting-surface-area + cut count (Jalalian  I11 / saw-path cost). Trades a little yield for full manufacturability."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Blocks",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Placed dimension-block meshes (closed boxes)."
-      },
-      {
-        "name": "Bin Index",
-        "nick": "Bi",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Container/bin index of each placed block."
-      },
-      {
-        "name": "Block Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Blocks placed per bin."
-      },
-      {
-        "name": "Recovered Volume",
-        "nick": "V",
-        "type": "Number",
-        "access": "list",
-        "desc": "Recovered block volume per bin (m^3)."
-      },
-      {
-        "name": "Yield",
-        "nick": "Y",
-        "type": "Number",
-        "access": "list",
-        "desc": "Recovered / intact volume per bin (0..1)."
-      },
-      {
-        "name": "Report",
-        "nick": "Rpt",
-        "type": "Text",
-        "access": "item",
-        "desc": "Per-bin yield summary."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/FractureBlockPackComponent.cs"
-  },
-  {
-    "guid": "A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05",
-    "class": "FractureBoundedSlabsComponent",
-    "name": "Fracture Bounded Slabs",
-    "nickname": "BedSlabs",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.",
-    "exposure": "primary",
-    "algorithm": {
-      "title": "Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces",
-      "citation": "ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)"
-    },
-    "inputs": [
-      {
-        "name": "Bench",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m). XY footprint + the Z range to slab."
-      },
-      {
-        "name": "Bed Surfaces",
-        "nick": "F",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds."
-      },
-      {
-        "name": "Grid Res",
-        "nick": "G",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26."
-      },
-      {
-        "name": "Keep-out",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slabs",
-        "nick": "S",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes."
-      },
-      {
-        "name": "Thickness",
-        "nick": "T",
-        "type": "Number",
-        "access": "list",
-        "desc": "Mean thickness (m) of each slab, aligned to Slabs."
-      },
-      {
-        "name": "Report",
-        "nick": "Rpt",
-        "type": "Text",
-        "access": "item",
-        "desc": "Per-slab summary."
-      }
-    ],
-    "related": [],
-    "icon": "Box2Mesh.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs"
   },
   {
     "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE04",
@@ -17522,230 +18786,6 @@
     "file": "src/Frahan.StonePack.GH/QuarryIngestionComponents.cs"
   },
   {
-    "guid": "F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9",
-    "class": "FrahanHeterogeneousExtractionComponent",
-    "name": "Heterogeneous Quarry Extraction",
-    "nickname": "HeteroExt",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-size pack  (monuments + dimension stones + slabs) avoiding fractured  regions, plus optional MonumentInventory placement on a  fracture-derived BlockGraph. One component, four outputs  per stage. Frahan-original method.",
-    "exposure": "quinary",
-    "algorithm": {
-      "title": "Heterogeneous quarry extraction pipeline",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Bench",
-        "nick": "B",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m)."
-      },
-      {
-        "name": "Fractures",
-        "nick": "Fx",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Fracture mesh."
-      },
-      {
-        "name": "Prime Block X",
-        "nick": "Plx",
-        "type": "Number",
-        "access": "item",
-        "desc": "Prime (max) block length (m) for BCO stage 1."
-      },
-      {
-        "name": "Prime Block Y",
-        "nick": "Ply",
-        "type": "Number",
-        "access": "item",
-        "desc": "Prime block width (m)."
-      },
-      {
-        "name": "Prime Block Z",
-        "nick": "Plz",
-        "type": "Number",
-        "access": "item",
-        "desc": "Prime block height (m)."
-      },
-      {
-        "name": "Kerf",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Saw kerf (m)."
-      },
-      {
-        "name": "Psi Step (deg)",
-        "nick": "Pdeg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Angular search step."
-      },
-      {
-        "name": "Catalogue Ids",
-        "nick": "Cid",
-        "type": "Text",
-        "access": "list",
-        "desc": "DLBF catalogue ids."
-      },
-      {
-        "name": "Catalogue Widths (m)",
-        "nick": "Cw",
-        "type": "Number",
-        "access": "list",
-        "desc": "DLBF widths."
-      },
-      {
-        "name": "Catalogue Depths (m)",
-        "nick": "Cd",
-        "type": "Number",
-        "access": "list",
-        "desc": "DLBF depths."
-      },
-      {
-        "name": "Catalogue Heights (m)",
-        "nick": "Ch",
-        "type": "Number",
-        "access": "list",
-        "desc": "DLBF heights."
-      },
-      {
-        "name": "Catalogue Revenues",
-        "nick": "Cr",
-        "type": "Number",
-        "access": "list",
-        "desc": "DLBF revenues."
-      },
-      {
-        "name": "Grid Cell (m)",
-        "nick": "Gc",
-        "type": "Number",
-        "access": "item",
-        "desc": "DLBF discretisation cell; 0 = min(W,D,H)/4."
-      },
-      {
-        "name": "Floor Only",
-        "nick": "Fl",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True = pieces on bench floor (no stacking)."
-      },
-      {
-        "name": "Monument Inventory",
-        "nick": "Mon",
-        "type": "Generic",
-        "access": "item",
-        "desc": "Optional MonumentInventory (from MonInv) for stage 4."
-      },
-      {
-        "name": "Monument Grid (m)",
-        "nick": "Mg",
-        "type": "Number",
-        "access": "item",
-        "desc": "Monument-placement grid stride."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Prime Boxes",
-        "nick": "Pb",
-        "type": "Box",
-        "access": "list",
-        "desc": "Non-intersected cells at the prime block dim."
-      },
-      {
-        "name": "Prime Count",
-        "nick": "Pn",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Count of fracture-clean prime cells."
-      },
-      {
-        "name": "Prime Recovery %",
-        "nick": "Pr",
-        "type": "Number",
-        "access": "item",
-        "desc": "BlockCutOpt recovery at the prime dim."
-      },
-      {
-        "name": "Best Psi (deg)",
-        "nick": "Psi",
-        "type": "Number",
-        "access": "item",
-        "desc": "Optimal cutting direction."
-      },
-      {
-        "name": "Forbidden Boxes",
-        "nick": "Fb",
-        "type": "Box",
-        "access": "list",
-        "desc": "Fracture-intersected cells (forbidden for DLBF)."
-      },
-      {
-        "name": "Mixed Boxes",
-        "nick": "Mb",
-        "type": "Box",
-        "access": "list",
-        "desc": "DLBF-placed mixed-size piece boxes."
-      },
-      {
-        "name": "Mixed Ids",
-        "nick": "Mi",
-        "type": "Text",
-        "access": "list",
-        "desc": "Id of each DLBF piece."
-      },
-      {
-        "name": "Mixed Revenue",
-        "nick": "Mr",
-        "type": "Number",
-        "access": "item",
-        "desc": "DLBF total revenue."
-      },
-      {
-        "name": "Mixed Volume",
-        "nick": "Mv",
-        "type": "Number",
-        "access": "item",
-        "desc": "DLBF occupied volume (m^3)."
-      },
-      {
-        "name": "Monument Boxes",
-        "nick": "Mo",
-        "type": "Box",
-        "access": "list",
-        "desc": "Monument-placement AABBs (empty if no inventory)."
-      },
-      {
-        "name": "Monument Ids",
-        "nick": "Moi",
-        "type": "Text",
-        "access": "list",
-        "desc": "Monument ids in placement order."
-      },
-      {
-        "name": "Monument Count",
-        "nick": "Mon",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Total monuments placed."
-      },
-      {
-        "name": "Unplaced Monuments",
-        "nick": "Mou",
-        "type": "Text",
-        "access": "list",
-        "desc": "Monuments that did not fit anywhere."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryBlock.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs"
-  },
-  {
     "guid": "ECFDAEBF-CBDC-4345-6789-012345678BCD",
     "class": "JointSetComponent",
     "name": "Joint Set",
@@ -17905,223 +18945,6 @@
     "related": [],
     "icon": "DiscontinuitySets.png",
     "file": "src/Frahan.StonePack.GH/Quarry/JointSetsToDfnComponent.cs"
-  },
-  {
-    "guid": "DBECFDAE-BFCA-4123-4567-89012345678A",
-    "class": "MeshShellSplitComponent",
-    "name": "Mesh Shell Split",
-    "nickname": "ShellSplit",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Separates a multi-shell Rhino mesh into one Slab per  connected shell. Each output shell is assumed convex  (Slab's input requirement). Frahan-original method.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Connected-components labelling",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Multi-shell Rhino mesh."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slabs",
-        "nick": "S",
-        "type": "Generic",
-        "access": "list",
-        "desc": "One Slab per connected shell."
-      },
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One Rhino Mesh per shell (parallel to the Slabs list)."
-      }
-    ],
-    "related": [],
-    "icon": "CoacdDecompose.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/MeshShellSplitComponent.cs"
-  },
-  {
-    "guid": "F7A13003-0001-4F2D-A0B0-7E60CADA17C3",
-    "class": "FrahanMeshFacesToFracturePlanesComponent",
-    "name": "Mesh → Fracture Planes",
-    "nickname": "Mesh2FxPl",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Convert a hand-drawn Rhino Mesh into a List<FracturePlane>  consumable by Slab Cut By Fractures. One plane per face  (centroid + face normal). Lets you author fractures on the  Rhino canvas without going through a PLY file. Frahan-original method.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Mesh-face to fracture-plane conversion",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Rhino mesh whose faces become fracture planes."
-      },
-      {
-        "name": "Unitize Normals",
-        "nick": "U",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Re-normalise face normals (recommended)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Fracture Planes",
-        "nick": "F",
-        "type": "Generic",
-        "access": "list",
-        "desc": "List<FracturePlane> for Slab Cut By Fractures."
-      },
-      {
-        "name": "Rhino Planes",
-        "nick": "Pl",
-        "type": "Plane",
-        "access": "list",
-        "desc": "Same fractures as Rhino Planes for preview."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of fracture planes."
-      }
-    ],
-    "related": [],
-    "icon": "DefectMap.png",
-    "file": "src/Frahan.StonePack.GH/QuarryBridgeComponents.cs"
-  },
-  {
-    "guid": "F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8",
-    "class": "FrahanMixedSizeBlockPack3DComponent",
-    "name": "Mixed-Size Block Pack 3D",
-    "nickname": "BCOMixedPack3D",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "3D generalisation of DLBF (Chehrazad 2025). Each piece has  its own (Width, Depth, Height); pieces sort by revenue-per- volume. Floor-only mode (default) places every piece at  z = bench.MinZ, matching quarry extraction where blocks are  cut OUT of solid rock (no stacking). Disable Floor-Only for  monument storage / slab racking / container loading. Implements Deepest-Left-Bottom-Fill 3D (Chehrazad 2025).",
-    "exposure": "quinary",
-    "algorithm": {
-      "title": "Deepest-Left-Bottom-Fill (3D)",
-      "citation": "Chehrazad, Roose, Wauters 2025, Int. J. Production Research 63:6606-6629"
-    },
-    "inputs": [
-      {
-        "name": "Tested Area",
-        "nick": "A",
-        "type": "Box",
-        "access": "item",
-        "desc": "Bench bounding box (m)."
-      },
-      {
-        "name": "Piece Ids",
-        "nick": "Id",
-        "type": "Text",
-        "access": "list",
-        "desc": "One id per catalogue entry."
-      },
-      {
-        "name": "Piece Widths (m)",
-        "nick": "W",
-        "type": "Number",
-        "access": "list",
-        "desc": "Width per entry (X)."
-      },
-      {
-        "name": "Piece Depths (m)",
-        "nick": "D",
-        "type": "Number",
-        "access": "list",
-        "desc": "Depth per entry (Y)."
-      },
-      {
-        "name": "Piece Heights (m)",
-        "nick": "H",
-        "type": "Number",
-        "access": "list",
-        "desc": "Height per entry (Z)."
-      },
-      {
-        "name": "Piece Revenues",
-        "nick": "Rev",
-        "type": "Number",
-        "access": "list",
-        "desc": "RMV per entry."
-      },
-      {
-        "name": "Forbidden Boxes",
-        "nick": "X",
-        "type": "Box",
-        "access": "list",
-        "desc": "Optional forbidden regions (e.g. fracture-intersected cells)."
-      },
-      {
-        "name": "Grid Cell (m)",
-        "nick": "Gc",
-        "type": "Number",
-        "access": "item",
-        "desc": "Discretisation cell; 0 = min(W,D,H)/4."
-      },
-      {
-        "name": "Floor Only",
-        "nick": "Fl",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True = pieces sit on bench floor (no stacking)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Placed Boxes",
-        "nick": "B",
-        "type": "Box",
-        "access": "list",
-        "desc": "One Box per placed piece."
-      },
-      {
-        "name": "Placed Ids",
-        "nick": "I",
-        "type": "Text",
-        "access": "list",
-        "desc": "Id of each placed piece (multiplicity preserved)."
-      },
-      {
-        "name": "Total Revenue",
-        "nick": "Pi",
-        "type": "Number",
-        "access": "item",
-        "desc": "Sum of placed-piece revenues."
-      },
-      {
-        "name": "Occupied Volume (m^3)",
-        "nick": "Vol",
-        "type": "Number",
-        "access": "item",
-        "desc": "Sum of placed-piece volumes."
-      },
-      {
-        "name": "Placed Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of placements."
-      }
-    ],
-    "related": [],
-    "icon": "BinPack.png",
-    "file": "src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs"
   },
   {
     "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE01",
@@ -18364,454 +19187,6 @@
     "related": [],
     "icon": "DefectMap.png",
     "file": "src/Frahan.StonePack.GH/Quarry/QuarryDfnComponent.cs"
-  },
-  {
-    "guid": "B9CADBEC-FDAE-4F01-2345-678901234567",
-    "class": "QuarryDecomposeComponent",
-    "name": "Quarry Decompose",
-    "nickname": "QuarryDc",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Cuts a convex quarry Slab into a list of smaller convex Slabs  by an orthogonal grid of fracture planes. Output flows into  Ashlar Pack. Frahan-original method. Selection: convex pieces  -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell  partition -> By Voronoi.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Orthogonal-grid slab decomposition",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Quarry",
-        "nick": "Q",
-        "type": "Generic",
-        "access": "item",
-        "desc": "Convex quarry. Accepts a Frahan Slab DTO (from Slab From Mesh)  OR a Rhino Mesh (auto-converted)."
-      },
-      {
-        "name": "nX",
-        "nick": "nX",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid count along +X (>= 0)."
-      },
-      {
-        "name": "nY",
-        "nick": "nY",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid count along +Y (>= 0)."
-      },
-      {
-        "name": "nZ",
-        "nick": "nZ",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid count along +Z (>= 0)."
-      },
-      {
-        "name": "Eps",
-        "nick": "eps",
-        "type": "Number",
-        "access": "item",
-        "desc": "Cutter floating-point tolerance. Must be >= 0."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slabs",
-        "nick": "S",
-        "type": "Generic",
-        "access": "list",
-        "desc": "Output Slab DTOs. Wire into Ashlar Pack."
-      },
-      {
-        "name": "Parents",
-        "nick": "Pi",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Per-output index back into the input list (always 0 for a  single-quarry call)."
-      },
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Output Slabs as Rhino Meshes (parallel to the Slab list)."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/Quarry/QuarryDecomposeComponent.cs"
-  },
-  {
-    "guid": "F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0",
-    "class": "CoacdQuarryDecomposeComponent",
-    "name": "Quarry Decompose By CoACD",
-    "nickname": "QuarryDcCoacd",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Decomposes a quarry mesh into nearly-convex blocks via  CoACD (Wei et al, SIGGRAPH 2022). Concavity-driven — block  count and shape come from the input geometry, not a user  grid. Use when the goal is approximate convex pieces for  downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Collision-Aware Approximate Convex Decomposition",
-      "citation": "Wei, Liu, Wang et al. 2022, Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search, SIGGRAPH 2022"
-    },
-    "inputs": [
-      {
-        "name": "Quarry",
-        "nick": "Q",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Quarry mesh. Must be 2-manifold for the lightweight CoACD  build (no OpenVDB preprocess); pre-clean with Mesh Repair  (CGAL) if needed."
-      },
-      {
-        "name": "Threshold",
-        "nick": "Th",
-        "type": "Number",
-        "access": "item",
-        "desc": "Concavity threshold. Lower = more pieces, tighter fit.  Default 0.05."
-      },
-      {
-        "name": "Real Metric",
-        "nick": "RM",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True = treat Threshold as metres rather than normalized  [0..1] units. Recommended for statue-scale input."
-      },
-      {
-        "name": "Max Pieces",
-        "nick": "Mx",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Cap on output piece count. -1 = unlimited."
-      },
-      {
-        "name": "Seed",
-        "nick": "Sd",
-        "type": "Integer",
-        "access": "item",
-        "desc": "RNG seed for reproducibility."
-      },
-      {
-        "name": "Run",
-        "nick": "Run",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Set true to compute. Decomposition is heavy."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Blocks",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One nearly-convex mesh per piece."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of pieces."
-      },
-      {
-        "name": "Available",
-        "nick": "Av",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True iff frahan_coacd.dll is loadable."
-      },
-      {
-        "name": "Report",
-        "nick": "R",
-        "type": "Text",
-        "access": "item",
-        "desc": "Diagnostic report."
-      }
-    ],
-    "related": [],
-    "icon": "CoacdDecompose.png",
-    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
-  },
-  {
-    "guid": "F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0",
-    "class": "CgalQuarryDecomposeByMeshComponent",
-    "name": "Quarry Decompose By Mesh (CGAL)",
-    "nickname": "QuarryDcCgal",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Decomposes a (possibly non-convex) quarry mesh into blocks  by intersecting it against a 3D grid of box cells via CGAL.  Empty cells are dropped automatically. Use this when the  plane-based Quarry Decompose does not apply because the  quarry mesh is not convex. Implements CGAL PMP corefinement.  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "CGAL Polygon Mesh Processing corefinement",
-      "citation": "CGAL Polygon Mesh Processing (corefine_and_compute, EPECK/EPICK hybrid kernel)"
-    },
-    "inputs": [
-      {
-        "name": "Quarry",
-        "nick": "Q",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Quarry mesh. Must be closed and manifold (run Mesh Repair  (CGAL) upstream if in doubt). Need not be convex."
-      },
-      {
-        "name": "Grid Box",
-        "nick": "Gb",
-        "type": "Box",
-        "access": "item",
-        "desc": "Oriented box that defines the grid extent + orientation.  If empty (Box.Empty / Box.Unset), the world-aligned bounding  box of the Quarry mesh is used."
-      },
-      {
-        "name": "nX",
-        "nick": "nX",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid divisions along the box's local +X axis (>= 1)."
-      },
-      {
-        "name": "nY",
-        "nick": "nY",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid divisions along the box's local +Y axis (>= 1)."
-      },
-      {
-        "name": "nZ",
-        "nick": "nZ",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Grid divisions along the box's local +Z axis (>= 1)."
-      },
-      {
-        "name": "Hybrid Kernel",
-        "nick": "Hy",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True (default) = HYBRID kernel for robustness on every  cell intersection. False = EPICK only (fastest)."
-      },
-      {
-        "name": "Run",
-        "nick": "Run",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Set true to compute. Cost scales with nX*nY*nZ CGAL calls."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Blocks",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One mesh per non-empty grid cell intersection (Quarry ∩ cell)."
-      },
-      {
-        "name": "Cell Index",
-        "nick": "Ci",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Flat (i + j*nX + k*nX*nY) cell index for each output block,  parallel to the Blocks list. Lets the caller correlate  outputs with their originating cell."
-      },
-      {
-        "name": "Backend",
-        "nick": "B",
-        "type": "Text",
-        "access": "item",
-        "desc": "Which kernel ran on the most recent cell."
-      },
-      {
-        "name": "Available",
-        "nick": "Av",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True iff the CGAL native shim is loadable."
-      },
-      {
-        "name": "Report",
-        "nick": "R",
-        "type": "Text",
-        "access": "item",
-        "desc": "Diagnostic report (cells visited / kept / dropped, runtime)."
-      }
-    ],
-    "related": [],
-    "icon": "CoacdDecompose.png",
-    "file": "src/Frahan.StonePack.GH/CgalCutComponents.cs"
-  },
-  {
-    "guid": "F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0",
-    "class": "GeogramTetQuarryDecomposeComponent",
-    "name": "Quarry Decompose By Tet",
-    "nickname": "QuarryDcTet",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Decomposes a quarry mesh into tetrahedra via Geogram.  Fine-grained, fracture-pattern style. Requires the  Geogram shim to be built with GEOGRAM_WITH_TETGEN=ON  (off by default — TetGen is non-commercial-use). When  off, the component surfaces a clear error and produces no  blocks; use Quarry Decompose By CoACD instead. Implements Geogram tetrahedralisation (Lévy, Geogram v1.9.9).",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Geogram tetrahedralisation",
-      "citation": "Lévy, B. Geogram v1.9.9 (GEO::mesh_tetrahedralize), BSD-3"
-    },
-    "inputs": [
-      {
-        "name": "Quarry",
-        "nick": "Q",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Closed manifold quarry mesh."
-      },
-      {
-        "name": "Preprocess",
-        "nick": "Pp",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Run mesh preprocess (manifold-isation, hole fill) inside  Geogram before tetrahedralizing."
-      },
-      {
-        "name": "Refine",
-        "nick": "Rf",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Refine the tet mesh via Delaunay refinement after the  initial tetrahedralization. Increases tet count."
-      },
-      {
-        "name": "Quality",
-        "nick": "Qu",
-        "type": "Number",
-        "access": "item",
-        "desc": "Tet quality bound for refinement (radius-edge ratio).  Default 1.4. Lower is stricter / more tets."
-      },
-      {
-        "name": "Run",
-        "nick": "Run",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Set true to compute."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Tets",
-        "nick": "T",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One closed tetrahedron mesh per output cell."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of tets."
-      },
-      {
-        "name": "Available",
-        "nick": "Av",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True iff frahan_geogram.dll is loadable."
-      },
-      {
-        "name": "Report",
-        "nick": "R",
-        "type": "Text",
-        "access": "item",
-        "desc": "Diagnostic report. Reports the TetGen-disabled state when  applicable."
-      }
-    ],
-    "related": [],
-    "icon": "CoacdDecompose.png",
-    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
-  },
-  {
-    "guid": "F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0",
-    "class": "VoronoiQuarryDecomposeComponent",
-    "name": "Quarry Decompose By Voronoi",
-    "nickname": "QuarryDcVoro",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Decomposes a (possibly non-convex) quarry mesh into solid  Voronoi blocks. Seeds are sampled inside the quarry and  Lloyd-relaxed for a more uniform cell-area distribution.  Each cell is then CGAL-intersected against the quarry  for the final block geometry. Realistic stone-fracturing  look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Restricted Voronoi diagram",
-      "citation": "Lévy, B. Geogram v1.9.9 restricted Voronoi, BSD-3"
-    },
-    "inputs": [
-      {
-        "name": "Quarry",
-        "nick": "Q",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Closed manifold quarry mesh."
-      },
-      {
-        "name": "Seed Count",
-        "nick": "Ns",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of Voronoi seeds = number of output blocks.  Default 30. Typical 20–200 for masonry-scale work."
-      },
-      {
-        "name": "Lloyd Iters",
-        "nick": "Li",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Lloyd-relaxation iterations on the interior seeds. 0 =  raw rejection-sampled seeds; 5–10 = visibly more uniform."
-      },
-      {
-        "name": "Seed",
-        "nick": "Sd",
-        "type": "Integer",
-        "access": "item",
-        "desc": "RNG seed for reproducibility. Default 1."
-      },
-      {
-        "name": "Hybrid Kernel",
-        "nick": "Hy",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True (default) = CGAL HYBRID kernel for the cell ×  quarry intersection. False = EPICK only (faster, less robust)."
-      },
-      {
-        "name": "Run",
-        "nick": "Run",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Set true to compute."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Blocks",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "One mesh per non-empty Voronoi cell ∩ quarry intersection."
-      },
-      {
-        "name": "Seeds",
-        "nick": "S",
-        "type": "Point",
-        "access": "list",
-        "desc": "The relaxed seed positions actually used (parallel to Blocks)."
-      },
-      {
-        "name": "Available",
-        "nick": "Av",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True iff CGAL shim is loadable."
-      },
-      {
-        "name": "Report",
-        "nick": "R",
-        "type": "Text",
-        "access": "item",
-        "desc": "Diagnostic report."
-      }
-    ],
-    "related": [],
-    "icon": "Voronoi.png",
-    "file": "src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs"
   },
   {
     "guid": "F7A11001-0001-4F2D-A0B0-7E60CADA17A1",
@@ -19269,118 +19644,6 @@
     "related": [],
     "icon": "QuarryBlock.png",
     "file": "src/Frahan.StonePack.GH/Quarry/ScanToBlockInventoryComponent.cs"
-  },
-  {
-    "guid": "F7A14001-0001-4F2D-A0B0-7E60CADA17D1",
-    "class": "FrahanSlabYieldOptimizerComponent",
-    "name": "Slab Yield Optimizer",
-    "nickname": "SlabYield",
-    "category": "Frahan",
-    "subcategory": "Quarry",
-    "description": "Pick the best SlabPlan (axis + thickness) for one block.  Enumerates three axis-aligned candidates at the given  thickness; score = yield - conflictPenalty * crackConflicts.",
-    "exposure": "quarternary",
-    "algorithm": {
-      "title": "Per-block slab-plan yield maximisation",
-      "citation": "Frahan-original spec 09 section 2 conflict-penalised yield score"
-    },
-    "inputs": [
-      {
-        "name": "Block",
-        "nick": "B",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Convex block mesh."
-      },
-      {
-        "name": "Fracture Planes",
-        "nick": "F",
-        "type": "Generic",
-        "access": "list",
-        "desc": "Optional List<FracturePlane>. Wire from Frahan Mesh → Fracture Planes."
-      },
-      {
-        "name": "Thickness (m)",
-        "nick": "T",
-        "type": "Number",
-        "access": "item",
-        "desc": "Target slab thickness."
-      },
-      {
-        "name": "Kerf (m)",
-        "nick": "K",
-        "type": "Number",
-        "access": "item",
-        "desc": "Saw kerf."
-      },
-      {
-        "name": "Conflict Penalty",
-        "nick": "Cp",
-        "type": "Number",
-        "access": "item",
-        "desc": "Score penalty per aligned fracture inside the block."
-      },
-      {
-        "name": "Alignment Tol (deg)",
-        "nick": "At",
-        "type": "Number",
-        "access": "item",
-        "desc": "Normal-axis alignment tolerance for conflict detection."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Best Plan",
-        "nick": "P",
-        "type": "Generic",
-        "access": "item",
-        "desc": "SlabPlan with the highest score."
-      },
-      {
-        "name": "Axis",
-        "nick": "A",
-        "type": "Integer",
-        "access": "item",
-        "desc": "0=X, 1=Y, 2=Z."
-      },
-      {
-        "name": "Slab Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Slabs the block produces under this plan."
-      },
-      {
-        "name": "Yield Fraction",
-        "nick": "Y",
-        "type": "Number",
-        "access": "item",
-        "desc": "slab_total_volume / block_volume."
-      },
-      {
-        "name": "Conflicts",
-        "nick": "C",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Crack conflicts counted."
-      },
-      {
-        "name": "Score",
-        "nick": "S",
-        "type": "Number",
-        "access": "item",
-        "desc": "Yield − penalty × conflicts."
-      },
-      {
-        "name": "Cut Planes",
-        "nick": "Cp",
-        "type": "Generic",
-        "access": "list",
-        "desc": "FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures)."
-      }
-    ],
-    "related": [],
-    "icon": "YieldEstimator.png",
-    "file": "src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs"
   },
   {
     "guid": "D5F1004A-ED9E-4ED9-A04A-ED9EED9E004A",
@@ -20331,269 +20594,6 @@
     "related": [],
     "icon": "PackIntoBlock.png",
     "file": "src/Frahan.StonePack.GH/Sculpt/FitInBlockComponent.cs"
-  },
-  {
-    "guid": "C2B3D4E5-6F7A-489B-AC1D-2E3F4A5B6C7D",
-    "class": "SlabCutByFracturesComponent",
-    "name": "Slab Cut By Fractures",
-    "nickname": "SlabCut",
-    "category": "Frahan",
-    "subcategory": "Slab",
-    "description": "Cuts a list of Slabs by a list of oriented fracture planes.  Each Rhino Plane is interpreted as an infinite plane (Origin, Normal).  Output Slabs carry the input-list parent index so callers can  track 'this fragment came from quarry block #N'.  Managed path is Frahan-original; opt-in CGAL backend uses CGAL PMP booleans (CGAL_PMP).",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Convex polyhedron half-space clipping (managed)",
-      "citation": "Frahan-original"
-    },
-    "inputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Convex meshes to cut. Standard Rhino mesh wires; the cutter  converts to its internal Slab DTO automatically. Multi-shell  meshes should be split with Mesh Shell Split first."
-      },
-      {
-        "name": "Plane",
-        "nick": "P",
-        "type": "Generic",
-        "access": "list",
-        "desc": "Oriented infinite fracture planes. Accepts the Frahan  FracturePlane DTO (from any *Fracture Planes generator) OR a  Rhino Plane (origin + normal). The two are interchangeable."
-      },
-      {
-        "name": "Eps",
-        "nick": "E",
-        "type": "Number",
-        "access": "item",
-        "desc": "Vertex-classification tolerance. Default 1e-9 works for most  metric inputs; raise to 1e-6 for non-metric or noisy meshes."
-      },
-      {
-        "name": "Use CGAL",
-        "nick": "Cg",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Backend. False (default) = managed convex SlabCutter (fast, but  convex-only and explodes combinatorially on large slabs with many  planes). True = route the cut through the CGAL boolean kernel  (CgalMeshBoolean): robust on non-convex / large slabs. CGAL path  returns meshes (the Slab output is empty). Falls back to managed  if the CGAL shim is not loaded."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slab",
-        "nick": "S",
-        "type": "Generic",
-        "access": "list",
-        "desc": "Output Slabs after cutting."
-      },
-      {
-        "name": "Parent",
-        "nick": "P",
-        "type": "Integer",
-        "access": "list",
-        "desc": "Per-output parent index (0-based) into the input Slab list."
-      },
-      {
-        "name": "TotalVolume",
-        "nick": "V",
-        "type": "Number",
-        "access": "item",
-        "desc": "Sum of signed volumes of all output Slabs (sanity check)."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of resulting Slabs."
-      },
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "list",
-        "desc": "Output Slabs as Rhino Meshes (parallel to the Slab list). Wire  into native components (Move, Bake, Boolean, Volume, etc.)."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/Slab/SlabCutByFracturesComponent.cs"
-  },
-  {
-    "guid": "F2D000C0-CADC-4F2D-A0C0-7E60CADA15A0",
-    "class": "CgalSlabCutByToolMeshComponent",
-    "name": "Slab Cut By Tool Mesh (CGAL)",
-    "nickname": "SlabCutCgal",
-    "category": "Frahan",
-    "subcategory": "Slab",
-    "description": "Cuts a slab/block mesh by an arbitrary tool mesh via CGAL  exact-predicate booleans. Outputs the outside half  (slab − tool), the inside half (slab ∩ tool), or both.  Use this for non-convex slabs or curved/sculpted fracture  tools where the plane-based cutter does not apply.  Implements CGAL PMP corefinement booleans (CGAL_PMP).",
-    "exposure": "primary",
-    "algorithm": {
-      "title": "Exact-predicate mesh-mesh CSG via corefinement",
-      "citation": "CGAL Polygon Mesh Processing corefine_and_compute_difference/intersection (EPICK+EPECK Hybrid kernel)"
-    },
-    "inputs": [
-      {
-        "name": "Slab",
-        "nick": "S",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Slab/block mesh to cut. Must be closed and manifold for  predictable output (run Mesh Repair (CGAL) upstream if in  doubt)."
-      },
-      {
-        "name": "Tool",
-        "nick": "T",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Tool mesh used as the cutter. Closed manifold mesh."
-      },
-      {
-        "name": "Mode",
-        "nick": "M",
-        "type": "Integer",
-        "access": "item",
-        "desc": "0 = Outside only (slab − tool).  1 = Inside only  (slab ∩ tool).  2 = Both halves (default)."
-      },
-      {
-        "name": "Hybrid Kernel",
-        "nick": "Hy",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True (default) = HYBRID — EPICK storage + EPECK intersection  construction. Robust on near-tangent contacts and multi-cut  chains at a 2–5x speed cost.  False = EPICK only — fastest, fine for well-conditioned inputs."
-      },
-      {
-        "name": "Run",
-        "nick": "Run",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "Set true to compute. Heavy operation on large inputs."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Outside",
-        "nick": "O",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Slab − Tool. The portion of the slab outside the tool.  Empty mesh when the tool fully contains the slab."
-      },
-      {
-        "name": "Inside",
-        "nick": "I",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Slab ∩ Tool. The portion of the slab inside the tool.  Empty mesh when the tool misses the slab entirely."
-      },
-      {
-        "name": "Backend",
-        "nick": "B",
-        "type": "Text",
-        "access": "item",
-        "desc": "Which kernel ran: 'CGAL' or 'ManagedBsp' (BSP fallback)."
-      },
-      {
-        "name": "Available",
-        "nick": "Av",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "True iff the CGAL native shim is loadable."
-      },
-      {
-        "name": "Report",
-        "nick": "R",
-        "type": "Text",
-        "access": "item",
-        "desc": "Diagnostic report (mode, kernel, vertex/face counts, runtime)."
-      }
-    ],
-    "related": [],
-    "icon": "BlockCutOpt.png",
-    "file": "src/Frahan.StonePack.GH/CgalCutComponents.cs"
-  },
-  {
-    "guid": "B1A2C3D4-5E6F-4789-9ABC-1D2E3F4A5B6C",
-    "class": "SlabFromMeshComponent",
-    "name": "Slab From Mesh",
-    "nickname": "Slab",
-    "category": "Frahan",
-    "subcategory": "Slab",
-    "description": "Wraps a Rhino mesh into a Slab DTO. Quads stay as quads.  Mesh must have at least 4 vertices and 4 faces. Slab assumes  the input is CONVEX; convexity is not verified here.",
-    "exposure": "secondary",
-    "algorithm": null,
-    "inputs": [
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Rhino mesh defining a CONVEX polyhedral slab. Quads are  preserved as quads; triangles stay as triangles."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Slab",
-        "nick": "S",
-        "type": "Generic",
-        "access": "item",
-        "desc": "Slab DTO. Wire into Slab Cut By Fractures or downstream masonry."
-      },
-      {
-        "name": "Mesh",
-        "nick": "M",
-        "type": "Mesh",
-        "access": "item",
-        "desc": "Slab as a Rhino Mesh (re-emitted). Identical geometry to the  input Mesh but fan-triangulated from each polygonal face."
-      }
-    ],
-    "related": [],
-    "icon": "QuarryBlock.png",
-    "file": "src/Frahan.StonePack.GH/Slab/SlabFromMeshComponent.cs"
-  },
-  {
-    "guid": "F2D05A09-1A2B-4C3D-9E4F-5A6B7C8D9E09",
-    "class": "VerticalFracturePlanesFromCurvesComponent",
-    "name": "Vertical Fracture Planes From Curves",
-    "nickname": "FracPlanes",
-    "category": "Frahan",
-    "subcategory": "Slab",
-    "description": "Turn plan-view fracture trace curves (e.g. from Vector Fractures  Loader on a real fracture shapefile) into VERTICAL cutting planes  for Slab Cut By Fractures. Per Segment = a plane per polyline segment  (faithful to wiggly traces); off = one best-fit vertical plane per curve.",
-    "exposure": "secondary",
-    "algorithm": {
-      "title": "Vertical plane per fracture trace",
-      "citation": "Frahan-original: plan-view trace -> vertical cutting plane (contains the trace direction + Z)"
-    },
-    "inputs": [
-      {
-        "name": "Curves",
-        "nick": "T",
-        "type": "Curve",
-        "access": "list",
-        "desc": "Fracture trace curves (plan-view)."
-      },
-      {
-        "name": "Per Segment",
-        "nick": "Sg",
-        "type": "Boolean",
-        "access": "item",
-        "desc": "TRUE = one vertical plane per polyline segment (faithful to curved traces);  FALSE (default) = one best-fit vertical plane per curve (start->end direction)."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "Planes",
-        "nick": "P",
-        "type": "Plane",
-        "access": "list",
-        "desc": "Vertical fracture planes (feed Slab Cut By Fractures 'Plane')."
-      },
-      {
-        "name": "Count",
-        "nick": "N",
-        "type": "Integer",
-        "access": "item",
-        "desc": "Number of planes produced."
-      }
-    ],
-    "related": [],
-    "icon": "PoissonReconstruct.png",
-    "file": "src/Frahan.StonePack.GH/VerticalFracturePlanesFromCurvesComponent.cs"
   },
   {
     "guid": "AB12C006-1A2B-4C3D-9E4F-5A6B7C8D9E06",

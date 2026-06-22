@@ -36,7 +36,7 @@ namespace Frahan.GH.Quarry
                 "Brute-force search + extract the winning OrientedBlock grid. " +
                 "Outputs the non-intersected blocks as Rhino Boxes plus the " +
                 "BlockCutOptResult headline numbers.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -138,7 +138,7 @@ namespace Frahan.GH.Quarry
                 "Run BlockCutOpt per BenchBlock in the ExtractionPlan order " +
                 "and emit the winning cut-grid as Slabs (Mesh form). " +
                 "Closes the Layer 7 → Layer 5 / 6 handoff.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -265,7 +265,7 @@ namespace Frahan.GH.Quarry
                 "consumable by Slab Cut By Fractures. One plane per face " +
                 "(centroid + face normal). Lets you author fractures on the " +
                 "Rhino canvas without going through a PLY file. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>

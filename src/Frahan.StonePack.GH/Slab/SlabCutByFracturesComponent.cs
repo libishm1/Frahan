@@ -51,7 +51,7 @@ namespace Frahan.GH.Masonry
                 "Output Slabs carry the input-list parent index so callers can " +
                 "track 'this fragment came from quarry block #N'. " +
                 "Managed path is Frahan-original; opt-in CGAL backend uses CGAL PMP booleans (CGAL_PMP).",
-                "Frahan", "Slab")
+                "Frahan", "Block Cutting")
         {
         }
 

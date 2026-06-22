@@ -63,7 +63,7 @@ public sealed class CgalSlabCutByToolMeshComponent : FrahanComponentBase
             "Use this for non-convex slabs or curved/sculpted fracture " +
             "tools where the plane-based cutter does not apply. " +
             "Implements CGAL PMP corefinement booleans (CGAL_PMP).",
-            "Frahan", "Slab")
+            "Frahan", "Block Cutting")
     {
     }
 
@@ -248,7 +248,7 @@ public sealed class CgalQuarryDecomposeByMeshComponent : FrahanComponentBase
             "plane-based Quarry Decompose does not apply because the " +
             "quarry mesh is not convex. Implements CGAL PMP corefinement. " +
             "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     {
     }
 

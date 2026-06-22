@@ -47,7 +47,7 @@ public sealed class BedBlockLayoutComponent : FrahanComponentBase
             "sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max " +
             "volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08 " +
             "Botticino marble study. Facade over Core CatalogueBlockLayout.",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     { }
 
     public override Guid ComponentGuid => new Guid("A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06");

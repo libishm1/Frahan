@@ -40,7 +40,7 @@ namespace Frahan.GH.Masonry
                 "Wraps a Rhino mesh into a Slab DTO. Quads stay as quads. " +
                 "Mesh must have at least 4 vertices and 4 faces. Slab assumes " +
                 "the input is CONVEX; convexity is not verified here.",
-                "Frahan", "Slab")
+                "Frahan", "Block Cutting")
         {
         }
 

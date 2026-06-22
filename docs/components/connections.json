@@ -158,1173 +158,1173 @@
     },
     {
       "id": "n26",
+      "name": "Algebraic Convex Polyhedron",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5"
+    },
+    {
+      "id": "n27",
+      "name": "Bed Block Layout",
+      "subcategory": "Block Cutting",
+      "guid": "A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06"
+    },
+    {
+      "id": "n28",
+      "name": "BenchBlock Cut → Slabs",
+      "subcategory": "Block Cutting",
+      "guid": "F7A13002-0001-4F2D-A0B0-7E60CADA17C2"
+    },
+    {
+      "id": "n29",
+      "name": "Billet Cutter",
+      "subcategory": "Block Cutting",
+      "guid": "F7A14002-0001-4F2D-A0B0-7E60CADA17D2"
+    },
+    {
+      "id": "n30",
+      "name": "Block Candidate Generator",
+      "subcategory": "Block Cutting",
+      "guid": "F7A15003-0001-4F2D-A0B0-7E60CADA17E3"
+    },
+    {
+      "id": "n31",
+      "name": "Block Graph",
+      "subcategory": "Block Cutting",
+      "guid": "F7A15002-0001-4F2D-A0B0-7E60CADA17E2"
+    },
+    {
+      "id": "n32",
+      "name": "BlockCutOpt AMRR Plan",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3"
+    },
+    {
+      "id": "n33",
+      "name": "BlockCutOpt Extract Grid",
+      "subcategory": "Block Cutting",
+      "guid": "F7A13001-0001-4F2D-A0B0-7E60CADA17C1"
+    },
+    {
+      "id": "n34",
+      "name": "BlockCutOpt Load Fractures",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1"
+    },
+    {
+      "id": "n35",
+      "name": "BlockCutOpt Omni Solve",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4"
+    },
+    {
+      "id": "n36",
+      "name": "BlockCutOpt Solve",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2"
+    },
+    {
+      "id": "n37",
+      "name": "Box To Mesh",
+      "subcategory": "Block Cutting",
+      "guid": "D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345"
+    },
+    {
+      "id": "n38",
+      "name": "Convex Hull Slab",
+      "subcategory": "Block Cutting",
+      "guid": "ECFDAEBF-CADB-4234-5678-9012345678AB"
+    },
+    {
+      "id": "n39",
+      "name": "Crack Graph (manual)",
+      "subcategory": "Block Cutting",
+      "guid": "F7A15001-0001-4F2D-A0B0-7E60CADA17E1"
+    },
+    {
+      "id": "n40",
+      "name": "Fracture Block Pack",
+      "subcategory": "Block Cutting",
+      "guid": "A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04"
+    },
+    {
+      "id": "n41",
+      "name": "Fracture Bounded Slabs",
+      "subcategory": "Block Cutting",
+      "guid": "A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05"
+    },
+    {
+      "id": "n42",
+      "name": "Heterogeneous Quarry Extraction",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9"
+    },
+    {
+      "id": "n43",
+      "name": "Mesh Shell Split",
+      "subcategory": "Block Cutting",
+      "guid": "DBECFDAE-BFCA-4123-4567-89012345678A"
+    },
+    {
+      "id": "n44",
+      "name": "Mesh → Fracture Planes",
+      "subcategory": "Block Cutting",
+      "guid": "F7A13003-0001-4F2D-A0B0-7E60CADA17C3"
+    },
+    {
+      "id": "n45",
+      "name": "Mixed-Size Block Pack 3D",
+      "subcategory": "Block Cutting",
+      "guid": "F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8"
+    },
+    {
+      "id": "n46",
+      "name": "Quarry Decompose",
+      "subcategory": "Block Cutting",
+      "guid": "B9CADBEC-FDAE-4F01-2345-678901234567"
+    },
+    {
+      "id": "n47",
+      "name": "Quarry Decompose By CoACD",
+      "subcategory": "Block Cutting",
+      "guid": "F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0"
+    },
+    {
+      "id": "n48",
+      "name": "Quarry Decompose By Mesh (CGAL)",
+      "subcategory": "Block Cutting",
+      "guid": "F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0"
+    },
+    {
+      "id": "n49",
+      "name": "Quarry Decompose By Tet",
+      "subcategory": "Block Cutting",
+      "guid": "F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0"
+    },
+    {
+      "id": "n50",
+      "name": "Quarry Decompose By Voronoi",
+      "subcategory": "Block Cutting",
+      "guid": "F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0"
+    },
+    {
+      "id": "n51",
+      "name": "Slab Cut By Fractures",
+      "subcategory": "Block Cutting",
+      "guid": "C2B3D4E5-6F7A-489B-AC1D-2E3F4A5B6C7D"
+    },
+    {
+      "id": "n52",
+      "name": "Slab Cut By Tool Mesh (CGAL)",
+      "subcategory": "Block Cutting",
+      "guid": "F2D000C0-CADC-4F2D-A0C0-7E60CADA15A0"
+    },
+    {
+      "id": "n53",
+      "name": "Slab From Mesh",
+      "subcategory": "Block Cutting",
+      "guid": "B1A2C3D4-5E6F-4789-9ABC-1D2E3F4A5B6C"
+    },
+    {
+      "id": "n54",
+      "name": "Slab Yield Optimizer",
+      "subcategory": "Block Cutting",
+      "guid": "F7A14001-0001-4F2D-A0B0-7E60CADA17D1"
+    },
+    {
+      "id": "n55",
+      "name": "Vertical Fracture Planes From Curves",
+      "subcategory": "Block Cutting",
+      "guid": "F2D05A09-1A2B-4C3D-9E4F-5A6B7C8D9E09"
+    },
+    {
+      "id": "n56",
       "name": "Adaptive Block Match 3D",
       "subcategory": "EdgeMatch",
       "guid": "D5F1000A-ED9E-4ED9-A00A-ED9EED9E000A"
     },
     {
-      "id": "n27",
+      "id": "n57",
       "name": "Block Chain Along Thrust Line",
       "subcategory": "EdgeMatch",
       "guid": "D5F10009-ED9E-4ED9-A009-ED9EED9E0009"
     },
     {
-      "id": "n28",
+      "id": "n58",
       "name": "Block Pair Match 3D",
       "subcategory": "EdgeMatch",
       "guid": "D5F10008-ED9E-4ED9-A008-ED9EED9E0008"
     },
     {
-      "id": "n29",
+      "id": "n59",
       "name": "Cyclopean Recipe Coursing",
       "subcategory": "EdgeMatch",
       "guid": "D5F1000C-ED9E-4ED9-A00C-ED9EED9E000C"
     },
     {
-      "id": "n30",
+      "id": "n60",
       "name": "EdgeMatch Options",
       "subcategory": "EdgeMatch",
       "guid": "D5F10003-ED9E-4ED9-A003-ED9EED9E0003"
     },
     {
-      "id": "n31",
+      "id": "n61",
       "name": "EdgeMatch Segments",
       "subcategory": "EdgeMatch",
       "guid": "D5F10002-ED9E-4ED9-A002-ED9EED9E0002"
     },
     {
-      "id": "n32",
+      "id": "n62",
       "name": "EdgeMatch Solve",
       "subcategory": "EdgeMatch",
       "guid": "D5F10001-ED9E-4ED9-A001-ED9EED9E0001"
     },
     {
-      "id": "n33",
+      "id": "n63",
       "name": "Live Edge Classify",
       "subcategory": "EdgeMatch",
       "guid": "D5F10043-ED9E-4ED9-A043-ED9EED9E0043"
     },
     {
-      "id": "n34",
+      "id": "n64",
       "name": "Live Edge Match",
       "subcategory": "EdgeMatch",
       "guid": "D5F10044-ED9E-4ED9-A044-ED9EED9E0044"
     },
     {
-      "id": "n35",
+      "id": "n65",
       "name": "Live Edge Stagger Layup",
       "subcategory": "EdgeMatch",
       "guid": "D5F10046-ED9E-4ED9-A046-ED9EED9E0046"
     },
     {
-      "id": "n36",
+      "id": "n66",
       "name": "Live Edge Trim",
       "subcategory": "EdgeMatch",
       "guid": "D5F10045-ED9E-4ED9-A045-ED9EED9E0045"
     },
     {
-      "id": "n37",
+      "id": "n67",
       "name": "Mesh Template Match",
       "subcategory": "EdgeMatch",
       "guid": "D5F1000D-ED9E-4ED9-A00D-ED9EED9E000D"
     },
     {
-      "id": "n38",
+      "id": "n68",
       "name": "Soft ICP 3D",
       "subcategory": "EdgeMatch",
       "guid": "D5F1000E-ED9E-4ED9-A00E-ED9EED9E000E"
     },
     {
-      "id": "n39",
+      "id": "n69",
       "name": "Template Block Match 3D",
       "subcategory": "EdgeMatch",
       "guid": "D5F1000B-ED9E-4ED9-A00B-ED9EED9E000B"
     },
     {
-      "id": "n40",
+      "id": "n70",
       "name": "Bench Monument Pack",
       "subcategory": "Fabricate",
       "guid": "F7A16002-0001-4F2D-A0B0-7E60CADA17F2"
     },
     {
-      "id": "n41",
+      "id": "n71",
       "name": "Fabrication Prep Report",
       "subcategory": "Fabricate",
       "guid": "F2D07A04-1A2B-4C3D-9E4F-5A6B7C8D9E04"
     },
     {
-      "id": "n42",
+      "id": "n72",
       "name": "G-code Parser",
       "subcategory": "Fabricate",
       "guid": "D5F10030-ED9E-4ED9-A030-ED9EED9E0030"
     },
     {
-      "id": "n43",
+      "id": "n73",
       "name": "G-code to Planes",
       "subcategory": "Fabricate",
       "guid": "D5F10031-ED9E-4ED9-A031-ED9EED9E0031"
     },
     {
-      "id": "n44",
+      "id": "n74",
       "name": "Monument Inventory",
       "subcategory": "Fabricate",
       "guid": "F7A16001-0001-4F2D-A0B0-7E60CADA17F1"
     },
     {
-      "id": "n45",
+      "id": "n75",
       "name": "Pack Monuments In Cell",
       "subcategory": "Fabricate",
       "guid": "F7A16003-0001-4F2D-A0B0-7E60CADA17F3"
     },
     {
-      "id": "n46",
+      "id": "n76",
       "name": "Planes to KUKAprc Commands",
       "subcategory": "Fabricate",
       "guid": "D5F10032-ED9E-4ED9-A032-ED9EED9E0032"
     },
     {
-      "id": "n47",
+      "id": "n77",
       "name": "Planes to Robot Targets",
       "subcategory": "Fabricate",
       "guid": "D5F10033-ED9E-4ED9-A033-ED9EED9E0033"
     },
     {
-      "id": "n48",
+      "id": "n78",
       "name": "Staggered Block Decompose",
       "subcategory": "Fabricate",
       "guid": "F2D07A02-1A2B-4C3D-9E4F-5A6B7C8D9E02"
     },
     {
-      "id": "n49",
+      "id": "n79",
       "name": "Stone-Aware Cut Export",
       "subcategory": "Fabricate",
       "guid": "F2D07A01-1A2B-4C3D-9E4F-5A6B7C8D9E01"
     },
     {
-      "id": "n50",
+      "id": "n80",
       "name": "Wire-Saw Toolpath",
       "subcategory": "Fabricate",
       "guid": "D5F10034-ED9E-4ED9-A034-ED9EED9E0034"
     },
     {
-      "id": "n51",
+      "id": "n81",
       "name": "Brick-Pattern Fracture Planes",
       "subcategory": "Fracture",
       "guid": "BADBECFD-AEBF-4567-89AB-CDEF01234567"
     },
     {
-      "id": "n52",
+      "id": "n82",
       "name": "Fracture Plane Filter",
       "subcategory": "Fracture",
       "guid": "DCFDAEBF-CADB-4789-ABCD-EF0123456789"
     },
     {
-      "id": "n53",
+      "id": "n83",
       "name": "Fracture Polygon From Curve",
       "subcategory": "Fracture",
       "guid": "D3C4E5F6-7B8A-49AC-BD2E-3F4A5B6C7D8E"
     },
     {
-      "id": "n54",
+      "id": "n84",
       "name": "Grid Fracture Planes",
       "subcategory": "Fracture",
       "guid": "E6F7A8B9-CADB-4CDE-F012-345678901234"
     },
     {
-      "id": "n55",
+      "id": "n85",
       "name": "Jittered Grid Fracture Planes",
       "subcategory": "Fracture",
       "guid": "CBECFDAE-BFCA-4678-9ABC-DEF012345678"
     },
     {
-      "id": "n56",
+      "id": "n86",
       "name": "Layered Fracture Planes",
       "subcategory": "Fracture",
       "guid": "F8A9CADB-ECFD-4345-6789-012345678ABC"
     },
     {
-      "id": "n57",
+      "id": "n87",
       "name": "Radial Fracture Planes",
       "subcategory": "Fracture",
       "guid": "A9CADBEC-FDAE-4456-789A-012345678BCD"
     },
     {
-      "id": "n58",
+      "id": "n88",
       "name": "Random Fracture Planes",
       "subcategory": "Fracture",
       "guid": "F7A8B9CA-DBEC-4DEF-0123-456789012345"
     },
     {
-      "id": "n59",
+      "id": "n89",
       "name": "Slab Cut By Fracture Polygons",
       "subcategory": "Fracture",
       "guid": "E4D5F607-8C9B-40BD-CE3F-405162738491"
     },
     {
-      "id": "n60",
+      "id": "n90",
       "name": "Voronoi Fracture Planes",
       "subcategory": "Fracture",
       "guid": "A8B9CADB-ECFD-4EF0-1234-567890123456"
     },
     {
-      "id": "n61",
+      "id": "n91",
       "name": "GPR File Loader",
       "subcategory": "Ingest",
       "guid": "F2D00BEC-2026-4523-B0B0-2ABE15A0DEAD"
     },
     {
-      "id": "n62",
+      "id": "n92",
       "name": "GPR Picks From Points",
       "subcategory": "Ingest",
       "guid": "F2D05A07-1A2B-4C3D-9E4F-5A6B7C8D9E07"
     },
     {
-      "id": "n63",
+      "id": "n93",
       "name": "GPR Radargram Mesh",
       "subcategory": "Ingest",
       "guid": "F2D05A04-1A2B-4C3D-9E4F-5A6B7C8D9E04"
     },
     {
-      "id": "n64",
+      "id": "n94",
       "name": "Import Photo Markers",
       "subcategory": "Ingest",
       "guid": "F2D07A03-1A2B-4C3D-9E4F-5A6B7C8D9E03"
     },
     {
-      "id": "n65",
+      "id": "n95",
       "name": "Vector Fractures Loader",
       "subcategory": "Ingest",
       "guid": "F2D00BEC-2026-4522-B0B0-1ABE15A0DEAD"
     },
     {
-      "id": "n66",
+      "id": "n96",
       "name": "Contact Settle",
       "subcategory": "Kintsugi",
       "guid": "F2D00507-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n67",
+      "id": "n97",
       "name": "Fracture Roughen",
       "subcategory": "Kintsugi",
       "guid": "F2D00504-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n68",
+      "id": "n98",
       "name": "Fragment Shatter",
       "subcategory": "Kintsugi",
       "guid": "F2D00502-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n69",
+      "id": "n99",
       "name": "Kintsugi",
       "subcategory": "Kintsugi",
       "guid": "F2D00501-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n70",
+      "id": "n100",
       "name": "Load BB Sample",
       "subcategory": "Kintsugi",
       "guid": "F2D00503-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n71",
+      "id": "n101",
       "name": "Load Scan Fragments",
       "subcategory": "Kintsugi",
       "guid": "F2D00505-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n72",
+      "id": "n102",
       "name": "Synthetic Block",
       "subcategory": "Kintsugi",
       "guid": "F2D00506-2026-4522-B0B0-1ABE15A0CAFE"
     },
     {
-      "id": "n73",
+      "id": "n103",
       "name": "CVT Seeds (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C5-6E06-4F2D-A0C5-7E60660C0AC1"
     },
     {
-      "id": "n74",
+      "id": "n104",
       "name": "Density-Watershed Zones",
       "subcategory": "Lab",
       "guid": "F2D0BC12-1234-4F2D-A0B0-7E60CADA15B2"
     },
     {
-      "id": "n75",
+      "id": "n105",
       "name": "Download Frahan Data",
       "subcategory": "Lab",
       "guid": "F2D05A08-1A2B-4C3D-9E4F-5A6B7C8D9E08"
     },
     {
-      "id": "n76",
+      "id": "n106",
       "name": "Fisher-Robust BCO",
       "subcategory": "Lab",
       "guid": "F2D0BC11-1234-4F2D-A0B0-7E60CADA15B1"
     },
     {
-      "id": "n77",
+      "id": "n107",
       "name": "Geodesic Voronoi (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A8-CADC-4F2D-A0A8-7E60CADA15A0"
     },
     {
-      "id": "n78",
+      "id": "n108",
       "name": "Mesh CSG (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A0-CADC-4F2D-A0A0-7E60CADA15A0"
     },
     {
-      "id": "n79",
+      "id": "n109",
       "name": "Mesh Decimate (Auto)",
       "subcategory": "Lab",
       "guid": "F2D000D1-A070-4F2D-A0D1-7E60A07000D1"
     },
     {
-      "id": "n80",
+      "id": "n110",
       "name": "Mesh Decimate (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A5-CADC-4F2D-A0A5-7E60CADA15A0"
     },
     {
-      "id": "n81",
+      "id": "n111",
       "name": "Mesh Decimate (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C0-6E06-4F2D-A0C0-7E60660C0AC1"
     },
     {
-      "id": "n82",
+      "id": "n112",
       "name": "Mesh Decompose (CoACD)",
       "subcategory": "Lab",
       "guid": "F2D000B0-C0AC-4F2D-A0B0-7E60C0AC1DB0"
     },
     {
-      "id": "n83",
+      "id": "n113",
       "name": "Mesh Fill Holes (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C7-6E06-4F2D-A0C7-7E60660C0AC1"
     },
     {
-      "id": "n84",
+      "id": "n114",
       "name": "Mesh Remesh (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C3-6E06-4F2D-A0C3-7E60660C0AC1"
     },
     {
-      "id": "n85",
+      "id": "n115",
       "name": "Mesh Repair (Auto)",
       "subcategory": "Lab",
       "guid": "F2D000D0-A070-4F2D-A0D0-7E60A07000D0"
     },
     {
-      "id": "n86",
+      "id": "n116",
       "name": "Mesh Repair (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A4-CADC-4F2D-A0A4-7E60CADA15A0"
     },
     {
-      "id": "n87",
+      "id": "n117",
       "name": "Mesh Repair (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C1-6E06-4F2D-A0C1-7E60660C0AC1"
     },
     {
-      "id": "n88",
+      "id": "n118",
       "name": "Mesh Segmentation (CGAL SDF)",
       "subcategory": "Lab",
       "guid": "F2D000A6-CADC-4F2D-A0A6-7E60CADA15A0"
     },
     {
-      "id": "n89",
+      "id": "n119",
       "name": "Mesh Segmentation by Angle (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A7-CADC-4F2D-A0A7-7E60CADA15A0"
     },
     {
-      "id": "n90",
+      "id": "n120",
       "name": "Mixed-Size Block Pack",
       "subcategory": "Lab",
       "guid": "F2D0BC17-1234-4F2D-A0B0-7E60CADA15B7"
     },
     {
-      "id": "n91",
+      "id": "n121",
       "name": "OBB (Auto)",
       "subcategory": "Lab",
       "guid": "F2D000D2-A070-4F2D-A0D2-7E60A07000D2"
     },
     {
-      "id": "n92",
+      "id": "n122",
       "name": "OBB (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C2-6E06-4F2D-A0C2-7E60660C0AC1"
     },
     {
-      "id": "n93",
+      "id": "n123",
       "name": "Pareto Front Inspector",
       "subcategory": "Lab",
       "guid": "F2D0BC10-1234-4F2D-A0B0-7E60CADA15B0"
     },
     {
-      "id": "n94",
+      "id": "n124",
       "name": "Polygon Partition (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A2-CADC-4F2D-A0A2-7E60CADA15A0"
     },
     {
-      "id": "n95",
+      "id": "n125",
       "name": "Straight Skeleton (CGAL)",
       "subcategory": "Lab",
       "guid": "F2D000A1-CADC-4F2D-A0A1-7E60CADA15A0"
     },
     {
-      "id": "n96",
+      "id": "n126",
       "name": "Tetrahedralize (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C4-6E06-4F2D-A0C4-7E60660C0AC1"
     },
     {
-      "id": "n97",
+      "id": "n127",
       "name": "VTU Export",
       "subcategory": "Lab",
       "guid": "F2D0BC13-1234-4F2D-A0B0-7E60CADA15B3"
     },
     {
-      "id": "n98",
+      "id": "n128",
       "name": "Voronoi Block Partition (Geogram)",
       "subcategory": "Lab",
       "guid": "F2D000C6-6E06-4F2D-A0C6-7E60660C0AC1"
     },
     {
-      "id": "n99",
+      "id": "n129",
       "name": "Ashlar Pack",
       "subcategory": "Masonry",
       "guid": "F1A2B3C4-D5E6-4789-9ABC-DEF012345678"
     },
     {
-      "id": "n100",
+      "id": "n130",
       "name": "Ashlar Pack Options",
       "subcategory": "Masonry",
       "guid": "B3C4D5E6-F7A8-49AB-CDEF-012345678901"
     },
     {
-      "id": "n101",
+      "id": "n131",
       "name": "Assembly Preview",
       "subcategory": "Masonry",
       "guid": "12345678-9ABC-DEF0-1234-56789ABCDEF0"
     },
     {
-      "id": "n102",
+      "id": "n132",
       "name": "Auto Interfaces",
       "subcategory": "Masonry",
       "guid": "CADBECFD-AEBF-4012-3456-789012345678"
     },
     {
-      "id": "n103",
+      "id": "n133",
       "name": "Best Fit Pack",
       "subcategory": "Masonry",
       "guid": "01234567-89AB-CDEF-0123-456789ABCDEF"
     },
     {
-      "id": "n104",
+      "id": "n134",
       "name": "Block Build Order",
       "subcategory": "Masonry",
       "guid": "3456789A-BCDE-F012-3456-789ABCDEF012"
     },
     {
-      "id": "n105",
+      "id": "n135",
       "name": "Block Graph Coloring",
       "subcategory": "Masonry",
       "guid": "F2D000B0-CADC-4F2D-A0B0-7E60CADA15A0"
     },
     {
-      "id": "n106",
+      "id": "n136",
       "name": "Block Ground Transforms",
       "subcategory": "Masonry",
       "guid": "23456789-ABCD-EF01-2345-6789ABCDEF01"
     },
     {
-      "id": "n107",
+      "id": "n137",
       "name": "Block Pack (Tree)",
       "subcategory": "Masonry",
       "guid": "C2D3E4F5-3001-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n108",
+      "id": "n138",
       "name": "Block Size Distribution",
       "subcategory": "Masonry",
       "guid": "EF012345-6789-ABCD-EF01-23456789ABCD"
     },
     {
-      "id": "n109",
+      "id": "n139",
       "name": "Build Sequence JSON",
       "subcategory": "Masonry",
       "guid": "6789ABCD-EF01-2345-6789-ABCDEF012345"
     },
     {
-      "id": "n110",
+      "id": "n140",
       "name": "Build Step Preview",
       "subcategory": "Masonry",
       "guid": "56789ABC-DEF0-1234-5678-9ABCDEF01234"
     },
     {
-      "id": "n111",
+      "id": "n141",
       "name": "Build-Order Stability Stream",
       "subcategory": "Masonry",
       "guid": "F2D000B3-CADC-4F2D-A0B3-7E60CADA15A0"
     },
     {
-      "id": "n112",
+      "id": "n142",
       "name": "Cut Validation",
       "subcategory": "Masonry",
       "guid": "DEF01234-5678-9ABC-DEF0-123456789ABC"
     },
     {
-      "id": "n113",
+      "id": "n143",
       "name": "Fragment Merger",
       "subcategory": "Masonry",
       "guid": "F0123456-789A-BCDE-F012-3456789ABCDE"
     },
     {
-      "id": "n114",
+      "id": "n144",
       "name": "IFC Export (Building)",
       "subcategory": "Masonry",
       "guid": "D5F10018-5C7B-4E2D-9A41-8B36F1D07C54"
     },
     {
-      "id": "n115",
+      "id": "n145",
       "name": "IFC Export (Stone Assembly)",
       "subcategory": "Masonry",
       "guid": "D5F10017-3E5A-4B9C-8D26-1F70A4C85E93"
     },
     {
-      "id": "n116",
+      "id": "n146",
       "name": "Masonry Assembly",
       "subcategory": "Masonry",
       "guid": "E5A9B2C3-3D4E-4F60-AB2C-4D5E6F7A8B9C"
     },
     {
-      "id": "n117",
+      "id": "n147",
       "name": "Masonry Block",
       "subcategory": "Masonry",
       "guid": "D4F8A1B2-2C3D-4E5F-9A1B-3C4D5E6F7A8B"
     },
     {
-      "id": "n118",
+      "id": "n148",
       "name": "Masonry Stability (RBE)",
       "subcategory": "Masonry",
       "guid": "F6BAC3D4-4E5F-4071-BC3D-5E6F7A8B9CAD"
     },
     {
-      "id": "n119",
+      "id": "n149",
       "name": "Masonry Stability Check",
       "subcategory": "Masonry",
       "guid": "D5F10015-2B43-4E8A-A1C7-9D0F4B6E2A91"
     },
     {
-      "id": "n120",
+      "id": "n150",
       "name": "Match Block Transform",
       "subcategory": "Masonry",
       "guid": "89ABCDEF-0123-4567-89AB-CDEF01234567"
     },
     {
-      "id": "n121",
+      "id": "n151",
       "name": "Mesh Planar Polygon Extractor",
       "subcategory": "Masonry",
       "guid": "F2D000B2-CADC-4F2D-A0B2-7E60CADA15A0"
     },
     {
-      "id": "n122",
+      "id": "n152",
       "name": "Mesh Quality Report",
       "subcategory": "Masonry",
       "guid": "9ABCDEF0-1234-5678-9ABC-DEF012345678"
     },
     {
-      "id": "n123",
+      "id": "n153",
       "name": "Pack Diagnostics",
       "subcategory": "Masonry",
       "guid": "C4D5E6F7-A8B9-4ABC-DEF0-123456789012"
     },
     {
-      "id": "n124",
+      "id": "n154",
       "name": "Pack Preview",
       "subcategory": "Masonry",
       "guid": "D5E6F7A8-B9CA-4BCD-EF01-234567890123"
     },
     {
-      "id": "n125",
+      "id": "n155",
       "name": "Pick Place Frames",
       "subcategory": "Masonry",
       "guid": "456789AB-CDEF-0123-4567-89ABCDEF0123"
     },
     {
-      "id": "n126",
+      "id": "n156",
       "name": "Polygon Sanitize",
       "subcategory": "Masonry",
       "guid": "F2D000B1-CADC-4F2D-A0B1-7E60CADA15A0"
     },
     {
-      "id": "n127",
+      "id": "n157",
       "name": "Polygonal Masonry Sequence",
       "subcategory": "Masonry",
       "guid": "B4E07A3C-7F4D-4E5B-9C71-0EAF21C9B6A1"
     },
     {
-      "id": "n128",
+      "id": "n158",
       "name": "Polygonal Masonry Sequence 3D",
       "subcategory": "Masonry",
       "guid": "C5F18B4D-8A6F-4E72-AC83-1FBD32D8C7B2"
     },
     {
-      "id": "n129",
+      "id": "n159",
       "name": "Polygonal Wall (Generator)",
       "subcategory": "Masonry",
       "guid": "D5F10014-7A11-4C0E-9B22-3F6A1E2C4D80"
     },
     {
-      "id": "n130",
+      "id": "n160",
       "name": "Robust Auto Interfaces",
       "subcategory": "Masonry",
       "guid": "F2D000B4-CADC-4F2D-A0B4-7E60CADA15A0"
     },
     {
-      "id": "n131",
+      "id": "n161",
       "name": "Rubble Wall Settle",
       "subcategory": "Masonry",
       "guid": "6514A1BB-FE82-4919-9419-141A07D2358A"
     },
     {
-      "id": "n132",
+      "id": "n162",
       "name": "Stone-Cell Match (Λ)",
       "subcategory": "Masonry",
       "guid": "D5F10016-6C2D-4F1B-B3E8-7A95D0C41F62"
     },
     {
-      "id": "n133",
+      "id": "n163",
       "name": "Wall Frame",
       "subcategory": "Masonry",
       "guid": "A2B3C4D5-E6F7-489A-BCDE-F01234567890"
     },
     {
-      "id": "n134",
+      "id": "n164",
       "name": "Bench From Mesh",
       "subcategory": "Mesh",
       "guid": "D3E4F5A6-3002-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n135",
+      "id": "n165",
       "name": "Clip Boxes By Mesh",
       "subcategory": "Mesh",
       "guid": "D3E4F5A6-3003-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n136",
+      "id": "n166",
       "name": "Close Holes",
       "subcategory": "Mesh",
       "guid": "F2D05A02-1A2B-4C3D-9E4F-5A6B7C8D9E02"
     },
     {
-      "id": "n137",
+      "id": "n167",
       "name": "Cloud ICP",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3201-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n138",
+      "id": "n168",
       "name": "Estimate Cloud Normals",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3203-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n139",
+      "id": "n169",
       "name": "Georeference",
       "subcategory": "Mesh",
       "guid": "B1C2D3A4-1112-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n140",
+      "id": "n170",
       "name": "Georeference (Align by Points)",
       "subcategory": "Mesh",
       "guid": "F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06"
     },
     {
-      "id": "n141",
+      "id": "n171",
       "name": "Load Cloud",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3210-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n142",
+      "id": "n172",
       "name": "Load E57 Cloud",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3230-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n143",
+      "id": "n173",
       "name": "Load Metashape Dense Cloud",
       "subcategory": "Mesh",
       "guid": "D5F10040-ED9E-4ED9-A040-ED9EED9E0040"
     },
     {
-      "id": "n144",
+      "id": "n174",
       "name": "Load Photo Set",
       "subcategory": "Mesh",
       "guid": "D5F10041-ED9E-4ED9-A041-ED9EED9E0041"
     },
     {
-      "id": "n145",
+      "id": "n175",
       "name": "Marker Registration",
       "subcategory": "Mesh",
       "guid": "B1C2D3A4-1111-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n146",
+      "id": "n176",
       "name": "Mesh AABB",
       "subcategory": "Mesh",
       "guid": "ABCDEF01-2345-6789-ABCD-EF0123456789"
     },
     {
-      "id": "n147",
+      "id": "n177",
       "name": "Mesh Diagnostics",
       "subcategory": "Mesh",
       "guid": "AB12C005-1A2B-4C3D-9E4F-5A6B7C8D9E05"
     },
     {
-      "id": "n148",
+      "id": "n178",
       "name": "Mesh PCA",
       "subcategory": "Mesh",
       "guid": "BCDEF012-3456-789A-BCDE-F0123456789A"
     },
     {
-      "id": "n149",
+      "id": "n179",
       "name": "Mesh Repair",
       "subcategory": "Mesh",
       "guid": "AB12C00A-1A2B-4C3D-9E4F-5A6B7C8D9E0A"
     },
     {
-      "id": "n150",
+      "id": "n180",
       "name": "Move to Origin",
       "subcategory": "Mesh",
       "guid": "F2D05A03-1A2B-4C3D-9E4F-5A6B7C8D9E03"
     },
     {
-      "id": "n151",
+      "id": "n181",
       "name": "Read LAS Cloud",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3220-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n152",
+      "id": "n182",
       "name": "Read Metashape Project",
       "subcategory": "Mesh",
       "guid": "D5F10042-ED9E-4ED9-A042-ED9EED9E0042"
     },
     {
-      "id": "n153",
+      "id": "n183",
       "name": "Sanitize Mesh",
       "subcategory": "Mesh",
       "guid": "F2D05A01-1A2B-4C3D-9E4F-5A6B7C8D9E01"
     },
     {
-      "id": "n154",
+      "id": "n184",
       "name": "Scan Read",
       "subcategory": "Mesh",
       "guid": "789ABCDE-F012-3456-789A-BCDEF0123456"
     },
     {
-      "id": "n155",
+      "id": "n185",
       "name": "Scan Reconstruct",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3101-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n156",
+      "id": "n186",
       "name": "Scan Scale Calibrate",
       "subcategory": "Mesh",
       "guid": "B1C2D3A4-2001-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n157",
+      "id": "n187",
       "name": "Stone Prep (Scan)",
       "subcategory": "Mesh",
       "guid": "B1C2D3A4-2002-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n158",
+      "id": "n188",
       "name": "Voxel Downsample",
       "subcategory": "Mesh",
       "guid": "E4F5A6B7-3202-4F5E-A6B7-C8D9E0F12345"
     },
     {
-      "id": "n159",
-      "name": "Algebraic Convex Polyhedron",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5"
-    },
-    {
-      "id": "n160",
-      "name": "Bed Block Layout",
-      "subcategory": "Quarry",
-      "guid": "A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06"
-    },
-    {
-      "id": "n161",
-      "name": "BenchBlock Cut → Slabs",
-      "subcategory": "Quarry",
-      "guid": "F7A13002-0001-4F2D-A0B0-7E60CADA17C2"
-    },
-    {
-      "id": "n162",
-      "name": "Billet Cutter",
-      "subcategory": "Quarry",
-      "guid": "F7A14002-0001-4F2D-A0B0-7E60CADA17D2"
-    },
-    {
-      "id": "n163",
-      "name": "Block Candidate Generator",
-      "subcategory": "Quarry",
-      "guid": "F7A15003-0001-4F2D-A0B0-7E60CADA17E3"
-    },
-    {
-      "id": "n164",
-      "name": "Block Graph",
-      "subcategory": "Quarry",
-      "guid": "F7A15002-0001-4F2D-A0B0-7E60CADA17E2"
-    },
-    {
-      "id": "n165",
-      "name": "BlockCutOpt AMRR Plan",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3"
-    },
-    {
-      "id": "n166",
-      "name": "BlockCutOpt Extract Grid",
-      "subcategory": "Quarry",
-      "guid": "F7A13001-0001-4F2D-A0B0-7E60CADA17C1"
-    },
-    {
-      "id": "n167",
-      "name": "BlockCutOpt Load Fractures",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1"
-    },
-    {
-      "id": "n168",
-      "name": "BlockCutOpt Omni Solve",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4"
-    },
-    {
-      "id": "n169",
-      "name": "BlockCutOpt Solve",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2"
-    },
-    {
-      "id": "n170",
-      "name": "Box To Mesh",
-      "subcategory": "Quarry",
-      "guid": "D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345"
-    },
-    {
-      "id": "n171",
+      "id": "n189",
       "name": "Clean Scan Mesh",
       "subcategory": "Quarry",
       "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE03"
     },
     {
-      "id": "n172",
+      "id": "n190",
       "name": "Construct GPR Preset",
       "subcategory": "Quarry",
       "guid": "A7E0B0F6-0C0F-4A16-9E3D-0FACE0FACE07"
     },
     {
-      "id": "n173",
-      "name": "Convex Hull Slab",
-      "subcategory": "Quarry",
-      "guid": "ECFDAEBF-CADB-4234-5678-9012345678AB"
-    },
-    {
-      "id": "n174",
-      "name": "Crack Graph (manual)",
-      "subcategory": "Quarry",
-      "guid": "F7A15001-0001-4F2D-A0B0-7E60CADA17E1"
-    },
-    {
-      "id": "n175",
+      "id": "n191",
       "name": "Discontinuity Ingest",
       "subcategory": "Quarry",
       "guid": "D5F10049-ED9E-4ED9-A049-ED9EED9E0049"
     },
     {
-      "id": "n176",
+      "id": "n192",
       "name": "Discontinuity Sets (Async)",
       "subcategory": "Quarry",
       "guid": "D5F10048-ED9E-4ED9-A048-ED9EED9E0048"
     },
     {
-      "id": "n177",
+      "id": "n193",
       "name": "Discontinuity Sets (Cloud)",
       "subcategory": "Quarry",
       "guid": "D5F10047-ED9E-4ED9-A047-ED9EED9E0047"
     },
     {
-      "id": "n178",
+      "id": "n194",
       "name": "Extraction Order Optimizer",
       "subcategory": "Quarry",
       "guid": "F7A11003-0001-4F2D-A0B0-7E60CADA17A3"
     },
     {
-      "id": "n179",
-      "name": "Fracture Block Pack",
-      "subcategory": "Quarry",
-      "guid": "A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04"
-    },
-    {
-      "id": "n180",
-      "name": "Fracture Bounded Slabs",
-      "subcategory": "Quarry",
-      "guid": "A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05"
-    },
-    {
-      "id": "n181",
+      "id": "n195",
       "name": "GPR Bedrock Surface",
       "subcategory": "Quarry",
       "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE04"
     },
     {
-      "id": "n182",
+      "id": "n196",
       "name": "GPR Fracture Extract",
       "subcategory": "Quarry",
       "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE02"
     },
     {
-      "id": "n183",
+      "id": "n197",
       "name": "GPR Fracture Surfaces 3D",
       "subcategory": "Quarry",
       "guid": "A7E0B0F2-0C0F-4A16-9E3D-0FACE0FACE03"
     },
     {
-      "id": "n184",
+      "id": "n198",
       "name": "GPR Fractures on Mesh",
       "subcategory": "Quarry",
       "guid": "F2D05A05-1A2B-4C3D-9E4F-5A6B7C8D9E05"
     },
     {
-      "id": "n185",
+      "id": "n199",
       "name": "GPR Radargram Reader",
       "subcategory": "Quarry",
       "guid": "F7A12001-0001-4F2D-A0B0-7E60CADA17B1"
     },
     {
-      "id": "n186",
+      "id": "n200",
       "name": "GPR Survey Grid",
       "subcategory": "Quarry",
       "guid": "A7E0B0F0-0C0F-4A16-9E3D-0FACE0FACE01"
     },
     {
-      "id": "n187",
+      "id": "n201",
       "name": "GeoFractNet Inference",
       "subcategory": "Quarry",
       "guid": "F7A12002-0001-4F2D-A0B0-7E60CADA17B2"
     },
     {
-      "id": "n188",
-      "name": "Heterogeneous Quarry Extraction",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9"
-    },
-    {
-      "id": "n189",
+      "id": "n202",
       "name": "Joint Set",
       "subcategory": "Quarry",
       "guid": "ECFDAEBF-CBDC-4345-6789-012345678BCD"
     },
     {
-      "id": "n190",
+      "id": "n203",
       "name": "Joint Sets to DFN",
       "subcategory": "Quarry",
       "guid": "D5F1004B-ED9E-4ED9-A04B-ED9EED9E004B"
     },
     {
-      "id": "n191",
-      "name": "Mesh Shell Split",
-      "subcategory": "Quarry",
-      "guid": "DBECFDAE-BFCA-4123-4567-89012345678A"
-    },
-    {
-      "id": "n192",
-      "name": "Mesh → Fracture Planes",
-      "subcategory": "Quarry",
-      "guid": "F7A13003-0001-4F2D-A0B0-7E60CADA17C3"
-    },
-    {
-      "id": "n193",
-      "name": "Mixed-Size Block Pack 3D",
-      "subcategory": "Quarry",
-      "guid": "F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8"
-    },
-    {
-      "id": "n194",
+      "id": "n204",
       "name": "Overburden To Rock Face",
       "subcategory": "Quarry",
       "guid": "A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE01"
     },
     {
-      "id": "n195",
+      "id": "n205",
       "name": "Photo Detect → PLY",
       "subcategory": "Quarry",
       "guid": "F2D0BC14-1234-4F2D-A0B0-7E60CADA15B4"
     },
     {
-      "id": "n196",
+      "id": "n206",
       "name": "Quarry DFN",
       "subcategory": "Quarry",
       "guid": "FDAEBFCA-DCED-4456-789A-CDEF01234567"
     },
     {
-      "id": "n197",
-      "name": "Quarry Decompose",
-      "subcategory": "Quarry",
-      "guid": "B9CADBEC-FDAE-4F01-2345-678901234567"
-    },
-    {
-      "id": "n198",
-      "name": "Quarry Decompose By CoACD",
-      "subcategory": "Quarry",
-      "guid": "F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0"
-    },
-    {
-      "id": "n199",
-      "name": "Quarry Decompose By Mesh (CGAL)",
-      "subcategory": "Quarry",
-      "guid": "F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0"
-    },
-    {
-      "id": "n200",
-      "name": "Quarry Decompose By Tet",
-      "subcategory": "Quarry",
-      "guid": "F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0"
-    },
-    {
-      "id": "n201",
-      "name": "Quarry Decompose By Voronoi",
-      "subcategory": "Quarry",
-      "guid": "F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0"
-    },
-    {
-      "id": "n202",
+      "id": "n207",
       "name": "Quarry Inventory",
       "subcategory": "Quarry",
       "guid": "F7A11001-0001-4F2D-A0B0-7E60CADA17A1"
     },
     {
-      "id": "n203",
+      "id": "n208",
       "name": "Quarry Report",
       "subcategory": "Quarry",
       "guid": "F7A11005-0001-4F2D-A0B0-7E60CADA17A5"
     },
     {
-      "id": "n204",
+      "id": "n209",
       "name": "Quarry Yield Estimator",
       "subcategory": "Quarry",
       "guid": "F7A11002-0001-4F2D-A0B0-7E60CADA17A2"
     },
     {
-      "id": "n205",
+      "id": "n210",
       "name": "Saw-Bed Schedule",
       "subcategory": "Quarry",
       "guid": "F7A11004-0001-4F2D-A0B0-7E60CADA17A4"
     },
     {
-      "id": "n206",
+      "id": "n211",
       "name": "Scan to Block Inventory",
       "subcategory": "Quarry",
       "guid": "F2D0BC20-1A2B-4F2D-A0B0-7E60CADA20A0"
     },
     {
-      "id": "n207",
-      "name": "Slab Yield Optimizer",
-      "subcategory": "Quarry",
-      "guid": "F7A14001-0001-4F2D-A0B0-7E60CADA17D1"
-    },
-    {
-      "id": "n208",
+      "id": "n212",
       "name": "Stereonet + Block Size",
       "subcategory": "Quarry",
       "guid": "D5F1004A-ED9E-4ED9-A04A-ED9EED9E004A"
     },
     {
-      "id": "n209",
+      "id": "n213",
       "name": "Stochastic DFN (Baecher)",
       "subcategory": "Quarry",
       "guid": "D5F1004C-ED9E-4ED9-A04C-ED9EED9E004C"
     },
     {
-      "id": "n210",
+      "id": "n214",
       "name": "Synthetic TN Granite",
       "subcategory": "Quarry",
       "guid": "F2D0BC16-1234-4F2D-A0B0-7E60CADA15B6"
     },
     {
-      "id": "n211",
+      "id": "n215",
       "name": "Packing Plan Report",
       "subcategory": "Reports",
       "guid": "AB12C008-1A2B-4C3D-9E4F-5A6B7C8D9E08"
     },
     {
-      "id": "n212",
+      "id": "n216",
       "name": "Packing Report",
       "subcategory": "Reports",
       "guid": "AB12C004-1A2B-4C3D-9E4F-5A6B7C8D9E04"
     },
     {
-      "id": "n213",
+      "id": "n217",
       "name": "Report / Export",
       "subcategory": "Reports",
       "guid": "AB12C010-1A2B-4C3D-9E4F-5A6B7C8D9E10"
     },
     {
-      "id": "n214",
+      "id": "n218",
       "name": "Carving Stages",
       "subcategory": "Sculpt",
       "guid": "F2D06A03-1A2B-4C3D-9E4F-5A6B7C8D9E03"
     },
     {
-      "id": "n215",
+      "id": "n219",
       "name": "Enlarge Sculpture",
       "subcategory": "Sculpt",
       "guid": "F2D06A01-1A2B-4C3D-9E4F-5A6B7C8D9E01"
     },
     {
-      "id": "n216",
+      "id": "n220",
       "name": "Fit In Block",
       "subcategory": "Sculpt",
       "guid": "F2D06A02-1A2B-4C3D-9E4F-5A6B7C8D9E02"
-    },
-    {
-      "id": "n217",
-      "name": "Slab Cut By Fractures",
-      "subcategory": "Slab",
-      "guid": "C2B3D4E5-6F7A-489B-AC1D-2E3F4A5B6C7D"
-    },
-    {
-      "id": "n218",
-      "name": "Slab Cut By Tool Mesh (CGAL)",
-      "subcategory": "Slab",
-      "guid": "F2D000C0-CADC-4F2D-A0C0-7E60CADA15A0"
-    },
-    {
-      "id": "n219",
-      "name": "Slab From Mesh",
-      "subcategory": "Slab",
-      "guid": "B1A2C3D4-5E6F-4789-9ABC-1D2E3F4A5B6C"
-    },
-    {
-      "id": "n220",
-      "name": "Vertical Fracture Planes From Curves",
-      "subcategory": "Slab",
-      "guid": "F2D05A09-1A2B-4C3D-9E4F-5A6B7C8D9E09"
     },
     {
       "id": "n221",

@@ -48,7 +48,7 @@ public sealed class CoacdQuarryDecomposeComponent : FrahanComponentBase
             "grid. Use when the goal is approximate convex pieces for " +
             "downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022). " +
             "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     {
     }
 
@@ -195,7 +195,7 @@ public sealed class GeogramTetQuarryDecomposeComponent : FrahanComponentBase
             "(off by default — TetGen is non-commercial-use). When " +
             "off, the component surfaces a clear error and produces no " +
             "blocks; use Quarry Decompose By CoACD instead. Implements Geogram tetrahedralisation (Lévy, Geogram v1.9.9).",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     {
     }
 
@@ -384,7 +384,7 @@ public sealed class VoronoiQuarryDecomposeComponent : FrahanComponentBase
             "for the final block geometry. Realistic stone-fracturing " +
             "look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982). " +
             "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-            "Frahan", "Quarry")
+            "Frahan", "Block Cutting")
     {
     }
 

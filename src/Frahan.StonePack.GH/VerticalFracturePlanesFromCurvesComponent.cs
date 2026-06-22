@@ -33,7 +33,7 @@ public sealed class VerticalFracturePlanesFromCurvesComponent : FrahanComponentB
             "Loader on a real fracture shapefile) into VERTICAL cutting planes " +
             "for Slab Cut By Fractures. Per Segment = a plane per polyline segment " +
             "(faithful to wiggly traces); off = one best-fit vertical plane per curve.",
-            "Frahan", "Slab")
+            "Frahan", "Block Cutting")
     {
     }
 

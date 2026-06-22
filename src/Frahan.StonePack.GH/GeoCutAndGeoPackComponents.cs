@@ -48,7 +48,7 @@ namespace Frahan.GH.Quarry
                 "Pick the best SlabPlan (axis + thickness) for one block. " +
                 "Enumerates three axis-aligned candidates at the given " +
                 "thickness; score = yield - conflictPenalty * crackConflicts.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -174,7 +174,7 @@ namespace Frahan.GH.Quarry
                 "Billet Cutter", "Billets",
                 "Sub-divide slabs into billets along an axis at a target " +
                 "billet width. Kerf-aware. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -251,7 +251,7 @@ namespace Frahan.GH.Quarry
                 "Crack Graph (manual)", "CrkGraph",
                 "Wrap a user-supplied list of FracturePlanes (and optional " +
                 "confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -323,7 +323,7 @@ namespace Frahan.GH.Quarry
                 "Partition a bench (Box or Mesh) into BlockCells using a " +
                 "CrackGraph. Each cell is a convex Slab; small cells are " +
                 "dropped under Min Cell Volume. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
@@ -391,7 +391,7 @@ namespace Frahan.GH.Quarry
                 "Emit one BlockCandidate per BlockCell using the cell's AABB " +
                 "as the BenchBlock footprint. Also returns a QuarryInventory " +
                 "ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block Cutting")
         { }
 
         public override Guid ComponentGuid =>
