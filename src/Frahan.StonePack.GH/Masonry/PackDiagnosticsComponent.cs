@@ -38,7 +38,7 @@ namespace Frahan.GH.Masonry
         public override Guid ComponentGuid =>
             new Guid("C4D5E6F7-A8B9-4ABC-DEF0-123456789012");
 
-        public override GH_Exposure Exposure => GH_Exposure.secondary;
+        public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
         protected override Bitmap Icon => IconProvider.Load("PackDiagnostics.png");
 

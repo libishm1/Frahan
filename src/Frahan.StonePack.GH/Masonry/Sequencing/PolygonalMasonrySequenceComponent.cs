@@ -51,6 +51,8 @@ namespace Frahan.GH.Masonry.Sequencing
         {
         }
 
+        public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
         public override Guid ComponentGuid =>
             new Guid("B4E07A3C-7F4D-4E5B-9C71-0EAF21C9B6A1");
 

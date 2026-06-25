@@ -15,12 +15,17 @@ if (-not (Test-Path $bin)) { Write-Error "Build output not found: $bin. Build th
 if (-not (Test-Path $plugin)) { Write-Error "Staging folder not found: $plugin"; exit 1 }
 
 # The managed assemblies this build produces (the only files that change on a dev build).
+# PDB files are included so Visual Studio breakpoints bind when attaching to Rhino.
 $names = @(
     "Frahan.StonePack.gha",
     "Frahan.StonePack.dll",
+    "Frahan.StonePack.pdb",
     "Frahan.StonePack.Core.dll",
+    "Frahan.StonePack.Core.pdb",
     "Frahan.EdgeMatching.Core.dll",
-    "Frahan.Kintsugi.Port.dll"
+    "Frahan.EdgeMatching.Core.pdb",
+    "Frahan.Kintsugi.Port.dll",
+    "Frahan.Kintsugi.Port.pdb"
 )
 
 Write-Host "Staging fresh build -> $plugin"
