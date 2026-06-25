@@ -1,27 +1,27 @@
 # Frahan StonePack - component catalog (inputs / outputs)
 
-Auto-generated from source by `extract_components.py`. 230 components on the `Frahan` ribbon tab.
+Auto-generated from source by `extract_components.py`. 240 components on the `Frahan` ribbon tab.
 Each entry lists its GUID, algorithm citation, inputs, outputs, and related components.
 Source of truth = the component source; regenerate after any component change.
 
 ## Subcategories
 
-- [2D Packing](#2d-packing) (13)
+- [2D Packing](#2d-packing) (14)
 - [3D Packing](#3d-packing) (9)
 - [Analysis](#analysis) (3)
-- [EdgeMatch](#edgematch) (14)
+- [EdgeMatch](#edgematch) (15)
 - [Fabricate](#fabricate) (11)
 - [Fracture](#fracture) (10)
 - [Ingest](#ingest) (5)
 - [Kintsugi](#kintsugi) (7)
 - [Lab](#lab) (26)
-- [Masonry](#masonry) (35)
+- [Masonry](#masonry) (38)
 - [Mesh](#mesh) (25)
-- [Quarry](#quarry) (48)
+- [Quarry](#quarry) (52)
 - [Reports](#reports) (3)
 - [Sculpt](#sculpt) (3)
 - [Slab](#slab) (4)
-- [Surface Packing](#surface-packing) (4)
+- [Surface Packing](#surface-packing) (5)
 - [Trencadis](#trencadis) (5)
 - [Voussoir](#voussoir) (5)
 
@@ -222,6 +222,43 @@ Related:
 | Total Parts (`T`) | Integer | item | Total number of curves emitted. |
 | Report (`Rep`) | Text | item | One-line summary of the read. |
 
+### Floor Tile (Boundary-Trimmed)  (`FloorTile`)
+
+- GUID: `D5F1001A-7C3B-4E29-B1A6-0F2D9E4C8B57`  |  icon: `FloorTile.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/TwoD/FloorTileComponent.cs`
+- Algorithm: **Floor setting-out: balanced/centred layout and the ANSI half-tile no-sliver rule** - ANSI A108.02 4.3.2 (centre and balance tile, no cuts smaller than half size); CTEF/TCNA tile layout practice
+- Divide a floor boundary into standard stone tiles on a module grid (tile face + grout joint) by  straight full-span (guillotine) lines, trimming the perimeter tiles to the boundary. Choose the  start: a corner, a picked point, or a centred/symmetric layout that balances the border cuts  equally on opposite walls. The ANSI half-tile no-sliver rule is enforced by auto-centring (the  grid shifts by half a module to split a thin sliver into two larger border cuts). Each tile  carries a GRAIN DIRECTION, output both as a direction line (the feature) and as a texture-mapping  frame: feed the tile meshes to a Custom Preview Material with a scanned stone image and the grain  follows. Set Continuous for a slip-match (the floor reads as one slab). Deterministic.
+
+| in | type | access | description |
+|---|---|---|---|
+| Boundary (`B`) | Curve | item | Closed planar floor outline curve (the room edge), in a WorldXY-parallel plane. |
+| Holes (`H`) | Curve | list | Optional closed obstacle/hole curves inside the floor (columns, openings); tiles are trimmed around them. |
+| TileX (`Lx`) | Number | item | Tile face width (model units). |
+| TileY (`Ly`) | Number | item | Tile face height (model units). |
+| Joint (`Gr`) | Number | item | Grout joint width; module pitch = tile + joint. Stone 2-6, rectified 3. |
+| Start (`St`) | Integer | item | Start mode: 0 = corner (full tile at the boundary min corner), 1 = picked point (Anchor),  2 = centred/symmetric (equal border cuts on opposite walls). |
+| Anchor (`Pt`) | Point | item | Lattice origin for Start = 1 (picked point); the corner of one full tile. |
+| Grain (`Ga`) | Number | item | Grain/vein direction in DEGREES (the grain feature; also rotates the texture mapping). |
+| GrainField (`Gf`) | Integer | item | Grain pattern: 0 = monolithic (all one way), 1 = quarter-turn (checkerboard 0/90), 2 = random. |
+| Sliver (`Sf`) | Number | item | No-sliver acceptance: perimeter cuts must be >= this fraction of the tile (0.5 ANSI, 0.333 fallback). |
+| Match (`Mt`) | Integer | item | Texture continuity: 0 = per-tile (each tile shows the whole image, rotated to its grain),  1 = slip-match (UVs flow across the floor so it reads as one slab), 2 = book-match (adjacent  tiles mirror so the veins meet at the joints). |
+| Stagger (`Off`) | Integer | item | Running-bond row offset: 0 = stack bond, 1 = 1/3 offset, 2 = 1/2 offset. Large-format tiles  (a side > 380) auto-cap at 1/3 to control lippage. |
+| Image (`Img`) | Text | item | Optional stone-texture image file path. When supplied, the floor is DRAWN on screen with the  image mapped to the grain (no extra wiring); also emitted as Material for Custom Preview / baking. |
+| Rates (`$`) | Number | list | Optional cost rates (defaults kept where omitted). Order: material/m2, overage frac, cut/tile,  set-out stack, set-out matched, lay/m2, lay/tile, large-format/m2, premium[per,slip,book],  matchLabour[per,slip,book]/m2. Drives the Cost/m2 and Costing outputs. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Tiles (`T`) | Curve | list | Trimmed tile boundary polylines (full tiles + cut perimeter tiles). |
+| Direction (`Dir`) | Line | list | Per-tile grain direction line from the tile centre (the grain feature; draw as arrows). |
+| Full (`F`) | Boolean | list | True for a full module tile, false for a cut perimeter tile. |
+| TexMesh (`M`) | Mesh | list | Per-tile mesh carrying grain-aligned texture coordinates. Feed a Custom Preview Material with a  scanned stone image and the texture maps per the grain direction. |
+| MapFrame (`Pl`) | Plane | list | Per-tile texture-mapping plane (origin = tile centre, X rotated by the grain). Use with Rhino's  planar TextureMapping (CreatePlanarMapping + SetTextureMapping) for object-level mapping. |
+| Report (`R`) | Text | item | Tile counts (full/cut), coverage, smallest perimeter cut vs the no-sliver threshold, grain field,  match mode and row offset. |
+| Cost/m2 (`$/m2`) | Number | item | Estimated installed cost per square metre of floor for the current config (material + cutting +  set-out + laying + matching, on the Rates). Illustrative; override Rates with local prices. |
+| Costing (`$R`) | Text | item | Cost report: the material vs operation breakdown and the total $/m2 for the current config, plus a  match sweep (PerTile/Slip/Book at this layout) and a size sweep (re-packed tile-size ladder). |
+
+Related:
+- Frahan > 2D Packing > Sheet Nest (Hole-Aware) - Irregular-part nesting on a sheet; the floor tiler is its regular-grid, boundary-trimmed sibling.
+
 ### Frahan Residual Voids  (`ResVoid`)
 
 - GUID: `AB12C002-1A2B-4C3D-9E4F-5A6B7C8D9E02`  |  icon: `PackMetrics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/ResidualVoidsComponent.cs`
@@ -402,7 +439,7 @@ Related:
 ### Sheet Nest (Hole-Aware)  (`HoleNest`)
 
 - GUID: `D5F10019-8A3C-4D17-B5E2-6C90F2A47D31`  |  icon: `NoFitPolygon.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/TwoD/HoleNestComponent.cs`
-- Algorithm: **Exact No-Fit-Polygon Bottom-Left-Fill with part-in-part-hole nesting** - Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2006). "A New Bottom-Left-Fill Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem." Operations Research 54(3):587-601
+- Algorithm: **No-fit-polygon / inner-fit-polygon via Minkowski sum** - Bennell, J.A. & Oliveira, J.F. (2009). "A tutorial in irregular shape packing problems." J. Oper. Res. Soc. 60(S1):S93-S105
 - Deterministic hole-aware 2D nester: parts are placed on a sheet with defects (holes) by  exact no-fit-polygon bottom-left-fill, and smaller parts are nested INSIDE the holes of  larger placed parts via the inner-fit region. No-fit and inner-fit polygons are built  exactly as Clipper2 Minkowski sums/erosions (Bennell & Oliveira 2009) and placement is  bottom-left-fill (Burke et al. 2006), so layouts are 0-overlap by construction.  Rotations are contact-adaptive: the uniform base set is extended with edge-alignment  angles against the sheet, the latest neighbour, and host holes so parts seat flush.  Returns valid hole-aware layouts where hole-blind nesters fail; an exact rectangle  shelf fast-path accelerates all-rectangle instances. Deterministic: the same inputs  always reproduce the same cut layout.
 
 | in | type | access | description |
@@ -787,7 +824,7 @@ Related:
 ### Block Pair Match 3D  (`BlkMatch3D`)
 
 - GUID: `D5F10008-ED9E-4ED9-A008-ED9EED9E0008`  |  icon: `EdgeMatchSolve.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/BlockPairMatch3DComponent.cs`
-- Algorithm: **Variational Shape Approximation (face partitioning)** - Cohen-Steiner, Alliez, Desbrun 2004 SIGGRAPH; Frahan stub implementation
+- Algorithm: **Phase correlator FFT (3D)** - Classical cross-correlation lag estimation
 - First-cut matcher: VSA segmentation + plane-to-plane mating scored by sampled  Hausdorff distance. The full exhaustive face-pair search is a planned refinement.  For a practically-tested matcher use Stone-Cell Match (Λ)  (ETH1100 Lambda=0.194, card 27_07).  Atomic 3D edge-matching primitive: given two scanned stone meshes,  find the rigid 3D pose where their planar face patches mate.  VsaSegmenter -> face filtering -> per-pair PhaseCorrelator +  ConstrainedIcp3D refinement -> top-N candidates ranked by  patch-pair Hausdorff residual + match-length. Foundational  primitive for the 3D EdgeMatch family (Block Chain, Adaptive  Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]
 
 | in | type | access | description |
@@ -812,7 +849,7 @@ Related:
 ### Cyclopean Recipe Coursing  (`CycRecipe`)
 
 - GUID: `D5F1000C-ED9E-4ED9-A00C-ED9EED9E000C`  |  icon: `EdgeMatchSolve.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/CyclopeanRecipeCoursingComponent.cs`
-- Algorithm: **Cyclopean Cannibalism 8-step recipe** - Clifford and McGee 2017 ACADIA pp. 404-413 + Clifford 2017 The Cannibal's Cookbook (Matter Publishing)
+- Algorithm: **Largest 4-sided inscribed polygon** - Clifford 2017 The Cannibal's Cookbook pp. 118-120 recursive algorithm
 - The bottom-up 3D peer with no 2D analog. Encodes the Clifford- McGee 2017 Cyclopean Cannibalism 8-step recipe verbatim. Inputs:  scanned rubble inventory + wall envelope + variable-thickness  back-plane + course height. Outputs: placed stones with  trapezoid/parallelogram/keystone recipe-step tags + Utah-detail  scribe curves per bed joint + dowel insertion vectors. The 3D  flagship bottom-up component, mirroring cyclopean masonry  principles per Libish 2026-05-31 directive.
 
 | in | type | access | description |
@@ -839,7 +876,7 @@ Related:
 ### EdgeMatch Options  (`EMOpts`)
 
 - GUID: `D5F10003-ED9E-4ED9-A003-ED9EED9E0003`  |  icon: `EdgeMatchOptions.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatchOptionsComponent.cs`
-- Algorithm: **Beam-search assembly solver** - Frahan-original deterministic beam search with state cloning
+- Algorithm: **Agglomerative pair-graph assembly** - Frahan-original minimum-residual spanning tree
 - Bundle the EdgeMatch solver's advanced AssemblyOptions flags  (assembly mode, scale-relative gates, partial sub-segment  matching, overlap resolve, Soft-ICP rim-contact refine, and the  WIP projection bootstrap) into one AssemblyOptions DTO. Wire into  EdgeMatch Solve's optional Opt input. Every input is optional and  defaults to the Core default, so an empty component emits the  default options (unchanged behaviour).
 
 | in | type | access | description |
@@ -1062,7 +1099,7 @@ Related:
 ### Soft ICP 3D  (`SoftICP3D`)
 
 - GUID: `D5F1000E-ED9E-4ED9-A00E-ED9EED9E000E`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/SoftIcp3DComponent.cs`
-- Algorithm: **Soft-ICP / CPD weighted-Kabsch alternation** - Myronenko and Song 2010 Coherent Point Drift; Frahan EM closed-form M-step
+- Algorithm: **Penetration hinge (smooth non-penetration)** - Mesh.IsPointInside inside-test + smooth quadratic hinge per SettleContactComponent / OverlapResolver2D
 - Refine the poses of 3D fragment meshes so their rims come into  CONTACT while their solids do not interpenetrate. EM weighted- Kabsch over CPD soft correspondence + smooth penetration hinge.  The standalone primitive that EdgeMatch Solve / Kintsugi / Trencadis  / Cyclopean Recipe / Voussoir Match all invoke internally; surface  on the canvas to chain into any custom workflow. [Myronenko & Song 2010]
 
 | in | type | access | description |
@@ -1109,6 +1146,30 @@ Related:
 | Unused Stones (`Us`) | Integer | list | Inventory indices not consumed in the assignment. |
 | Total Cost (`Tc`) | Number | item | Sum of per-cell costs across the assignment (Hungarian objective value). |
 | Remarks (`Rm`) | Text | list | Diagnostic notes -- strategy used, cost matrix size, rejected stones, etc. |
+
+### Whole-Side Assemble  (`WSAssemble`)
+
+- GUID: `D5F10021-ED9E-4ED9-A021-ED9EED9E0021`  |  icon: `WholeSideAssemble.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/WholeSideAssembleComponent.cs`
+- Algorithm: **Whole-side corner/side extraction** - Minimum-area bounding rectangle (rotating calipers) corners + flat-border (is_edge) exclusion
+- Reassembles scattered/rotated coplanar parts by matching WHOLE contour  sides (corner-to-corner) and growing best-first from an anchor part.  Outputs placed contours and per-part transforms. 2D (world XY) only.
+
+| in | type | access | description |
+|---|---|---|---|
+| Anchor (`A`) | Curve | item | Anchor part (placed first at its current position; the assembly grows from it). |
+| Parts (`P`) | Curve | list | Closed part contours to reassemble (scattered / rotated, coplanar in world XY). |
+| Fit Gate (`G`) | Number | item | Maximum length-normalized side-fit cost admitted to the search.  Default 2.5 (must exceed the highest TRUE seam cost; too low orphans far parts). |
+| Run (`R`) | Boolean | item | Execute the assembler. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed (`Pl`) | Curve | list | Part contours transformed by their solved placements (anchor included). |
+| Transforms (`X`) | Transform | list | Per-part rigid transform, matching the Placed / Ids order. |
+| Ids (`Id`) | Text | list | Part ids in placement order. |
+| Total Residual (`Tr`) | Number | item | Sum of accepted side-fit costs. |
+| Report (`Rp`) | Text | item | Human-readable solve summary. |
+
+Related:
+- Frahan > EdgeMatch > EdgeMatch Solve - ALTERNATIVE SOLVER: segment/ICP/beam pipeline for frame-anchored Trencadís; 
 
 
 ## Fabricate
@@ -1325,7 +1386,7 @@ Related:
 ### Wire-Saw Toolpath  (`WireSaw`)
 
 - GUID: `D5F10034-ED9E-4ED9-A034-ED9EED9E0034`  |  icon: `StoneCutExport.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/WireSawToolpathAdapterComponent.cs`
-- Algorithm: **Zhang2024RobotDiamondWire** - Zhang Y. et al. 2024 J. Comp. Design and Engineering 11(6) 75-85 DOI 10.1093/jcde/qwae094 -- 6-axis robot + brazed diamond wire end-effector
+- Algorithm: **Moult2018PortableWireBandsaw** - Moult, Weir, Fernando 2018 University of Sydney KUKA + portable diamond-wire bandsaw end-effector
 - Generate a Plane[] toolpath for a robot-mounted diamond-wire saw  to cut stone along a designed curve. Frahan-original component  closing the toolchain gap left by Zhang 2024 + Moult 2018 (neither  has KUKAprc / Robots plugin integration). v1 supports planar cuts;  v1.x adds ruled-surface decomposition + variable wire tension.  Outputs feed directly into KUKAprc / Robots downstream.
 
 | in | type | access | description |
@@ -1697,7 +1758,7 @@ Related:
 ### Frahan Kintsugi  (`Kintsugi`)
 
 - GUID: `F2D00501-2026-4522-B0B0-1ABE15A0CAFE`  |  icon: `KintsugiAssemble.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/KintsugiAssemblyComponent.cs`
-- Algorithm: **Kintsugi 3D pottery joiner** - Geometric interim. Full GPL-3.0 honest port of PuzzleFusion++ underway. 
+- Algorithm: **Auto-agglomerative outer loop** - Clean-room translation of PuzzleFusion++ Section 3 outer schedule
 - 3D mesh fracture-assembly via naked-edge rim matching.  Each fragment's open-boundary loops are treated as 3D  panels and joined by the same deterministic 5-stage  edge-matching pipeline used by Frahan Trencadís EdgeMatch.  Inspired by PuzzleFusion++ but no learned model; runs  entirely in-process. Best when fracture rims are clean  and well-defined. [Wang et al. 2025]
 
 | in | type | access | description |
@@ -1777,7 +1838,6 @@ Related:
 ### Synthetic Block  (`SynBlock`)
 
 - GUID: `F2D00506-2026-4522-B0B0-1ABE15A0CAFE`  |  icon: `SyntheticBlock.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Kintsugi/SyntheticBlockComponent.cs`
-- Algorithm: **Synthetic stone-block target generator** - Builds parametric closed block meshes (10 shapes spanning featureless to 
 - Generate parametric closed stone-block meshes (10 shapes) as  targets for synthetic fracture-assembly training. Wire into  Frahan Fragment Shatter or bake to .3dm for the PotNet-stone  exporter. Distinctive shapes train better than featureless ones.
 
 | in | type | access | description |
@@ -2778,6 +2838,51 @@ Related:
 | Cleaned Slabs (`Clean`) | Generic | list | Sliver-free subset of post slabs. Empty when Drop  Slivers is false. |
 | Report (`R`) | Text | item | One-line summary. |
 
+### Dry-Stone Wall (NBO)  (`NBOWall`)
+
+- GUID: `D5F10030-0BA0-4ED9-A030-0BA00BA00030`  |  icon: `DryStoneWallNbo.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/DryStoneWallNboComponent.cs`
+- Fill a dry-stone wall from a stone inventory with the Next-Best-Object planner  (hybrid orient -> drop-to-contact -> analytic stability gate -> lowest-cost pick).  Outputs the ordered, gated placement sequence. Optional target envelope, physical Seat  validation (settle each placement onto the fixed wall), and Bullet settle / CRA confirmation.  Ref: Furrer 2017 / Johns 2020.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`I`) | Mesh | list | Stone meshes to draw from. |
+| Wall Length (`L`) | Number | item | Wall length to fill along +X (m). Overridden by Envelope if supplied. |
+| Target Height (`H`) | Number | item | Fill until the wall top reaches this height (m). Overridden by Envelope. |
+| Course Offset (`O`) | Number | item | Running-bond offset applied on alternating courses (m). |
+| Gap (`G`) | Number | item | Minimum gap between stones along a course (m). |
+| Envelope (`E`) | Brep | item | Optional closed target envelope (Brep): bounds the wall and rejects stones whose CoM falls outside it. |
+| Spine (`Sp`) | Curve | item | Optional plan-rim spine curve: the wall follows it (front advances along arc length, long axis  into the wall along the local normal). A straight line reproduces the straight-X wall. |
+| Confirm (`C`) | Boolean | item | Run a Bullet physics settle confirmation of the produced wall. |
+| CRA (`Cra`) | Boolean | item | Run the compas-CRA rigid-block-equilibrium wall-gate (the strongest stability tier) on the produced wall. |
+| Run (`R`) | Boolean | item | Execute the fill. |
+| Seat (`Se`) | Boolean | item | Physically VALIDATE each placement: drop every candidate (in its top stable orientations) onto  the fixed as-built and keep only the one that beds firmly, committed at its settled pose. Builds  a wall that holds (fewer stones, no slips) -- the robot-ready mode. Needs the Bullet backend. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed (`Pl`) | Mesh | list | Placed stone meshes in placement order. |
+| Transforms (`X`) | Transform | list | Per-stone placement transform (matches Placed order). |
+| Course (`Cr`) | Integer | list | Per-stone course index. |
+| Stable (`St`) | Boolean | list | Per-stone analytic stability verdict. |
+| Cost (`Co`) | Number | list | Per-stone selection cost (lower is better). |
+| Report (`Rp`) | Text | item | Solve summary. |
+
+### Force-Seat (URScript)  (`FSeat`)
+
+- GUID: `D5F10032-0BA0-4ED9-A032-0BA00BA00032`  |  icon: `ForceSeatUrScript.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/ForceSeatUrScriptComponent.cs`
+- Emit UR URScript to place + force-seat a stone at each place TCP frame  (approach -> descend -> force_mode press -> retract). TEXT ONLY (code-gen, no  hardware send); validate in URSim. Force-seating is the irregular-stone enabler.
+
+| in | type | access | description |
+|---|---|---|---|
+| Place Frames (`F`) | Plane | list | Seat TCP frames (from Next-Best-Object Pose -> Robot Frame). Frame Z is the press direction. |
+| Robot Base (`B`) | Plane | item | Robot base frame in world coords; poses are emitted in it. |
+| Seat Force (`Fz`) | Number | item | Downward press force to seat the stone (N). |
+| Approach (`A`) | Number | item | Approach/retract clearance above the seat (m). |
+| Descend Speed (`V`) | Number | item | Compliant descent speed during seating (m/s). |
+
+| out | type | access | description |
+|---|---|---|---|
+| URScript (`U`) | Text | list | One place + force-seat URScript program per place frame (text; validate in URSim before any hardware). |
+
 ### Fragment Merger  (`FragMerge`)
 
 - GUID: `F0123456-789A-BCDE-F012-3456789ABCDE`  |  icon: `KintsugiAssemble.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/FragmentMergerComponent.cs`
@@ -2983,6 +3088,27 @@ Related:
 | Signed Volume (`V`) | Number | item | Divergence-theorem volume. Negative means normals are  inward-facing on a closed mesh. |
 | Report (`R`) | Text | item | Single-line human-readable summary. |
 
+### Next-Best-Object Pose → Robot Frame  (`NBORobot`)
+
+- GUID: `D5F10031-0BA0-4ED9-A031-0BA00BA00031`  |  icon: `NboPoseRobotFrame.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/NboPoseToRobotFrameComponent.cs`
+- Turn NBO placements into robot TCP frames + UR poses via a top-pick grasp model.  Outputs pick / place / approach frames, the place pose as UR p[...] in the robot base,  and the grip width/length. The live robot stays downstream (Robots/visose,  UnderAutomation, compas_fab); this is the planner->robot handoff only.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Mesh | list | Source stone meshes (where they currently sit, for the pick frame). |
+| Placements (`X`) | Transform | list | NBO placement transforms, matching the Stones order. |
+| Robot Base (`B`) | Plane | item | Robot base frame in world coords; the place pose is expressed in it. |
+| Approach (`A`) | Number | item | Approach/retract clearance above each place frame (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Pick Frames (`Pk`) | Plane | list | TCP frame to grab each stone where it sits. |
+| Place Frames (`Pl`) | Plane | list | TCP frame to place each stone. |
+| Approach Frames (`Ap`) | Plane | list | Pre-place / retract waypoint above each place frame. |
+| Place Poses (`Ps`) | Text | list | Place TCP as a UR p[x,y,z,rx,ry,rz] (m, axis-angle) in the robot base. |
+| Grip Width (`Gw`) | Number | list | Stone extent across the jaw axis (gripper opening). |
+| Grip Length (`Gl`) | Number | list | Stone extent along the jaw-open axis. |
+
 ### Pack Diagnostics  (`PackDiag`)
 
 - GUID: `C4D5E6F7-A8B9-4ABC-DEF0-123456789012`  |  icon: `PackDiagnostics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/PackDiagnosticsComponent.cs`
@@ -3145,7 +3271,7 @@ Related:
 ### Rubble Wall Settle  (`RubbleSettle`)
 
 - GUID: `6514A1BB-FE82-4919-9419-141A07D2358A`  |  icon: `RubbleWallSettle.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/RubbleWallSettleComponent.cs`
-- Algorithm: **Concave-aware Z-up rubble settle** - Frahan-original (ETH1100 dry-stone HITL rev 2, signed off 2026-05-25)
+- Algorithm: **COM-over-support stability** - Heyman 1966 limit-state masonry (centre of thrust within the support)
 - NOTE: the settle v2 objective reaches +97% clearance, 23/24 stable  (see examples/27 cards); this component remains the validated v1.  Settles stone meshes into an upright Z-up rubble wall. Each  stone is PCA-oriented so its broad/flat face beds DOWN, then  dropped (gravity = -Z) into the per-(x,y)-cell dimples of the  course below, trying 4 orientation flips and a small X-slot  shift. Non-penetrating by construction. Reports a per-stone  COM-over-support stability flag and signed support clearance.  Apply each output mesh as-is; transforms are already baked in.
 
 | in | type | access | description |
@@ -3732,6 +3858,35 @@ Related:
 
 ## Quarry
 
+### Bed Block Layout  (`BedBlocks`)
+
+- GUID: `A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06`  |  icon: `BlockPackTree.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs`
+- Algorithm: **Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling** - Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)
+- Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`A`) | Box | item | Bench bounding box (m). The XY footprint + Z range to lay blocks in. |
+| Bed Surfaces (`F`) | Mesh | list | Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom). |
+| Volume Weight (`W`) | Number | item | Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0. |
+| Oblique (`Ob`) | Boolean | item | TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste). |
+| Cut Cost (`Cut`) | Number | item | Diamond-saw cost (USD/m2 of sawn block face). Default 200. |
+| Keep-out (`K`) | Number | item | Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05. |
+| Catalogue (`Cat`) | Number | list | OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes. |
+| Class (`C`) | Text | list | Catalogue class (A/B/C/D...) of each block, aligned to Blocks. |
+| Volume (`V`) | Number | item | Total recovered block volume (m3). |
+| Net Value (`Net`) | Number | item | Net value (USD) = block sale price - diamond-saw cut cost. |
+| Count (`N`) | Integer | item | Number of blocks placed. |
+| Report (`Rpt`) | Text | item | Mix + economics + per-layer summary. |
+
+Related:
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the bed surfaces this lays blocks between.
+- Frahan > Quarry > Fracture Block Pack - Uniform-block guillotine packer; this one is the priced multi-size CATALOGUE layout.
+
 ### BlockCutOpt AMRR Plan  (`BCOAmrr`)
 
 - GUID: `F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3`  |  icon: `QuarryCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
@@ -3897,6 +4052,29 @@ Related:
 - Frahan > Quarry > Overburden To Rock Face - Cleaned ground TIN feeds the overburden volume.
 - Frahan > Ingest > Scan Reconstruct - Cleans the over-triangulated reconstruction output.
 
+### Construct GPR Preset  (`GprPreset`)
+
+- GUID: `A7E0B0F6-0C0F-4A16-9E3D-0FACE0FACE07`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/GprPresetComponents.cs`
+- Algorithm: **Constructs a GPR preset: velocity (or eps_r), frequency, energy + continuity gates** - EM velocity v = c/sqrt(eps_r), c = 0.2998 m/ns; depth = v*t/2. Continuity gate per USGS Mirror Lake WRIR 99-4018C.
+- Build a custom GPR ingestion preset for ANY stone / antenna (the library ships only two  empirically tuned presets, marble_600 and granite_160). Set the EM velocity (or a relative  permittivity to derive it), the antenna frequency, and the reflector detection + continuity  gates. Wire the output into GPR Survey Grid > Custom Preset to override the named preset.  Tip: a stone sold as 'marble' may be a compact limestone - match the velocity/frequency to the  survey, not the trade name.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stone (`St`) | Text | item | Stone / material label (e.g. limestone, marble, granite, travertine). custom |
+| Frequency (`f`) | Integer | item | Antenna centre frequency (MHz). Sets the lambda/4 resolution. |
+| Velocity (`v`) | Number | item | EM velocity (m/ns); depth = v*t/2. If <= 0 it is derived from Eps_r.  Marble/limestone ~0.10, granite ~0.12, travertine ~0.11. |
+| Eps_r (`Er`) | Number | item | Relative permittivity. Used to derive Velocity when Velocity <= 0  (v = 0.2998/sqrt(Eps_r)); otherwise Eps_r is recomputed from Velocity for consistency. |
+| Energy Quantile (`Q`) | Number | item | Reflector detection threshold (0..1) on the Hilbert energy;  higher keeps only the strongest reflectors. Marble/granite empirical ~0.985. |
+| Continuity Traces (`Ct`) | Integer | item | Reflector continuity gate in traces: a reflector must  persist this many traces to be kept. Marble veins are short (~27 traces ~0.65 m); granite shear zones  longer (~41 traces ~1 m). |
+| Migrate (`Mig`) | Boolean | item | f-k (Stolt) migration on each line (repositions dipping reflectors). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Preset (`Pr`) | Generic | item | Constructed GPR preset. Wire into GPR Survey Grid > Custom Preset. |
+
+Related:
+- Frahan > Quarry > GPR Survey Grid - Wire the constructed preset into Custom Preset to ingest a stone the two built-in presets do not cover.
+
 ### Convex Hull Slab  (`HullSlab`)
 
 - GUID: `ECFDAEBF-CADB-4234-5678-9012345678AB`  |  icon: `ConvexHull2D.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/ConvexHullSlabComponent.cs`
@@ -4026,6 +4204,30 @@ Related:
 | Recovered Volume (`V`) | Number | list | Recovered block volume per bin (m^3). |
 | Yield (`Y`) | Number | list | Recovered / intact volume per bin (0..1). |
 | Report (`Rpt`) | Text | item | Per-bin yield summary. |
+
+### Fracture Bounded Slabs  (`BedSlabs`)
+
+- GUID: `A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05`  |  icon: `Box2Mesh.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs`
+- Algorithm: **Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces** - ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)
+- Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`A`) | Box | item | Bench bounding box (m). XY footprint + the Z range to slab. |
+| Bed Surfaces (`F`) | Mesh | list | Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds. |
+| Grid Res (`G`) | Integer | item | Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26. |
+| Keep-out (`K`) | Number | item | Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Mesh | list | The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes. |
+| Thickness (`T`) | Number | list | Mean thickness (m) of each slab, aligned to Slabs. |
+| Report (`Rpt`) | Text | item | Per-slab summary. |
+
+Related:
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the kriged bed surfaces this slabs the bench by.
+- Frahan > Quarry > Fracture Block Pack - Pack each fracture-bounded slab with the staged guillotine (mode 5).
+- Frahan > Slab > Slab Cut By Tool Mesh (CGAL) - The CGAL boolean alternative for arbitrary (non-height-field) curved cutters.
 
 ### Frahan Algebraic Convex Polyhedron  (`AlgConv`)
 
@@ -4308,7 +4510,7 @@ Related:
 ### Frahan Photo Detect → PLY  (`Photo2Ply`)
 
 - GUID: `F2D0BC14-1234-4F2D-A0B0-7E60CADA15B4`  |  icon: `PlyReader.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
-- Run a fracture detector on a calibrated image and emit the  vertical-extruded PLY consumable by BlockCutOpt. v1 backend  is CsvFractureTraceSource: x1, y1, x2, y2 in world metres.  Pair with GFNInfer to write the CSV from a GeoFractNet run,  or hand-author the CSV from QGIS / AutoCAD digitisation.
+- v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2  in world metres) and emits the vertical-extruded PLY consumable by  BlockCutOpt. The on-image fracture detector is not yet wired (the  Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer  to write the CSV from a GeoFractNet run, or hand-author the CSV from  QGIS / AutoCAD digitisation.
 
 | in | type | access | description |
 |---|---|---|---|
@@ -4493,7 +4695,7 @@ Related:
 
 - GUID: `A7E0B0F1-0C0F-4A16-9E3D-0FACE0FACE02`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/GprFractureExtractComponent.cs`
 - Algorithm: **GPR fracture extraction: f-k (Stolt) migration + Hilbert instantaneous energy + USGS continuity** - Stolt 1978 (f-k migration); Taner 1979 (instantaneous attributes via Hilbert); USGS Mirror Lake WRIR 99-4018C (>=40-trace continuity); Porsani 2006 + Isakova 2021 (high-energy = fracture)
-- Process a GPR radargram and extract fracture reflectors. Reads IDS .dt /  MALA .rd3 / GSSI .dzt / pulseEKKO .dt1 / SEG-Y / CSV. Runs dewow -> background  removal -> time-zero mute -> gain -> f-k (Stolt) migration -> Hilbert energy ->  USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for  tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use  the preset). Outputs fracture picks, depths, confidence, and a depth-converted  energy mesh. Note: Geoscanners .gsf must be exported to SEG-Y (GPRSoft) first.  Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.
+- Process a GPR radargram and extract fracture reflectors. Reads IDS .dt /  MALA .rd3 / GSSI .dzt / pulseEKKO .dt1 / SEG-Y / CSV. Runs dewow -> background  removal -> time-zero mute -> gain -> f-k (Stolt) migration -> Hilbert energy ->  USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for  tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use  the preset). Outputs fracture picks, depths, confidence, and a depth-converted  energy mesh. Reads Geoscanners .gsf natively (GsfReader).  Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.
 
 | in | type | access | description |
 |---|---|---|---|
@@ -4523,11 +4725,6 @@ Related:
 | Depth Sigma (`Ds`) | Number | list | Per-pick 1-sigma depth uncertainty (m), aligned to Fracture Picks: the GPR time->depth  deviation sqrt((depth*sigma_v/v)^2 + (lambda/4)^2). Grows with depth (velocity error)  off a lambda/4 resolution floor. Stage 1 of the GPR->fracture->mesh tolerance ladder. |
 | Confidence within T (`Cf%`) | Number | item | OPTIMISATION METRIC: mean over the picks of P(|depth deviation| <= T) = erf(T/(sigma*sqrt2)).  0..1 (= the fraction of the fracture trace within +-T of truth). Raise it by calibrating  velocity (Perm Uncertainty down) or higher frequency. Section-level (no inter-line term). |
 
-Related:
-- Frahan > Ingest > GPR Radargram Mesh - Alternative radargram visual; this one adds processing + extraction.
-- Frahan > Quarry > GPR Fractures on Mesh - Drape these extracted picks onto a bench/block mesh.
-- Frahan > Quarry > Overburden To Rock Face - The deepest continuous reflector = bedrock surface z_r for the overburden strip.
-
 ### GPR Fracture Surfaces 3D  (`GprFrac3D`)
 
 - GUID: `A7E0B0F2-0C0F-4A16-9E3D-0FACE0FACE03`  |  icon: `Stratigraphy.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/GprFractureSurface3DComponent.cs`
@@ -4546,6 +4743,9 @@ Related:
 | Assume Open (`Op`) | Boolean | item | Treat the fractures as OPEN (fluid/air-filled) when scoring detectability. Surface GPR  mainly images OPEN fractures; sealed ones are largely missed (Molron 2020). Default true. |
 | Time-Zero (`t0`) | Number | item | Direct-wave time-zero pick window (ns) -> rectangular sigma_t0=((t0)/2)/sqrt3 added to  sigma_recon (Xie 2021; dominant near the surface). 0 = off. Default 0. |
 | Detect Base (`Pe`) | Number | item | STONE-SPECIFIC base imaging efficiency for detectability (0..1): the detected fraction  for ideal open sub-horizontal fractures. Crystalline/granite ~0.80-0.91 (Molron 2020 /  Dorn 2012, low loss); attenuating/clay-prone stone (marble, limestone) is lower. Default  0.80 (granite, MEASURED Molron 2020). Per-stone (GprDetectionCalibration): limestone 0.90,  sandstone 0.80, marble/travertine 0.75, andesite 0.50, tuff 0.38. ONLY stone-specific detection  knob; velocity/eps_r/frequency still set sigma_recon + the (now depth-aware) size floor. |
+| Through Picks (`Xp`) | Boolean | item | EXACT interpolation: collapse each fracture's picks to one PEAK pick per cell (keep the  highest-energy reflector) and krige with a near-zero nugget so the surface passes THROUGH  every peak pick (posterior sigma ~0 at picks) and spans the full survey footprint as one  continuous dipping sheet. False = smoothing fit (the old behaviour). Default true. |
+| Pick Energy (`En`) | Number | list | OPTIONAL per-pick energy/confidence (0..1), aligned to Fracture Picks (wire the Confidence  output of GPR Survey Grid / GPR Fracture Extract). With Through Picks on, the PEAK (highest-  energy) pick is kept per cell. Omit to keep the pick nearest the local trend. |
+| Peak Dedup (`Dd`) | Boolean | item | K2 (default true): collapse each cell to its single PEAK reflector before kriging -> smoothest  sheet, lowest residual, rides the strong reflectors. False = K1: keep EVERY pick as a hard  constraint -> maximum fidelity to the raw cloud, marginally lower posterior sigma, but the  surface buckles where near-coincident picks disagree. Only applies when Through Picks is on. |
 
 | out | type | access | description |
 |---|---|---|---|
@@ -4583,6 +4783,39 @@ Related:
 - Frahan > Cut > Cut By Fractures (CGAL) - Fracture-sheet output feeds the CGAL fracture cutter.
 - Frahan > Quarry > BlockCutOpt Load Fractures - Fracture meshes are the BlockCutOpt fracture input.
 - Frahan > Mesh > Move to Origin - Bring GPR picks + the bench mesh into one coordinate frame first.
+
+### GPR Survey Grid  (`GprGrid`)
+
+- GUID: `A7E0B0F0-0C0F-4A16-9E3D-0FACE0FACE01`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/GprSurveyGridComponent.cs`
+- Algorithm: **GPR survey-grid ingest: per-line f-k migration + Hilbert energy + USGS continuity, laid out by line offset** - Stolt 1978 (f-k migration); Taner 1979 (instantaneous attributes); USGS Mirror Lake WRIR 99-4018C (>=40-trace continuity)
+- Ingest a whole GPR survey GRID in ONE component. Give it the LIST of scan-line files  (.dt / .rd3 / .dzt / .dt1 / .sgy / .csv) and a Line Spacing (or explicit Line Positions);  it runs the validated GPR chain (dewow -> background -> time-zero -> gain -> f-k migration  -> Hilbert energy -> USGS continuity) on each line and lays line i at y = position[i]  (default i*spacing). Outputs one 3D fracture-pick cloud (x=distance, y=line offset, z=-depth)  plus per-pick energy -- feed Picks -> 'GPR Fracture Surfaces 3D' Fracture Picks and Confidence  -> its Pick Energy. Replaces N single-line components + Merge.
+
+| in | type | access | description |
+|---|---|---|---|
+| Files (`F`) | Text | list | The GRID of GPR scan-line files (one per survey line). .dt / .rd3 / .dzt / .dt1 / .sgy / .csv /  .gsf (Geoscanners Akula -- now read natively). |
+| Preset (`Pr`) | Text | item | Stone x frequency preset for tuned defaults applied to every line:  marble_600, granite_160, travertine_390, andesite_390, limestone_200. granite_160 |
+| Line Spacing (`Sp`) | Number | item | Distance (m) between consecutive parallel scan lines. Line i is placed at y = i * spacing.  Ignored where Line Positions supplies an explicit y. Default 2.0. |
+| Line Positions (`Y`) | Number | list | OPTIONAL explicit y offset (m) per line, aligned to Files (use real survey line coordinates  when you have them). Overrides Line Spacing when its count matches the file count. |
+| Velocity (`v`) | Number | item | EM velocity (m/ns), depth = v*t/2. < 0 = use the preset value. Override with a WARR/CMP- measured velocity when available (highest-leverage parameter). |
+| Energy Quantile (`Q`) | Number | item | Energy quantile (0..1) above which a sample is a fracture candidate. < 0 = preset (~0.985). |
+| Max Dip (`Dip`) | Number | item | USGS dip gate (deg). < 0 = default 45 (crystalline-rock standard). |
+| Migrate (`Mig`) | Boolean | item | f-k (Stolt) migration on every line. Default true. |
+| Orientation (`Ax`) | Integer | list | OPTIONAL per-line axis for a BIDIRECTIONAL grid: 0 = longitudinal (line runs along X, lines  stacked in Y), 1 = transverse / cross-line (runs along Y, stacked in X). Empty = auto-detect  from the filename (contains 'TA' -> transverse, else longitudinal); a single value applies to  all. With BOTH axes present the picks form a true crossing grid and each axis is spaced to fit  the other axis' extent (the cross-lines MEASURE the perpendicular dip instead of interpolating  it); with one axis it falls back to Line Spacing (parallel lines). |
+| Custom Preset (`CPr`) | Generic | item | OPTIONAL constructed GPR preset (from 'Construct GPR Preset'). If provided, it OVERRIDES the named  Preset string -- use it for any stone/antenna the two built-in empirical presets do not cover. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fracture Picks (`P`) | Point | list | One 3D fracture-pick cloud across the whole survey: (distance, line offset, -depth) in metres.  Wire into GPR Fracture Surfaces 3D > Fracture Picks. |
+| Line Id (`Lid`) | Integer | list | Survey line index (0-based) of each pick. |
+| Confidence (`Cf`) | Number | list | Normalised energy (0..1) of each pick. Wire into GPR Fracture Surfaces 3D > Pick Energy so the  PEAK reflector is kept per cell. |
+| Depths (`D`) | Number | list | Depth (m) of each pick. |
+| Energy Sections (`E`) | Mesh | list | Per-line depth-converted energy section meshes, each laid at its survey y (x=distance,  y=line offset, z=-depth), vertex-coloured by instantaneous energy. |
+| Bedrock Depth (`Z`) | Number | list | Deepest continuous reflector (m) per line = candidate bedrock / rock-face top. |
+| Report (`Rpt`) | Text | item | Per-line ingest summary. |
+
+Related:
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Krige this multi-line pick cloud into 3D dipping bed surfaces.
+- Frahan > Quarry > GPR Fracture Extract - Single-section twin; this one batches a whole survey grid.
 
 ### Joint Set  (`Joint`)
 
@@ -5189,6 +5422,32 @@ Related:
 | Unplaced (`U`) | Curve | list | Curves that could not be placed on any chart. |
 | Report (`R`) | Text | item | Packing and mapping report. |
 
+### Panel Tile Surface  (`PanelTile`)
+
+- GUID: `A7E0B0F7-0C0F-4A16-9E3D-0FACE0FACE08`  |  icon: `QuarryBlock.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/PanelTileSurfaceComponent.cs`
+- Algorithm: **Planar-panel discretization of a surface for stone cladding (planarized U x V quads + flat cut outlines)** - Each UV quad is projected to its best-fit plane (Plane.FitPlaneToPoints); the flat outline mapped to World XY is the cut tile.
+- Discretize a freeform facade surface into PLANAR stone-cladding panels: divide the surface  U x V, project each quad to its best-fit plane (stone cannot bend), and output BOTH the 3D  panels on the surface AND their flat cut outlines (laid in World XY) ready to nest on slabs  with Sheet Nest (Hole-Aware). Reports per-panel planarity (corner deviation from the panel  plane) and area - raise U/V where planarity is too high for the curvature.
+
+| in | type | access | description |
+|---|---|---|---|
+| Surface (`S`) | Surface | item | Facade surface to panelize (a single surface; a Brep face is coerced). |
+| U Count (`U`) | Integer | item | Number of panels across the surface U direction. |
+| V Count (`V`) | Integer | item | Number of panels across the surface V direction. |
+| Joint (`J`) | Number | item | Grout / joint gap: each panel is inset by this toward its  centre (m). Default 0.005. |
+| Planarize (`Pl`) | Boolean | item | Project each quad to its best-fit plane so every panel  is a FLAT cuttable tile (stone cannot bend). False = leave the warped surface quad. Default true. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Panels (`P`) | Mesh | list | The 3D (planarized) cladding panels positioned on the surface. |
+| Cut Tiles (`T`) | Curve | list | Flat closed outline per panel, mapped to the World XY plane,  ready to nest on slabs (wire into Sheet Nest (Hole-Aware) > Parts). |
+| Planarity (`Pl`) | Number | list | Max corner deviation from the panel plane (m) per panel.  High = the surface is too curved for that panel size; raise U / V. |
+| Area (`A`) | Number | list | Panel area (m2) per panel. |
+| Report (`R`) | Text | item | Panel count, total area, and worst planarity. |
+
+Related:
+- Frahan > 2D Packing > Sheet Nest (Hole-Aware) - Nest the flat Cut Tiles onto slab sheets to cut them from stock.
+- Frahan > Quarry > Fracture Bounded Slabs - Produces the slabs the cut tiles are nested onto.
+
 ### Surface Chart  (`SurfChart`)
 
 - GUID: `A3F1C8B2-74D9-4E2A-8F5B-1C3D9E7A2B4F`  |  icon: `BffChartPack.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/SurfacePacking/SurfaceChartComponent.cs`
@@ -5426,7 +5685,7 @@ Related:
 ### Voussoir Ingest  (`VousIngest`)
 
 - GUID: `D5F1000F-ED9E-4ED9-A00F-ED9EED9E000F`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Voussoir/VoussoirIngestComponent.cs`
-- Algorithm: **VoussoirIngestPipeline** - Frahan-original Voussoir GH plugin -> typed VoussoirAssembly DTO
+- Algorithm: **Bed-Head plane detection via largest-face heuristic** - Frahan-original: sort voussoir faces by area; bed = largest, head = second-largest
 - Read a list of voussoir meshes (from the Voussoir GH plugin or  Frahan Stereotomic Vault Mode) as a typed VoussoirAssembly.  Per-voussoir record carries OBB + volume + centroid + bed/head  planes + load axis + joint class. Emits MatchItem[] for downstream  MatcherContextBuilder (the substrate spine). First step of the  top-down voussoir-to-stone workflow per philosophy doc §10.6.
 
 | in | type | access | description |
@@ -5479,7 +5738,7 @@ Related:
 ### Voussoir Stone Matcher  (`VousMatch`)
 
 - GUID: `D5F10010-ED9E-4ED9-A010-ED9EED9E0010`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Voussoir/VoussoirStoneMatcherComponent.cs`
-- Algorithm: **Kuhn1955Hungarian** - H.W. Kuhn 1955 Hungarian Method for the Assignment Problem; Naval Research Logistics Quarterly 2:83-97; Jonker-Volgenant pivot
+- Algorithm: **Tomczak2023Matching** - Tomczak/Haakonsen/Luczkowski 2023 Environ. Res. Infrastruct. Sustain. 3:035005 DOI 10.1088/2634-4505/acf341 -- Figure 2 5-stage matching pipeline
 - Assign each voussoir to a quarry stone via Kuhn 1955 Hungarian  bipartite assignment. Voussoirs are demand; stones are supply;  feasibility = stone OBB contains voussoir OBB + safety margin +  yield_ratio >= MinYield; cost = w_yield * (1 - yield_ratio) +  w_carving * (carving_vol / voussoir_vol). The canonical top-down  voussoir-to-stone matcher per wiki/research/voussoir_stereotomy_integration.md  Phase 2 + philosophy doc §10.6. First production use of the  MatcherRegistry substrate.
 
 | in | type | access | description |

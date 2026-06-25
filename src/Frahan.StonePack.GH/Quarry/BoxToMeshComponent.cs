@@ -47,7 +47,7 @@ public sealed class BoxToMeshComponent : FrahanComponentBase
             "Mesh (8 vertices, 12 triangles). Bridges the Box->Mesh " +
             "adapter gap between BlockCutOpt and SlabFromMesh / " +
             "SlabCutByFractures / AshlarPack.",
-            "Frahan", "Quarry")
+            "Frahan", "Block")
     {
     }
 

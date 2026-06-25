@@ -1,11 +1,11 @@
 # Frahan StonePack - icon library
 
-Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons referenced by 230 components.
+Resources dir: `src/Frahan.StonePack.GH/Resources` (135 PNGs). 87 distinct icons referenced by 240 components.
 
 ## Coverage
 
 - Components WITHOUT an explicit icon: **0**.
-- Referenced icons with NO file on disk: **5**.
+- Referenced icons with NO file on disk: **1**.
 - Icons on disk NOT referenced: **49**.
 
 ## Component -> icon
@@ -18,6 +18,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | 2D Irregular Sheet Pack | 2D Packing | Pack2D.png | yes |
 | 2D NFP Pack | 2D Packing | NoFitPolygon.png | yes |
 | CSV Parts Reader | 2D Packing | CurveToPolygon.png | yes |
+| Floor Tile (Boundary-Trimmed) | 2D Packing | FloorTile.png | MISSING FILE |
 | Frahan Residual Voids | 2D Packing | PackMetrics.png | yes |
 | Frahan Sheet Pack (Unified Async) | 2D Packing | IrregularSheet.png | yes |
 | Frahan Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
@@ -51,17 +52,18 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Mesh Template Match | EdgeMatch | EdgeMatchSolve.png | yes |
 | Soft ICP 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Template Block Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
+| Whole-Side Assemble | EdgeMatch | WholeSideAssemble.png | yes |
 | Fabrication Prep Report | Fabricate | StockpileManager.png | yes |
 | Frahan Bench Monument Pack | Fabricate | BinPack.png | yes |
 | Frahan Monument Inventory | Fabricate | StockpileManager.png | yes |
 | Frahan Pack Monuments In Cell | Fabricate | PackIntoBlock.png | yes |
-| G-code Parser | Fabricate | StoneCutExport.png | MISSING FILE |
-| G-code to Planes | Fabricate | StoneCutExport.png | MISSING FILE |
-| Planes to KUKAprc Commands | Fabricate | StoneCutExport.png | MISSING FILE |
-| Planes to Robot Targets | Fabricate | StoneCutExport.png | MISSING FILE |
+| G-code Parser | Fabricate | StoneCutExport.png | yes |
+| G-code to Planes | Fabricate | StoneCutExport.png | yes |
+| Planes to KUKAprc Commands | Fabricate | StoneCutExport.png | yes |
+| Planes to Robot Targets | Fabricate | StoneCutExport.png | yes |
 | Staggered Block Decompose | Fabricate | BondPattern.png | yes |
 | Stone-Aware Cut Export | Fabricate | GcodeExport.png | yes |
-| Wire-Saw Toolpath | Fabricate | StoneCutExport.png | MISSING FILE |
+| Wire-Saw Toolpath | Fabricate | StoneCutExport.png | yes |
 | Brick-Pattern Fracture Planes | Fracture | BondPattern.png | yes |
 | Fracture Plane Filter | Fracture | DefectMap.png | yes |
 | Fracture Polygon From Curve | Fracture | DefectMap.png | yes |
@@ -124,6 +126,8 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Build Step Preview | Masonry | AssemblyState.png | yes |
 | Build-Order Stability Stream | Masonry | EquilibriumRBE.png | yes |
 | Cut Validation | Masonry | StereotomyJoint.png | yes |
+| Dry-Stone Wall (NBO) | Masonry | DryStoneWallNbo.png | yes |
+| Force-Seat (URScript) | Masonry | ForceSeatUrScript.png | yes |
 | Fragment Merger | Masonry | KintsugiAssemble.png | yes |
 | IFC Export (Building) | Masonry | IfcBuilding.png | yes |
 | IFC Export (Stone Assembly) | Masonry | IfcExport.png | yes |
@@ -134,6 +138,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Match Block Transform | Masonry | RigidTransform.png | yes |
 | Mesh Planar Polygon Extractor | Masonry | MortarJoint.png | yes |
 | Mesh Quality Report | Masonry | PackDiagnostics.png | yes |
+| Next-Best-Object Pose → Robot Frame | Masonry | NboPoseRobotFrame.png | yes |
 | Pack Diagnostics | Masonry | PackDiagnostics.png | yes |
 | Pack Preview | Masonry | AssemblyState.png | yes |
 | Pick Place Frames | Masonry | FrameBuilder.png | yes |
@@ -170,6 +175,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Scan Scale Calibrate | Mesh | CalibrationBoard.png | yes |
 | Stone Prep (Scan) | Mesh | OutlierRemoval.png | yes |
 | Voxel Downsample | Mesh | Downsample.png | yes |
+| Bed Block Layout | Quarry | BlockPackTree.png | yes |
 | BlockCutOpt AMRR Plan | Quarry | QuarryCutOpt.png | yes |
 | BlockCutOpt Extract Grid | Quarry | BlockCutOpt.png | yes |
 | BlockCutOpt Load Fractures | Quarry | DefectMap.png | yes |
@@ -177,11 +183,13 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | BlockCutOpt Solve | Quarry | BlockCutOpt.png | yes |
 | Box To Mesh | Quarry | QuarryBlock.png | yes |
 | Clean Scan Mesh | Quarry | QuarryBlock.png | yes |
+| Construct GPR Preset | Quarry | GprIngest.png | yes |
 | Convex Hull Slab | Quarry | ConvexHull2D.png | yes |
 | Discontinuity Ingest | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Async) | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Cloud) | Quarry | DiscontinuitySets.png | yes |
 | Fracture Block Pack | Quarry | BlockCutOpt.png | yes |
+| Fracture Bounded Slabs | Quarry | Box2Mesh.png | yes |
 | Frahan Algebraic Convex Polyhedron | Quarry | CoacdDecompose.png | yes |
 | Frahan BenchBlock Cut → Slabs | Quarry | QuarryCutOpt.png | yes |
 | Frahan Billet Cutter | Quarry | QuarryCutOpt.png | yes |
@@ -205,6 +213,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | GPR Fracture Extract | Quarry | GprIngest.png | yes |
 | GPR Fracture Surfaces 3D | Quarry | Stratigraphy.png | yes |
 | GPR Fractures on Mesh | Quarry | Downsample.png | yes |
+| GPR Survey Grid | Quarry | GprIngest.png | yes |
 | Joint Set | Quarry | Stratigraphy.png | yes |
 | Joint Sets to DFN | Quarry | DiscontinuitySets.png | yes |
 | Mesh Shell Split | Quarry | CoacdDecompose.png | yes |
@@ -231,6 +240,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Frahan Chart Flatness Report | Surface Packing | DistortionMap.png | yes |
 | Pack On Surface | Surface Packing | SurfaceTile.png | yes |
 | Pack Surfaces | Surface Packing | SurfaceUnroll.png | yes |
+| Panel Tile Surface | Surface Packing | QuarryBlock.png | yes |
 | Surface Chart | Surface Packing | BffChartPack.png | yes |
 | Frahan Trencadís Catalog Pack | Trencadis | Trencadis.png | yes |
 | Frahan Trencadís Dynamic Settle | Trencadis | ContactSettle.png | yes |
@@ -245,8 +255,4 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 
 ## Referenced icons with NO file (canvas shows default)
 
-- G-code Parser (Fabricate) -> `StoneCutExport.png`
-- G-code to Planes (Fabricate) -> `StoneCutExport.png`
-- Planes to KUKAprc Commands (Fabricate) -> `StoneCutExport.png`
-- Planes to Robot Targets (Fabricate) -> `StoneCutExport.png`
-- Wire-Saw Toolpath (Fabricate) -> `StoneCutExport.png`
+- Floor Tile (Boundary-Trimmed) (2D Packing) -> `FloorTile.png`

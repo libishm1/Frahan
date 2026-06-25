@@ -40,7 +40,7 @@ namespace Frahan.GH.Quarry
                 "Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer " +
                 "to write the CSV from a GeoFractNet run, or hand-author the CSV from " +
                 "QGIS / AutoCAD digitisation.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -120,7 +120,7 @@ namespace Frahan.GH.Quarry
                 "Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14). " +
                 "Each parallel-list row defines one face's outward normal " +
                 "and offset. Returns a triangulated Rhino Mesh. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -203,7 +203,7 @@ namespace Frahan.GH.Quarry
                 "z=midheight + a PLY of 3D fracture polygons + the fracture " +
                 "Mesh in-process. Lets you regression-test BlockCutOpt " +
                 "without a field dataset. Implements synthetic joint-set DFN generation (ISRM/Priest 1993; Goodman & Shi 1985).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

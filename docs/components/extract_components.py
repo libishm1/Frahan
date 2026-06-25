@@ -112,8 +112,13 @@ for root, _, files in os.walk(GH):
                     name, nick = bs[0], bs[1]
                     desc = " ".join(bs[2:]).strip()
             algo = ALGO_RE.search(text[max(0, m.start()-1200):m.start()] + body[:400])
+            # [RelatedComponent] decorators sit ABOVE the class declaration, not in `body`. Scan the
+            # attribute block = text from after the previous member's closing brace up to this class.
+            _pre = text[:m.start()]
+            _lb = _pre.rfind("}")
+            _attr = _pre[_lb + 1:] if _lb >= 0 else _pre
             related = [{"target": strip_cs(t), "reason": strip_cs(r or "")}
-                       for t, r in REL_RE.findall(body)]
+                       for t, r in REL_RE.findall(_attr)]
             icon = ICON_RE.search(body)
             expo = EXPO_RE.search(body)
             comps.append({
@@ -179,11 +184,17 @@ open(os.path.join(OUT, "COMPONENTS.md"), "w", encoding="utf-8").write("\n".join(
 # ---- connection map (RelatedComponent edges) ----
 name_to_id = {c["name"]: f"n{i}" for i, c in enumerate(comps)}
 edges = []
+dangling = []
 for c in comps:
     for r in c["related"]:
         tgt = [p.strip() for p in r["target"].split(">")][-1]
         if tgt in name_to_id:
             edges.append({"from": c["name"], "to": tgt, "reason": r["reason"]})
+        else:
+            dangling.append((c["name"], tgt))
+print(f"connection edges: {len(edges)}; dangling RelatedComponent targets (no matching component): {len(dangling)}")
+for frm, tgt in dangling:
+    print(f"  DANGLING: {frm} -> {tgt!r}")
 conn = {"nodes": [{"id": name_to_id[c["name"]], "name": c["name"], "subcategory": c["subcategory"], "guid": c["guid"]} for c in comps],
         "edges": [{"from": name_to_id[e["from"]], "to": name_to_id[e["to"]], "fromName": e["from"], "toName": e["to"], "reason": e["reason"]} for e in edges]}
 json.dump(conn, open(os.path.join(OUT, "connections.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)

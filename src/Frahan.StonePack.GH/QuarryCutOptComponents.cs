@@ -38,7 +38,7 @@ namespace Frahan.GH.Quarry
                 "Frahan Quarry Inventory", "QInv",
                 "Aggregate a list of bench-block AABBs into a QuarryInventory. " +
                 "All units in metres.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -127,7 +127,7 @@ namespace Frahan.GH.Quarry
                 "Frahan Quarry Yield Estimator", "QYield",
                 "Per-block yield estimate via BlockCutOpt as a sub-routine. " +
                 "Returns one BlockYieldEstimate per BenchBlock.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -231,7 +231,7 @@ namespace Frahan.GH.Quarry
                 "Frahan Extraction Order Optimizer", "QOrder",
                 "Order BenchBlocks by score = w_yield*yield - w_risk*risk - " +
                 "w_access*access. Blocks under min yield are skipped. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -330,7 +330,7 @@ namespace Frahan.GH.Quarry
                 "Frahan Saw-Bed Schedule", "QSched",
                 "Greedy LPT schedule of accepted blocks onto N saw beds. " +
                 "Returns per-bed timelines and the total makespan. Implements greedy LPT scheduling (Graham 1969).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -405,7 +405,7 @@ namespace Frahan.GH.Quarry
                 "Frahan Quarry Report", "QRep",
                 "Aggregate Inventory + ExtractionPlan + SawBedSchedule into " +
                 "a Markdown summary plus headline numbers.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

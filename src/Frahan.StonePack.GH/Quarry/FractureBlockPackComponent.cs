@@ -31,7 +31,7 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
                "Pack fixed-size dimension blocks into each fracture-bounded slab (bin): tree-pack " +
                "coarse subdivision of the AABB + irregular-boundary fit to the slab mesh. Reports " +
                "per-bin yield. Managed.",
-               "Frahan", "Quarry")
+               "Frahan", "Block")
     { }
 
     public override Guid ComponentGuid => new Guid("A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04");

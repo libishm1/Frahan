@@ -24,7 +24,7 @@ namespace Frahan.GH.RubblePack
                    "Match each carved block to the tightest rubble stone that fully encloses it, " +
                    "evolving the placement pose (24 rotation seeds + (1+8)-ES) until every block " +
                    "vertex is inside the stone. One block per stone. True geometric enclosure.",
-                   "Frahan", "Quarry")
+                   "Frahan", "Masonry")
         { }
 
         public override Guid ComponentGuid => new Guid("b1c2d3e4-aa02-4f5e-9c10-7e60cada1501");

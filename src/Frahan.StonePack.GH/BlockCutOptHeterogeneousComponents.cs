@@ -54,7 +54,7 @@ namespace Frahan.GH.Quarry
                 "z = bench.MinZ, matching quarry extraction where blocks are " +
                 "cut OUT of solid rock (no stacking). Disable Floor-Only for " +
                 "monument storage / slab racking / container loading. Implements Deepest-Left-Bottom-Fill 3D (Chehrazad 2025).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -187,7 +187,7 @@ namespace Frahan.GH.Quarry
                 "regions, plus optional MonumentInventory placement on a " +
                 "fracture-derived BlockGraph. One component, four outputs " +
                 "per stage. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

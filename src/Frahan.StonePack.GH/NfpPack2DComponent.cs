@@ -25,6 +25,7 @@ public sealed class NfpPack2DComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("0B164F89-A199-4264-88FD-A91E508DBEC3");
+    public override GH_Exposure Exposure => GH_Exposure.hidden;   // consolidated: superseded by Sheet Nest (Hole-Aware)
     protected override Bitmap? Icon => IconProvider.Load("NoFitPolygon.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

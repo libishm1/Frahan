@@ -24,7 +24,7 @@ namespace Frahan.GH.RubblePack
                    "Pack many carved blocks into each rubble stone (one stone = one bin), spilling " +
                    "to the next stone when full. Voxel-occupancy FFD with true per-vertex enclosure " +
                    "and a kerf gap. Multiple blocks per stone.",
-                   "Frahan", "Quarry")
+                   "Frahan", "3D Packing")
         { }
 
         public override Guid ComponentGuid => new Guid("b1c2d3e4-aa03-4f5e-9c10-7e60cada1502");

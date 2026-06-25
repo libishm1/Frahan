@@ -36,7 +36,7 @@ namespace Frahan.GH.Quarry
                 "Brute-force search + extract the winning OrientedBlock grid. " +
                 "Outputs the non-intersected blocks as Rhino Boxes plus the " +
                 "BlockCutOptResult headline numbers.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -138,7 +138,7 @@ namespace Frahan.GH.Quarry
                 "Run BlockCutOpt per BenchBlock in the ExtractionPlan order " +
                 "and emit the winning cut-grid as Slabs (Mesh form). " +
                 "Closes the Layer 7 → Layer 5 / 6 handoff.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

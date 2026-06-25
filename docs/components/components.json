@@ -920,6 +920,186 @@
     "file": "src/Frahan.StonePack.GH/TwoD/CsvPartsReaderComponent.cs"
   },
   {
+    "guid": "D5F1001A-7C3B-4E29-B1A6-0F2D9E4C8B57",
+    "class": "FloorTileComponent",
+    "name": "Floor Tile (Boundary-Trimmed)",
+    "nickname": "FloorTile",
+    "category": "Frahan",
+    "subcategory": "2D Packing",
+    "description": "Divide a floor boundary into standard stone tiles on a module grid (tile face + grout joint) by  straight full-span (guillotine) lines, trimming the perimeter tiles to the boundary. Choose the  start: a corner, a picked point, or a centred/symmetric layout that balances the border cuts  equally on opposite walls. The ANSI half-tile no-sliver rule is enforced by auto-centring (the  grid shifts by half a module to split a thin sliver into two larger border cuts). Each tile  carries a GRAIN DIRECTION, output both as a direction line (the feature) and as a texture-mapping  frame: feed the tile meshes to a Custom Preview Material with a scanned stone image and the grain  follows. Set Continuous for a slip-match (the floor reads as one slab). Deterministic.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Floor setting-out: balanced/centred layout and the ANSI half-tile no-sliver rule",
+      "citation": "ANSI A108.02 4.3.2 (centre and balance tile, no cuts smaller than half size); CTEF/TCNA tile layout practice"
+    },
+    "inputs": [
+      {
+        "name": "Boundary",
+        "nick": "B",
+        "type": "Curve",
+        "access": "item",
+        "desc": "Closed planar floor outline curve (the room edge), in a WorldXY-parallel plane."
+      },
+      {
+        "name": "Holes",
+        "nick": "H",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Optional closed obstacle/hole curves inside the floor (columns, openings); tiles are trimmed around them."
+      },
+      {
+        "name": "TileX",
+        "nick": "Lx",
+        "type": "Number",
+        "access": "item",
+        "desc": "Tile face width (model units)."
+      },
+      {
+        "name": "TileY",
+        "nick": "Ly",
+        "type": "Number",
+        "access": "item",
+        "desc": "Tile face height (model units)."
+      },
+      {
+        "name": "Joint",
+        "nick": "Gr",
+        "type": "Number",
+        "access": "item",
+        "desc": "Grout joint width; module pitch = tile + joint. Stone 2-6, rectified 3."
+      },
+      {
+        "name": "Start",
+        "nick": "St",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Start mode: 0 = corner (full tile at the boundary min corner), 1 = picked point (Anchor),  2 = centred/symmetric (equal border cuts on opposite walls)."
+      },
+      {
+        "name": "Anchor",
+        "nick": "Pt",
+        "type": "Point",
+        "access": "item",
+        "desc": "Lattice origin for Start = 1 (picked point); the corner of one full tile."
+      },
+      {
+        "name": "Grain",
+        "nick": "Ga",
+        "type": "Number",
+        "access": "item",
+        "desc": "Grain/vein direction in DEGREES (the grain feature; also rotates the texture mapping)."
+      },
+      {
+        "name": "GrainField",
+        "nick": "Gf",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Grain pattern: 0 = monolithic (all one way), 1 = quarter-turn (checkerboard 0/90), 2 = random."
+      },
+      {
+        "name": "Sliver",
+        "nick": "Sf",
+        "type": "Number",
+        "access": "item",
+        "desc": "No-sliver acceptance: perimeter cuts must be >= this fraction of the tile (0.5 ANSI, 0.333 fallback)."
+      },
+      {
+        "name": "Match",
+        "nick": "Mt",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Texture continuity: 0 = per-tile (each tile shows the whole image, rotated to its grain),  1 = slip-match (UVs flow across the floor so it reads as one slab), 2 = book-match (adjacent  tiles mirror so the veins meet at the joints)."
+      },
+      {
+        "name": "Stagger",
+        "nick": "Off",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Running-bond row offset: 0 = stack bond, 1 = 1/3 offset, 2 = 1/2 offset. Large-format tiles  (a side > 380) auto-cap at 1/3 to control lippage."
+      },
+      {
+        "name": "Image",
+        "nick": "Img",
+        "type": "Text",
+        "access": "item",
+        "desc": "Optional stone-texture image file path. When supplied, the floor is DRAWN on screen with the  image mapped to the grain (no extra wiring); also emitted as Material for Custom Preview / baking."
+      },
+      {
+        "name": "Rates",
+        "nick": "$",
+        "type": "Number",
+        "access": "list",
+        "desc": "Optional cost rates (defaults kept where omitted). Order: material/m2, overage frac, cut/tile,  set-out stack, set-out matched, lay/m2, lay/tile, large-format/m2, premium[per,slip,book],  matchLabour[per,slip,book]/m2. Drives the Cost/m2 and Costing outputs."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Tiles",
+        "nick": "T",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Trimmed tile boundary polylines (full tiles + cut perimeter tiles)."
+      },
+      {
+        "name": "Direction",
+        "nick": "Dir",
+        "type": "Line",
+        "access": "list",
+        "desc": "Per-tile grain direction line from the tile centre (the grain feature; draw as arrows)."
+      },
+      {
+        "name": "Full",
+        "nick": "F",
+        "type": "Boolean",
+        "access": "list",
+        "desc": "True for a full module tile, false for a cut perimeter tile."
+      },
+      {
+        "name": "TexMesh",
+        "nick": "M",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Per-tile mesh carrying grain-aligned texture coordinates. Feed a Custom Preview Material with a  scanned stone image and the texture maps per the grain direction."
+      },
+      {
+        "name": "MapFrame",
+        "nick": "Pl",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Per-tile texture-mapping plane (origin = tile centre, X rotated by the grain). Use with Rhino's  planar TextureMapping (CreatePlanarMapping + SetTextureMapping) for object-level mapping."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Tile counts (full/cut), coverage, smallest perimeter cut vs the no-sliver threshold, grain field,  match mode and row offset."
+      },
+      {
+        "name": "Cost/m2",
+        "nick": "$/m2",
+        "type": "Number",
+        "access": "item",
+        "desc": "Estimated installed cost per square metre of floor for the current config (material + cutting +  set-out + laying + matching, on the Rates). Illustrative; override Rates with local prices."
+      },
+      {
+        "name": "Costing",
+        "nick": "$R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Cost report: the material vs operation breakdown and the total $/m2 for the current config, plus a  match sweep (PerTile/Slip/Book at this layout) and a size sweep (re-packed tile-size ladder)."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > 2D Packing > Sheet Nest (Hole-Aware)",
+        "reason": "Irregular-part nesting on a sheet; the floor tiler is its regular-grid, boundary-trimmed sibling."
+      }
+    ],
+    "icon": "FloorTile.png",
+    "file": "src/Frahan.StonePack.GH/TwoD/FloorTileComponent.cs"
+  },
+  {
     "guid": "AB12C002-1A2B-4C3D-9E4F-5A6B7C8D9E02",
     "class": "ResidualVoidsComponent",
     "name": "Frahan Residual Voids",
@@ -1774,8 +1954,8 @@
     "description": "Deterministic hole-aware 2D nester: parts are placed on a sheet with defects (holes) by  exact no-fit-polygon bottom-left-fill, and smaller parts are nested INSIDE the holes of  larger placed parts via the inner-fit region. No-fit and inner-fit polygons are built  exactly as Clipper2 Minkowski sums/erosions (Bennell & Oliveira 2009) and placement is  bottom-left-fill (Burke et al. 2006), so layouts are 0-overlap by construction.  Rotations are contact-adaptive: the uniform base set is extended with edge-alignment  angles against the sheet, the latest neighbour, and host holes so parts seat flush.  Returns valid hole-aware layouts where hole-blind nesters fail; an exact rectangle  shelf fast-path accelerates all-rectangle instances. Deterministic: the same inputs  always reproduce the same cut layout.",
     "exposure": "primary",
     "algorithm": {
-      "title": "Exact No-Fit-Polygon Bottom-Left-Fill with part-in-part-hole nesting",
-      "citation": "Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2006). \"A New Bottom-Left-Fill Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem.\" Operations Research 54(3):587-601"
+      "title": "No-fit-polygon / inner-fit-polygon via Minkowski sum",
+      "citation": "Bennell, J.A. & Oliveira, J.F. (2009). \"A tutorial in irregular shape packing problems.\" J. Oper. Res. Soc. 60(S1):S93-S105"
     },
     "inputs": [
       {
@@ -3396,8 +3576,8 @@
     "description": "First-cut matcher: VSA segmentation + plane-to-plane mating scored by sampled  Hausdorff distance. The full exhaustive face-pair search is a planned refinement.  For a practically-tested matcher use Stone-Cell Match (Λ)  (ETH1100 Lambda=0.194, card 27_07).  Atomic 3D edge-matching primitive: given two scanned stone meshes,  find the rigid 3D pose where their planar face patches mate.  VsaSegmenter -> face filtering -> per-pair PhaseCorrelator +  ConstrainedIcp3D refinement -> top-N candidates ranked by  patch-pair Hausdorff residual + match-length. Foundational  primitive for the 3D EdgeMatch family (Block Chain, Adaptive  Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]",
     "exposure": "hidden",
     "algorithm": {
-      "title": "Variational Shape Approximation (face partitioning)",
-      "citation": "Cohen-Steiner, Alliez, Desbrun 2004 SIGGRAPH; Frahan stub implementation"
+      "title": "Phase correlator FFT (3D)",
+      "citation": "Classical cross-correlation lag estimation"
     },
     "inputs": [
       {
@@ -3492,8 +3672,8 @@
     "description": "The bottom-up 3D peer with no 2D analog. Encodes the Clifford- McGee 2017 Cyclopean Cannibalism 8-step recipe verbatim. Inputs:  scanned rubble inventory + wall envelope + variable-thickness  back-plane + course height. Outputs: placed stones with  trapezoid/parallelogram/keystone recipe-step tags + Utah-detail  scribe curves per bed joint + dowel insertion vectors. The 3D  flagship bottom-up component, mirroring cyclopean masonry  principles per Libish 2026-05-31 directive.",
     "exposure": "hidden",
     "algorithm": {
-      "title": "Cyclopean Cannibalism 8-step recipe",
-      "citation": "Clifford and McGee 2017 ACADIA pp. 404-413 + Clifford 2017 The Cannibal's Cookbook (Matter Publishing)"
+      "title": "Largest 4-sided inscribed polygon",
+      "citation": "Clifford 2017 The Cannibal's Cookbook pp. 118-120 recursive algorithm"
     },
     "inputs": [
       {
@@ -3618,8 +3798,8 @@
     "description": "Bundle the EdgeMatch solver's advanced AssemblyOptions flags  (assembly mode, scale-relative gates, partial sub-segment  matching, overlap resolve, Soft-ICP rim-contact refine, and the  WIP projection bootstrap) into one AssemblyOptions DTO. Wire into  EdgeMatch Solve's optional Opt input. Every input is optional and  defaults to the Core default, so an empty component emits the  default options (unchanged behaviour).",
     "exposure": "primary",
     "algorithm": {
-      "title": "Beam-search assembly solver",
-      "citation": "Frahan-original deterministic beam search with state cloning"
+      "title": "Agglomerative pair-graph assembly",
+      "citation": "Frahan-original minimum-residual spanning tree"
     },
     "inputs": [
       {
@@ -4580,8 +4760,8 @@
     "description": "Refine the poses of 3D fragment meshes so their rims come into  CONTACT while their solids do not interpenetrate. EM weighted- Kabsch over CPD soft correspondence + smooth penetration hinge.  The standalone primitive that EdgeMatch Solve / Kintsugi / Trencadis  / Cyclopean Recipe / Voussoir Match all invoke internally; surface  on the canvas to chain into any custom workflow. [Myronenko & Song 2010]",
     "exposure": "primary",
     "algorithm": {
-      "title": "Soft-ICP / CPD weighted-Kabsch alternation",
-      "citation": "Myronenko and Song 2010 Coherent Point Drift; Frahan EM closed-form M-step"
+      "title": "Penetration hinge (smooth non-penetration)",
+      "citation": "Mesh.IsPointInside inside-test + smooth quadratic hinge per SettleContactComponent / OverlapResolver2D"
     },
     "inputs": [
       {
@@ -4800,6 +4980,95 @@
     "related": [],
     "icon": "EdgeMatchSolve.png",
     "file": "src/Frahan.StonePack.GH/EdgeMatch3D/TemplateBlockMatch3DComponent.cs"
+  },
+  {
+    "guid": "D5F10021-ED9E-4ED9-A021-ED9EED9E0021",
+    "class": "WholeSideAssembleComponent",
+    "name": "Whole-Side Assemble",
+    "nickname": "WSAssemble",
+    "category": "Frahan",
+    "subcategory": "EdgeMatch",
+    "description": "Reassembles scattered/rotated coplanar parts by matching WHOLE contour  sides (corner-to-corner) and growing best-first from an anchor part.  Outputs placed contours and per-part transforms. 2D (world XY) only.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Whole-side corner/side extraction",
+      "citation": "Minimum-area bounding rectangle (rotating calipers) corners + flat-border (is_edge) exclusion"
+    },
+    "inputs": [
+      {
+        "name": "Anchor",
+        "nick": "A",
+        "type": "Curve",
+        "access": "item",
+        "desc": "Anchor part (placed first at its current position; the assembly grows from it)."
+      },
+      {
+        "name": "Parts",
+        "nick": "P",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Closed part contours to reassemble (scattered / rotated, coplanar in world XY)."
+      },
+      {
+        "name": "Fit Gate",
+        "nick": "G",
+        "type": "Number",
+        "access": "item",
+        "desc": "Maximum length-normalized side-fit cost admitted to the search.  Default 2.5 (must exceed the highest TRUE seam cost; too low orphans far parts)."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Execute the assembler."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Placed",
+        "nick": "Pl",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Part contours transformed by their solved placements (anchor included)."
+      },
+      {
+        "name": "Transforms",
+        "nick": "X",
+        "type": "Transform",
+        "access": "list",
+        "desc": "Per-part rigid transform, matching the Placed / Ids order."
+      },
+      {
+        "name": "Ids",
+        "nick": "Id",
+        "type": "Text",
+        "access": "list",
+        "desc": "Part ids in placement order."
+      },
+      {
+        "name": "Total Residual",
+        "nick": "Tr",
+        "type": "Number",
+        "access": "item",
+        "desc": "Sum of accepted side-fit costs."
+      },
+      {
+        "name": "Report",
+        "nick": "Rp",
+        "type": "Text",
+        "access": "item",
+        "desc": "Human-readable solve summary."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > EdgeMatch > EdgeMatch Solve",
+        "reason": "ALTERNATIVE SOLVER: segment/ICP/beam pipeline for frame-anchored Trencadís; "
+      }
+    ],
+    "icon": "WholeSideAssemble.png",
+    "file": "src/Frahan.StonePack.GH/WholeSideAssembleComponent.cs"
   },
   {
     "guid": "F2D07A04-1A2B-4C3D-9E4F-5A6B7C8D9E04",
@@ -5656,8 +5925,8 @@
     "description": "Generate a Plane[] toolpath for a robot-mounted diamond-wire saw  to cut stone along a designed curve. Frahan-original component  closing the toolchain gap left by Zhang 2024 + Moult 2018 (neither  has KUKAprc / Robots plugin integration). v1 supports planar cuts;  v1.x adds ruled-surface decomposition + variable wire tension.  Outputs feed directly into KUKAprc / Robots downstream.",
     "exposure": "primary",
     "algorithm": {
-      "title": "Zhang2024RobotDiamondWire",
-      "citation": "Zhang Y. et al. 2024 J. Comp. Design and Engineering 11(6) 75-85 DOI 10.1093/jcde/qwae094 -- 6-axis robot + brazed diamond wire end-effector"
+      "title": "Moult2018PortableWireBandsaw",
+      "citation": "Moult, Weir, Fernando 2018 University of Sydney KUKA + portable diamond-wire bandsaw end-effector"
     },
     "inputs": [
       {
@@ -6959,8 +7228,8 @@
     "description": "3D mesh fracture-assembly via naked-edge rim matching.  Each fragment's open-boundary loops are treated as 3D  panels and joined by the same deterministic 5-stage  edge-matching pipeline used by Frahan Trencadís EdgeMatch.  Inspired by PuzzleFusion++ but no learned model; runs  entirely in-process. Best when fracture rims are clean  and well-defined. [Wang et al. 2025]",
     "exposure": "primary",
     "algorithm": {
-      "title": "Kintsugi 3D pottery joiner",
-      "citation": "Geometric interim. Full GPL-3.0 honest port of PuzzleFusion++ underway. "
+      "title": "Auto-agglomerative outer loop",
+      "citation": "Clean-room translation of PuzzleFusion++ Section 3 outer schedule"
     },
     "inputs": [
       {
@@ -7329,10 +7598,7 @@
     "subcategory": "Kintsugi",
     "description": "Generate parametric closed stone-block meshes (10 shapes) as  targets for synthetic fracture-assembly training. Wire into  Frahan Fragment Shatter or bake to .3dm for the PotNet-stone  exporter. Distinctive shapes train better than featureless ones.",
     "exposure": "primary",
-    "algorithm": {
-      "title": "Synthetic stone-block target generator",
-      "citation": "Builds parametric closed block meshes (10 shapes spanning featureless to "
-    },
+    "algorithm": null,
     "inputs": [
       {
         "name": "Shape",
@@ -11241,6 +11507,203 @@
     "file": "src/Frahan.StonePack.GH/Masonry/CutValidationComponent.cs"
   },
   {
+    "guid": "D5F10030-0BA0-4ED9-A030-0BA00BA00030",
+    "class": "DryStoneWallNboComponent",
+    "name": "Dry-Stone Wall (NBO)",
+    "nickname": "NBOWall",
+    "category": "Frahan",
+    "subcategory": "Masonry",
+    "description": "Fill a dry-stone wall from a stone inventory with the Next-Best-Object planner  (hybrid orient -> drop-to-contact -> analytic stability gate -> lowest-cost pick).  Outputs the ordered, gated placement sequence. Optional target envelope, physical Seat  validation (settle each placement onto the fixed wall), and Bullet settle / CRA confirmation.  Ref: Furrer 2017 / Johns 2020.",
+    "exposure": "primary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Inventory",
+        "nick": "I",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Stone meshes to draw from."
+      },
+      {
+        "name": "Wall Length",
+        "nick": "L",
+        "type": "Number",
+        "access": "item",
+        "desc": "Wall length to fill along +X (m). Overridden by Envelope if supplied."
+      },
+      {
+        "name": "Target Height",
+        "nick": "H",
+        "type": "Number",
+        "access": "item",
+        "desc": "Fill until the wall top reaches this height (m). Overridden by Envelope."
+      },
+      {
+        "name": "Course Offset",
+        "nick": "O",
+        "type": "Number",
+        "access": "item",
+        "desc": "Running-bond offset applied on alternating courses (m)."
+      },
+      {
+        "name": "Gap",
+        "nick": "G",
+        "type": "Number",
+        "access": "item",
+        "desc": "Minimum gap between stones along a course (m)."
+      },
+      {
+        "name": "Envelope",
+        "nick": "E",
+        "type": "Brep",
+        "access": "item",
+        "desc": "Optional closed target envelope (Brep): bounds the wall and rejects stones whose CoM falls outside it."
+      },
+      {
+        "name": "Spine",
+        "nick": "Sp",
+        "type": "Curve",
+        "access": "item",
+        "desc": "Optional plan-rim spine curve: the wall follows it (front advances along arc length, long axis  into the wall along the local normal). A straight line reproduces the straight-X wall."
+      },
+      {
+        "name": "Confirm",
+        "nick": "C",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Run a Bullet physics settle confirmation of the produced wall."
+      },
+      {
+        "name": "CRA",
+        "nick": "Cra",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Run the compas-CRA rigid-block-equilibrium wall-gate (the strongest stability tier) on the produced wall."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Execute the fill."
+      },
+      {
+        "name": "Seat",
+        "nick": "Se",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Physically VALIDATE each placement: drop every candidate (in its top stable orientations) onto  the fixed as-built and keep only the one that beds firmly, committed at its settled pose. Builds  a wall that holds (fewer stones, no slips) -- the robot-ready mode. Needs the Bullet backend."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Placed",
+        "nick": "Pl",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Placed stone meshes in placement order."
+      },
+      {
+        "name": "Transforms",
+        "nick": "X",
+        "type": "Transform",
+        "access": "list",
+        "desc": "Per-stone placement transform (matches Placed order)."
+      },
+      {
+        "name": "Course",
+        "nick": "Cr",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Per-stone course index."
+      },
+      {
+        "name": "Stable",
+        "nick": "St",
+        "type": "Boolean",
+        "access": "list",
+        "desc": "Per-stone analytic stability verdict."
+      },
+      {
+        "name": "Cost",
+        "nick": "Co",
+        "type": "Number",
+        "access": "list",
+        "desc": "Per-stone selection cost (lower is better)."
+      },
+      {
+        "name": "Report",
+        "nick": "Rp",
+        "type": "Text",
+        "access": "item",
+        "desc": "Solve summary."
+      }
+    ],
+    "related": [],
+    "icon": "DryStoneWallNbo.png",
+    "file": "src/Frahan.StonePack.GH/Nbo/DryStoneWallNboComponent.cs"
+  },
+  {
+    "guid": "D5F10032-0BA0-4ED9-A032-0BA00BA00032",
+    "class": "ForceSeatUrScriptComponent",
+    "name": "Force-Seat (URScript)",
+    "nickname": "FSeat",
+    "category": "Frahan",
+    "subcategory": "Masonry",
+    "description": "Emit UR URScript to place + force-seat a stone at each place TCP frame  (approach -> descend -> force_mode press -> retract). TEXT ONLY (code-gen, no  hardware send); validate in URSim. Force-seating is the irregular-stone enabler.",
+    "exposure": "primary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Place Frames",
+        "nick": "F",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Seat TCP frames (from Next-Best-Object Pose -> Robot Frame). Frame Z is the press direction."
+      },
+      {
+        "name": "Robot Base",
+        "nick": "B",
+        "type": "Plane",
+        "access": "item",
+        "desc": "Robot base frame in world coords; poses are emitted in it."
+      },
+      {
+        "name": "Seat Force",
+        "nick": "Fz",
+        "type": "Number",
+        "access": "item",
+        "desc": "Downward press force to seat the stone (N)."
+      },
+      {
+        "name": "Approach",
+        "nick": "A",
+        "type": "Number",
+        "access": "item",
+        "desc": "Approach/retract clearance above the seat (m)."
+      },
+      {
+        "name": "Descend Speed",
+        "nick": "V",
+        "type": "Number",
+        "access": "item",
+        "desc": "Compliant descent speed during seating (m/s)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "URScript",
+        "nick": "U",
+        "type": "Text",
+        "access": "list",
+        "desc": "One place + force-seat URScript program per place frame (text; validate in URSim before any hardware)."
+      }
+    ],
+    "related": [],
+    "icon": "ForceSeatUrScript.png",
+    "file": "src/Frahan.StonePack.GH/Nbo/ForceSeatUrScriptComponent.cs"
+  },
+  {
     "guid": "F0123456-789A-BCDE-F012-3456789ABCDE",
     "class": "FragmentMergerComponent",
     "name": "Fragment Merger",
@@ -12050,6 +12513,94 @@
     "file": "src/Frahan.StonePack.GH/Masonry/MeshQualityReportComponent.cs"
   },
   {
+    "guid": "D5F10031-0BA0-4ED9-A031-0BA00BA00031",
+    "class": "NboPoseToRobotFrameComponent",
+    "name": "Next-Best-Object Pose → Robot Frame",
+    "nickname": "NBORobot",
+    "category": "Frahan",
+    "subcategory": "Masonry",
+    "description": "Turn NBO placements into robot TCP frames + UR poses via a top-pick grasp model.  Outputs pick / place / approach frames, the place pose as UR p[...] in the robot base,  and the grip width/length. The live robot stays downstream (Robots/visose,  UnderAutomation, compas_fab); this is the planner->robot handoff only.",
+    "exposure": "primary",
+    "algorithm": null,
+    "inputs": [
+      {
+        "name": "Stones",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Source stone meshes (where they currently sit, for the pick frame)."
+      },
+      {
+        "name": "Placements",
+        "nick": "X",
+        "type": "Transform",
+        "access": "list",
+        "desc": "NBO placement transforms, matching the Stones order."
+      },
+      {
+        "name": "Robot Base",
+        "nick": "B",
+        "type": "Plane",
+        "access": "item",
+        "desc": "Robot base frame in world coords; the place pose is expressed in it."
+      },
+      {
+        "name": "Approach",
+        "nick": "A",
+        "type": "Number",
+        "access": "item",
+        "desc": "Approach/retract clearance above each place frame (m)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Pick Frames",
+        "nick": "Pk",
+        "type": "Plane",
+        "access": "list",
+        "desc": "TCP frame to grab each stone where it sits."
+      },
+      {
+        "name": "Place Frames",
+        "nick": "Pl",
+        "type": "Plane",
+        "access": "list",
+        "desc": "TCP frame to place each stone."
+      },
+      {
+        "name": "Approach Frames",
+        "nick": "Ap",
+        "type": "Plane",
+        "access": "list",
+        "desc": "Pre-place / retract waypoint above each place frame."
+      },
+      {
+        "name": "Place Poses",
+        "nick": "Ps",
+        "type": "Text",
+        "access": "list",
+        "desc": "Place TCP as a UR p[x,y,z,rx,ry,rz] (m, axis-angle) in the robot base."
+      },
+      {
+        "name": "Grip Width",
+        "nick": "Gw",
+        "type": "Number",
+        "access": "list",
+        "desc": "Stone extent across the jaw axis (gripper opening)."
+      },
+      {
+        "name": "Grip Length",
+        "nick": "Gl",
+        "type": "Number",
+        "access": "list",
+        "desc": "Stone extent along the jaw-open axis."
+      }
+    ],
+    "related": [],
+    "icon": "NboPoseRobotFrame.png",
+    "file": "src/Frahan.StonePack.GH/Nbo/NboPoseToRobotFrameComponent.cs"
+  },
+  {
     "guid": "C4D5E6F7-A8B9-4ABC-DEF0-123456789012",
     "class": "PackDiagnosticsComponent",
     "name": "Pack Diagnostics",
@@ -12684,8 +13235,8 @@
     "description": "NOTE: the settle v2 objective reaches +97% clearance, 23/24 stable  (see examples/27 cards); this component remains the validated v1.  Settles stone meshes into an upright Z-up rubble wall. Each  stone is PCA-oriented so its broad/flat face beds DOWN, then  dropped (gravity = -Z) into the per-(x,y)-cell dimples of the  course below, trying 4 orientation flips and a small X-slot  shift. Non-penetrating by construction. Reports a per-stone  COM-over-support stability flag and signed support clearance.  Apply each output mesh as-is; transforms are already baked in.",
     "exposure": "primary",
     "algorithm": {
-      "title": "Concave-aware Z-up rubble settle",
-      "citation": "Frahan-original (ETH1100 dry-stone HITL rev 2, signed off 2026-05-25)"
+      "title": "COM-over-support stability",
+      "citation": "Heyman 1966 limit-state masonry (centre of thrust within the support)"
     },
     "inputs": [
       {
@@ -14919,6 +15470,127 @@
     "file": "src/Frahan.StonePack.GH/ScanIngest/VoxelDownsampleComponent.cs"
   },
   {
+    "guid": "A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06",
+    "class": "BedBlockLayoutComponent",
+    "name": "Bed Block Layout",
+    "nickname": "BedBlocks",
+    "category": "Frahan",
+    "subcategory": "Quarry",
+    "description": "Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling",
+      "citation": "Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)"
+    },
+    "inputs": [
+      {
+        "name": "Bench",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m). The XY footprint + Z range to lay blocks in."
+      },
+      {
+        "name": "Bed Surfaces",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom)."
+      },
+      {
+        "name": "Volume Weight",
+        "nick": "W",
+        "type": "Number",
+        "access": "item",
+        "desc": "Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0."
+      },
+      {
+        "name": "Oblique",
+        "nick": "Ob",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste)."
+      },
+      {
+        "name": "Cut Cost",
+        "nick": "Cut",
+        "type": "Number",
+        "access": "item",
+        "desc": "Diamond-saw cost (USD/m2 of sawn block face). Default 200."
+      },
+      {
+        "name": "Keep-out",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05."
+      },
+      {
+        "name": "Catalogue",
+        "nick": "Cat",
+        "type": "Number",
+        "access": "list",
+        "desc": "OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Blocks",
+        "nick": "B",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes."
+      },
+      {
+        "name": "Class",
+        "nick": "C",
+        "type": "Text",
+        "access": "list",
+        "desc": "Catalogue class (A/B/C/D...) of each block, aligned to Blocks."
+      },
+      {
+        "name": "Volume",
+        "nick": "V",
+        "type": "Number",
+        "access": "item",
+        "desc": "Total recovered block volume (m3)."
+      },
+      {
+        "name": "Net Value",
+        "nick": "Net",
+        "type": "Number",
+        "access": "item",
+        "desc": "Net value (USD) = block sale price - diamond-saw cut cost."
+      },
+      {
+        "name": "Count",
+        "nick": "N",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of blocks placed."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Mix + economics + per-layer summary."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > Quarry > GPR Fracture Surfaces 3D",
+        "reason": "Source of the bed surfaces this lays blocks between."
+      },
+      {
+        "target": "Frahan > Quarry > Fracture Block Pack",
+        "reason": "Uniform-block guillotine packer; this one is the priced multi-size CATALOGUE layout."
+      }
+    ],
+    "icon": "BlockPackTree.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs"
+  },
+  {
     "guid": "F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3",
     "class": "BlockCutOptAmrrPlanComponent",
     "name": "BlockCutOpt AMRR Plan",
@@ -15626,6 +16298,88 @@
     "file": "src/Frahan.StonePack.GH/Quarry/CleanScanMeshComponent.cs"
   },
   {
+    "guid": "A7E0B0F6-0C0F-4A16-9E3D-0FACE0FACE07",
+    "class": "ConstructGprPresetComponent",
+    "name": "Construct GPR Preset",
+    "nickname": "GprPreset",
+    "category": "Frahan",
+    "subcategory": "Quarry",
+    "description": "Build a custom GPR ingestion preset for ANY stone / antenna (the library ships only two  empirically tuned presets, marble_600 and granite_160). Set the EM velocity (or a relative  permittivity to derive it), the antenna frequency, and the reflector detection + continuity  gates. Wire the output into GPR Survey Grid > Custom Preset to override the named preset.  Tip: a stone sold as 'marble' may be a compact limestone - match the velocity/frequency to the  survey, not the trade name.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "Constructs a GPR preset: velocity (or eps_r), frequency, energy + continuity gates",
+      "citation": "EM velocity v = c/sqrt(eps_r), c = 0.2998 m/ns; depth = v*t/2. Continuity gate per USGS Mirror Lake WRIR 99-4018C."
+    },
+    "inputs": [
+      {
+        "name": "Stone",
+        "nick": "St",
+        "type": "Text",
+        "access": "item",
+        "desc": "Stone / material label (e.g. limestone, marble, granite, travertine). custom"
+      },
+      {
+        "name": "Frequency",
+        "nick": "f",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Antenna centre frequency (MHz). Sets the lambda/4 resolution."
+      },
+      {
+        "name": "Velocity",
+        "nick": "v",
+        "type": "Number",
+        "access": "item",
+        "desc": "EM velocity (m/ns); depth = v*t/2. If <= 0 it is derived from Eps_r.  Marble/limestone ~0.10, granite ~0.12, travertine ~0.11."
+      },
+      {
+        "name": "Eps_r",
+        "nick": "Er",
+        "type": "Number",
+        "access": "item",
+        "desc": "Relative permittivity. Used to derive Velocity when Velocity <= 0  (v = 0.2998/sqrt(Eps_r)); otherwise Eps_r is recomputed from Velocity for consistency."
+      },
+      {
+        "name": "Energy Quantile",
+        "nick": "Q",
+        "type": "Number",
+        "access": "item",
+        "desc": "Reflector detection threshold (0..1) on the Hilbert energy;  higher keeps only the strongest reflectors. Marble/granite empirical ~0.985."
+      },
+      {
+        "name": "Continuity Traces",
+        "nick": "Ct",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Reflector continuity gate in traces: a reflector must  persist this many traces to be kept. Marble veins are short (~27 traces ~0.65 m); granite shear zones  longer (~41 traces ~1 m)."
+      },
+      {
+        "name": "Migrate",
+        "nick": "Mig",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "f-k (Stolt) migration on each line (repositions dipping reflectors)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Preset",
+        "nick": "Pr",
+        "type": "Generic",
+        "access": "item",
+        "desc": "Constructed GPR preset. Wire into GPR Survey Grid > Custom Preset."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > Quarry > GPR Survey Grid",
+        "reason": "Wire the constructed preset into Custom Preset to ingest a stone the two built-in presets do not cover."
+      }
+    ],
+    "icon": "GprIngest.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/GprPresetComponents.cs"
+  },
+  {
     "guid": "ECFDAEBF-CADB-4234-5678-9012345678AB",
     "class": "ConvexHullSlabComponent",
     "name": "Convex Hull Slab",
@@ -16166,6 +16920,89 @@
     "related": [],
     "icon": "BlockCutOpt.png",
     "file": "src/Frahan.StonePack.GH/Quarry/FractureBlockPackComponent.cs"
+  },
+  {
+    "guid": "A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05",
+    "class": "FractureBoundedSlabsComponent",
+    "name": "Fracture Bounded Slabs",
+    "nickname": "BedSlabs",
+    "category": "Frahan",
+    "subcategory": "Quarry",
+    "description": "Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces",
+      "citation": "ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)"
+    },
+    "inputs": [
+      {
+        "name": "Bench",
+        "nick": "A",
+        "type": "Box",
+        "access": "item",
+        "desc": "Bench bounding box (m). XY footprint + the Z range to slab."
+      },
+      {
+        "name": "Bed Surfaces",
+        "nick": "F",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds."
+      },
+      {
+        "name": "Grid Res",
+        "nick": "G",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26."
+      },
+      {
+        "name": "Keep-out",
+        "nick": "K",
+        "type": "Number",
+        "access": "item",
+        "desc": "Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Slabs",
+        "nick": "S",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes."
+      },
+      {
+        "name": "Thickness",
+        "nick": "T",
+        "type": "Number",
+        "access": "list",
+        "desc": "Mean thickness (m) of each slab, aligned to Slabs."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Per-slab summary."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > Quarry > GPR Fracture Surfaces 3D",
+        "reason": "Source of the kriged bed surfaces this slabs the bench by."
+      },
+      {
+        "target": "Frahan > Quarry > Fracture Block Pack",
+        "reason": "Pack each fracture-bounded slab with the staged guillotine (mode 5)."
+      },
+      {
+        "target": "Frahan > Slab > Slab Cut By Tool Mesh (CGAL)",
+        "reason": "The CGAL boolean alternative for arbitrary (non-height-field) curved cutters."
+      }
+    ],
+    "icon": "Box2Mesh.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs"
   },
   {
     "guid": "F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5",
@@ -17335,7 +18172,7 @@
     "nickname": "Photo2Ply",
     "category": "Frahan",
     "subcategory": "Quarry",
-    "description": "Run a fracture detector on a calibrated image and emit the  vertical-extruded PLY consumable by BlockCutOpt. v1 backend  is CsvFractureTraceSource: x1, y1, x2, y2 in world metres.  Pair with GFNInfer to write the CSV from a GeoFractNet run,  or hand-author the CSV from QGIS / AutoCAD digitisation.",
+    "description": "v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2  in world metres) and emits the vertical-extruded PLY consumable by  BlockCutOpt. The on-image fracture detector is not yet wired (the  Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer  to write the CSV from a GeoFractNet run, or hand-author the CSV from  QGIS / AutoCAD digitisation.",
     "exposure": "secondary",
     "algorithm": null,
     "inputs": [
@@ -18113,7 +18950,7 @@
     "nickname": "GprFracture",
     "category": "Frahan",
     "subcategory": "Quarry",
-    "description": "Process a GPR radargram and extract fracture reflectors. Reads IDS .dt /  MALA .rd3 / GSSI .dzt / pulseEKKO .dt1 / SEG-Y / CSV. Runs dewow -> background  removal -> time-zero mute -> gain -> f-k (Stolt) migration -> Hilbert energy ->  USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for  tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use  the preset). Outputs fracture picks, depths, confidence, and a depth-converted  energy mesh. Note: Geoscanners .gsf must be exported to SEG-Y (GPRSoft) first.  Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.",
+    "description": "Process a GPR radargram and extract fracture reflectors. Reads IDS .dt /  MALA .rd3 / GSSI .dzt / pulseEKKO .dt1 / SEG-Y / CSV. Runs dewow -> background  removal -> time-zero mute -> gain -> f-k (Stolt) migration -> Hilbert energy ->  USGS >=40-trace continuity extraction. Choose a STONE x FREQUENCY preset for  tuned defaults (marble_600, granite_160, ...); override any knob (set < 0 to use  the preset). Outputs fracture picks, depths, confidence, and a depth-converted  energy mesh. Reads Geoscanners .gsf natively (GsfReader).  Workflows cross-checked against RGPR (the open R GPR-processing package) in the companion paper.",
     "exposure": "secondary",
     "algorithm": {
       "title": "GPR fracture extraction: f-k (Stolt) migration + Hilbert instantaneous energy + USGS continuity",
@@ -18277,20 +19114,7 @@
         "desc": "OPTIMISATION METRIC: mean over the picks of P(|depth deviation| <= T) = erf(T/(sigma*sqrt2)).  0..1 (= the fraction of the fracture trace within +-T of truth). Raise it by calibrating  velocity (Perm Uncertainty down) or higher frequency. Section-level (no inter-line term)."
       }
     ],
-    "related": [
-      {
-        "target": "Frahan > Ingest > GPR Radargram Mesh",
-        "reason": "Alternative radargram visual; this one adds processing + extraction."
-      },
-      {
-        "target": "Frahan > Quarry > GPR Fractures on Mesh",
-        "reason": "Drape these extracted picks onto a bench/block mesh."
-      },
-      {
-        "target": "Frahan > Quarry > Overburden To Rock Face",
-        "reason": "The deepest continuous reflector = bedrock surface z_r for the overburden strip."
-      }
-    ],
+    "related": [],
     "icon": "GprIngest.png",
     "file": "src/Frahan.StonePack.GH/Quarry/GprFractureExtractComponent.cs"
   },
@@ -18381,6 +19205,27 @@
         "type": "Number",
         "access": "item",
         "desc": "STONE-SPECIFIC base imaging efficiency for detectability (0..1): the detected fraction  for ideal open sub-horizontal fractures. Crystalline/granite ~0.80-0.91 (Molron 2020 /  Dorn 2012, low loss); attenuating/clay-prone stone (marble, limestone) is lower. Default  0.80 (granite, MEASURED Molron 2020). Per-stone (GprDetectionCalibration): limestone 0.90,  sandstone 0.80, marble/travertine 0.75, andesite 0.50, tuff 0.38. ONLY stone-specific detection  knob; velocity/eps_r/frequency still set sigma_recon + the (now depth-aware) size floor."
+      },
+      {
+        "name": "Through Picks",
+        "nick": "Xp",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "EXACT interpolation: collapse each fracture's picks to one PEAK pick per cell (keep the  highest-energy reflector) and krige with a near-zero nugget so the surface passes THROUGH  every peak pick (posterior sigma ~0 at picks) and spans the full survey footprint as one  continuous dipping sheet. False = smoothing fit (the old behaviour). Default true."
+      },
+      {
+        "name": "Pick Energy",
+        "nick": "En",
+        "type": "Number",
+        "access": "list",
+        "desc": "OPTIONAL per-pick energy/confidence (0..1), aligned to Fracture Picks (wire the Confidence  output of GPR Survey Grid / GPR Fracture Extract). With Through Picks on, the PEAK (highest-  energy) pick is kept per cell. Omit to keep the pick nearest the local trend."
+      },
+      {
+        "name": "Peak Dedup",
+        "nick": "Dd",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "K2 (default true): collapse each cell to its single PEAK reflector before kriging -> smoothest  sheet, lowest residual, rides the strong reflectors. False = K1: keep EVERY pick as a hard  constraint -> maximum fidelity to the raw cloud, marginally lower posterior sigma, but the  surface buckles where near-coincident picks disagree. Only applies when Through Picks is on."
       }
     ],
     "outputs": [
@@ -18538,6 +19383,155 @@
     ],
     "icon": "Downsample.png",
     "file": "src/Frahan.StonePack.GH/GprFractureOverlayComponent.cs"
+  },
+  {
+    "guid": "A7E0B0F0-0C0F-4A16-9E3D-0FACE0FACE01",
+    "class": "GprSurveyGridComponent",
+    "name": "GPR Survey Grid",
+    "nickname": "GprGrid",
+    "category": "Frahan",
+    "subcategory": "Quarry",
+    "description": "Ingest a whole GPR survey GRID in ONE component. Give it the LIST of scan-line files  (.dt / .rd3 / .dzt / .dt1 / .sgy / .csv) and a Line Spacing (or explicit Line Positions);  it runs the validated GPR chain (dewow -> background -> time-zero -> gain -> f-k migration  -> Hilbert energy -> USGS continuity) on each line and lays line i at y = position[i]  (default i*spacing). Outputs one 3D fracture-pick cloud (x=distance, y=line offset, z=-depth)  plus per-pick energy -- feed Picks -> 'GPR Fracture Surfaces 3D' Fracture Picks and Confidence  -> its Pick Energy. Replaces N single-line components + Merge.",
+    "exposure": "secondary",
+    "algorithm": {
+      "title": "GPR survey-grid ingest: per-line f-k migration + Hilbert energy + USGS continuity, laid out by line offset",
+      "citation": "Stolt 1978 (f-k migration); Taner 1979 (instantaneous attributes); USGS Mirror Lake WRIR 99-4018C (>=40-trace continuity)"
+    },
+    "inputs": [
+      {
+        "name": "Files",
+        "nick": "F",
+        "type": "Text",
+        "access": "list",
+        "desc": "The GRID of GPR scan-line files (one per survey line). .dt / .rd3 / .dzt / .dt1 / .sgy / .csv /  .gsf (Geoscanners Akula -- now read natively)."
+      },
+      {
+        "name": "Preset",
+        "nick": "Pr",
+        "type": "Text",
+        "access": "item",
+        "desc": "Stone x frequency preset for tuned defaults applied to every line:  marble_600, granite_160, travertine_390, andesite_390, limestone_200. granite_160"
+      },
+      {
+        "name": "Line Spacing",
+        "nick": "Sp",
+        "type": "Number",
+        "access": "item",
+        "desc": "Distance (m) between consecutive parallel scan lines. Line i is placed at y = i * spacing.  Ignored where Line Positions supplies an explicit y. Default 2.0."
+      },
+      {
+        "name": "Line Positions",
+        "nick": "Y",
+        "type": "Number",
+        "access": "list",
+        "desc": "OPTIONAL explicit y offset (m) per line, aligned to Files (use real survey line coordinates  when you have them). Overrides Line Spacing when its count matches the file count."
+      },
+      {
+        "name": "Velocity",
+        "nick": "v",
+        "type": "Number",
+        "access": "item",
+        "desc": "EM velocity (m/ns), depth = v*t/2. < 0 = use the preset value. Override with a WARR/CMP- measured velocity when available (highest-leverage parameter)."
+      },
+      {
+        "name": "Energy Quantile",
+        "nick": "Q",
+        "type": "Number",
+        "access": "item",
+        "desc": "Energy quantile (0..1) above which a sample is a fracture candidate. < 0 = preset (~0.985)."
+      },
+      {
+        "name": "Max Dip",
+        "nick": "Dip",
+        "type": "Number",
+        "access": "item",
+        "desc": "USGS dip gate (deg). < 0 = default 45 (crystalline-rock standard)."
+      },
+      {
+        "name": "Migrate",
+        "nick": "Mig",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "f-k (Stolt) migration on every line. Default true."
+      },
+      {
+        "name": "Orientation",
+        "nick": "Ax",
+        "type": "Integer",
+        "access": "list",
+        "desc": "OPTIONAL per-line axis for a BIDIRECTIONAL grid: 0 = longitudinal (line runs along X, lines  stacked in Y), 1 = transverse / cross-line (runs along Y, stacked in X). Empty = auto-detect  from the filename (contains 'TA' -> transverse, else longitudinal); a single value applies to  all. With BOTH axes present the picks form a true crossing grid and each axis is spaced to fit  the other axis' extent (the cross-lines MEASURE the perpendicular dip instead of interpolating  it); with one axis it falls back to Line Spacing (parallel lines)."
+      },
+      {
+        "name": "Custom Preset",
+        "nick": "CPr",
+        "type": "Generic",
+        "access": "item",
+        "desc": "OPTIONAL constructed GPR preset (from 'Construct GPR Preset'). If provided, it OVERRIDES the named  Preset string -- use it for any stone/antenna the two built-in empirical presets do not cover."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Fracture Picks",
+        "nick": "P",
+        "type": "Point",
+        "access": "list",
+        "desc": "One 3D fracture-pick cloud across the whole survey: (distance, line offset, -depth) in metres.  Wire into GPR Fracture Surfaces 3D > Fracture Picks."
+      },
+      {
+        "name": "Line Id",
+        "nick": "Lid",
+        "type": "Integer",
+        "access": "list",
+        "desc": "Survey line index (0-based) of each pick."
+      },
+      {
+        "name": "Confidence",
+        "nick": "Cf",
+        "type": "Number",
+        "access": "list",
+        "desc": "Normalised energy (0..1) of each pick. Wire into GPR Fracture Surfaces 3D > Pick Energy so the  PEAK reflector is kept per cell."
+      },
+      {
+        "name": "Depths",
+        "nick": "D",
+        "type": "Number",
+        "access": "list",
+        "desc": "Depth (m) of each pick."
+      },
+      {
+        "name": "Energy Sections",
+        "nick": "E",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "Per-line depth-converted energy section meshes, each laid at its survey y (x=distance,  y=line offset, z=-depth), vertex-coloured by instantaneous energy."
+      },
+      {
+        "name": "Bedrock Depth",
+        "nick": "Z",
+        "type": "Number",
+        "access": "list",
+        "desc": "Deepest continuous reflector (m) per line = candidate bedrock / rock-face top."
+      },
+      {
+        "name": "Report",
+        "nick": "Rpt",
+        "type": "Text",
+        "access": "item",
+        "desc": "Per-line ingest summary."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > Quarry > GPR Fracture Surfaces 3D",
+        "reason": "Krige this multi-line pick cloud into 3D dipping bed surfaces."
+      },
+      {
+        "target": "Frahan > Quarry > GPR Fracture Extract",
+        "reason": "Single-section twin; this one batches a whole survey grid."
+      }
+    ],
+    "icon": "GprIngest.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/GprSurveyGridComponent.cs"
   },
   {
     "guid": "ECFDAEBF-CBDC-4345-6789-012345678BCD",
@@ -20995,6 +21989,106 @@
     "file": "src/Frahan.StonePack.GH/SurfacePacking/PackSurfacesComponent.cs"
   },
   {
+    "guid": "A7E0B0F7-0C0F-4A16-9E3D-0FACE0FACE08",
+    "class": "PanelTileSurfaceComponent",
+    "name": "Panel Tile Surface",
+    "nickname": "PanelTile",
+    "category": "Frahan",
+    "subcategory": "Surface Packing",
+    "description": "Discretize a freeform facade surface into PLANAR stone-cladding panels: divide the surface  U x V, project each quad to its best-fit plane (stone cannot bend), and output BOTH the 3D  panels on the surface AND their flat cut outlines (laid in World XY) ready to nest on slabs  with Sheet Nest (Hole-Aware). Reports per-panel planarity (corner deviation from the panel  plane) and area - raise U/V where planarity is too high for the curvature.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Planar-panel discretization of a surface for stone cladding (planarized U x V quads + flat cut outlines)",
+      "citation": "Each UV quad is projected to its best-fit plane (Plane.FitPlaneToPoints); the flat outline mapped to World XY is the cut tile."
+    },
+    "inputs": [
+      {
+        "name": "Surface",
+        "nick": "S",
+        "type": "Surface",
+        "access": "item",
+        "desc": "Facade surface to panelize (a single surface; a Brep face is coerced)."
+      },
+      {
+        "name": "U Count",
+        "nick": "U",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of panels across the surface U direction."
+      },
+      {
+        "name": "V Count",
+        "nick": "V",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of panels across the surface V direction."
+      },
+      {
+        "name": "Joint",
+        "nick": "J",
+        "type": "Number",
+        "access": "item",
+        "desc": "Grout / joint gap: each panel is inset by this toward its  centre (m). Default 0.005."
+      },
+      {
+        "name": "Planarize",
+        "nick": "Pl",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Project each quad to its best-fit plane so every panel  is a FLAT cuttable tile (stone cannot bend). False = leave the warped surface quad. Default true."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Panels",
+        "nick": "P",
+        "type": "Mesh",
+        "access": "list",
+        "desc": "The 3D (planarized) cladding panels positioned on the surface."
+      },
+      {
+        "name": "Cut Tiles",
+        "nick": "T",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Flat closed outline per panel, mapped to the World XY plane,  ready to nest on slabs (wire into Sheet Nest (Hole-Aware) > Parts)."
+      },
+      {
+        "name": "Planarity",
+        "nick": "Pl",
+        "type": "Number",
+        "access": "list",
+        "desc": "Max corner deviation from the panel plane (m) per panel.  High = the surface is too curved for that panel size; raise U / V."
+      },
+      {
+        "name": "Area",
+        "nick": "A",
+        "type": "Number",
+        "access": "list",
+        "desc": "Panel area (m2) per panel."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Panel count, total area, and worst planarity."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > 2D Packing > Sheet Nest (Hole-Aware)",
+        "reason": "Nest the flat Cut Tiles onto slab sheets to cut them from stock."
+      },
+      {
+        "target": "Frahan > Quarry > Fracture Bounded Slabs",
+        "reason": "Produces the slabs the cut tiles are nested onto."
+      }
+    ],
+    "icon": "QuarryBlock.png",
+    "file": "src/Frahan.StonePack.GH/Quarry/PanelTileSurfaceComponent.cs"
+  },
+  {
     "guid": "A3F1C8B2-74D9-4E2A-8F5B-1C3D9E7A2B4F",
     "class": "SurfaceChartComponent",
     "name": "Surface Chart",
@@ -22096,8 +23190,8 @@
     "description": "Read a list of voussoir meshes (from the Voussoir GH plugin or  Frahan Stereotomic Vault Mode) as a typed VoussoirAssembly.  Per-voussoir record carries OBB + volume + centroid + bed/head  planes + load axis + joint class. Emits MatchItem[] for downstream  MatcherContextBuilder (the substrate spine). First step of the  top-down voussoir-to-stone workflow per philosophy doc §10.6.",
     "exposure": "primary",
     "algorithm": {
-      "title": "VoussoirIngestPipeline",
-      "citation": "Frahan-original Voussoir GH plugin -> typed VoussoirAssembly DTO"
+      "title": "Bed-Head plane detection via largest-face heuristic",
+      "citation": "Frahan-original: sort voussoir faces by area; bed = largest, head = second-largest"
     },
     "inputs": [
       {
@@ -22341,8 +23435,8 @@
     "description": "Assign each voussoir to a quarry stone via Kuhn 1955 Hungarian  bipartite assignment. Voussoirs are demand; stones are supply;  feasibility = stone OBB contains voussoir OBB + safety margin +  yield_ratio >= MinYield; cost = w_yield * (1 - yield_ratio) +  w_carving * (carving_vol / voussoir_vol). The canonical top-down  voussoir-to-stone matcher per wiki/research/voussoir_stereotomy_integration.md  Phase 2 + philosophy doc §10.6. First production use of the  MatcherRegistry substrate.",
     "exposure": "primary",
     "algorithm": {
-      "title": "Kuhn1955Hungarian",
-      "citation": "H.W. Kuhn 1955 Hungarian Method for the Assignment Problem; Naval Research Logistics Quarterly 2:83-97; Jonker-Volgenant pivot"
+      "title": "Tomczak2023Matching",
+      "citation": "Tomczak/Haakonsen/Luczkowski 2023 Environ. Res. Infrastruct. Sustain. 3:035005 DOI 10.1088/2634-4505/acf341 -- Figure 2 5-stage matching pipeline"
     },
     "inputs": [
       {
