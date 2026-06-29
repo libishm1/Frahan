@@ -1411,7 +1411,10 @@ var tests = new List<(string Name, Action Body)>
     // TEMPORARY (revert before commit) — KB-10 local registration; the
     // orchestrator integrates the final tuples.
     ("kb10 6x4 exact-joint wall certifies (was SolverError)", Kb10ExactJointConditioningTests.Wall6x4_ExactJoints_CertifiesWithoutSolverError),
-    ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError)
+    ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError),
+
+    // Rubble-vault tessellation Core pipeline on the real Park Güell archive SubD (Checkpoint 1)
+    ("Vault tessellation pipeline reproduces v004 scale on archive SubD (Rhino)", VaultTessellationTests.Vault_ArchiveSubD_Pipeline_ProducesV004ScaleTessellation)
 };
 
 // Dev hook (permanent, documented): FRAHAN_TEST_FILTER=<substring> narrows the

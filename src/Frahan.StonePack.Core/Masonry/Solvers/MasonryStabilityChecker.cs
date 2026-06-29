@@ -217,14 +217,15 @@ public static class MasonryStabilityChecker
         // ADMM (cold ADMM degrades steeply past ~50 exact-joint interfaces).
         // When the LS path declines (non-diagonal H, singular dual system),
         // behaviour is exactly the previous cold-start solve.
-        var solver = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4);
         double[] lsPoint = TryLsFirstKktPoint(equilibrium, qp, out bool lsCertified, out string lsCertificate);
         ConvexQpResult sol;
         if (lsPoint != null && lsCertified)
             sol = new ConvexQpResult(ConvexQpStatus.Optimal, lsPoint,
                                      DiagonalQpObjective(qp, lsPoint), lsCertificate);
+        else if (MasonrySolverRegistry.Default is OsqpQpSolver osqp)
+            sol = osqp.Solve(qp); // native OSQP (frahan_osqp) — robust on ill-conditioned QPs
         else
-            sol = solver.Solve(qp, lsPoint); // lsPoint may be null -> cold start (unchanged)
+            sol = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(qp, lsPoint); // managed fallback (unchanged)
 
         int vertexCount = equilibrium.ForceColumns.Count / Math.Max(1, equilibrium.ForceComponentsPerVertex);
 
