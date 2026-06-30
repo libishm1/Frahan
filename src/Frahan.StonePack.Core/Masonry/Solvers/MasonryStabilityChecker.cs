@@ -176,6 +176,26 @@ public static class MasonryStabilityChecker
                 0, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
         }
 
+        // ---- Guard: a degenerate (near-zero signed volume) FREE block. Self-weight is
+        // density*|V|*g and BlockCenterOfMass zeroes V below 1e-12 (open / inward-wound /
+        // flat triangulation), so the block becomes WEIGHTLESS -- and a weightless block
+        // trivially "balances", producing a SILENT false-'stable' verdict. This is the
+        // exact hazard a raw triangle-mesh / scan-rubble feeder hits. Reject it instead
+        // of certifying garbage; the fix is upstream (weld + unify normals + close). ----
+        for (int i = 0; i < assembly.Blocks.Count; i++)
+        {
+            var b = assembly.Blocks[i];
+            if (assembly.BoundaryConditions.IsFixed(b.Id)) continue;
+            if (Math.Abs(BlockCenterOfMass.SignedVolume(b)) < 1e-12)
+            {
+                return new DetailedStabilityResult(new StabilityResult(false, ConvexQpStatus.Infeasible,
+                    $"Free block '{b.Id}' has degenerate signed volume (open / inward-wound / flat) -> zero self-weight; " +
+                    "the verdict would be a false 'stable'. Repair the block (weld + unify normals + close it) before checking.",
+                    0, 0, -1, new List<InterfaceUtilization>(),
+                    freeCount, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
+            }
+        }
+
         // ---- Formulate + solve the PENALTY RBE QP (Kao 2022 Eq. 14 semantics,
         // minus the displacement coupling, which is evolution phase P2):
         // f_n = f_n+ - f_n-, both >= 0, with a large Hessian weight gamma on
