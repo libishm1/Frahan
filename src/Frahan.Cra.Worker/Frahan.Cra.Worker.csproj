@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>frahan_cra_worker</AssemblyName>
+    <RootNamespace>Frahan.Cra.Worker</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <!-- Out-of-process CRA solve worker. The CRA path (MasonryStabilityChecker +
+         equilibrium + native OSQP) is Rhino-free, so this runs standalone. It
+         references Core (which drags RhinoCommon), but the CRA code path never
+         calls Rhino natives. The GH component serializes an assembly to a temp
+         file, launches this worker async, and reads the verdict -> GH never blocks. -->
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Frahan.StonePack.Core\Frahan.StonePack.Core.csproj" />
+  </ItemGroup>
+</Project>
