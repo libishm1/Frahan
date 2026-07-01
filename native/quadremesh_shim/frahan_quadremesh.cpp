@@ -31,6 +31,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <map>
+#include <cstdlib>
 
 struct V3 { double x, y, z; };
 static inline V3 operator-(const V3&a,const V3&b){ return {a.x-b.x,a.y-b.y,a.z-b.z}; }
@@ -206,6 +208,107 @@ static void solve(const Mesh& m, const std::vector<V3>& E1, double edgeLen,
     res = residual(F,U);
 }
 
+// ---- thrust-POTENTIAL field --------------------------------------------------
+// The curvature-proxy cross-field degenerates (anisotropy -> 0) on flat regions
+// and carries many 4-RoSy comb cones. Instead solve the load-path potential
+//     L phi = lumped_area,   phi = 0 at the supports,
+// and take E1 = tangential grad(phi): the meridional thrust direction, support ->
+// crown. A GRADIENT field is single-valued (no 4-fold ambiguity), so it has far
+// fewer singularities -> the single-chart param survives on a real holed vault.
+static std::vector<V3> computeNormals(const Mesh& m) {
+    int nv=(int)m.P.size(), nf=(int)m.T.size()/3;
+    std::vector<V3> N(nv,{0,0,0});
+    for(int f=0;f<nf;++f){ int a=m.T[3*f],b=m.T[3*f+1],c=m.T[3*f+2];
+        V3 nrm=cross(m.P[b]-m.P[a], m.P[c]-m.P[a]); N[a]=N[a]+nrm; N[b]=N[b]+nrm; N[c]=N[c]+nrm; }
+    for(int i=0;i<nv;++i){ V3 u=unit(N[i]); N[i]= len(u)>0.5 ? u : V3{0,0,1}; }
+    return N;
+}
+
+// supports = naked-boundary vertices in the low z-band (the springing + column
+// tops). Falls back to all boundary verts if the band is too thin.
+static std::vector<char> detectSupports(const Mesh& m, double frac) {
+    int nv=(int)m.P.size(), nf=(int)m.T.size()/3;
+    std::map<long long,int> ec;
+    auto key=[&](int a,int b){ long long lo=std::min(a,b),hi=std::max(a,b); return (lo<<32)|hi; };
+    for(int f=0;f<nf;++f){ int t[3]={m.T[3*f],m.T[3*f+1],m.T[3*f+2]};
+        for(int e=0;e<3;++e) ec[key(t[e],t[(e+1)%3])]++; }
+    std::vector<char> bnd(nv,0);
+    for(auto&kv:ec) if(kv.second==1){ int a=(int)(kv.first>>32), b=(int)(kv.first&0xffffffff); bnd[a]=1; bnd[b]=1; }
+    double zmin=1e300,zmax=-1e300; for(int i=0;i<nv;++i){ zmin=std::min(zmin,m.P[i].z); zmax=std::max(zmax,m.P[i].z); }
+    double thr=zmin+frac*(zmax-zmin);
+    std::vector<char> sup(nv,0); int ns=0;
+    for(int i=0;i<nv;++i) if(bnd[i] && m.P[i].z<=thr){ sup[i]=1; ns++; }
+    if(ns<3) for(int i=0;i<nv;++i) if(bnd[i]) sup[i]=1;
+    return sup;
+}
+
+// CG for  L u = b  with a SET of vertices pinned to 0 (Dirichlet supports).
+static int cgSolveMask(const std::vector<FaceOp>& F, int nv, const std::vector<char>& pin,
+                       std::vector<double> b, const std::vector<double>& diagL,
+                       std::vector<double>& u, int maxit=6000, double tol=1e-10) {
+    for(int i=0;i<nv;++i) if(pin[i]) b[i]=0.0;
+    u.assign(nv,0.0);
+    auto matvec=[&](const std::vector<double>& x, std::vector<double>& y){
+        y.assign(nv,0.0);
+        for(const auto& fo:F){ if(fo.A==0) continue;
+            for(int a=0;a<3;++a){ double s=0; for(int bb=0;bb<3;++bb) s+=dot(fo.g[a],fo.g[bb])*x[fo.v[bb]]; y[fo.v[a]]+=fo.A*s; } }
+        for(int i=0;i<nv;++i) if(pin[i]) y[i]=x[i];
+    };
+    std::vector<double> r=b,z(nv),p(nv),q(nv);
+    auto precond=[&](const std::vector<double>& in, std::vector<double>& out){
+        for(int i=0;i<nv;++i){ double d=pin[i]?1.0:diagL[i]; out[i]=(d>1e-14)?in[i]/d:in[i]; if(pin[i]) out[i]=0.0; } };
+    for(int i=0;i<nv;++i) if(pin[i]) r[i]=0.0;
+    precond(r,z); p=z;
+    double rz=0; for(int i=0;i<nv;++i) rz+=r[i]*z[i];
+    double bn=0; for(int i=0;i<nv;++i) bn+=b[i]*b[i]; bn=std::sqrt(bn)+1e-30;
+    int it=0;
+    for(;it<maxit;++it){ matvec(p,q);
+        double pq=0; for(int i=0;i<nv;++i) pq+=p[i]*q[i]; if(std::fabs(pq)<1e-30) break;
+        double al=rz/pq; for(int i=0;i<nv;++i){ u[i]+=al*p[i]; r[i]-=al*q[i]; }
+        for(int i=0;i<nv;++i) if(pin[i]){ u[i]=0; r[i]=0; }
+        double rn=0; for(int i=0;i<nv;++i) rn+=r[i]*r[i]; rn=std::sqrt(rn);
+        if(rn/bn<tol){ ++it; break; }
+        precond(r,z); double rz2=0; for(int i=0;i<nv;++i) rz2+=r[i]*z[i];
+        double be=rz2/(rz+1e-30); for(int i=0;i<nv;++i) p[i]=z[i]+be*p[i]; rz=rz2; }
+    return it;
+}
+
+static std::vector<V3> potentialField(const Mesh& m, double supportFrac,
+                                      std::vector<V3>& N, int& nsup, int& cgit) {
+    int nv=(int)m.P.size();
+    N=computeNormals(m);
+    std::vector<char> sup=detectSupports(m,supportFrac); nsup=0; for(char c:sup) nsup+=c;
+    std::vector<V3> dummy(nv,{1,0,0}); std::vector<FaceOp> F; std::vector<double> b1,b2,diagL;
+    buildFaceOps(m,dummy,1.0,F,b1,b2,diagL);                 // reuse for L geometry
+    std::vector<double> load(nv,0.0);
+    for(const auto& fo:F){ if(fo.A==0) continue; double a3=fo.A/3.0; load[fo.v[0]]+=a3; load[fo.v[1]]+=a3; load[fo.v[2]]+=a3; }
+    std::vector<double> phi; cgit=cgSolveMask(F,nv,sup,load,diagL,phi);
+    std::vector<V3> E1(nv,{0,0,0});
+    for(const auto& fo:F){ if(fo.A==0) continue;
+        V3 gp = phi[fo.v[0]]*fo.g[0] + phi[fo.v[1]]*fo.g[1] + phi[fo.v[2]]*fo.g[2];
+        for(int a=0;a<3;++a) E1[fo.v[a]]=E1[fo.v[a]]+fo.A*gp; }
+    for(int i=0;i<nv;++i){ V3 e=E1[i]; e=e-dot(e,N[i])*N[i];
+        if(len(e)>1e-9) E1[i]=unit(e);
+        else { V3 t=cross(N[i],V3{1,0,0}); if(len(t)<1e-6) t=cross(N[i],V3{0,1,0}); E1[i]=unit(t); } }
+    return E1;
+}
+
+// mesh-only blob: int32 nv; nv*3 f64 verts; int32 nf; nf*3 int32 tris; f64 edgeLen.
+template<class T> static T rdf(FILE* f){ T v; fread(&v,sizeof(T),1,f); return v; }
+static int remeshPotential(const char* inPath, const char* outPath, double supportFrac) {
+    FILE* f=fopen(inPath,"rb"); if(!f){ fprintf(stderr,"cannot open %s\n",inPath); return 2; }
+    int nv=rdf<int32_t>(f); Mesh m; m.P.resize(nv);
+    for(int i=0;i<nv;++i){ m.P[i].x=rdf<double>(f); m.P[i].y=rdf<double>(f); m.P[i].z=rdf<double>(f); }
+    int nf=rdf<int32_t>(f); m.T.resize(3*nf); for(int i=0;i<3*nf;++i) m.T[i]=rdf<int32_t>(f);
+    double edgeLen=rdf<double>(f); fclose(f);
+    std::vector<V3> N; int nsup,cgphi; std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi);
+    std::vector<double> U,V; double res; int it; solve(m,E1,edgeLen,U,V,res,it);
+    QuadMesh q=extract(m,U,V); writeObj(outPath,q);
+    printf("potential-remesh: V=%d F=%d supports=%d phi_cg=%d -> quads=%d flippedTris=%d residual=%.3e param_cg=%d -> %s\n",
+           nv,nf,nsup,cgphi,(int)q.Q.size()/4,q.flipped,res,it,outPath);
+    return 0;
+}
+
 static int selftest() {
     int fails=0;
     // TEST1: flat 20x20 grid, constant field +X. Exact: u = rho*x, residual ~0.
@@ -256,6 +359,7 @@ static int remesh(const char* inPath, const char* outPath) {
 int main(int argc, char** argv) {
     if (argc<2 || strcmp(argv[1],"--selftest")==0) return selftest();
     if (strcmp(argv[1],"--remesh")==0 && argc>=4) return remesh(argv[2],argv[3]);
-    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj>\n");
+    if (strcmp(argv[1],"--potential")==0 && argc>=4) return remeshPotential(argv[2],argv[3], argc>=5?atof(argv[4]):0.35);
+    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj> | --potential <mesh.bin> <out.obj> [supportFrac]\n");
     return 2;
 }
