@@ -25,6 +25,20 @@ namespace Frahan.Masonry.Tna
         public bool[] IsBoundary;      // naked-edge vertices
     }
 
+    /// <summary>
+    /// Stage A.5 output. Refine() combs + smooths the field IN PLACE (updates the
+    /// ThrustFieldResult E1/E2) and reports the per-triangle 4-RoSy singularity index
+    /// and the interior cones -- the gate that tells Stage B it must cut a seam.
+    /// </summary>
+    public sealed class FieldRefineResult
+    {
+        public int[] SingularIndex;                          // per triangle: 0 regular, 1 valence-3 cone, 3 valence-5
+        public List<int> InteriorSingularFaces = new List<int>();
+        public bool HasInteriorSingularity;
+        public int TriangleCount;
+        public int SmoothSweeps;
+    }
+
     public static class ThrustField
     {
         /// <summary>
@@ -108,6 +122,137 @@ namespace Frahan.Masonry.Tna
             if (t.Length < 1e-12) return; t.Unitize();
             double c = t * b1[v], s = t * b2[v];
             Saa[v] += we * c * c; Sbb[v] += we * s * s; Sab[v] += we * c * s;
+        }
+
+        // =====================================================================
+        // Stage A.5 — comb + smooth + singularity index (extends the field).
+        // Spec: outputs/2026-06-30/thrust_remesh/HANDOFF_IMPLEMENTATION.md §2.
+        //   - comb: BFS over the 1-ring, rotate each e1 into its parent's 4-RoSy
+        //     orbit so it is a single consistent representative;
+        //   - smooth: Gauss-Seidel on the aligned neighbour reps (umbilic cleanup);
+        //   - singularity index: per triangle, sum of the mod-90 matches, mod 4.
+        //     0 = regular, 1 = valence-3 cone (+1/4), 3 = valence-5 (-1/4).
+        // The interior cones are the flag Stage B seams on (the 3-prong -> 1 hub cone).
+        // Writes the refined e1/e2 back into `field`.
+        // =====================================================================
+        public static FieldRefineResult Refine(ThrustFieldResult field, Mesh mesh, int smoothSweeps = 4)
+        {
+            int nv = field.E1.Length;
+            var N = field.Normal;
+
+            // triangle faces + 1-ring adjacency
+            var m = mesh.DuplicateMesh(); m.Faces.ConvertQuadsToTriangles(); m.Compact();
+            int nf = m.Faces.Count;
+            var F = new int[nf][];
+            for (int f = 0; f < nf; f++) { var mf = m.Faces[f]; F[f] = new[] { mf.A, mf.B, mf.C }; }
+            var VAdj = new List<int>[nv];
+            for (int i = 0; i < nv; i++) VAdj[i] = new List<int>();
+            var seen = new HashSet<long>();
+            for (int f = 0; f < nf; f++)
+            {
+                int[] tri = F[f];
+                for (int p = 0; p < 3; p++)
+                {
+                    int a = tri[p], b = tri[(p + 1) % 3];
+                    if (a == b || a < 0 || b < 0 || a >= nv || b >= nv) continue;
+                    long key = a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
+                    if (seen.Add(key)) { VAdj[a].Add(b); VAdj[b].Add(a); }
+                }
+            }
+
+            // boundary faces (touch a naked edge): interior cones are what we gate on
+            var boundaryFace = new bool[nf];
+            var te = m.TopologyEdges;
+            for (int e = 0; e < te.Count; e++)
+            {
+                var cf = te.GetConnectedFaces(e);
+                if (cf != null && cf.Length == 1 && cf[0] >= 0 && cf[0] < nf) boundaryFace[cf[0]] = true;
+            }
+
+            // --- comb: BFS, rotate each e1 into its parent's orbit ---
+            var visited = new bool[nv];
+            var comb = (Vector3d[])field.E1.Clone();
+            var q = new Queue<int>();
+            for (int s = 0; s < nv; s++)
+            {
+                if (visited[s]) continue;
+                visited[s] = true; q.Enqueue(s);
+                while (q.Count > 0)
+                {
+                    int i = q.Dequeue();
+                    foreach (int j in VAdj[i])
+                        if (!visited[j])
+                        {
+                            Vector3d r = comb[i]; r -= (r * N[j]) * N[j];
+                            if (r.Length < 1e-9) r = field.E1[j];
+                            r.Unitize();
+                            comb[j] = Rot(field.E1[j], N[j], MatchK(r, field.E1[j], N[j]));
+                            if (comb[j].Length > 1e-12) comb[j].Unitize();
+                            visited[j] = true; q.Enqueue(j);
+                        }
+                }
+            }
+            field.E1 = comb;
+
+            // --- smooth: Gauss-Seidel on the aligned neighbour reps ---
+            for (int sweep = 0; sweep < smoothSweeps; sweep++)
+                for (int i = 0; i < nv; i++)
+                {
+                    if (field.IsBoundary[i]) continue;
+                    Vector3d acc = Vector3d.Zero;
+                    foreach (int j in VAdj[i])
+                    {
+                        Vector3d ej = field.E1[j]; ej -= (ej * N[i]) * N[i];
+                        if (ej.Length < 1e-9) continue; ej.Unitize();
+                        int k = MatchK(field.E1[i], ej, N[i]);
+                        acc += Rot(ej, N[i], k);
+                    }
+                    acc -= (acc * N[i]) * N[i];
+                    if (acc.Length > 1e-9) { field.E1[i] = acc; field.E1[i].Unitize(); }
+                }
+            for (int i = 0; i < nv; i++) { field.E2[i] = Vector3d.CrossProduct(N[i], field.E1[i]); field.E2[i].Unitize(); }
+
+            // --- per-triangle 4-RoSy singularity index ---
+            var res = new FieldRefineResult { SingularIndex = new int[nf], TriangleCount = nf, SmoothSweeps = smoothSweeps };
+            for (int f = 0; f < nf; f++)
+            {
+                int i = F[f][0], j = F[f][1], k = F[f][2];
+                if (i >= nv || j >= nv || k >= nv) continue;
+                int sum = MatchK(Pln(field.E1[j], N[i]), field.E1[i], N[i])
+                        + MatchK(Pln(field.E1[k], N[j]), field.E1[j], N[j])
+                        + MatchK(Pln(field.E1[i], N[k]), field.E1[k], N[k]);
+                int idx = ((sum % 4) + 4) % 4;
+                res.SingularIndex[f] = idx;
+                if (idx != 0 && !boundaryFace[f]) res.InteriorSingularFaces.Add(f);
+            }
+            res.HasInteriorSingularity = res.InteriorSingularFaces.Count > 0;
+            return res;
+        }
+
+        // best 90*k rotation of the cross {e1} to align with reference dir r (in n's plane)
+        private static int MatchK(Vector3d r, Vector3d e1, Vector3d n)
+        {
+            Vector3d e2 = Vector3d.CrossProduct(n, e1);
+            double d0 = r * e1, d1 = r * e2, d2 = -d0, d3 = -d1;
+            int k = 0; double best = d0;
+            if (d1 > best) { best = d1; k = 1; }
+            if (d2 > best) { best = d2; k = 2; }
+            if (d3 > best) { k = 3; }
+            return k;
+        }
+
+        // R^k e1, where R v = n x v (90 deg about n)
+        private static Vector3d Rot(Vector3d e1, Vector3d n, int k)
+        {
+            Vector3d v = e1; int kk = k & 3;
+            for (int i = 0; i < kk; i++) v = Vector3d.CrossProduct(n, v);
+            return v;
+        }
+
+        // project v into n's tangent plane, unit
+        private static Vector3d Pln(Vector3d v, Vector3d n)
+        {
+            var r = v - (v * n) * n; if (r.Length > 1e-12) r.Unitize(); return r;
         }
     }
 }
