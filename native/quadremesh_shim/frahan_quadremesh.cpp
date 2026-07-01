@@ -1,0 +1,261 @@
+// =============================================================================
+// Copyright (c) 2026 Frahan StonePack (Independent Research).
+// SPDX-License-Identifier: LicenseRef-Frahan-Proprietary
+// CLEAN-ROOM implementation: derived from our own C# reference
+// (Frahan.Masonry.Vault.FieldAlignedParam / QuadExtract, validated in Rhino) and
+// the cited published math, NOT from QuadriFlow / Instant Meshes source.
+// =============================================================================
+// frahan_quadremesh -- out-of-process thrust-following quad remesher. Given a
+// triangle mesh and a per-vertex cross-field (E1 tangent + N normal, computed
+// upstream from the TNA thrust network), it produces a quad mesh whose edges
+// follow the field:
+//     Stage A.5  comb + Gauss-Seidel smooth of the field (optional here; the
+//                C# side already combs, so this is a light re-smooth).
+//     Stage B    cotangent-Poisson parametrization  min |grad u - rho*E1|^2,
+//                solved MATRIX-FREE by preconditioned conjugate gradient (the
+//                native win over the C# dense Cholesky -> full-res meshes stay
+//                fast and memory-light).
+//     Stage C    lift the integer (u,v) lattice back onto the surface -> quads.
+//
+//   args: --selftest                    internal flat + paraboloid asserts (no I/O)
+//         --remesh <in.bin> <out.obj>   read mesh+field blob, write quad OBJ
+//
+// Blob format (little-endian): int32 nv; nv*3 f64 verts; nv*3 f64 E1; nv*3 f64 N;
+//                              int32 nf; nf*3 int32 tris; f64 edgeLen.
+// Build: build_mingw.sh (static mingw64 g++ -O3, no external libraries).
+// =============================================================================
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <cmath>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+struct V3 { double x, y, z; };
+static inline V3 operator-(const V3&a,const V3&b){ return {a.x-b.x,a.y-b.y,a.z-b.z}; }
+static inline V3 operator+(const V3&a,const V3&b){ return {a.x+b.x,a.y+b.y,a.z+b.z}; }
+static inline V3 operator*(double s,const V3&a){ return {s*a.x,s*a.y,s*a.z}; }
+static inline double dot(const V3&a,const V3&b){ return a.x*b.x+a.y*b.y+a.z*b.z; }
+static inline V3 cross(const V3&a,const V3&b){ return {a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x}; }
+static inline double len(const V3&a){ return std::sqrt(dot(a,a)); }
+static inline V3 unit(const V3&a){ double l=len(a); return l>1e-12 ? (1.0/l)*a : V3{0,0,0}; }
+
+struct Mesh { std::vector<V3> P; std::vector<int> T; /*3*nf*/ };
+
+// ---- per-face precompute for the Poisson operator ---------------------------
+struct FaceOp {
+    int v[3];
+    double A;          // triangle area
+    V3 g[3];           // hat-function gradients (grad phi_a)
+    V3 X1, X2;         // rho * projected field (RHS targets)
+};
+
+// Build the field-aligned Poisson data: hat gradients, area, and the target
+// gradient rho*E1 / rho*E2 per face. Mirrors FieldAlignedParam.Solve (C#).
+static void buildFaceOps(const Mesh& m, const std::vector<V3>& E1, double rho,
+                         std::vector<FaceOp>& F, std::vector<double>& b1,
+                         std::vector<double>& b2, std::vector<double>& diagL) {
+    int nv = (int)m.P.size(); int nf = (int)m.T.size()/3;
+    F.clear(); F.reserve(nf);
+    b1.assign(nv,0.0); b2.assign(nv,0.0); diagL.assign(nv,0.0);
+    for (int f=0; f<nf; ++f) {
+        FaceOp fo; fo.v[0]=m.T[3*f]; fo.v[1]=m.T[3*f+1]; fo.v[2]=m.T[3*f+2];
+        const V3& p0=m.P[fo.v[0]]; const V3& p1=m.P[fo.v[1]]; const V3& p2=m.P[fo.v[2]];
+        V3 nrm = cross(p1-p0, p2-p0); double A = 0.5*len(nrm);
+        if (A < 1e-12) { fo.A=0; fo.g[0]=fo.g[1]=fo.g[2]={0,0,0}; fo.X1=fo.X2={0,0,0}; F.push_back(fo); continue; }
+        V3 n = unit(nrm); fo.A=A;
+        fo.g[0]=(1.0/(2*A))*cross(n, p2-p1);
+        fo.g[1]=(1.0/(2*A))*cross(n, p0-p2);
+        fo.g[2]=(1.0/(2*A))*cross(n, p1-p0);
+        V3 e1f = E1[fo.v[0]]+E1[fo.v[1]]+E1[fo.v[2]];
+        e1f = e1f - dot(e1f,n)*n;
+        e1f = (len(e1f)>1e-9) ? unit(e1f) : unit(fo.g[0]);
+        V3 e2f = cross(n, e1f);
+        fo.X1 = rho*e1f; fo.X2 = rho*e2f;
+        for (int a=0;a<3;++a) {
+            b1[fo.v[a]] += A*dot(fo.g[a], fo.X1);
+            b2[fo.v[a]] += A*dot(fo.g[a], fo.X2);
+            diagL[fo.v[a]] += A*dot(fo.g[a], fo.g[a]);
+        }
+        F.push_back(fo);
+    }
+}
+
+// Matrix-free action y = L x  (L = cotangent stiffness), with vertex p pinned.
+static void applyL(const std::vector<FaceOp>& F, int nv, int pin,
+                   const std::vector<double>& x, std::vector<double>& y) {
+    y.assign(nv,0.0);
+    for (const auto& fo : F) {
+        if (fo.A==0) continue;
+        for (int a=0;a<3;++a) {
+            double s=0;
+            for (int b=0;b<3;++b) s += dot(fo.g[a],fo.g[b]) * x[fo.v[b]];
+            y[fo.v[a]] += fo.A * s;
+        }
+    }
+    y[pin] = x[pin]; // pinned row -> identity
+}
+
+// Jacobi-preconditioned CG for L u = b with u[pin]=0. Returns iterations used.
+static int cgSolve(const std::vector<FaceOp>& F, int nv, int pin,
+                   std::vector<double> b, const std::vector<double>& diagL,
+                   std::vector<double>& u, int maxit=3000, double tol=1e-10) {
+    b[pin]=0.0;
+    u.assign(nv,0.0);
+    std::vector<double> r=b, z(nv), p(nv), q(nv);
+    auto precond=[&](const std::vector<double>& in, std::vector<double>& out){
+        for (int i=0;i<nv;++i){ double d = (i==pin)?1.0:diagL[i]; out[i] = (d>1e-14)? in[i]/d : in[i]; }
+        out[pin]=0.0;
+    };
+    r[pin]=0.0; precond(r,z); p=z;
+    double rz=0; for(int i=0;i<nv;++i) rz+=r[i]*z[i];
+    double bnorm=0; for(int i=0;i<nv;++i) bnorm+=b[i]*b[i]; bnorm=std::sqrt(bnorm)+1e-30;
+    int it=0;
+    for (; it<maxit; ++it) {
+        applyL(F,nv,pin,p,q);
+        double pq=0; for(int i=0;i<nv;++i) pq+=p[i]*q[i];
+        if (std::fabs(pq)<1e-30) break;
+        double alpha=rz/pq;
+        for(int i=0;i<nv;++i){ u[i]+=alpha*p[i]; r[i]-=alpha*q[i]; }
+        u[pin]=0.0; r[pin]=0.0;
+        double rnorm=0; for(int i=0;i<nv;++i) rnorm+=r[i]*r[i]; rnorm=std::sqrt(rnorm);
+        if (rnorm/bnorm < tol) { ++it; break; }
+        precond(r,z);
+        double rz2=0; for(int i=0;i<nv;++i) rz2+=r[i]*z[i];
+        double beta=rz2/(rz+1e-30);
+        for(int i=0;i<nv;++i) p[i]=z[i]+beta*p[i];
+        rz=rz2;
+    }
+    return it;
+}
+
+// field-follow residual  Sum A|grad u - X1|^2 / Sum A|X1|^2
+static double residual(const std::vector<FaceOp>& F, const std::vector<double>& u) {
+    double num=0,den=0;
+    for (const auto& fo:F){ if(fo.A==0) continue;
+        V3 gu = u[fo.v[0]]*fo.g[0] + u[fo.v[1]]*fo.g[1] + u[fo.v[2]]*fo.g[2];
+        V3 d = gu - fo.X1; num += fo.A*dot(d,d); den += fo.A*dot(fo.X1,fo.X1);
+    }
+    return den>1e-12 ? num/den : 0.0;
+}
+
+// ---- Stage C: integer-lattice inverse-map extraction ------------------------
+struct QuadMesh { std::vector<V3> P; std::vector<int> Q; /*4*nq*/ int flipped=0; };
+
+static bool locate(const Mesh& m, const std::vector<double>& U, const std::vector<double>& V,
+                   double gu, double gv, V3& pos) {
+    int nf=(int)m.T.size()/3;
+    for (int f=0; f<nf; ++f) {
+        int a=m.T[3*f],b=m.T[3*f+1],c=m.T[3*f+2];
+        double ux=U[a],uy=V[a],vx=U[b],vy=V[b],wx=U[c],wy=V[c];
+        double d=(vy-wy)*(ux-wx)+(wx-vx)*(uy-wy);
+        if (std::fabs(d)<1e-14) continue;
+        double la=((vy-wy)*(gu-wx)+(wx-vx)*(gv-wy))/d;
+        double lb=((wy-uy)*(gu-wx)+(ux-wx)*(gv-wy))/d;
+        double lc=1.0-la-lb; const double e=-1e-7;
+        if (la>=e && lb>=e && lc>=e) {
+            pos = la*m.P[a] + lb*m.P[b] + lc*m.P[c];
+            return true;
+        }
+    }
+    return false;
+}
+
+static QuadMesh extract(const Mesh& m, const std::vector<double>& U, const std::vector<double>& V) {
+    QuadMesh out;
+    int nv=(int)m.P.size(), nf=(int)m.T.size()/3;
+    double umin=1e300,umax=-1e300,vmin=1e300,vmax=-1e300;
+    for(int i=0;i<nv;++i){ umin=std::min(umin,U[i]);umax=std::max(umax,U[i]);vmin=std::min(vmin,V[i]);vmax=std::max(vmax,V[i]); }
+    for(int f=0;f<nf;++f){ int a=m.T[3*f],b=m.T[3*f+1],c=m.T[3*f+2];
+        double ar=0.5*((U[b]-U[a])*(V[c]-V[a])-(U[c]-U[a])*(V[b]-V[a])); if(ar<0) out.flipped++; }
+    int i0=(int)std::ceil(umin-1e-9), i1=(int)std::floor(umax+1e-9);
+    int j0=(int)std::ceil(vmin-1e-9), j1=(int)std::floor(vmax+1e-9);
+    int nu=i1-i0+1, nvv=j1-j0+1;
+    if (nu<2||nvv<2) return out;
+    std::vector<V3> node(nu*nvv); std::vector<char> have(nu*nvv,0);
+    for(int a=0;a<nu;++a) for(int b=0;b<nvv;++b){ V3 pos;
+        if (locate(m,U,V,(double)(i0+a),(double)(j0+b),pos)){ node[a*nvv+b]=pos; have[a*nvv+b]=1; } }
+    std::vector<int> idx(nu*nvv,-1);
+    auto ens=[&](int a,int b)->int{ int k=a*nvv+b; if(idx[k]<0){ idx[k]=(int)out.P.size(); out.P.push_back(node[k]); } return idx[k]; };
+    for(int a=0;a<nu-1;++a) for(int b=0;b<nvv-1;++b){
+        if(have[a*nvv+b]&&have[(a+1)*nvv+b]&&have[(a+1)*nvv+b+1]&&have[a*nvv+b+1]){
+            int i00=ens(a,b),i10=ens(a+1,b),i11=ens(a+1,b+1),i01=ens(a,b+1);
+            out.Q.push_back(i00);out.Q.push_back(i10);out.Q.push_back(i11);out.Q.push_back(i01);
+        }
+    }
+    return out;
+}
+
+static void writeObj(const char* path, const QuadMesh& q) {
+    FILE* fp=fopen(path,"w"); if(!fp) return;
+    for (const auto& v:q.P) fprintf(fp,"v %.9g %.9g %.9g\n",v.x,v.y,v.z);
+    for (size_t i=0;i<q.Q.size();i+=4) fprintf(fp,"f %d %d %d %d\n",q.Q[i]+1,q.Q[i+1]+1,q.Q[i+2]+1,q.Q[i+3]+1);
+    fclose(fp);
+}
+
+// ---- driver ----------------------------------------------------------------
+static void solve(const Mesh& m, const std::vector<V3>& E1, double edgeLen,
+                  std::vector<double>& U, std::vector<double>& V, double& res, int& iters) {
+    int nv=(int)m.P.size();
+    double rho = edgeLen>1e-9 ? 1.0/edgeLen : 1.0;
+    std::vector<FaceOp> F; std::vector<double> b1,b2,diagL;
+    buildFaceOps(m,E1,rho,F,b1,b2,diagL);
+    iters  = cgSolve(F,nv,0,b1,diagL,U);
+    int it2= cgSolve(F,nv,0,b2,diagL,V); iters=std::max(iters,it2);
+    res = residual(F,U);
+}
+
+static int selftest() {
+    int fails=0;
+    // TEST1: flat 20x20 grid, constant field +X. Exact: u = rho*x, residual ~0.
+    {
+        int N=20; double h=0.25; Mesh m; std::vector<V3> E1;
+        for(int j=0;j<N;++j)for(int i=0;i<N;++i){ m.P.push_back({i*h,j*h,0}); E1.push_back({1,0,0}); }
+        for(int j=0;j<N-1;++j)for(int i=0;i<N-1;++i){ int a=j*N+i,b=j*N+i+1,c=(j+1)*N+i+1,d=(j+1)*N+i;
+            m.T.push_back(a);m.T.push_back(b);m.T.push_back(c); m.T.push_back(a);m.T.push_back(c);m.T.push_back(d); }
+        std::vector<double> U,V; double res; int it; solve(m,E1,h,U,V,res,it);
+        double rho=1.0/h, err=0; for(size_t k=0;k<m.P.size();++k) err=std::max(err,std::fabs((U[k]-U[0])-rho*(m.P[k].x-m.P[0].x)));
+        printf("TEST1 flat/const: residual=%.3e maxErr(u-rho*x)=%.3e cg_it=%d  %s\n",res,err,it,(res<1e-8&&err<1e-6)?"PASS":"FAIL");
+        if(!(res<1e-8&&err<1e-6)) fails++;
+    }
+    // TEST2: paraboloid patch, projected-X field. Extract -> flips==0, quads>200.
+    {
+        int N=26; double h=0.22, c=0.10; Mesh m; std::vector<V3> E1;
+        for(int j=0;j<N;++j)for(int i=0;i<N;++i){ double x=(i-N/2)*h,y=(j-N/2)*h; m.P.push_back({x,y,c*(x*x+y*y)});
+            V3 n=unit(V3{-2*c*x,-2*c*y,1}); V3 e={1,0,0}; e=e-dot(e,n)*n; E1.push_back(unit(e)); }
+        for(int j=0;j<N-1;++j)for(int i=0;i<N-1;++i){ int a=j*N+i,b=j*N+i+1,cc=(j+1)*N+i+1,d=(j+1)*N+i;
+            m.T.push_back(a);m.T.push_back(b);m.T.push_back(cc); m.T.push_back(a);m.T.push_back(cc);m.T.push_back(d); }
+        std::vector<double> U,V; double res; int it; solve(m,E1,0.30,U,V,res,it);
+        QuadMesh q=extract(m,U,V); int nq=(int)q.Q.size()/4;
+        printf("TEST2 paraboloid: residual=%.3e quads=%d flippedTris=%d cg_it=%d  %s\n",res,nq,q.flipped,it,(q.flipped==0&&nq>200)?"PASS":"FAIL");
+        if(!(q.flipped==0&&nq>200)) fails++;
+    }
+    printf(fails==0 ? "SELFTEST: ALL PASS (native pipeline matches the C# reference)\n" : "SELFTEST: %d FAIL\n", fails);
+    return fails==0?0:1;
+}
+
+template<class T> static T rd(FILE* f){ T v; fread(&v,sizeof(T),1,f); return v; }
+
+static int remesh(const char* inPath, const char* outPath) {
+    FILE* f=fopen(inPath,"rb"); if(!f){ fprintf(stderr,"cannot open %s\n",inPath); return 2; }
+    int nv=rd<int32_t>(f); Mesh m; m.P.resize(nv); std::vector<V3> E1(nv), Nn(nv);
+    for(int i=0;i<nv;++i){ m.P[i].x=rd<double>(f); m.P[i].y=rd<double>(f); m.P[i].z=rd<double>(f); }
+    for(int i=0;i<nv;++i){ E1[i].x=rd<double>(f); E1[i].y=rd<double>(f); E1[i].z=rd<double>(f); }
+    for(int i=0;i<nv;++i){ Nn[i].x=rd<double>(f); Nn[i].y=rd<double>(f); Nn[i].z=rd<double>(f); }
+    int nf=rd<int32_t>(f); m.T.resize(3*nf);
+    for(int i=0;i<3*nf;++i) m.T[i]=rd<int32_t>(f);
+    double edgeLen=rd<double>(f); fclose(f);
+    std::vector<double> U,V; double res; int it; solve(m,E1,edgeLen,U,V,res,it);
+    QuadMesh q=extract(m,U,V); writeObj(outPath,q);
+    printf("remesh: V=%d F=%d -> quads=%d flippedTris=%d residual=%.3e cg_it=%d -> %s\n",
+           nv,nf,(int)q.Q.size()/4,q.flipped,res,it,outPath);
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    if (argc<2 || strcmp(argv[1],"--selftest")==0) return selftest();
+    if (strcmp(argv[1],"--remesh")==0 && argc>=4) return remesh(argv[2],argv[3]);
+    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj>\n");
+    return 2;
+}

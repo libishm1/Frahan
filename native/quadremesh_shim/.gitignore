@@ -1,0 +1,4 @@
+_tmpbuild/
+*.exe
+*.obj
+*.bin
