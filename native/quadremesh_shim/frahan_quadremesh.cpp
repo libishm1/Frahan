@@ -274,7 +274,8 @@ static int cgSolveMask(const std::vector<FaceOp>& F, int nv, const std::vector<c
 }
 
 static std::vector<V3> potentialField(const Mesh& m, double supportFrac,
-                                      std::vector<V3>& N, int& nsup, int& cgit) {
+                                      std::vector<V3>& N, int& nsup, int& cgit,
+                                      std::vector<double>& conf) {
     int nv=(int)m.P.size();
     N=computeNormals(m);
     std::vector<char> sup=detectSupports(m,supportFrac); nsup=0; for(char c:sup) nsup+=c;
@@ -287,9 +288,16 @@ static std::vector<V3> potentialField(const Mesh& m, double supportFrac,
     for(const auto& fo:F){ if(fo.A==0) continue;
         V3 gp = phi[fo.v[0]]*fo.g[0] + phi[fo.v[1]]*fo.g[1] + phi[fo.v[2]]*fo.g[2];
         for(int a=0;a<3;++a) E1[fo.v[a]]=E1[fo.v[a]]+fo.A*gp; }
+    // confidence = |tangential grad phi| (0 where the potential is flat/degenerate),
+    // normalised by its 90th percentile -> [0,1]. Drives the smoothing data term.
+    conf.assign(nv,0.0);
     for(int i=0;i<nv;++i){ V3 e=E1[i]; e=e-dot(e,N[i])*N[i];
+        conf[i]=len(e);
         if(len(e)>1e-9) E1[i]=unit(e);
-        else { V3 t=cross(N[i],V3{1,0,0}); if(len(t)<1e-6) t=cross(N[i],V3{0,1,0}); E1[i]=unit(t); } }
+        else { V3 t=cross(N[i],V3{1,0,0}); if(len(t)<1e-6) t=cross(N[i],V3{0,1,0}); E1[i]=unit(t); conf[i]=0.0; } }
+    std::vector<double> cs=conf; std::sort(cs.begin(),cs.end());
+    double p90=cs[(size_t)(0.9*(cs.size()-1))]+1e-30;
+    for(int i=0;i<nv;++i) conf[i]=std::min(1.0, conf[i]/p90);
     return E1;
 }
 
@@ -301,7 +309,8 @@ static int remeshPotential(const char* inPath, const char* outPath, double suppo
     for(int i=0;i<nv;++i){ m.P[i].x=rdf<double>(f); m.P[i].y=rdf<double>(f); m.P[i].z=rdf<double>(f); }
     int nf=rdf<int32_t>(f); m.T.resize(3*nf); for(int i=0;i<3*nf;++i) m.T[i]=rdf<int32_t>(f);
     double edgeLen=rdf<double>(f); fclose(f);
-    std::vector<V3> N; int nsup,cgphi; std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi);
+    std::vector<V3> N; int nsup,cgphi; std::vector<double> conf;
+    std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi,conf);
     std::vector<double> U,V; double res; int it; solve(m,E1,edgeLen,U,V,res,it);
     QuadMesh q=extract(m,U,V); writeObj(outPath,q);
     printf("potential-remesh: V=%d F=%d supports=%d phi_cg=%d -> quads=%d flippedTris=%d residual=%.3e param_cg=%d -> %s\n",
@@ -356,26 +365,109 @@ static int remesh(const char* inPath, const char* outPath) {
     return 0;
 }
 
+// ---- field refinement: 4-RoSy-aware smoothing + singularity diagnostics -----
+// rotate v by k*90deg about n (one 90deg step: R v = n x v)
+static inline V3 rotK(const V3& e, const V3& n, int k){ V3 v=e; for(int i=0;i<k;++i) v=cross(n,v); return v; }
+// k in {0..3} whose R^k e best matches target (both ~in n's tangent plane)
+static inline int best4(const V3& target, const V3& e, const V3& n){
+    V3 c1=cross(n,e);
+    double d[4]={ dot(target,e), dot(target,c1), -dot(target,e), -dot(target,c1) };
+    int k=0; for(int i=1;i<4;++i) if(d[i]>d[k]) k=i;
+    return k;
+}
+static void vertexAdjacency(const Mesh& m, std::vector<std::vector<int> >& adj, std::vector<char>& bnd){
+    int nv=(int)m.P.size(), nf=(int)m.T.size()/3;
+    std::map<long long,int> ec;
+    auto key=[&](int a,int b){ long long lo=std::min(a,b),hi=std::max(a,b); return (lo<<32)|hi; };
+    for(int f=0;f<nf;++f){ int t[3]={m.T[3*f],m.T[3*f+1],m.T[3*f+2]};
+        for(int e=0;e<3;++e) ec[key(t[e],t[(e+1)%3])]++; }
+    adj.assign(nv, std::vector<int>()); bnd.assign(nv,0);
+    for(std::map<long long,int>::iterator it=ec.begin(); it!=ec.end(); ++it){
+        int a=(int)(it->first>>32), b=(int)(it->first&0xffffffff);
+        adj[a].push_back(b); adj[b].push_back(a);
+        if(it->second==1){ bnd[a]=1; bnd[b]=1; } }
+}
+// interior 4-RoSy singularity count: per triangle, sum the matching rotations
+// around the loop; != 0 (mod 4) => cone. Triangles touching the boundary skipped.
+static int countSing(const Mesh& m, const std::vector<V3>& E1, const std::vector<V3>& N, const std::vector<char>& bnd){
+    int nf=(int)m.T.size()/3, sing=0;
+    for(int f=0;f<nf;++f){ int a=m.T[3*f],b=m.T[3*f+1],c=m.T[3*f+2];
+        if(bnd[a]||bnd[b]||bnd[c]) continue;
+        int vv[4]={a,b,c,a}; int kk=0; bool ok=true;
+        for(int i=0;i<3;++i){ int u=vv[i], w=vv[i+1];
+            V3 t=E1[u]-dot(E1[u],N[w])*N[w];
+            if(len(t)<1e-9){ ok=false; break; }
+            kk += best4(unit(t), E1[w], N[w]); }
+        if(ok && (kk&3)!=0) sing++; }
+    return sing;
+}
+// Confidence-weighted 4-RoSy Gauss-Seidel smoothing. Where |grad phi| is strong the
+// data term holds the thrust direction; where the field is weak/degenerate the
+// neighbours flood in (harmonic fill), so NOISE cone pairs annihilate while the
+// topologically forced cones migrate to natural locations. This is the refinement
+// that cleans the extra singularities seen in the thrust-aligned QuadWild run.
+static void smoothField(const Mesh& m, std::vector<V3>& E1, const std::vector<V3>& N,
+                        const std::vector<double>& conf, int sweeps, double dataW){
+    int nv=(int)m.P.size();
+    std::vector<std::vector<int> > adj; std::vector<char> bnd;
+    vertexAdjacency(m,adj,bnd);
+    std::vector<V3> orig=E1;
+    for(int s=0;s<sweeps;++s){
+        for(int i=0;i<nv;++i){
+            V3 acc = (dataW*conf[i])*orig[i];
+            for(size_t jj=0;jj<adj[i].size();++jj){ int j=adj[i][jj];
+                V3 v=E1[j]-dot(E1[j],N[i])*N[i];
+                if(len(v)<1e-9) continue;
+                v=unit(v);
+                acc = acc + (0.25+conf[j])*rotK(v,N[i],best4(E1[i],v,N[i]));   // 0.25 floor: propagate through degenerate zones
+            }
+            acc = acc - dot(acc,N[i])*N[i];
+            if(len(acc)>1e-9) E1[i]=unit(acc);
+        }
+    }
+}
+
 // Emit our thrust-potential field as a QuadWild .rosy (per-FACE cross-field):
 // line 1 = nFaces, line 2 = 4 (RoSy degree), then one unit direction per face.
 // Feed to `quadwild <mesh.obj> 2 <config do_remesh 0> <this.rosy>` -> thrust-aligned
 // patches + Bi-MDF quantization -> a RELIABLE thrust-following quad mesh (our field,
 // their robustness).
-static int writeRosy(const char* inPath, const char* outPath, double supportFrac) {
+static int writeRosy(const char* inPath, const char* outPath, double supportFrac, int sweeps, double dataW) {
     FILE* f=fopen(inPath,"rb"); if(!f){ fprintf(stderr,"cannot open %s\n",inPath); return 2; }
     int nv=rdf<int32_t>(f); Mesh m; m.P.resize(nv);
     for(int i=0;i<nv;++i){ m.P[i].x=rdf<double>(f); m.P[i].y=rdf<double>(f); m.P[i].z=rdf<double>(f); }
     int nf=rdf<int32_t>(f); m.T.resize(3*nf); for(int i=0;i<3*nf;++i) m.T[i]=rdf<int32_t>(f);
     fclose(f);
-    std::vector<V3> N; int nsup,cgphi; std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi);
+    std::vector<V3> N; int nsup,cgphi; std::vector<double> conf;
+    std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi,conf);
+    std::vector<std::vector<int> > adj; std::vector<char> bnd; vertexAdjacency(m,adj,bnd);
+    int s0=countSing(m,E1,N,bnd);
+    std::vector<V3> orig=E1;
+    if(sweeps>0) smoothField(m,E1,N,conf,sweeps,dataW);
+    int s1=countSing(m,E1,N,bnd);
+    // alignment kept vs the raw thrust field (4-RoSy residual cos, high-conf verts)
+    double al=0; int na=0;
+    for(int i=0;i<nv;++i){ if(conf[i]<0.5) continue;
+        al += dot(E1[i], rotK(orig[i],N[i],best4(E1[i],orig[i],N[i]))); na++; }
+    al = na>0 ? al/na : 1.0;
     FILE* o=fopen(outPath,"w"); if(!o) return 3;
     fprintf(o,"%d\n4\n",nf);
     for(int fi=0; fi<nf; ++fi){ int a=m.T[3*fi],b=m.T[3*fi+1],c=m.T[3*fi+2];
         V3 fn=unit(cross(m.P[b]-m.P[a], m.P[c]-m.P[a]));
-        V3 e=E1[a]+E1[b]+E1[c]; e=e-dot(e,fn)*fn; e=unit(e);
+        // 4-RoSy-aware per-face average (a plain vector sum cancels near cones)
+        int vv[3]={a,b,c}; V3 acc={0,0,0}; V3 ref={0,0,0}; bool haveRef=false;
+        for(int i=0;i<3;++i){ V3 v=E1[vv[i]]-dot(E1[vv[i]],fn)*fn;
+            if(len(v)<1e-9) continue;
+            v=unit(v);
+            if(!haveRef){ ref=v; haveRef=true; acc=acc+v; }
+            else acc = acc + rotK(v,fn,best4(ref,v,fn)); }
+        V3 e;
+        if(haveRef && len(acc)>1e-9){ e=acc-dot(acc,fn)*fn; e=unit(e); }
+        else { e=unit(cross(fn,V3{1,0,0})); if(len(e)<0.5) e=unit(cross(fn,V3{0,1,0})); }
         fprintf(o,"%.9g %.9g %.9g \n",e.x,e.y,e.z); }
     fclose(o);
-    printf("rosy: %d faces, supports=%d phi_cg=%d -> %s\n",nf,nsup,cgphi,outPath);
+    printf("rosy: %d faces supports=%d phi_cg=%d | interiorSing %d -> %d (sweeps=%d dataW=%.2f) meanAlign=%.3f -> %s\n",
+           nf,nsup,cgphi,s0,s1,sweeps,dataW,al,outPath);
     return 0;
 }
 
@@ -383,7 +475,7 @@ int main(int argc, char** argv) {
     if (argc<2 || strcmp(argv[1],"--selftest")==0) return selftest();
     if (strcmp(argv[1],"--remesh")==0 && argc>=4) return remesh(argv[2],argv[3]);
     if (strcmp(argv[1],"--potential")==0 && argc>=4) return remeshPotential(argv[2],argv[3], argc>=5?atof(argv[4]):0.35);
-    if (strcmp(argv[1],"--rosy")==0 && argc>=4) return writeRosy(argv[2],argv[3], argc>=5?atof(argv[4]):0.35);
-    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj> | --potential <mesh.bin> <out.obj> [frac] | --rosy <mesh.bin> <out.rosy> [frac]\n");
+    if (strcmp(argv[1],"--rosy")==0 && argc>=4) return writeRosy(argv[2],argv[3], argc>=5?atof(argv[4]):0.35, argc>=6?atoi(argv[5]):0, argc>=7?atof(argv[6]):0.5);
+    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj> | --potential <mesh.bin> <out.obj> [frac] | --rosy <mesh.bin> <out.rosy> [frac] [sweeps] [dataW]\n");
     return 2;
 }

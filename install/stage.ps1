@@ -9,6 +9,12 @@
 $ErrorActionPreference = "Stop"
 $here   = Split-Path -Parent $MyInvocation.MyCommand.Path
 $bin    = Join-Path $here "..\src\Frahan.StonePack.GH\bin\Debug\net48"
+# Use the Release output when Debug is absent or Release holds the newer .gha.
+$binRel = Join-Path $here "..\src\Frahan.StonePack.GH\bin\Release\net48"
+$ghaDbg = Join-Path $bin "Frahan.StonePack.gha"
+$ghaRel = Join-Path $binRel "Frahan.StonePack.gha"
+if (-not (Test-Path $ghaDbg)) { $bin = $binRel }
+elseif ((Test-Path $ghaRel) -and ((Get-Item $ghaRel).LastWriteTime -gt (Get-Item $ghaDbg).LastWriteTime)) { $bin = $binRel }
 $plugin = Join-Path $here "plugin"
 
 if (-not (Test-Path $bin)) { Write-Error "Build output not found: $bin. Build the GH project first (dotnet build src\Frahan.StonePack.GH)."; exit 1 }

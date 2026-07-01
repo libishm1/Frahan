@@ -23,6 +23,12 @@ Get-ChildItem (Join-Path $here "plugin") -File | ForEach-Object {
     Copy-Item $_.FullName $lib -Force
     Write-Host ("  plugin  " + $_.Name)
 }
+# Subfolders (arm's-length third-party workers, e.g. thirdparty/quadwild-bimdf
+# with bin/ + config/ + LICENSE). Copied recursively, structure preserved.
+Get-ChildItem (Join-Path $here "plugin") -Directory | ForEach-Object {
+    Copy-Item $_.FullName $lib -Recurse -Force
+    Write-Host ("  plugin  " + $_.Name + "\ (recursive)")
+}
 # BFF (optional; used by Surface Chart for distortion-free charts).
 Copy-Item (Join-Path $here "tools\bff-command-line.exe") $lib -Force
 Write-Host "  tool    bff-command-line.exe"
