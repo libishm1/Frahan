@@ -356,10 +356,34 @@ static int remesh(const char* inPath, const char* outPath) {
     return 0;
 }
 
+// Emit our thrust-potential field as a QuadWild .rosy (per-FACE cross-field):
+// line 1 = nFaces, line 2 = 4 (RoSy degree), then one unit direction per face.
+// Feed to `quadwild <mesh.obj> 2 <config do_remesh 0> <this.rosy>` -> thrust-aligned
+// patches + Bi-MDF quantization -> a RELIABLE thrust-following quad mesh (our field,
+// their robustness).
+static int writeRosy(const char* inPath, const char* outPath, double supportFrac) {
+    FILE* f=fopen(inPath,"rb"); if(!f){ fprintf(stderr,"cannot open %s\n",inPath); return 2; }
+    int nv=rdf<int32_t>(f); Mesh m; m.P.resize(nv);
+    for(int i=0;i<nv;++i){ m.P[i].x=rdf<double>(f); m.P[i].y=rdf<double>(f); m.P[i].z=rdf<double>(f); }
+    int nf=rdf<int32_t>(f); m.T.resize(3*nf); for(int i=0;i<3*nf;++i) m.T[i]=rdf<int32_t>(f);
+    fclose(f);
+    std::vector<V3> N; int nsup,cgphi; std::vector<V3> E1=potentialField(m,supportFrac,N,nsup,cgphi);
+    FILE* o=fopen(outPath,"w"); if(!o) return 3;
+    fprintf(o,"%d\n4\n",nf);
+    for(int fi=0; fi<nf; ++fi){ int a=m.T[3*fi],b=m.T[3*fi+1],c=m.T[3*fi+2];
+        V3 fn=unit(cross(m.P[b]-m.P[a], m.P[c]-m.P[a]));
+        V3 e=E1[a]+E1[b]+E1[c]; e=e-dot(e,fn)*fn; e=unit(e);
+        fprintf(o,"%.9g %.9g %.9g \n",e.x,e.y,e.z); }
+    fclose(o);
+    printf("rosy: %d faces, supports=%d phi_cg=%d -> %s\n",nf,nsup,cgphi,outPath);
+    return 0;
+}
+
 int main(int argc, char** argv) {
     if (argc<2 || strcmp(argv[1],"--selftest")==0) return selftest();
     if (strcmp(argv[1],"--remesh")==0 && argc>=4) return remesh(argv[2],argv[3]);
     if (strcmp(argv[1],"--potential")==0 && argc>=4) return remeshPotential(argv[2],argv[3], argc>=5?atof(argv[4]):0.35);
-    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj> | --potential <mesh.bin> <out.obj> [supportFrac]\n");
+    if (strcmp(argv[1],"--rosy")==0 && argc>=4) return writeRosy(argv[2],argv[3], argc>=5?atof(argv[4]):0.35);
+    fprintf(stderr,"usage: frahan_quadremesh --selftest | --remesh <in.bin> <out.obj> | --potential <mesh.bin> <out.obj> [frac] | --rosy <mesh.bin> <out.rosy> [frac]\n");
     return 2;
 }
