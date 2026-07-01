@@ -54,6 +54,8 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddNumberParameter("Overfill", "Ov", "Stock over-fill factor.", GH_ParamAccess.item, 1.16);
             p.AddNumberParameter("Pool AR", "AR", "Max bbox aspect ratio of admitted stones.", GH_ParamAccess.item, 2.2);
             p.AddBooleanParameter("Run", "R", "Execute the fit + trim.", GH_ParamAccess.item, false);
+            // NEW inputs appended at the end so existing .gh wiring (indices 0-10) is preserved.
+            p.AddBooleanParameter("Match", "Mt", "Pick each mould's stone by the Hungarian best-fit matcher (least carving) instead of the arbitrary modular index. Best for <= a few hundred cells (Hungarian is O(N^3)); falls back to modular on failure.", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -69,7 +71,7 @@ namespace Frahan.StonePack.GH.Masonry
             var frames = new List<Plane>();
             var col = new List<double>();
             double dV = 0.26, dC = 0.20, overfill = 1.16, poolAr = 2.2;
-            string ethDir = null; int seed = 18; bool run = false;
+            string ethDir = null; int seed = 18; bool match = false, run = false;
 
             if (!GhGuard.List(this, da, 0, moulds, "Moulds")) return;
             da.GetDataList(1, curves);
@@ -77,7 +79,8 @@ namespace Frahan.StonePack.GH.Masonry
             da.GetDataList(3, col);
             da.GetData(4, ref dV); da.GetData(5, ref dC);
             da.GetData(6, ref ethDir); da.GetData(7, ref seed);
-            da.GetData(8, ref overfill); da.GetData(9, ref poolAr); da.GetData(10, ref run);
+            da.GetData(8, ref overfill); da.GetData(9, ref poolAr);
+            da.GetData(10, ref run); da.GetData(11, ref match);
 
             if (!run) { da.SetData(1, "Run = false. Toggle to fit + trim."); return; }
             if (curves.Count != moulds.Count || frames.Count != moulds.Count || col.Count != moulds.Count)
@@ -89,13 +92,13 @@ namespace Frahan.StonePack.GH.Masonry
             var cells = new List<PolylineCurve>(curves.Count);
             for (int i = 0; i < curves.Count; i++) cells.Add(ToPolylineCurve(curves[i]));
 
-            var res = VaultStoneFitter.FitAndTrim(moulds, cells, frames, col, dV, dC, ethDir, seed, overfill, poolAr);
+            var res = VaultStoneFitter.FitAndTrim(moulds, cells, frames, col, dV, dC, ethDir, seed, overfill, poolAr, useMatcher: match);
             if (res.PoolSize == 0)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Stone pool empty (check ETH Dir path / .obj files).");
 
             da.SetDataList(0, res.Rubble);
-            da.SetData(1, $"Carved {res.Count} rubble stones (pool {res.PoolSize}).");
-            Message = $"{res.Count} stones";
+            da.SetData(1, $"Carved {res.Count} rubble stones (pool {res.PoolSize}){(match ? ", best-fit matched" : "")}.");
+            Message = $"{res.Count} stones" + (match ? " (matched)" : "");
         }
     }
 }

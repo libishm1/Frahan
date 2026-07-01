@@ -278,9 +278,26 @@ namespace Frahan.Masonry.Vault
         public static VaultArchAssembly BuildArchOnSurface(
             IList<Point3d> centerline, IList<Vector3d> normals, double thickness, double width, double density)
         {
+            var th = new double[centerline.Count];
+            for (int i = 0; i < th.Length; i++) th[i] = thickness;
+            return BuildArchOnSurface(centerline, normals, th, width, density);
+        }
+
+        /// <summary>
+        /// Variable-thickness course: per-node section thickness (load-driven). Lets the
+        /// section be thicker at the supports/springers and thinner at the crown/midspan --
+        /// the Armadillo Vault's 12 cm -> 5 cm distribution (Rippmann/Block, AAG 2016).
+        /// thicknessPerNode parallels centerline; the voussoir between node i and i+1 spans
+        /// the two local half-thicknesses, so the section grades smoothly along the course.
+        /// </summary>
+        public static VaultArchAssembly BuildArchOnSurface(
+            IList<Point3d> centerline, IList<Vector3d> normals, IList<double> thicknessPerNode, double width, double density)
+        {
             int n = centerline.Count;
             if (n < 3) throw new ArgumentException("course needs >= 3 nodes");
-            double hd = thickness * 0.5, hw = width * 0.5;
+            if (thicknessPerNode == null || thicknessPerNode.Count < n)
+                throw new ArgumentException("thicknessPerNode must parallel centerline");
+            double hw = width * 0.5;
 
             var tan = new Vector3d[n];
             var sn = new Vector3d[n];   // section normal = surface normal (through the shell)
@@ -302,6 +319,7 @@ namespace Frahan.Masonry.Vault
             for (int i = 0; i < n; i++)
             {
                 Point3d c = centerline[i];
+                double hd = thicknessPerNode[i] * 0.5;   // load-driven per-node half-thickness
                 face[i] = new Point3d[]
                 {
                     c - sn[i] * hd - wd[i] * hw,

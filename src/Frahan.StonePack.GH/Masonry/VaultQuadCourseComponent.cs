@@ -39,10 +39,13 @@ namespace Frahan.StonePack.GH.Masonry
         {
             p.AddMeshParameter("Shell", "M", "Funicular vault shell mesh (e.g. from the TNA form-finder).", GH_ParamAccess.item);
             p.AddNumberParameter("Edge Length", "E", "Target quad edge length (m). 0 = analyse the input mesh as-is (no remesh).", GH_ParamAccess.item, 0.25);
-            p.AddNumberParameter("Thickness", "T", "Voussoir/section thickness through the shell (m).", GH_ParamAccess.item, 0.30);
+            p.AddNumberParameter("Thickness", "T", "Voussoir/section thickness through the shell (m). With Crown Thickness > 0 this is the thickness at the SUPPORTS/base.", GH_ParamAccess.item, 0.30);
             p.AddNumberParameter("Course Width", "W", "Course (block) width (m). Default ~0.9 x edge length.", GH_ParamAccess.item, 0.22);
             p.AddNumberParameter("Friction", "F", "Mohr-Coulomb friction coefficient (tan phi).", GH_ParamAccess.item, 0.84);
             p.AddBooleanParameter("Run", "R", "Execute the quad-course CRA.", GH_ParamAccess.item, false);
+            // NEW inputs appended at the end so existing .gh wiring (indices 0-5) is preserved.
+            p.AddNumberParameter("Crown Thickness", "Tc", "Load-driven thickness at the CROWN/midspan (m); section grades from Thickness at the base to this at the top (the Armadillo 12->5 cm). 0 = uniform.", GH_ParamAccess.item, 0.0);
+            p.AddBooleanParameter("Stagger", "St", "Running-bond 1/2-voussoir offset on alternate courses (interlock vs sliding). Quad courses only; Voronoi rubble is staggered already.", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -53,22 +56,26 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddBooleanParameter("Stable", "S", "Per-course stability flag (aligned with Courses).", GH_ParamAccess.list);
             p.AddNumberParameter("Stable %", "%", "Percentage of courses that are stable.", GH_ParamAccess.item);
             p.AddTextParameter("Report", "Rp", "Summary.", GH_ParamAccess.item);
+            // NEW output appended at the end so existing .gh wiring (indices 0-5) is preserved.
+            p.AddMeshParameter("Voussoirs", "V", "The per-course voussoir blocks (running-bond staggered when Stagger = true).", GH_ParamAccess.list);
         }
 
         protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh shell = null;
-            double edge = 0.25, thick = 0.30, width = 0.22, friction = 0.84;
-            bool run = false;
+            double edge = 0.25, thick = 0.30, width = 0.22, friction = 0.84, crown = 0.0;
+            bool stagger = false, run = false;
 
             if (!GhGuard.Item(this, da, 0, ref shell, "Shell")) return;
             da.GetData(1, ref edge); da.GetData(2, ref thick);
             da.GetData(3, ref width); da.GetData(4, ref friction);
             da.GetData(5, ref run);
+            da.GetData(6, ref crown); da.GetData(7, ref stagger);
 
             if (!run) { da.SetData(5, "Run = false. Toggle to analyse courses."); return; }
 
-            var res = VaultQuadCourses.Analyze(shell, edge, thick, width, friction);
+            double thicknessTop = crown > 0.0 ? crown : -1.0;
+            var res = VaultQuadCourses.Analyze(shell, edge, thick, width, friction, 2400.0, thicknessTop, stagger);
 
             // crisp per-face coverage mesh: one quad patch per face, vertex-coloured by score.
             var cov = new Mesh();
@@ -94,11 +101,14 @@ namespace Frahan.StonePack.GH.Masonry
             da.SetDataList(2, courses);
             da.SetDataList(3, new List<bool>(res.StripStable));
             da.SetData(4, res.StablePercent);
+            string thkNote = thicknessTop > 0.0 ? $"thickness {thick:F2}->{crown:F2}m (load-driven)" : $"thickness {thick:F2}m";
+            string stagNote = stagger ? ", staggered" : "";
             da.SetData(5,
                 $"{res.StableCount}/{res.StripCount} courses stable ({res.StablePercent:F0}%). " +
                 $"Coverage: {res.FacesBothWay} both-way / {res.FacesOneWay} one-way / {res.FacesNone} none of {res.QuadFaces.Count} faces. " +
-                $"edge {edge:F2}m, thickness {thick:F2}m, friction {friction:F2}.");
-            Message = $"{res.StableCount}/{res.StripCount} stable";
+                $"edge {edge:F2}m, {thkNote}, friction {friction:F2}{stagNote}.");
+            da.SetDataList(6, res.Voussoirs);
+            Message = $"{res.StableCount}/{res.StripCount} stable" + (stagger ? " (stag)" : "");
         }
     }
 }

@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Frahan.Masonry.Library;
+using Frahan.Masonry.Packing;
 using Rhino.Geometry;
 
 namespace Frahan.Masonry.Vault
@@ -33,41 +35,10 @@ namespace Frahan.Masonry.Vault
             public Vector3d LongAxis;  public double LongDim;
         }
 
-        private static Mesh LoadObj(string path)
-        {
-            var verts = new List<Point3d>();
-            var m = new Mesh();
-            foreach (string raw in File.ReadLines(path))
-            {
-                if (raw.Length < 2) continue;
-                if (raw[0] == 'v' && raw[1] == ' ')
-                {
-                    string[] pp = raw.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
-                    verts.Add(new Point3d(
-                        double.Parse(pp[1], CultureInfo.InvariantCulture),
-                        double.Parse(pp[2], CultureInfo.InvariantCulture),
-                        double.Parse(pp[3], CultureInfo.InvariantCulture)));
-                }
-                else if (raw[0] == 'f' && raw[1] == ' ')
-                {
-                    string[] pp = raw.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
-                    var idx = new List<int>(pp.Length - 1);
-                    for (int k = 1; k < pp.Length; k++)
-                    {
-                        string tok = pp[k];
-                        int slash = tok.IndexOf('/');
-                        if (slash >= 0) tok = tok.Substring(0, slash);
-                        idx.Add(int.Parse(tok, CultureInfo.InvariantCulture) - 1);
-                    }
-                    if (idx.Count == 3) m.Faces.AddFace(idx[0], idx[1], idx[2]);
-                    else if (idx.Count == 4) m.Faces.AddFace(idx[0], idx[1], idx[2], idx[3]);
-                    else for (int t = 1; t < idx.Count - 1; t++) m.Faces.AddFace(idx[0], idx[t], idx[t + 1]);
-                }
-            }
-            for (int i = 0; i < verts.Count; i++) m.Vertices.Add(verts[i]);
-            m.Normals.ComputeNormals();
-            return m;
-        }
+        // .obj parsing shared with the public stone-library loader (dedup); the LoadPool
+        // recipe below is intentionally NOT routed through StoneLibraryLoader.Load -- its
+        // candidate-budget semantics are the validated Park Guell v004 recipe.
+        private static Mesh LoadObj(string path) => StoneLibraryLoader.LoadObj(path);
 
         private static List<Stock> LoadPool(string ethDir, int seed, int maxPool, double poolArMax)
         {
@@ -137,7 +108,7 @@ namespace Frahan.Masonry.Vault
         public static StoneFitResult FitAndTrim(
             IList<Mesh> moulds, IList<PolylineCurve> cells, IList<Plane> frames, IList<double> columnness,
             double dVault, double dCol, string ethDir, int seed, double overfill, double poolArMax,
-            int maxPool = 140)
+            int maxPool = 140, bool useMatcher = false)
         {
             var res = new StoneFitResult();
             var pool = LoadPool(ethDir, seed, maxPool, poolArMax);
@@ -145,6 +116,34 @@ namespace Frahan.Masonry.Vault
             if (pool.Count == 0) return res;
 
             int nm = moulds == null ? 0 : moulds.Count;
+
+            // Optional upgrade: choose each mould's stone by the Hungarian BEST-FIT matcher
+            // (StoneCellAssignment -> the stone needing the least carving) instead of the
+            // arbitrary modular index. Placement/scale/trim below are unchanged; only WHICH
+            // stone goes in each cell changes. Hungarian is O(N^3): best for up to a few
+            // hundred cells; for a denser vault keep the modular default. Falls back to
+            // modular on any failure, so the validated Park Guell recipe is the default.
+            int[] cellToStone = null;
+            if (useMatcher && nm > 0)
+            {
+                try
+                {
+                    var poolMeshes = new List<Mesh>(pool.Count);
+                    foreach (var st in pool) poolMeshes.Add(st.Mesh);
+                    var valMoulds = new List<Mesh>(); var valIdx = new List<int>();
+                    for (int i = 0; i < nm; i++) if (moulds[i] != null) { valMoulds.Add(moulds[i]); valIdx.Add(i); }
+                    ToBuffers(poolMeshes, out var sC, out var sT);
+                    ToBuffers(valMoulds, out var cC, out var cT);
+                    var asg = StoneCellAssignment.Assign(sC, sT, cC, cT);
+                    cellToStone = new int[nm];
+                    for (int i = 0; i < nm; i++) cellToStone[i] = -1;
+                    foreach (var p in asg.Placements)
+                        if (p.CellIndex >= 0 && p.CellIndex < valIdx.Count)
+                            cellToStone[valIdx[p.CellIndex]] = p.StoneIndex;
+                }
+                catch { cellToStone = null; }   // any failure -> validated modular path
+            }
+
             for (int i = 0; i < nm; i++)
             {
                 Mesh mo = moulds[i];
@@ -169,7 +168,9 @@ namespace Frahan.Masonry.Vault
                 }
                 double w = maxx - minx, h = maxy - miny;
 
-                Stock s = pool[(i * 13 + 7) % pool.Count];
+                int si = (cellToStone != null && cellToStone[i] >= 0 && cellToStone[i] < pool.Count)
+                         ? cellToStone[i] : (i * 13 + 7) % pool.Count;
+                Stock s = pool[si];
                 double of = overfill + 0.34 * cc;
                 double sc = Math.Min(Math.Max(depth / Math.Max(s.ThinDim, 1e-4),
                                      Math.Max(of * h / Math.Max(s.MidDim, 1e-4),
@@ -206,6 +207,26 @@ namespace Frahan.Masonry.Vault
                 res.Rubble.Add(outMesh);
             }
             return res;
+        }
+
+        // Mesh -> flat (coords, tris) buffers for StoneCellAssignment (parallel lists).
+        private static void ToBuffers(IList<Mesh> meshes,
+            out List<IReadOnlyList<double>> coords, out List<IReadOnlyList<int>> tris)
+        {
+            coords = new List<IReadOnlyList<double>>(meshes.Count);
+            tris = new List<IReadOnlyList<int>>(meshes.Count);
+            foreach (var mesh in meshes)
+            {
+                var t = mesh.DuplicateMesh();
+                t.Faces.ConvertQuadsToTriangles();
+                var cs = new List<double>(t.Vertices.Count * 3);
+                for (int v = 0; v < t.Vertices.Count; v++)
+                { var p = t.Vertices[v]; cs.Add(p.X); cs.Add(p.Y); cs.Add(p.Z); }
+                var ts = new List<int>(t.Faces.Count * 3);
+                for (int f = 0; f < t.Faces.Count; f++)
+                { var fa = t.Faces[f]; ts.Add(fa.A); ts.Add(fa.B); ts.Add(fa.C); }
+                coords.Add(cs); tris.Add(ts);
+            }
         }
     }
 }

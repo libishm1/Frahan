@@ -34,6 +34,8 @@ namespace Frahan.Masonry.Vault
         public List<Polyline> Courses = new List<Polyline>(); // per-course centerline polyline
         public int[] FaceScore;                               // per quad face: # stable courses through it (0,1,2)
         public int FacesBothWay, FacesOneWay, FacesNone;
+        public List<Mesh> Voussoirs = new List<Mesh>();       // per-course voussoir blocks (staggered if requested)
+        public bool Staggered;                                // running-bond 1/2-voussoir offset on alternate courses
     }
 
     public static class VaultQuadCourses
@@ -44,7 +46,7 @@ namespace Frahan.Masonry.Vault
         /// </summary>
         public static QuadCourseResult Analyze(
             Mesh input, double targetEdge, double thickness, double courseWidth,
-            double friction, double density = 2400.0)
+            double friction, double density = 2400.0, double thicknessTop = -1.0, bool stagger = false)
         {
             Mesh m;
             if (targetEdge > 0)
@@ -59,20 +61,24 @@ namespace Frahan.Masonry.Vault
             }
             else m = input.DuplicateMesh();
 
-            return AnalyzeQuadMesh(m, thickness, courseWidth, friction, density);
+            return AnalyzeQuadMesh(m, thickness, courseWidth, friction, density, thicknessTop, stagger);
         }
 
         /// <summary>
         /// Analyze an existing (quad-dominant) mesh: extract face-strip courses and CRA each.
         /// </summary>
         public static QuadCourseResult AnalyzeQuadMesh(
-            Mesh mesh, double thickness, double courseWidth, double friction, double density = 2400.0)
+            Mesh mesh, double thickness, double courseWidth, double friction, double density = 2400.0,
+            double thicknessTop = -1.0, bool stagger = false)
         {
             var m = mesh.DuplicateMesh();
             m.Normals.ComputeNormals(); m.UnifyNormals(); m.Normals.ComputeNormals();
 
             int nv = m.Vertices.Count;
             var P = new Point3d[nv]; for (int i = 0; i < nv; i++) P[i] = m.Vertices[i];
+            double zmin = double.MaxValue, zmax = double.MinValue;
+            for (int i = 0; i < nv; i++) { if (P[i].Z < zmin) zmin = P[i].Z; if (P[i].Z > zmax) zmax = P[i].Z; }
+            double zrange = Math.Max(1e-9, zmax - zmin);   // load-driven thickness grades base->crown
             var Nz = new Vector3d[nv];
             for (int i = 0; i < nv; i++) { var nf = m.Normals[i]; Nz[i] = new Vector3d(nf.X, nf.Y, nf.Z); }
 
@@ -158,16 +164,36 @@ namespace Frahan.Masonry.Vault
             for (int s = 0; s < stripPts.Count; s++)
             {
                 bool st;
+                // running-bond stagger: shift alternate courses' joints to the midpoints of
+                // their segments (1/2-voussoir offset against sliding); even courses unchanged.
+                IList<Point3d> cpts = stripPts[s];
+                IList<Vector3d> cns = stripNs[s];
+                if (stagger && (s % 2 == 1) && cpts.Count >= 2)
+                    StaggerStrip(stripPts[s], stripNs[s], out cpts, out cns);
                 try
                 {
-                    var arch = VaultInterfaceMesh.BuildArchOnSurface(stripPts[s], stripNs[s], thickness, courseWidth, density);
+                    double[] th = null;
+                    if (thicknessTop > 0.0 && Math.Abs(thicknessTop - thickness) > 1e-9)
+                    {
+                        th = new double[cpts.Count];
+                        for (int k = 0; k < th.Length; k++)
+                        {
+                            double u = Math.Min(1.0, Math.Max(0.0, (cpts[k].Z - zmin) / zrange));
+                            th[k] = thickness + (thicknessTop - thickness) * u;   // base(thick) -> crown(thin)
+                        }
+                    }
+                    var arch = th != null
+                        ? VaultInterfaceMesh.BuildArchOnSurface(cpts, cns, th, courseWidth, density)
+                        : VaultInterfaceMesh.BuildArchOnSurface(cpts, cns, thickness, courseWidth, density);
                     st = MasonryStabilityChecker.Check(arch.Assembly, friction, 8, true, 1.0, -9.80665).IsStable;
+                    if (arch.Voussoirs != null) res.Voussoirs.AddRange(arch.Voussoirs);
                 }
                 catch { st = false; }
                 res.StripStable[s] = st;
-                res.Courses.Add(new Polyline(stripPts[s]));
+                res.Courses.Add(new Polyline(cpts));
                 if (st) { nstab++; foreach (int fi in stripFaces[s]) res.FaceScore[fi]++; }
             }
+            res.Staggered = stagger;
 
             res.StableCount = nstab;
             res.StablePercent = stripPts.Count > 0 ? 100.0 * nstab / stripPts.Count : 0.0;
@@ -175,6 +201,35 @@ namespace Frahan.Masonry.Vault
             for (int fi = 0; fi < nfc; fi++) { if (res.FaceScore[fi] >= 2) c2++; else if (res.FaceScore[fi] == 1) c1++; else c0++; }
             res.FacesBothWay = c2; res.FacesOneWay = c1; res.FacesNone = c0;
             return res;
+        }
+
+        // ---------------------------------------------------------------------
+        // Running-bond stagger: rebuild a course's node list so its voussoir joints fall
+        // at the MIDPOINTS of the original segments -- a 1/2-voussoir offset from the
+        // neighbouring un-staggered course, so the head joints no longer line up across
+        // courses (interlock against sliding; the Armadillo's staggered-course principle).
+        // The two end voussoirs become half-width; normals are averaged at the new nodes.
+        // ---------------------------------------------------------------------
+        static void StaggerStrip(IList<Point3d> pts, IList<Vector3d> ns,
+            out IList<Point3d> opts, out IList<Vector3d> ons)
+        {
+            int n = pts.Count;
+            var op = new List<Point3d>(n + 1);
+            var on = new List<Vector3d>(n + 1);
+            op.Add(pts[0]); on.Add(ns[0]);
+            for (int i = 0; i < n - 1; i++)
+            {
+                op.Add(new Point3d(
+                    (pts[i].X + pts[i + 1].X) * 0.5,
+                    (pts[i].Y + pts[i + 1].Y) * 0.5,
+                    (pts[i].Z + pts[i + 1].Z) * 0.5));
+                var v = ns[i] + ns[i + 1];
+                if (v.Length < 1e-9) v = ns[i];
+                v.Unitize();
+                on.Add(v);
+            }
+            op.Add(pts[n - 1]); on.Add(ns[n - 1]);
+            opts = op; ons = on;
         }
     }
 }
