@@ -34,6 +34,14 @@ $names = @(
     "Frahan.Kintsugi.Port.pdb"
 )
 
+# The out-of-process CRA worker is built by the Worker project (not the GH bin);
+# stage it from its own output so Vault Shell CRA's async path ships current.
+$worker = Join-Path $here "..\src\Frahan.Cra.Worker\bin\Release\net48\frahan_cra_worker.exe"
+if (Test-Path $worker) {
+    Copy-Item $worker (Join-Path $plugin "frahan_cra_worker.exe") -Force
+    Write-Host "  staged  frahan_cra_worker.exe"
+}
+
 Write-Host "Staging fresh build -> $plugin"
 foreach ($n in $names) {
     $src = Join-Path $bin $n

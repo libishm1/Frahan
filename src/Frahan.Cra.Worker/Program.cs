@@ -33,14 +33,21 @@ namespace Frahan.Cra.Worker
 
         private static int SolveFile(string inPath, string outPath)
         {
+            // Wire the native OSQP backend (frahan_osqp.dll beside this exe). In
+            // Rhino this happens in StonePackPlugin.OnLoad; a bare worker process
+            // must do it itself or every solve silently runs on the managed ADMM
+            // (found 2026-07-02: 52-interface case 'did not converge in 8000').
+            MasonrySolverRegistry.UseOsqpIfAvailable();
             MasonryAssembly asm;
             double mu, ts, gz; int fc; bool ins;
             using (var fin = File.OpenRead(inPath))
                 asm = CraAssemblyIO.ReadAssembly(fin, out mu, out fc, out ins, out ts, out gz);
             var r = MasonryStabilityChecker.Check(asm, mu, fc, ins, ts, gz);
             using (var fout = File.Create(outPath))
-                CraAssemblyIO.WriteResult(fout, r.IsStable, (int)r.Status, r.MaxCompression, "CRA " + r.Status);
+                CraAssemblyIO.WriteResult(fout, r.IsStable, (int)r.Status, r.MaxCompression,
+                    r.Message ?? ("CRA " + r.Status)); // full diagnostic (residuals/iterations), not just the status
             Console.WriteLine($"solved {asm.Blocks.Count} blocks / {asm.Interfaces.Count} interfaces -> IsStable={r.IsStable} ({r.Status})");
+            Console.WriteLine("  " + (r.Message ?? ""));
             return 0;
         }
 
