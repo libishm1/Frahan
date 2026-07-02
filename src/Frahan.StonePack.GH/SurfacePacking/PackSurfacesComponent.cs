@@ -335,16 +335,14 @@ namespace Frahan.GH.Surface
                         tick.Restart();
                         _progress = $"packing {partial.PlacedCount}/{snap.Parts.Count}...";
                         _selfTrigger = true;
-                        try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
-                        catch { }
+                        AsyncResolve.Kick(doc, iguid);
                     };
                     try { result = ComputePacking(snap, onPlacement, token); }
                     catch (Exception ex) { error = "Surface packing failed: " + ex.Message; }
                     if (token.IsCancellationRequested) return; // stale job: discard
                     lock (_gate) { _readyPayload = result == null ? null : new Payload { Snap = snap, Result = result }; _readyError = error; _hasReady = true; }
                     _selfTrigger = true;
-                    try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
-                    catch { }
+                    AsyncResolve.Kick(doc, iguid); // guarded delivery: schedule, then UI-thread fallback
                 }, token);
             }
         }

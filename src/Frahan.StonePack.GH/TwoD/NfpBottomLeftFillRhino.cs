@@ -122,6 +122,9 @@ public sealed class NfpBottomLeftFillRhino
         result.NfpCacheMisses = cache.Misses;
         result.OptimizationRuns = sequences.Count;
         result.Report = BuildReport(result);
+        if (_blockedUnionFailures > 0)
+            result.Report += $" WARNING: {_blockedUnionFailures} blocked-region union(s) failed — " +
+                             "raw overlapping blocked regions were used (KB-4 concave-NFP family); verify placements for overlap.";
         return result;
     }
 
@@ -393,6 +396,10 @@ public sealed class NfpBottomLeftFillRhino
         return polyline.ToNurbsCurve();
     }
 
+    // KB-4 visibility (2026-07-02): count blocked-region unions that fell back
+    // to the raw (overlapping) region list — the concave-NFP overlap family.
+    private int _blockedUnionFailures;
+
     private List<Curve> BuildBlockedUnion(List<Curve> blockedRegions)
     {
         try
@@ -407,6 +414,7 @@ public sealed class NfpBottomLeftFillRhino
         {
         }
 
+        _blockedUnionFailures++;
         return blockedRegions
             .Where(curve => curve != null && Math.Abs(Area(curve)) > _tolerance * _tolerance)
             .Select(curve => curve.DuplicateCurve())

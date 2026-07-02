@@ -96,6 +96,10 @@ namespace Frahan.Masonry.Library
         {
             opt = opt ?? new StoneLibraryOptions();
             var pool = new List<LibraryStone>();
+            // Fallback (2026-07-02): missing machine-specific path -> the bundled
+            // 16-stone ETH1100 subset beside the plugin (see VaultStoneFitter).
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+                folder = Frahan.Masonry.Vault.VaultStoneFitter.BundledSubsetDir();
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return pool;
 
             var files = new List<string>(Directory.GetFiles(folder, "*.obj",

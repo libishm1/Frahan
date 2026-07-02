@@ -123,6 +123,9 @@ public sealed class IrregularSheetFillRhino
         result.Utilization = ComputeUtilization(result.PackedCurves, sheets);
         result.RuntimeMilliseconds = stopwatch.ElapsedMilliseconds;
         result.Report = BuildReport(result, sheets.Count);
+        if (_offsetFailures > 0)
+            result.Report += $" WARNING: {_offsetFailures} spacing offset(s) failed (Curve.Offset) — " +
+                             "affected outlines were used WITHOUT spacing inflation (KB-4 family); check part gaps.";
         return result;
     }
 
@@ -934,6 +937,10 @@ public sealed class IrregularSheetFillRhino
         return result;
     }
 
+    // KB-4 visibility (2026-07-02): count spacing offsets that silently failed
+    // so the report says WHICH packs ran without their spacing inflation.
+    private int _offsetFailures;
+
     private Curve? OffsetClosedCurve(Curve curve, bool inward)
     {
         if (_spacing <= _tolerance)
@@ -955,11 +962,13 @@ public sealed class IrregularSheetFillRhino
             }
             catch
             {
+                _offsetFailures++;
             }
         }
 
         if (candidates.Count == 0)
         {
+            _offsetFailures++;
             return null;
         }
 

@@ -43,6 +43,12 @@ namespace Frahan.Masonry.Vault
         private static List<Stock> LoadPool(string ethDir, int seed, int maxPool, double poolArMax)
         {
             var pool = new List<Stock>();
+            // Fallback (2026-07-02): when the caller path is missing (machine-
+            // specific ETH1100 folders), use the 16-stone subset BUNDLED beside
+            // the plugin (data/eth1100_subset, deployed by deploy.ps1) so the
+            // published examples work on any machine.
+            if (string.IsNullOrEmpty(ethDir) || !Directory.Exists(ethDir))
+                ethDir = BundledSubsetDir();
             if (string.IsNullOrEmpty(ethDir) || !Directory.Exists(ethDir)) return pool;
 
             var files = new List<string>(Directory.GetFiles(ethDir, "*.obj"));
@@ -103,6 +109,22 @@ namespace Frahan.Masonry.Vault
                 Vector3f nn = m.Normals[i];
                 m.Vertices.SetVertex(i, vv.X + nn.X * (float)a, vv.Y + nn.Y * (float)a, vv.Z + nn.Z * (float)a);
             }
+        }
+
+        /// <summary>Bundled 16-stone ETH1100 subset beside the plugin (or the repo checkout).</summary>
+        internal static string BundledSubsetDir()
+        {
+            string dir = null;
+            try { dir = Path.GetDirectoryName(typeof(VaultStoneFitter).Assembly.Location); }
+            catch { }
+            if (dir == null) return null;
+            foreach (var cand in new[]
+            {
+                Path.Combine(dir, "data", "eth1100_subset"),
+                Path.Combine(dir, "..", "..", "..", "..", "..", "data", "eth1100_subset"), // repo bin -> repo root
+            })
+                if (Directory.Exists(cand)) return Path.GetFullPath(cand);
+            return null;
         }
 
         public static StoneFitResult FitAndTrim(

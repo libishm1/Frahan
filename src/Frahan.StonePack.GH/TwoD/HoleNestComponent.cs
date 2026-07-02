@@ -302,8 +302,7 @@ public sealed class HoleNestComponent : FrahanComponentBase
                     lock (_gate) { _last = pp; }
                     _progress = $"nesting {partial.PlacedCount}/{snap.Parts.Count}...";
                     _selfTrigger = true;
-                    try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
-                    catch { }
+                    AsyncResolve.Kick(doc, iguid);
                 };
                 try
                 {
@@ -338,14 +337,7 @@ public sealed class HoleNestComponent : FrahanComponentBase
                 if (cancelled) return; // stale job: discard silently
                 lock (_gate) { _readyPayload = payload; _readyError = error; _hasReady = true; }
                 _selfTrigger = true;   // the completion re-solve is mine: emit, don't restart
-                try
-                {
-                    doc?.ScheduleSolution(10, d =>
-                    {
-                        if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true);
-                    });
-                }
-                catch { }
+                AsyncResolve.Kick(doc, iguid); // guarded delivery: schedule, then UI-thread fallback
             }, token);
         }
     }
