@@ -198,6 +198,15 @@ public sealed class AdmmQpSolver : IConvexQpSolver
 
         double lastRPri = double.NaN, lastRDua = double.NaN, lastEpsPri = double.NaN, lastEpsDua = double.NaN;
         int refactors = 0;
+        // Primal-infeasibility certificate buffers (OSQP sec. 3.4, added 2026-07-02):
+        // dy = y_k+1 - y_k over the check window; if A'dy ~ 0 and the support
+        // function u'(dy)+ + l'(dy)- is negative, NO feasible point exists and we
+        // report Infeasible instead of grinding to a SolverError plateau (the
+        // Guell portico failure mode). Scaling preserves (in)feasibility.
+        var yPrev = new double[m];
+        var dyCert = new double[m];
+        var atdyCert = new double[n];
+        const double epsPinf = 1e-4;
         for (int it = 1; it <= _maxIterations; it++)
         {
             // rhs = sigma*x - q + A'(rho*z - y)
@@ -254,6 +263,53 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 return new ConvexQpResult(ConvexQpStatus.Optimal, xOut, obj,
                     $"ADMM converged in {it} iterations (rho={rho:0.###}, refactors={refactors}, " +
                     $"r_pri={rPri:0.###e0}, r_dua={rDua:0.###e0}).");
+            }
+
+            // ---- primal infeasibility certificate (OSQP sec. 3.4) ----
+            {
+                double ndy = 0;
+                for (int r = 0; r < m; r++)
+                {
+                    dyCert[r] = y[r] - yPrev[r];
+                    double a2 = Math.Abs(dyCert[r]);
+                    if (a2 > ndy) ndy = a2;
+                }
+                if (ndy > 1e-12)
+                {
+                    bool admissible = true;
+                    double supp = 0;
+                    for (int r = 0; r < m && admissible; r++)
+                    {
+                        double d = dyCert[r];
+                        if (d > 0)
+                        {
+                            if (double.IsPositiveInfinity(hi[r])) { if (d > epsPinf * ndy) admissible = false; }
+                            else supp += hi[r] * d;
+                        }
+                        else if (d < 0)
+                        {
+                            if (double.IsNegativeInfinity(lo[r])) { if (-d > epsPinf * ndy) admissible = false; }
+                            else supp += lo[r] * d;
+                        }
+                    }
+                    if (admissible)
+                    {
+                        a.TransposeMul(dyCert, atdyCert);
+                        double natdy = 0;
+                        for (int c2 = 0; c2 < n; c2++)
+                        {
+                            double a3 = Math.Abs(atdyCert[c2]);
+                            if (a3 > natdy) natdy = a3;
+                        }
+                        if (natdy <= epsPinf * ndy && supp < -epsPinf * ndy)
+                            return new ConvexQpResult(ConvexQpStatus.Infeasible, null, 0,
+                                $"Primal INFEASIBILITY certificate (OSQP sec. 3.4) at iteration {it}: " +
+                                $"||A'dy|| = {natdy:0.###e0} <= {epsPinf}*||dy||, support = {supp:0.###e0} < 0 " +
+                                "— no admissible force state exists for this assembly/friction/bounds " +
+                                "(the geometry cannot stand as constructed; not a solver failure).");
+                    }
+                }
+                Array.Copy(y, yPrev, m);
             }
 
             // ---- adaptive rho (bounded refactorisations) ----
