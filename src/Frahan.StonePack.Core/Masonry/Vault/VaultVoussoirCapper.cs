@@ -28,6 +28,19 @@ namespace Frahan.Masonry.Vault
             IList<PolylineCurve> cells, IList<Plane> frames, IList<double> columnness,
             double dVault, double dCol, double protrude)
         {
+            return Cap(cells, frames, columnness, dVault, dCol, protrude, null);
+        }
+
+        /// <summary>
+        /// innerLimit (optional, per cell): maximum INWARD offset (-ZAxis side).
+        /// On thin column tubes this stops opposite/adjacent stones from
+        /// interpenetrating through the tube axis (Quad Cells emits ~0.6 x local
+        /// tube radius there; vault cells pass a huge value = symmetric as before).
+        /// </summary>
+        public static MouldResult Cap(
+            IList<PolylineCurve> cells, IList<Plane> frames, IList<double> columnness,
+            double dVault, double dCol, double protrude, IList<double> innerLimit)
+        {
             var res = new MouldResult();
             int nc = cells == null ? 0 : cells.Count;
             for (int i = 0; i < nc; i++)
@@ -38,7 +51,10 @@ namespace Frahan.Masonry.Vault
                 double cc = columnness[i];
 
                 double depth = dVault + (dCol - dVault) * cc;
-                double hd = depth * 0.5 + protrude;
+                double hdOut = depth * 0.5 + protrude;
+                double hdIn = hdOut;
+                if (innerLimit != null && i < innerLimit.Count && innerLimit[i] > 0.0)
+                    hdIn = Math.Max(0.02, Math.Min(hdIn, innerLimit[i]));   // clamp inward on tubes
                 Vector3d n = fr.ZAxis;
 
                 Polyline poly;
@@ -47,8 +63,8 @@ namespace Frahan.Masonry.Vault
                 if (nn < 3) continue;
 
                 var m = new Mesh();
-                for (int k = 0; k < nn; k++) m.Vertices.Add(poly[k] - n * hd);   // bottom 0..nn-1
-                for (int k = 0; k < nn; k++) m.Vertices.Add(poly[k] + n * hd);   // top    nn..2nn-1
+                for (int k = 0; k < nn; k++) m.Vertices.Add(poly[k] - n * hdIn);    // bottom (inward) 0..nn-1
+                for (int k = 0; k < nn; k++) m.Vertices.Add(poly[k] + n * hdOut);   // top (outward)   nn..2nn-1
 
                 for (int k = 1; k < nn - 1; k++) m.Faces.AddFace(0, k + 1, k);            // bottom fan
                 for (int k = 1; k < nn - 1; k++) m.Faces.AddFace(nn, nn + k, nn + k + 1); // top fan
