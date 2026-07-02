@@ -224,6 +224,8 @@ namespace Frahan.GH.Masonry
             var outMeshes = new List<Mesh>();
             var parents = new List<int>();
             bool hitCap = false;
+            int boolFaults = 0, keptWholePieces = 0;
+            string firstFault = null;
 
             for (int i = 0; i < meshes.Count; i++)
             {
@@ -244,12 +246,29 @@ namespace Frahan.GH.Masonry
                     foreach (var piece in pieces)
                     {
                         MeshSnapshot inside = null, outside = null;
-                        try { inside = CgalMeshBoolean.Intersection(piece, tool, kernel, out _); } catch { }
-                        try { outside = CgalMeshBoolean.Difference(piece, tool, kernel, out _); } catch { }
+                        Exception fault = null;
+                        try { inside = CgalMeshBoolean.Intersection(piece, tool, kernel, out _); }
+                        catch (Exception ex) { fault = ex; }
+                        try { outside = CgalMeshBoolean.Difference(piece, tool, kernel, out _); }
+                        catch (Exception ex) { if (fault == null) fault = ex; }
+                        if (fault != null)
+                        {
+                            boolFaults++;
+                            if (firstFault == null) firstFault = fault.GetType().Name + ": " + fault.Message;
+                        }
                         bool added = false;
                         if (NonEmpty(inside)) { next.Add(inside); added = true; }
                         if (NonEmpty(outside)) { next.Add(outside); added = true; }
-                        if (!added) next.Add(piece); // plane missed this piece; keep it whole
+                        if (!added)
+                        {
+                            // A genuine miss leaves the piece intact on ONE side (the
+                            // half-space Difference returns it whole), so BOTH sides
+                            // empty means the NATIVE BOOLEAN FAILED — not geometry.
+                            // Keep the piece so nothing is lost, but COUNT it: the old
+                            // silent keep-whole made faults look like clean cuts.
+                            next.Add(piece);
+                            keptWholePieces++;
+                        }
                     }
                     pieces = next;
                     if (pieces.Count > cellCap) { hitCap = true; break; }
@@ -266,6 +285,13 @@ namespace Frahan.GH.Masonry
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                     $"Piece count exceeded {cellCap}; stopped splitting early (reduce plane count or pre-segment).");
 
+            if (boolFaults > 0 || keptWholePieces > 0)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                    $"CGAL boolean issues: {boolFaults} native fault(s) caught (first: {firstFault ?? "n/a"}); " +
+                    $"{keptWholePieces} piece(s) kept WHOLE because both half-space cuts came back empty/failed. " +
+                    "Those pieces are UNCUT by the offending plane(s) — inspect before fabrication " +
+                    "(try the Exact kernel or repair the input mesh).");
+
             double vol = 0.0;
             foreach (var m in outMeshes)
             {
@@ -279,7 +305,10 @@ namespace Frahan.GH.Masonry
             da.SetData(3, outMeshes.Count);
             da.SetDataList(4, outMeshes);
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
-                $"CGAL backend: {outMeshes.Count} piece(s) from {meshes.Count} mesh(es) x {planes.Count} plane(s). " +
+                $"CGAL backend: {outMeshes.Count} piece(s) from {meshes.Count} mesh(es) x {planes.Count} plane(s)" +
+                (boolFaults > 0 || keptWholePieces > 0
+                    ? $" — {boolFaults} fault(s), {keptWholePieces} kept whole (see warning)."
+                    : ". ") +
                 "Slab output is empty; use the Mesh output.");
             return true;
         }
