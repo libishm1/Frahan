@@ -197,16 +197,41 @@ namespace Frahan.Masonry.Vault
                 try
                 {
                     Mesh[] bi = Mesh.CreateBooleanIntersection(new Mesh[] { eth }, new Mesh[] { mo });
-                    if (bi != null && bi.Length > 0 && bi[0] != null && bi[0].Faces.Count > 3) outMesh = bi[0];
+                    // Accept the trim ONLY if it is a usable stone (closed + sane volume).
+                    // Degenerate boolean outputs (open shells, slivers) fall back to the
+                    // mould, which is always a valid closed voussoir -> no "empty" ETH
+                    // stones can reach the output (Libish 2026-07-02, three-prong).
+                    if (bi != null && bi.Length > 0 && IsUsableStone(bi[0], mo)) outMesh = bi[0];
                 }
                 catch { outMesh = mo; }
 
                 outMesh.Weld(0.01);
                 outMesh.Normals.ComputeNormals();
                 outMesh.UnifyNormals();
+                if (outMesh.Faces.Count < 4) continue; // never emit a degenerate stone
                 res.Rubble.Add(outMesh);
             }
             return res;
+        }
+
+        // Validity gate for a trimmed stone: non-trivial, CLOSED after a light weld,
+        // and at least 5% of its mould's volume (rejects boolean slivers/shards).
+        private static bool IsUsableStone(Mesh s, Mesh mould)
+        {
+            if (s == null || s.Faces.Count <= 3) return false;
+            var w = s.DuplicateMesh();
+            w.Weld(0.01);
+            if (!w.IsClosed) return false;
+            try
+            {
+                var vs = VolumeMassProperties.Compute(w);
+                if (vs == null || Math.Abs(vs.Volume) < 1e-9) return false;
+                var vm = VolumeMassProperties.Compute(mould);
+                double mv = vm != null ? Math.Abs(vm.Volume) : 0.0;
+                if (mv > 1e-9 && Math.Abs(vs.Volume) < 0.05 * mv) return false;
+            }
+            catch { return false; }
+            return true;
         }
 
         // Mesh -> flat (coords, tris) buffers for StoneCellAssignment (parallel lists).
