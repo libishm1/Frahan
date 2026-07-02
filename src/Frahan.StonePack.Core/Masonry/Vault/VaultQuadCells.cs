@@ -23,6 +23,10 @@ namespace Frahan.Masonry.Vault
         public readonly List<PolylineCurve> Cells = new List<PolylineCurve>();
         public readonly List<Plane> Frames = new List<Plane>();
         public readonly List<double> Columnness = new List<double>();
+        // per-cell max INWARD mould offset (0 = unlimited). ~0.6 x local tube
+        // radius on column shafts so opposite/adjacent stones never meet through
+        // the tube axis; 0 on vault/wall cells (symmetric capping as before).
+        public readonly List<double> InnerLimit = new List<double>();
         public int SplitFaces;
         public int Count { get { return Cells.Count; } }
     }
@@ -63,12 +67,12 @@ namespace Frahan.Masonry.Vault
                 var ctr = (A + B + C + D) / 4.0;
                 double cc = Math.Max(0.0, Math.Min(1.0, (zHi - ctr.Z) / band));
                 Vector3d n = m.FaceNormals[i]; n.Unitize();
+                double minDot = 1.0;
                 if (cc > 0.0)
                 {
                     // tube test: min 1-ring normal agreement below cos(tubeAngle)
                     // means the neighbourhood curves like a column shaft; a flat
                     // wall base has near-parallel neighbours and stays cc = 0.
-                    double minDot = 1.0;
                     int[] cv = { f.A, f.B, f.C, f.D };
                     foreach (int v in cv)
                         foreach (int nf2 in vFaces[v])
@@ -79,6 +83,20 @@ namespace Frahan.Masonry.Vault
                             if (d < minDot) minDot = d;
                         }
                     if (minDot > cosTube) cc = 0.0; // flat neighbourhood -> footer, not column
+                }
+                // inward mould cap on column shafts: local tube radius from the
+                // 1-ring normal turn over the circumferential edge (r ~ e/theta);
+                // 0.6 r keeps opposite AND adjacent stones clear of the axis.
+                double lim = 0.0;
+                if (cc > 0.5)
+                {
+                    double theta = Math.Acos(Math.Max(-1.0, Math.Min(1.0, minDot)));
+                    Vector3d abE = B - A, adE = D - A;
+                    double hAB2 = Math.Abs(abE.Z) / Math.Max(1e-9, abE.Length);
+                    double hAD2 = Math.Abs(adE.Z) / Math.Max(1e-9, adE.Length);
+                    double eH = hAB2 <= hAD2 ? abE.Length : adE.Length;
+                    double r = eH / Math.Max(0.05, theta);
+                    lim = Math.Max(0.03, Math.Min(5.0, 0.6 * r));
                 }
 
                 int s = cc > 0.5 ? columnSplit : 1;
@@ -106,6 +124,7 @@ namespace Frahan.Masonry.Vault
                         res.Cells.Add(new PolylineCurve(new Polyline(new[] { S(p00), S(p10), S(p11), S(p01), S(p00) })));
                         res.Frames.Add(new Plane(cx, n));
                         res.Columnness.Add(cc);
+                        res.InnerLimit.Add(lim);
                     }
             }
             return res;

@@ -48,6 +48,9 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddNumberParameter("d Column", "dC", "Stone depth on the legs (m).", GH_ParamAccess.item, 0.20);
             p.AddNumberParameter("Protrude", "Pr", "Mould overshoot past the shell (m).", GH_ParamAccess.item, 0.05);
             p.AddBooleanParameter("Run", "R", "Execute the capper.", GH_ParamAccess.item, false);
+            // APPENDED (wiring-safe): per-cell inward cap from Quad Cells' Inner Limit.
+            var il = p.AddNumberParameter("Inner Limit", "Il", "Optional per-cell max INWARD offset (m); 0 = unlimited (symmetric). Wire Quad Cells' Inner Limit here so column stones cannot interpenetrate through the tube axis.", GH_ParamAccess.list);
+            p[il].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -70,6 +73,8 @@ namespace Frahan.StonePack.GH.Masonry
             da.GetDataList(1, frames);
             da.GetDataList(2, col);
             da.GetData(3, ref dV); da.GetData(4, ref dC); da.GetData(5, ref pr); da.GetData(6, ref run);
+            var innerLimit = new List<double>();
+            da.GetDataList(7, innerLimit);
 
             if (!run) { da.SetData(4, "Run = false. Toggle to cap."); return; }
             if (frames.Count != curves.Count || col.Count != curves.Count)
@@ -77,11 +82,17 @@ namespace Frahan.StonePack.GH.Masonry
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Cells / Frames / Columnness lengths differ.");
                 return;
             }
+            if (innerLimit.Count > 0 && innerLimit.Count != curves.Count)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Inner Limit length differs from Cells; ignoring it.");
+                innerLimit.Clear();
+            }
 
             var cells = new List<PolylineCurve>(curves.Count);
             for (int i = 0; i < curves.Count; i++) cells.Add(ToPolylineCurve(curves[i]));
 
-            var res = VaultVoussoirCapper.Cap(cells, frames, col, dV, dC, pr);
+            var res = VaultVoussoirCapper.Cap(cells, frames, col, dV, dC, pr,
+                                              innerLimit.Count > 0 ? innerLimit : null);
             da.SetDataList(0, res.Moulds);
             da.SetDataList(1, res.Cells);
             da.SetDataList(2, res.Frames);

@@ -47,22 +47,25 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddPlaneParameter("Frames", "F", "Cell frames (origin = cell centre, Z = face normal).", GH_ParamAccess.list);
             p.AddNumberParameter("Columnness", "Cc", "0 = vault, 1 = column (drives mould depth dV -> dC).", GH_ParamAccess.list);
             p.AddTextParameter("Report", "Rp", "Summary.", GH_ParamAccess.item);
+            p.AddNumberParameter("Inner Limit", "Il", "Per-cell max INWARD mould offset (0 = unlimited). ~0.6 x local tube radius on columns: wire into Vault Voussoir Moulds' Inner Limit so opposite/adjacent column stones never interpenetrate.", GH_ParamAccess.list);
         }
 
         protected override void SolveSafe(IGH_DataAccess da)
         {
             Mesh mesh = null;
-            double shrink = 0.92, zLo = 0.9, zHi = 1.8; int split = 2;
+            double shrink = 0.92, zLo = 0.9, zHi = 1.8, tube = 12.0; int split = 2;
             if (!GhGuard.Item(this, da, 0, ref mesh, "Quad Mesh")) return;
             da.GetData(1, ref shrink); da.GetData(2, ref zLo); da.GetData(3, ref zHi); da.GetData(4, ref split);
+            da.GetData(5, ref tube);
             if (zHi <= zLo) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Column Z Hi must exceed Column Z Lo."); return; }
 
-            var r = VaultQuadCells.Build(mesh, shrink, zLo, zHi, split);
+            var r = VaultQuadCells.Build(mesh, shrink, zLo, zHi, split, tube);
             if (r.Count == 0) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No quad faces found (triangulated input?)."); return; }
             da.SetDataList(0, r.Cells);
             da.SetDataList(1, r.Frames);
             da.SetDataList(2, r.Columnness);
-            da.SetData(3, $"{r.Count} cells from {mesh.Faces.QuadCount} quads ({r.SplitFaces} column faces split {split}x{split}); shrink {shrink:0.00}, z-band [{zLo:0.0}..{zHi:0.0}].");
+            da.SetData(3, $"{r.Count} cells from {mesh.Faces.QuadCount} quads ({r.SplitFaces} column faces split, circumference-only); shrink {shrink:0.00}, z-band [{zLo:0.0}..{zHi:0.0}].");
+            da.SetDataList(4, r.InnerLimit);
             Message = r.Count + " cells";
         }
     }
