@@ -44,7 +44,7 @@ namespace Frahan.Masonry.Vault
         // Coarseness = the flow-config scaleFact (target edge multiplier). Measured on
         // the portico: 1 -> 7283 quads (fine skin), 3 -> 999, 5 -> 544 (whole-shell
         // CRA regime: contact-by-construction voussoirs stay solver-friendly).
-        public const int DefaultCoarseness = 1;
+        public const double DefaultCoarseness = 1.0;   // continuous: 1.5 -> 3297, 2.5 -> 1208 quads (portico)
 
         public static bool Available() => ResolveRoot() != null;
 
@@ -85,7 +85,7 @@ namespace Frahan.Masonry.Vault
         /// Returns null on failure (LastError).
         /// </summary>
         public static Mesh Remesh(Mesh input, bool thrustField, double supportFrac, int smoothSweeps,
-                                  int coarseness, Action<string> progress, CancellationToken token,
+                                  double coarseness, Action<string> progress, CancellationToken token,
                                   out string report)
         {
             LastError = null; report = null;
@@ -151,7 +151,7 @@ namespace Frahan.Masonry.Vault
                 // columns/tubes present keep coarseness <= 2 (foot rings survive).
                 File.WriteAllText(flowDst,
                     File.ReadAllText(flowSrc)
-                        .Replace("scaleFact 1", "scaleFact " + Math.Max(1, coarseness).ToString(ci))
+                        .Replace("scaleFact 1", "scaleFact " + Math.Max(1.0, coarseness).ToString("0.###", ci))
                         .Replace("alpha 0.005", "alpha 0.05"));
                 // quad_from_patches exits 0x80000003 (an exit-path assert) even on
                 // SUCCESS, so judge it by its output file, not its exit code.

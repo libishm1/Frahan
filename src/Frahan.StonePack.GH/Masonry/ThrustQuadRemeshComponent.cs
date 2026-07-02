@@ -29,7 +29,7 @@ namespace Frahan.StonePack.GH.Masonry
             public bool ThrustField;
             public double SupportFrac;
             public int SmoothSweeps;
-            public int Coarseness;
+            public double Coarseness;
         }
 
         public sealed class Payload
@@ -60,7 +60,7 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddBooleanParameter("Thrust Field", "T", "Align quads to the thrust-potential field (needs frahan_quadremesh.exe). Off = QuadWild curvature field.", GH_ParamAccess.item, true);
             p.AddNumberParameter("Support Band", "S", "Support detection: boundary vertices in the lowest fraction of the z-range act as supports for the potential solve.", GH_ParamAccess.item, QuadWildRemesher.DefaultSupportFrac);
             p.AddIntegerParameter("Smooth", "W", "Field-smoothing sweeps (confidence-weighted 4-RoSy). Cleans noise singularities; 0 = raw field.", GH_ParamAccess.item, QuadWildRemesher.DefaultSmoothSweeps);
-            p.AddIntegerParameter("Coarseness", "C", "Target-edge multiplier (flow scaleFact). 1 = fine skin mesh (portico: 7283 quads); 4-6 = coarse structural mesh for whole-shell CRA (5 -> 544 quads).", GH_ParamAccess.item, QuadWildRemesher.DefaultCoarseness);
+            p.AddNumberParameter("Coarseness", "C", "CONTINUOUS quad-size control (flow scaleFact): 1 = fine skin (7283 quads on the portico), 1.5 -> 3297, 2 -> 1879, 2.5 -> 1208, 5 -> 544 (CRA regime). Any fractional value works.", GH_ParamAccess.item, QuadWildRemesher.DefaultCoarseness);
             p.AddBooleanParameter("Run", "R", "Execute (async; the canvas stays responsive).", GH_ParamAccess.item, false);
         }
 
@@ -81,7 +81,7 @@ namespace Frahan.StonePack.GH.Masonry
             bool thrust = true;
             double frac = QuadWildRemesher.DefaultSupportFrac;
             int sweeps = QuadWildRemesher.DefaultSmoothSweeps;
-            int scale = QuadWildRemesher.DefaultCoarseness;
+            double scale = QuadWildRemesher.DefaultCoarseness;
             if (!da.GetData(0, ref mesh) || mesh == null || mesh.Vertices.Count < 4)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Mesh input is missing or too small.");
@@ -103,7 +103,7 @@ namespace Frahan.StonePack.GH.Masonry
                 ThrustField = thrust,
                 SupportFrac = Math.Max(0.02, Math.Min(0.95, frac)),
                 SmoothSweeps = Math.Max(0, sweeps),
-                Coarseness = Math.Max(1, scale),
+                Coarseness = Math.Max(1.0, scale),
             };
             return true;
         }
