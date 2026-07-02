@@ -159,7 +159,7 @@ namespace Frahan.GH.Masonry
             // path (StonePackPlugin -> EnsureDefaultSolver) has not run, e.g.
             // when only the .gha is loaded. Idempotent; matches the pattern in
             // MasonryStabilityRbeComponent.
-            MasonrySolverRegistry.EnsureDefaultSolver();
+            MasonrySolverRegistry.UseOsqpIfAvailable();
             var solver = MasonrySolverRegistry.Default;
             if (solver == null)
             {
@@ -210,6 +210,14 @@ namespace Frahan.GH.Masonry
                     // MasonryStabilityRbeComponent + StageBSolverTests. Fixed 2026-06-05 (W4).
                     var problem = RbeQpFormulation.BuildPhysicsCorrected(equilibrium, friction.Afr);
                     var qp = solver.Solve(problem);
+                    // A solver DECLINING (ManagedQpSolver NotImplemented on a
+                    // non-diagonal Hessian) is not a structural verdict — retry
+                    // on the managed ADMM, same as the checker's fallback chain.
+                    if (qp != null && qp.Status == ConvexQpStatus.NotImplemented)
+                    {
+                        try { qp = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(problem) ?? qp; }
+                        catch { /* keep the declined result; mapped below */ }
+                    }
                     if (qp == null) { verdict = "error"; }
                     else
                     {
@@ -219,7 +227,7 @@ namespace Frahan.GH.Masonry
                             case ConvexQpStatus.Optimal:       verdict = "stable"; break;
                             case ConvexQpStatus.Infeasible:    verdict = "infeasible"; break;
                             case ConvexQpStatus.Unbounded:     verdict = "unbounded"; break;
-                            case ConvexQpStatus.NotImplemented: verdict = "not implemented"; break;
+                            case ConvexQpStatus.NotImplemented: verdict = "solver declined (no fallback available)"; break;
                             default:                            verdict = "error"; break;
                         }
                     }

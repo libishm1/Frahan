@@ -190,7 +190,7 @@ namespace Frahan.GH.Masonry
                 // 2026-05-15: defensively ensure a default solver is wired
                 // even when only the .gha is loaded (StonePackPlugin.OnLoad
                 // wires this, but the .gha can be used without the .rhp).
-                MasonrySolverRegistry.EnsureDefaultSolver();
+                MasonrySolverRegistry.UseOsqpIfAvailable();
                 var solver = MasonrySolverRegistry.Default;
                 double muCopy = mu;
                 int facesCopy = faces;
@@ -237,7 +237,7 @@ namespace Frahan.GH.Masonry
                     return;
                 }
 
-                MasonrySolverRegistry.EnsureDefaultSolver();
+                MasonrySolverRegistry.UseOsqpIfAvailable();
                 result = Compute(assembly2, mu2, faces2, penalty2,
                     MasonrySolverRegistry.Default);
             }
@@ -349,6 +349,21 @@ namespace Frahan.GH.Masonry
                     return result;
                 }
 
+                // The registry solver DECLINING (ManagedQpSolver: non-diagonal
+                // Hessian / nonzero linear objective) is not a structural verdict.
+                // Same fallback the MasonryStabilityChecker chain uses: retry on
+                // the managed ADMM, which handles the general convex case.
+                if (qpResult.Status == ConvexQpStatus.NotImplemented)
+                {
+                    log.AppendLine(
+                        $"Solver '{solver.Name}' declined (NotImplemented); retrying on AdmmQpSolver.");
+                    try { qpResult = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(problem) ?? qpResult; }
+                    catch (Exception admmEx)
+                    {
+                        log.AppendLine($"  ADMM fallback threw: {admmEx.GetType().Name}: {admmEx.Message}");
+                    }
+                }
+
                 result.Objective = qpResult.ObjectiveValue;
                 log.AppendLine(
                     $"Solver: {solver.Name}, status={qpResult.Status}, " +
@@ -373,7 +388,8 @@ namespace Frahan.GH.Masonry
                         result.Verdict = "unbounded";
                         break;
                     case ConvexQpStatus.NotImplemented:
-                        result.Verdict = "not implemented";
+                        // only reachable if the ADMM fallback above also failed
+                        result.Verdict = "solver declined (no fallback available)";
                         break;
                     case ConvexQpStatus.SolverError:
                     default:
