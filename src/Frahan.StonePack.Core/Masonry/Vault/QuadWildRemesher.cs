@@ -142,8 +142,14 @@ namespace Frahan.Masonry.Vault
                 // number is NOT the density knob; measured 1 -> 7283, 3 -> 999, 5 -> 544).
                 string flowSrc = Path.Combine(work, "config", "main_config", "flow_noalign_lemon.txt");
                 string flowDst = Path.Combine(work, "config", "main_config", "flow_frahan.txt");
+                // alpha 0.2 (vs upstream 0.005) weights REGULARITY/isometry over patch
+                // fidelity: measured on the portico it cuts sub-0.10 m edges 43 -> 9 and
+                // lifts the p5 edge 0.156 -> 0.239 m — even quad sizing, no tiny quads
+                // collapsing around singularities (Libish 2026-07-02).
                 File.WriteAllText(flowDst,
-                    File.ReadAllText(flowSrc).Replace("scaleFact 1", "scaleFact " + Math.Max(1, coarseness).ToString(ci)));
+                    File.ReadAllText(flowSrc)
+                        .Replace("scaleFact 1", "scaleFact " + Math.Max(1, coarseness).ToString(ci))
+                        .Replace("alpha 0.005", "alpha 0.2"));
                 // quad_from_patches exits 0x80000003 (an exit-path assert) even on
                 // SUCCESS, so judge it by its output file, not its exit code.
                 RunProc(Path.Combine(root, "bin", "quad_from_patches.exe"),
