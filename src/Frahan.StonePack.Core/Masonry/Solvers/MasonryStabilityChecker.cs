@@ -237,15 +237,21 @@ public static class MasonryStabilityChecker
         // ADMM (cold ADMM degrades steeply past ~50 exact-joint interfaces).
         // When the LS path declines (non-diagonal H, singular dual system),
         // behaviour is exactly the previous cold-start solve.
-        double[] lsPoint = TryLsFirstKktPoint(equilibrium, qp, out bool lsCertified, out string lsCertificate);
+        // SPARSE-built problems (RbeQpFormulation size gate, 2026-07-02) have no
+        // dense blocks: the LS closed form and the native OSQP marshal both read
+        // dense arrays, so those problems route straight to the sparse/CG ADMM.
+        bool sparseQp = qp.EqualityMatrix == null && qp.EqualitySparse != null;
+        bool lsCertified = false; string lsCertificate = null;
+        double[] lsPoint = sparseQp ? null
+            : TryLsFirstKktPoint(equilibrium, qp, out lsCertified, out lsCertificate);
         ConvexQpResult sol;
         if (lsPoint != null && lsCertified)
             sol = new ConvexQpResult(ConvexQpStatus.Optimal, lsPoint,
                                      DiagonalQpObjective(qp, lsPoint), lsCertificate);
-        else if (MasonrySolverRegistry.Default is OsqpQpSolver osqp)
+        else if (!sparseQp && MasonrySolverRegistry.Default is OsqpQpSolver osqp)
             sol = osqp.Solve(qp); // native OSQP (frahan_osqp) — robust on ill-conditioned QPs
         else
-            sol = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(qp, lsPoint); // managed fallback (unchanged)
+            sol = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(qp, lsPoint); // managed sparse/CG path
 
         int vertexCount = equilibrium.ForceColumns.Count / Math.Max(1, equilibrium.ForceComponentsPerVertex);
 

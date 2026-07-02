@@ -81,7 +81,7 @@ public static class RbeQpFormulation
         // for that family. tangentialScale = 1.0 reproduces the original I*c
         // behaviour; tangentialScale > 1.0 (paper hint: ~1e3) makes the
         // solver prefer normal-dominated contact force distributions.
-        var hessian = new double[n, n];
+        var hessDiag = new double[n];
         for (int i = 0; i < n; i++)
         {
             ForceComponent component = equilibrium.ForceColumns[i].Component;
@@ -107,34 +107,40 @@ public static class RbeQpFormulation
                     throw new InvalidOperationException(
                         $"Unhandled ForceComponent {component} at column {i}.");
             }
-            hessian[i, i] = diag;
+            hessDiag[i] = diag;
         }
 
         // ---- Linear objective: zero vector (pure quadratic). ----
         var linearObjective = new double[n];
 
-        // ---- Equality: Aeq f = -b  (because EquilibriumSystem stores Aeq f + b = 0). ----
-        double[,] equalityMatrix = equilibrium.Aeq.ToDense();
-
+        // ---- Equality rhs: Aeq f = -b  (EquilibriumSystem stores Aeq f + b = 0). ----
         var equalityRhs = new double[meq];
         for (int i = 0; i < meq; i++)
         {
             equalityRhs[i] = -equilibrium.B[i];
         }
 
-        // ---- Inequality: friction cone Afr f <= 0, when supplied. ----
-        double[,] inequalityMatrix = null;
-        double[]  inequalityRhs    = null;
-        if (frictionAfr != null)
-        {
-            if (frictionAfr.ColCount != n)
-                throw new ArgumentException(
-                    $"frictionAfr column count {frictionAfr.ColCount} != equilibrium.Aeq column count {n}.",
-                    nameof(frictionAfr));
+        if (frictionAfr != null && frictionAfr.ColCount != n)
+            throw new ArgumentException(
+                $"frictionAfr column count {frictionAfr.ColCount} != equilibrium.Aeq column count {n}.",
+                nameof(frictionAfr));
+        int mfr = frictionAfr != null ? frictionAfr.RowCount : 0;
 
-            inequalityMatrix = frictionAfr.ToDense();
-            inequalityRhs = new double[frictionAfr.RowCount];
-            // RHS is the zero vector by construction (new double[] is already zero-filled).
+        // ---- Dense/sparse gate (2026-07-02). Densifying past ~1e7 cells OOMs
+        // (Güell portico: 822 interfaces = OutOfMemory in ToDense; even 572 ran
+        // ~20 min in the dense Cholesky). Above the gate the COO blocks go
+        // STRAIGHT to the sparse/CG ADMM path — no dense intermediate exists.
+        long denseCells = (long)n * n + (long)meq * n + (long)mfr * n;
+        bool sparse = denseCells > 12_000_000;
+
+        double[,] hessian = null, equalityMatrix = null, inequalityMatrix = null;
+        double[] inequalityRhs = mfr > 0 ? new double[mfr] : null; // zero rhs by construction
+        if (!sparse)
+        {
+            hessian = new double[n, n];
+            for (int i = 0; i < n; i++) hessian[i, i] = hessDiag[i];
+            equalityMatrix = equilibrium.Aeq.ToDense();
+            if (frictionAfr != null) inequalityMatrix = frictionAfr.ToDense();
         }
 
         // ---- Box bounds: normal-force columns >= 0; tangents unbounded. ----
@@ -164,6 +170,17 @@ public static class RbeQpFormulation
                         $"Unhandled ForceComponent {component} at column {k}.");
             }
         }
+
+        if (sparse)
+            return new ConvexQpProblem(
+                hessianDiagonal: hessDiag,
+                linearObjective: linearObjective,
+                equalitySparse: equilibrium.Aeq,
+                equalityRhs: equalityRhs,
+                inequalitySparse: frictionAfr,
+                inequalityRhs: inequalityRhs,
+                lowerBounds: lowerBounds,
+                upperBounds: upperBounds);
 
         return new ConvexQpProblem(
             variableCount: n,
@@ -211,6 +228,16 @@ public static class RbeQpFormulation
         var qp = Build(equilibrium, frictionAfr, hessianScale, tangentialScale, negativeNormalScale);
         var newRhs = new double[qp.EqualityRhs.Length];
         for (int i = 0; i < newRhs.Length; i++) newRhs[i] = -qp.EqualityRhs[i];
+        if (qp.Hessian == null) // SPARSE-built (size gate): re-wrap with the flipped rhs
+            return new ConvexQpProblem(
+                hessianDiagonal: qp.HessianDiagonal,
+                linearObjective: qp.LinearObjective,
+                equalitySparse: qp.EqualitySparse,
+                equalityRhs: newRhs,
+                inequalitySparse: qp.InequalitySparse,
+                inequalityRhs: qp.InequalityRhs,
+                lowerBounds: qp.LowerBounds,
+                upperBounds: qp.UpperBounds);
         return new ConvexQpProblem(
             variableCount: qp.VariableCount,
             hessian: qp.Hessian,

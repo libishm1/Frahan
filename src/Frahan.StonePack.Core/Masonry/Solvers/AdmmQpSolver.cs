@@ -101,8 +101,11 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         if (problem.LinearObjective != null)
             for (int i = 0; i < n; i++) q[i] = problem.LinearObjective[i];
 
-        // ---- Hessian: O(n) diagonal fast path when applicable. ----
-        double[] pDiag = ExtractDiagonal(problem.Hessian, n);
+        // ---- Hessian: O(n) diagonal fast path when applicable. Sparse-built
+        // problems (2026-07-02) carry the diagonal directly, no dense Hessian. ----
+        double[] pDiag = problem.Hessian != null
+            ? ExtractDiagonal(problem.Hessian, n)
+            : (problem.HessianDiagonal != null ? (double[])problem.HessianDiagonal.Clone() : null);
         double[] pDiag0 = pDiag != null ? (double[])pDiag.Clone() : null;
 
         // ---- P1.1b: full Ruiz equilibration (rows AND columns, 3 alternating
@@ -172,10 +175,26 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         var isEq = new bool[m];
         for (int r = 0; r < m; r++) isEq[r] = lo[r] == hi[r] && !double.IsInfinity(lo[r]);
         UpdateRhoRows(rhoRow, isEq, rho);
-        double[,] chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
-        if (chol == null)
-            return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
-                "Cholesky factorisation failed (P + sigma*I + rho*A'A not SPD).");
+        // ---- x-update linear solve: dense Cholesky for legacy problems; for
+        // SPARSE-built problems (diagonal P, no dense blocks) a matrix-free
+        // Jacobi-preconditioned CG on (P + sigma I + A' rho A) — the dense
+        // factor is O(n^2) memory / O(n^3) time and was the 20-min/OOM wall. ----
+        bool useCg = problem.Hessian == null && pDiag != null;
+        double[,] chol = null;
+        double[] kktDiag = null;
+        double[] cgTmpM = null, cgR = null, cgZ = null, cgP = null, cgAp = null;
+        if (useCg)
+        {
+            kktDiag = BuildKktDiag(pDiag, a, rhoRow, _sigma, n);
+            cgTmpM = new double[m]; cgR = new double[n]; cgZ = new double[n]; cgP = new double[n]; cgAp = new double[n];
+        }
+        else
+        {
+            chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
+            if (chol == null)
+                return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
+                    "Cholesky factorisation failed (P + sigma*I + rho*A'A not SPD).");
+        }
 
         double lastRPri = double.NaN, lastRDua = double.NaN, lastEpsPri = double.NaN, lastEpsDua = double.NaN;
         int refactors = 0;
@@ -184,7 +203,10 @@ public sealed class AdmmQpSolver : IConvexQpSolver
             // rhs = sigma*x - q + A'(rho*z - y)
             for (int c = 0; c < n; c++) rhs[c] = _sigma * x[c] - q[c];
             a.TransposeMulAccumulate(z, y, rhoRow, rhs);
-            CholSolve(chol, rhs, xTilde, n);
+            if (useCg)
+                CgSolveKkt(pDiag, a, rhoRow, _sigma, kktDiag, rhs, xTilde, cgTmpM, cgR, cgZ, cgP, cgAp); // warm-started from last xTilde
+            else
+                CholSolve(chol, rhs, xTilde, n);
 
             a.Mul(xTilde, axTilde);
             for (int c = 0; c < n; c++) x[c] = _alpha * xTilde[c] + (1 - _alpha) * x[c];
@@ -247,10 +269,17 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 {
                     rho = newRho; refactors++;
                     UpdateRhoRows(rhoRow, isEq, rho);
-                    chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
-                    if (chol == null)
-                        return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
-                            "Cholesky refactorisation failed after rho update.");
+                    if (useCg)
+                    {
+                        kktDiag = BuildKktDiag(pDiag, a, rhoRow, _sigma, n); // no factor: just refresh the preconditioner
+                    }
+                    else
+                    {
+                        chol = Factor(pUse, pDiag, a, n, rhoRow, _sigma);
+                        if (chol == null)
+                            return new ConvexQpResult(ConvexQpStatus.SolverError, null, 0,
+                                "Cholesky refactorisation failed after rho update.");
+                    }
                 }
             }
         }
@@ -262,10 +291,70 @@ public sealed class AdmmQpSolver : IConvexQpSolver
     }
 
     // =========================================================================
+    // Matrix-free CG for the sparse x-update (2026-07-02): solves
+    //   (P + sigma I + A' diag(rho) A) xTilde = rhs
+    // with a Jacobi preconditioner; warm-started from the previous xTilde, so
+    // late ADMM iterations converge in a handful of CG steps.
+    // =========================================================================
+    private static double[] BuildKktDiag(double[] pDiag, Csr a, double[] rhoRow, double sigma, int n)
+    {
+        var d = new double[n];
+        for (int c = 0; c < n; c++) d[c] = (pDiag != null ? pDiag[c] : 0.0) + sigma;
+        a.AddColSqWeighted(rhoRow, d);
+        for (int c = 0; c < n; c++) if (d[c] < 1e-12) d[c] = 1.0;
+        return d;
+    }
+
+    private static void KktMul(double[] pDiag, Csr a, double[] rhoRow, double sigma,
+                               double[] x, double[] tmpM, double[] y)
+    {
+        a.Mul(x, tmpM);
+        for (int r = 0; r < tmpM.Length; r++) tmpM[r] *= rhoRow[r];
+        a.TransposeMul(tmpM, y);
+        for (int c = 0; c < x.Length; c++) y[c] += ((pDiag != null ? pDiag[c] : 0.0) + sigma) * x[c];
+    }
+
+    private static void CgSolveKkt(double[] pDiag, Csr a, double[] rhoRow, double sigma,
+                                   double[] jacobi, double[] b, double[] x,
+                                   double[] tmpM, double[] r, double[] z, double[] p, double[] ap)
+    {
+        int n = x.Length;
+        KktMul(pDiag, a, rhoRow, sigma, x, tmpM, ap);
+        double bn = 0;
+        for (int c = 0; c < n; c++) { r[c] = b[c] - ap[c]; bn += b[c] * b[c]; }
+        bn = Math.Sqrt(bn) + 1e-300;
+        double rz = 0;
+        for (int c = 0; c < n; c++) { z[c] = r[c] / jacobi[c]; p[c] = z[c]; rz += r[c] * z[c]; }
+        for (int it = 0; it < 250; it++)
+        {
+            KktMul(pDiag, a, rhoRow, sigma, p, tmpM, ap);
+            double pap = 0;
+            for (int c = 0; c < n; c++) pap += p[c] * ap[c];
+            if (Math.Abs(pap) < 1e-300) break;
+            double alpha = rz / pap;
+            double rn = 0;
+            for (int c = 0; c < n; c++)
+            {
+                x[c] += alpha * p[c];
+                r[c] -= alpha * ap[c];
+                rn += r[c] * r[c];
+            }
+            if (Math.Sqrt(rn) <= 1e-10 * bn + 1e-14) break;
+            double rz2 = 0;
+            for (int c = 0; c < n; c++) { z[c] = r[c] / jacobi[c]; rz2 += r[c] * z[c]; }
+            double beta = rz2 / (rz + 1e-300);
+            for (int c = 0; c < n; c++) p[c] = z[c] + beta * p[c];
+            rz = rz2;
+        }
+    }
+
+    // =========================================================================
     // CSR assembly (equality + inequality + bound-identity rows), row-equilibrated.
     // =========================================================================
     private static Csr BuildCsr(ConvexQpProblem problem, int n, out double[] lo, out double[] hi)
     {
+        if (problem.EqualitySparse != null || problem.InequalitySparse != null)
+            return BuildCsrFromCoo(problem, n, out lo, out hi);
         int meq = problem.EqualityMatrix != null ? problem.EqualityMatrix.GetLength(0) : 0;
         int mineq = problem.InequalityMatrix != null ? problem.InequalityMatrix.GetLength(0) : 0;
         int m = meq + mineq + n;
@@ -315,6 +404,56 @@ public sealed class AdmmQpSolver : IConvexQpSolver
         return new Csr(m, n, rowPtr, colIdx, vals);
     }
 
+    /// <summary>
+    /// CSR straight from the COO blocks of a SPARSE-built problem (2026-07-02):
+    /// counting sort by row, no dense intermediate. Duplicate COO entries are
+    /// legal (the matvec kernels accumulate).
+    /// </summary>
+    private static Csr BuildCsrFromCoo(ConvexQpProblem problem, int n, out double[] lo, out double[] hi)
+    {
+        var eq = problem.EqualitySparse;
+        var ineq = problem.InequalitySparse;
+        int meq = eq != null ? eq.RowCount : 0;
+        int mineq = ineq != null ? ineq.RowCount : 0;
+        int m = meq + mineq + n;
+        lo = new double[m]; hi = new double[m];
+        int nnzEq = eq != null ? eq.NonZeroCount : 0;
+        int nnzIn = ineq != null ? ineq.NonZeroCount : 0;
+        int nnz = nnzEq + nnzIn + n;
+
+        var rowPtr = new int[m + 1];
+        if (eq != null) { var ri = eq.RowIndices; for (int k2 = 0; k2 < nnzEq; k2++) rowPtr[ri[k2] + 1]++; }
+        if (ineq != null) { var ri = ineq.RowIndices; for (int k2 = 0; k2 < nnzIn; k2++) rowPtr[meq + ri[k2] + 1]++; }
+        for (int i = 0; i < n; i++) rowPtr[meq + mineq + i + 1]++;
+        for (int r = 0; r < m; r++) rowPtr[r + 1] += rowPtr[r];
+
+        var colIdx = new int[nnz];
+        var vals = new double[nnz];
+        var cursor = new int[m];
+        for (int r = 0; r < m; r++) cursor[r] = rowPtr[r];
+        if (eq != null)
+        {
+            var ri = eq.RowIndices; var ci = eq.ColIndices; var vv = eq.Values;
+            for (int k2 = 0; k2 < nnzEq; k2++) { int r = ri[k2]; int p = cursor[r]++; colIdx[p] = ci[k2]; vals[p] = vv[k2]; }
+        }
+        if (ineq != null)
+        {
+            var ri = ineq.RowIndices; var ci = ineq.ColIndices; var vv = ineq.Values;
+            for (int k2 = 0; k2 < nnzIn; k2++) { int r = meq + ri[k2]; int p = cursor[r]++; colIdx[p] = ci[k2]; vals[p] = vv[k2]; }
+        }
+        for (int i = 0; i < n; i++) { int r = meq + mineq + i; int p = cursor[r]++; colIdx[p] = i; vals[p] = 1.0; }
+
+        for (int i = 0; i < meq; i++) { lo[i] = problem.EqualityRhs[i]; hi[i] = lo[i]; }
+        for (int i = 0; i < mineq; i++) { lo[meq + i] = double.NegativeInfinity; hi[meq + i] = problem.InequalityRhs[i]; }
+        for (int i = 0; i < n; i++)
+        {
+            int r = meq + mineq + i;
+            lo[r] = problem.LowerBounds != null ? problem.LowerBounds[i] : double.NegativeInfinity;
+            hi[r] = problem.UpperBounds != null ? problem.UpperBounds[i] : double.PositiveInfinity;
+        }
+        return new Csr(m, n, rowPtr, colIdx, vals);
+    }
+
     /// <summary>Minimal CSR matrix with the three kernels ADMM needs.</summary>
     private sealed class Csr
     {
@@ -351,6 +490,18 @@ public sealed class AdmmQpSolver : IConvexQpSolver
                 if (w == 0) continue;
                 int end = _rowPtr[r + 1];
                 for (int k = _rowPtr[r]; k < end; k++) result[_colIdx[k]] += _vals[k] * w;
+            }
+        }
+
+        /// <summary>acc[c] += sum_r w[r] * A[r,c]^2 (Jacobi diag of Aᵀ diag(w) A).</summary>
+        public void AddColSqWeighted(double[] w, double[] acc)
+        {
+            for (int r = 0; r < RowCount; r++)
+            {
+                double wr = w[r];
+                if (wr == 0) continue;
+                int end = _rowPtr[r + 1];
+                for (int k = _rowPtr[r]; k < end; k++) acc[_colIdx[k]] += _vals[k] * _vals[k] * wr;
             }
         }
 

@@ -154,6 +154,69 @@ public sealed class ConvexQpProblem
         UpperBounds = upperBounds;
     }
 
+    /// <summary>
+    /// SPARSE construction (2026-07-02): diagonal Hessian + COO constraint
+    /// blocks, NO dense intermediates. Built by RbeQpFormulation above the
+    /// dense-size gate (the Güell portico OOMed in ToDense at 822 interfaces).
+    /// Dense properties (Hessian / EqualityMatrix / InequalityMatrix) are NULL
+    /// on this path — only AdmmQpSolver's sparse/CG route consumes these
+    /// problems; other solvers must check for null and decline.
+    /// </summary>
+    public ConvexQpProblem(
+        double[] hessianDiagonal,
+        double[] linearObjective,
+        Frahan.Masonry.Equilibrium.SparseMatrixCoo equalitySparse,
+        double[] equalityRhs,
+        Frahan.Masonry.Equilibrium.SparseMatrixCoo inequalitySparse,
+        double[] inequalityRhs,
+        double[] lowerBounds,
+        double[] upperBounds)
+    {
+        if (hessianDiagonal == null) throw new ArgumentNullException(nameof(hessianDiagonal));
+        int n = hessianDiagonal.Length;
+        if (linearObjective == null || linearObjective.Length != n)
+            throw new ArgumentException("linearObjective must be length n.", nameof(linearObjective));
+        if (equalitySparse != null && equalitySparse.ColCount != n)
+            throw new ArgumentException("equalitySparse column count != n.", nameof(equalitySparse));
+        if (equalitySparse != null && (equalityRhs == null || equalityRhs.Length != equalitySparse.RowCount))
+            throw new ArgumentException("equalityRhs length != equalitySparse rows.", nameof(equalityRhs));
+        if (inequalitySparse != null && inequalitySparse.ColCount != n)
+            throw new ArgumentException("inequalitySparse column count != n.", nameof(inequalitySparse));
+        if (inequalitySparse != null && (inequalityRhs == null || inequalityRhs.Length != inequalitySparse.RowCount))
+            throw new ArgumentException("inequalityRhs length != inequalitySparse rows.", nameof(inequalityRhs));
+
+        if (lowerBounds == null)
+        {
+            lowerBounds = new double[n];
+            for (int i = 0; i < n; i++) lowerBounds[i] = double.NegativeInfinity;
+        }
+        if (upperBounds == null)
+        {
+            upperBounds = new double[n];
+            for (int i = 0; i < n; i++) upperBounds[i] = double.PositiveInfinity;
+        }
+
+        VariableCount = n;
+        Hessian = null;
+        HessianDiagonal = hessianDiagonal;
+        LinearObjective = linearObjective;
+        EqualitySparse = equalitySparse;
+        EqualityRhs = equalityRhs;
+        InequalitySparse = inequalitySparse;
+        InequalityRhs = inequalityRhs;
+        LowerBounds = lowerBounds;
+        UpperBounds = upperBounds;
+    }
+
+    /// <summary>Diagonal Hessian (sparse path); null on the dense path.</summary>
+    public double[] HessianDiagonal { get; }
+
+    /// <summary>COO equality block (sparse path); null on the dense path.</summary>
+    public Frahan.Masonry.Equilibrium.SparseMatrixCoo EqualitySparse { get; }
+
+    /// <summary>COO inequality block (sparse path); null on the dense path.</summary>
+    public Frahan.Masonry.Equilibrium.SparseMatrixCoo InequalitySparse { get; }
+
     /// <summary>Number of decision variables n.</summary>
     public int VariableCount { get; }
 
