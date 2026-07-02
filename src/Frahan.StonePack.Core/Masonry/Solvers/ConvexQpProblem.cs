@@ -245,10 +245,14 @@ public sealed class ConvexQpProblem
     public double[] UpperBounds { get; }
 
     /// <summary>Number of equality rows, or 0 when <see cref="EqualityMatrix"/> is null.</summary>
-    public int EqualityRowCount => EqualityMatrix == null ? 0 : EqualityMatrix.GetLength(0);
+    public int EqualityRowCount =>
+        EqualityMatrix != null ? EqualityMatrix.GetLength(0)
+        : EqualitySparse != null ? EqualitySparse.RowCount : 0;
 
-    /// <summary>Number of inequality rows, or 0 when <see cref="InequalityMatrix"/> is null.</summary>
-    public int InequalityRowCount => InequalityMatrix == null ? 0 : InequalityMatrix.GetLength(0);
+    /// <summary>Number of inequality rows (dense or sparse), or 0 when absent.</summary>
+    public int InequalityRowCount =>
+        InequalityMatrix != null ? InequalityMatrix.GetLength(0)
+        : InequalitySparse != null ? InequalitySparse.RowCount : 0;
 
     public override string ToString() =>
         $"ConvexQpProblem(n={VariableCount}, meq={EqualityRowCount}, mineq={InequalityRowCount})";
