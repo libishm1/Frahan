@@ -31,7 +31,11 @@ hypar cut surface  --> Wire-Saw Feasibility          (ruled? developable? kerf o
   into rectangular product blocks, flexing the size within ±10% tolerance and
   picking the axis assignment that tiles the block with the least off-cut waste:
   **36 blocks @ 0.52×0.43×0.33 m, 97 % yield** (vs 79 % at a fixed 0.5×0.4×0.3).
-  Feed the **Cut frame** from Cut Orientation to cut on the fabric-aligned grid.
+  Feed the **Cut frame** from Cut Orientation to cut on the fabric-aligned grid,
+  and **Fractures** (joint planes inside the block): the grid slides to dodge them
+  and blocks straddled by a fracture are flagged **flawed** (here a dodged vertical
+  joint + an oblique one → 26 sound / 10 flawed, **70 % sound yield**). Axis-aligned
+  joints are dodgeable; oblique ones cost sound yield — the reason to cut on-fabric.
 - **COMPAS Export** (Frahan ▸ Fabricate) — hands the yield-optimised cut blocks (+ optional
   placement/robot frames) to the COMPAS ecosystem as a stable JSON + a Python
   loader, so a user can run `compas_cra`'s equilibrium solver or `compas_fab`'s
