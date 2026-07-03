@@ -174,9 +174,12 @@ namespace Frahan.Masonry.Vault
         // interfaces are still emitted per ORIGINAL lattice edge — just skipped
         // where both faces share a group (the healed head joint).
         // =====================================================================
+        // hubMode: 0 = off (granular rings), 1 = single keystone per cone,
+        // 2 = SPLIT the cone into neighbour-sized wedges (each keeps the minimum
+        // thickness — a keystone rosette, not one oversized block).
         public static ShellAssemblyResult BuildStaggered(Mesh shell, double thickness,
             double density = 2400.0, double supportBand = 0.08, double minBlockFraction = 0.45,
-            bool hubCapstone = false)
+            int hubMode = 0)
         {
             if (shell == null) throw new ArgumentNullException(nameof(shell));
             var res = new ShellAssemblyResult();
@@ -307,7 +310,7 @@ namespace Frahan.Masonry.Vault
             // ONE keystone block per connected hub region — the classic masonry
             // answer to a crown cone. ----
             var isHub = new bool[nfc];
-            if (hubCapstone)
+            if (hubMode >= 1)
             {
                 double hubThresh = Math.Max(0.0, Math.Min(1.0, minBlockFraction)) * maxBed; // even a PAIR stays under minLen
                 for (int f = 0; f < nfc; f++)
@@ -357,10 +360,10 @@ namespace Frahan.Masonry.Vault
                 }
             }
 
-            // ---- hub components -> ONE capstone block each (RADIAL cross-course
-            // merge: flood fill over shared edges, so the whole spiral becomes a
-            // single keystone regardless of course structure). ----
-            if (hubCapstone)
+            // ---- hub components: single keystone (mode 1) or split into
+            // neighbour-sized wedges (mode 2). RADIAL cross-course merge via a
+            // flood fill over shared edges collects each cone's faces. ----
+            if (hubMode >= 1)
             {
                 var adjH = new List<int>[nfc];
                 for (int e = 0; e < top.Count; e++)
@@ -373,18 +376,56 @@ namespace Frahan.Masonry.Vault
                     adjH[fs2[0]].Add(fs2[1]);
                     adjH[fs2[1]].Add(fs2[0]);
                 }
+                var seen = new bool[nfc];
                 var stack = new Stack<int>();
                 for (int f = 0; f < nfc; f++)
                 {
-                    if (!isHub[f] || group[f] >= 0) continue;
-                    int gid = ng++;
-                    stack.Push(f); group[f] = gid;
+                    if (!isHub[f] || seen[f]) continue;
+                    var compFaces = new List<int>();
+                    stack.Push(f); seen[f] = true;
                     while (stack.Count > 0)
                     {
-                        int cur = stack.Pop();
+                        int cur = stack.Pop(); compFaces.Add(cur);
                         if (adjH[cur] == null) continue;
-                        foreach (int nb in adjH[cur])
-                            if (group[nb] < 0) { group[nb] = gid; stack.Push(nb); }
+                        foreach (int nb in adjH[cur]) if (!seen[nb]) { seen[nb] = true; stack.Push(nb); }
+                    }
+
+                    if (hubMode == 1)
+                    {
+                        int gid = ng++;
+                        foreach (int cf in compFaces) group[cf] = gid;
+                        continue;
+                    }
+
+                    // ---- mode 2: angular wedges sized ~ minLen (keeps min
+                    // thickness; wedge count driven by the cone's circumference). ----
+                    double cx = 0, cy = 0, cz = 0;
+                    double nx = 0, ny = 0, nz = 0;
+                    foreach (int cf in compFaces)
+                    {
+                        var cc = Centroid(P, faceVerts[cf]); cx += cc.X; cy += cc.Y; cz += cc.Z;
+                        var vs = faceVerts[cf];
+                        var fn = Vector3d.CrossProduct(P[vs[1]] - P[vs[0]], P[vs[2]] - P[vs[0]]);
+                        nx += fn.X; ny += fn.Y; nz += fn.Z;
+                    }
+                    var c = new Point3d(cx / compFaces.Count, cy / compFaces.Count, cz / compFaces.Count);
+                    var nrm = new Vector3d(nx, ny, nz); if (nrm.Length < 1e-9) nrm = Vector3d.ZAxis; nrm.Unitize();
+                    var u = Vector3d.CrossProduct(nrm, Vector3d.ZAxis);
+                    if (u.Length < 1e-6) u = Vector3d.CrossProduct(nrm, Vector3d.XAxis);
+                    u.Unitize();
+                    var vv = Vector3d.CrossProduct(nrm, u); vv.Unitize();
+                    double rmax = 0;
+                    foreach (int cf in compFaces) { double r = (Centroid(P, faceVerts[cf]) - c).Length; if (r > rmax) rmax = r; }
+                    int nW = (int)Math.Round(2.0 * Math.PI * (0.66 * rmax) / Math.Max(1e-6, minLen));
+                    nW = Math.Max(3, Math.Min(16, nW));
+                    var wedge = new int[nW];
+                    for (int w = 0; w < nW; w++) wedge[w] = ng++;
+                    foreach (int cf in compFaces)
+                    {
+                        var d = Centroid(P, faceVerts[cf]) - c;
+                        double ang = Math.Atan2(d * vv, d * u); if (ang < 0) ang += 2.0 * Math.PI;
+                        int w = (int)(ang / (2.0 * Math.PI) * nW); if (w >= nW) w = nW - 1;
+                        group[cf] = wedge[w];
                     }
                 }
             }
