@@ -34,13 +34,13 @@ public sealed class CutOrientationOptimizerComponent : FrahanComponentBase
             "the three optimal cut planes (right-prism blocks by construction), which joint set each cut follows, and " +
             "the obliquity where the fabric is not orthogonal (the unavoidable oblique cut). Bench mode pins one cut to " +
             "the horizontal floor.",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 
     public override Guid ComponentGuid => new Guid("D5F10052-ED9E-4ED9-A052-ED9EED9E0052");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("StoneCutExport.png");
+    protected override Bitmap Icon => IconProvider.Load("CutOrientation.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

@@ -40,7 +40,7 @@ public sealed class InSituBlockSizeComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("D5F10050-ED9E-4ED9-A050-ED9EED9E0050");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("DiscontinuitySets.png");
+    protected override Bitmap Icon => IconProvider.Load("InSituBlockSize.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

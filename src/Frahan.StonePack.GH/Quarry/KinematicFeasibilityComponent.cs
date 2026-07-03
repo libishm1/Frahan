@@ -41,7 +41,7 @@ public sealed class KinematicFeasibilityComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("D5F1004F-ED9E-4ED9-A04F-ED9EED9E004F");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("DiscontinuitySets.png");
+    protected override Bitmap Icon => IconProvider.Load("KinematicFeasibility.png");
 
     // ---- preview state ----
     private readonly List<Polyline> _net = new List<Polyline>();

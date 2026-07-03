@@ -40,7 +40,7 @@ public sealed class FractureIntensityComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("D5F1004E-ED9E-4ED9-A04E-ED9EED9E004E");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("DiscontinuitySets.png");
+    protected override Bitmap Icon => IconProvider.Load("FractureIntensity.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

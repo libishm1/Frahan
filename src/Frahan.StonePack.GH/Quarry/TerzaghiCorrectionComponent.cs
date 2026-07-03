@@ -40,7 +40,7 @@ public sealed class TerzaghiCorrectionComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("D5F1004D-ED9E-4ED9-A04D-ED9EED9E004D");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("DiscontinuitySets.png");
+    protected override Bitmap Icon => IconProvider.Load("Terzaghi.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

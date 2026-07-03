@@ -32,13 +32,13 @@ public sealed class WireSawFeasibilityComponent : FrahanComponentBase
             "Pre-CAM check: is a target cut surface wire-sawable? A tensioned wire is straight, so the cut must be a " +
             "RULED surface; a DEVELOPABLE ruled surface is a clean single pass. Reports the verdict, the wire positions, " +
             "ruling twist, and the kerf-compensated toolpath surface (Delta=(D+delta)/2). Feed one surface / Brep face.",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 
     public override Guid ComponentGuid => new Guid("D5F10051-ED9E-4ED9-A051-ED9EED9E0051");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("StoneCutExport.png");
+    protected override Bitmap Icon => IconProvider.Load("WireSawFeasibility.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {

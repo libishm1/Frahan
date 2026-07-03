@@ -33,13 +33,13 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
             "Export cut-profile curves to a CAM-readable DXF (one layer per piece + id label), the format every stone " +
             "CAM imports (Alphacam, DDX EasySTONE, Breton). Optionally flattens tilted profiles and shelf-nests them " +
             "into a 2D cut sheet. Set Write = true to write the file.",
-            "Frahan", "Fabrication")
+            "Frahan", "Fabricate")
     {
     }
 
     public override Guid ComponentGuid => new Guid("D5F10053-ED9E-4ED9-A053-ED9EED9E0053");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => IconProvider.Load("GcodeExport.png");
+    protected override Bitmap Icon => IconProvider.Load("DxfCutPlan.png");
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
