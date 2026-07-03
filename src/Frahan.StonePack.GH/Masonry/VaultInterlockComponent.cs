@@ -30,6 +30,7 @@ namespace Frahan.StonePack.GH.Masonry
         }
 
         public override Guid ComponentGuid => new Guid("B7A11500-0009-4A11-B500-0000000000A9");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("VaultInterlock.png");
         public override GH_Exposure Exposure => GH_Exposure.quinary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)

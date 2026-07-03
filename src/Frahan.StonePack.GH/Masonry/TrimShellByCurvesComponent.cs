@@ -32,6 +32,7 @@ namespace Frahan.StonePack.GH.Masonry
         }
 
         public override Guid ComponentGuid => new Guid("B7A11500-0013-4A11-B500-0000000000B3");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("TrimShellByCurves.png");
         public override GH_Exposure Exposure => GH_Exposure.quinary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)

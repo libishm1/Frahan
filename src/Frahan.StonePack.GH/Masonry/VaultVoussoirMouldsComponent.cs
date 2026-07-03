@@ -27,6 +27,7 @@ namespace Frahan.StonePack.GH.Masonry
         }
 
         public override Guid ComponentGuid => new Guid("B7A11500-0003-4A11-B500-0000000000A3");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("VaultVoussoirMoulds.png");
         public override GH_Exposure Exposure => GH_Exposure.quinary;
 
         private static PolylineCurve ToPolylineCurve(Curve c)

@@ -25,6 +25,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-0011-4A11-B500-0000000000B1");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("CatenaryCurve.png");
         public override GH_Exposure Exposure => GH_Exposure.senary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)
@@ -77,6 +78,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-000E-4A11-B500-0000000000AE");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("BoundaryNet.png");
         public override GH_Exposure Exposure => GH_Exposure.senary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)
@@ -116,6 +118,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-000F-4A11-B500-0000000000AF");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("CatenaryRelax.png");
         public override GH_Exposure Exposure => GH_Exposure.senary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)
@@ -162,6 +165,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-0010-4A11-B500-0000000000B0");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("SubDVault.png");
         public override GH_Exposure Exposure => GH_Exposure.senary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)

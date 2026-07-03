@@ -115,6 +115,7 @@ public sealed class Param_QuarryBlock : GH_PersistentParam<QuarryBlockGoo>
     }
 
     public override Guid ComponentGuid => new Guid("F2D0BC21-1A2B-4F2D-A0B0-7E60CADA20A1");
+        protected override System.Drawing.Bitmap Icon => Frahan.GH.IconProvider.Load("BlockCutOpt.png");
 
     public override GH_Exposure Exposure => GH_Exposure.hidden;
 
