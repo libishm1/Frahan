@@ -418,14 +418,23 @@ namespace Frahan.Masonry.Vault
                     foreach (int cf in compFaces) { double r = (Centroid(P, faceVerts[cf]) - c).Length; if (r > rmax) rmax = r; }
                     int nW = (int)Math.Round(2.0 * Math.PI * (0.66 * rmax) / Math.Max(1e-6, minLen));
                     nW = Math.Max(3, Math.Min(16, nW));
-                    var wedge = new int[nW];
-                    for (int w = 0; w < nW; w++) wedge[w] = ng++;
+                    // bin faces into angular sectors first, then allocate a group
+                    // id only for NON-EMPTY wedges (empty sectors would leave a
+                    // group with no faces -> null groupFaces -> NRE downstream).
+                    var bins = new List<int>[nW];
                     foreach (int cf in compFaces)
                     {
                         var d = Centroid(P, faceVerts[cf]) - c;
                         double ang = Math.Atan2(d * vv, d * u); if (ang < 0) ang += 2.0 * Math.PI;
-                        int w = (int)(ang / (2.0 * Math.PI) * nW); if (w >= nW) w = nW - 1;
-                        group[cf] = wedge[w];
+                        int w = (int)(ang / (2.0 * Math.PI) * nW); if (w >= nW) w = nW - 1; if (w < 0) w = 0;
+                        if (bins[w] == null) bins[w] = new List<int>();
+                        bins[w].Add(cf);
+                    }
+                    foreach (var bin in bins)
+                    {
+                        if (bin == null) continue;
+                        int gid = ng++;
+                        foreach (int cf in bin) group[cf] = gid;
                     }
                 }
             }
