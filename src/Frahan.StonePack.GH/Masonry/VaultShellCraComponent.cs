@@ -32,6 +32,8 @@ namespace Frahan.StonePack.GH.Masonry
             public Mesh Shell;
             public double Edge, Thick, Friction, Density, Band;
             public bool Stagger;
+            public double MinBlock;
+            public bool HubCapstone;
         }
 
         public sealed class Payload
@@ -72,6 +74,8 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddBooleanParameter("Run", "R", "Build the assembly + run CRA (async; canvas stays responsive).", GH_ParamAccess.item, false);
             // APPENDED (wiring-safe): whole-shell running bond.
             p.AddBooleanParameter("Stagger", "St", "Running bond: alternate courses merge quad PAIRS with an offset of one, so head joints never align (contact-by-construction preserved).", GH_ParamAccess.item, false);
+            p.AddNumberParameter("Min Block", "Mb", "Stagger only: minimum block size as a fraction of the largest standard block (courses keep merging until reached; 0.45 validated).", GH_ParamAccess.item, 0.45);
+            p.AddBooleanParameter("Hub Capstone", "Hc", "Stagger only: merge the singularity spiral into ONE keystone block per hub (radial cross-course merge) instead of granular rings.", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -99,13 +103,16 @@ namespace Frahan.StonePack.GH.Masonry
             }
             da.GetData(1, ref edge); da.GetData(2, ref thick); da.GetData(3, ref friction);
             da.GetData(4, ref density); da.GetData(5, ref band);
-            bool stagger = false;
+            bool stagger = false, hubCap = false;
+            double minBlock = 0.45;
             da.GetData(7, ref stagger);
+            da.GetData(8, ref minBlock);
+            da.GetData(9, ref hubCap);
             snapshot = new Snapshot
             {
                 Shell = shell.DuplicateMesh(),
                 Edge = edge, Thick = thick, Friction = friction, Density = density, Band = band,
-                Stagger = stagger,
+                Stagger = stagger, MinBlock = minBlock, HubCapstone = hubCap,
             };
             return true;
         }
@@ -123,7 +130,7 @@ namespace Frahan.StonePack.GH.Masonry
 
             progress?.Invoke(s.Stagger ? "building STAGGERED assembly..." : "building assembly...");
             var sa = s.Stagger
-                ? VaultShellAssembly.BuildStaggered(quad, s.Thick, s.Density, s.Band)
+                ? VaultShellAssembly.BuildStaggered(quad, s.Thick, s.Density, s.Band, s.MinBlock, s.HubCapstone)
                 : VaultShellAssembly.Build(quad, s.Thick, s.Density, s.Band);
             token.ThrowIfCancellationRequested();
 

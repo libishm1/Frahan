@@ -175,7 +175,8 @@ namespace Frahan.Masonry.Vault
         // where both faces share a group (the healed head joint).
         // =====================================================================
         public static ShellAssemblyResult BuildStaggered(Mesh shell, double thickness,
-            double density = 2400.0, double supportBand = 0.08, double minBlockFraction = 0.45)
+            double density = 2400.0, double supportBand = 0.08, double minBlockFraction = 0.45,
+            bool hubCapstone = false)
         {
             if (shell == null) throw new ArgumentNullException(nameof(shell));
             var res = new ShellAssemblyResult();
@@ -300,6 +301,19 @@ namespace Frahan.Masonry.Vault
                 if (bedLen[f] > maxBed) maxBed = bedLen[f];
             }
             double minLen = Math.Max(0.0, Math.Min(1.0, minBlockFraction)) * 2.0 * maxBed; // vs the standard 2-quad block
+
+            // ---- HUB CAPSTONE (2026-07-03): faces too small to ever reach the
+            // minimum block by course merging (the singularity spiral) merge into
+            // ONE keystone block per connected hub region — the classic masonry
+            // answer to a crown cone. ----
+            var isHub = new bool[nfc];
+            if (hubCapstone)
+            {
+                double hubThresh = Math.Max(0.0, Math.Min(1.0, minBlockFraction)) * maxBed; // even a PAIR stays under minLen
+                for (int f = 0; f < nfc; f++)
+                    if (faceVerts[f].Length == 4 && bedLen[f] > 1e-12 && bedLen[f] < hubThresh) isHub[f] = true;
+            }
+
             var group = new int[nfc];
             for (int i = 0; i < nfc; i++) group[i] = -1;
             int ng = 0;
@@ -311,17 +325,19 @@ namespace Frahan.Masonry.Vault
                 var stripGroups = new List<List<int>>();
                 while (i2 < strip.Count)
                 {
+                    while (i2 < strip.Count && isHub[strip[i2]]) i2++;   // hub faces grouped separately below
+                    if (i2 >= strip.Count) break;
                     var g = new List<int>();
                     double acc = 0;
                     double target = half && stripGroups.Count == 0 ? 0.5 * minLen : minLen;
-                    while (i2 < strip.Count && (g.Count < (target >= minLen ? 2 : 1) || acc < target))
+                    while (i2 < strip.Count && !isHub[strip[i2]] && (g.Count < (target >= minLen ? 2 : 1) || acc < target))
                     {
                         g.Add(strip[i2]);
                         acc += bedLen[strip[i2]];
                         i2++;
                         if (g.Count >= 2 && acc >= target) break;
                     }
-                    stripGroups.Add(g);
+                    if (g.Count > 0) stripGroups.Add(g);
                 }
                 // absorb a runt tail into the previous block (keeps the bond clean)
                 if (stripGroups.Count >= 2)
@@ -338,6 +354,38 @@ namespace Frahan.Masonry.Vault
                 {
                     foreach (int f2 in g) group[f2] = ng;
                     ng++;
+                }
+            }
+
+            // ---- hub components -> ONE capstone block each (RADIAL cross-course
+            // merge: flood fill over shared edges, so the whole spiral becomes a
+            // single keystone regardless of course structure). ----
+            if (hubCapstone)
+            {
+                var adjH = new List<int>[nfc];
+                for (int e = 0; e < top.Count; e++)
+                {
+                    int[] fs2 = top.GetConnectedFaces(e);
+                    if (fs2 == null || fs2.Length != 2) continue;
+                    if (!isHub[fs2[0]] || !isHub[fs2[1]]) continue;
+                    if (adjH[fs2[0]] == null) adjH[fs2[0]] = new List<int>(4);
+                    if (adjH[fs2[1]] == null) adjH[fs2[1]] = new List<int>(4);
+                    adjH[fs2[0]].Add(fs2[1]);
+                    adjH[fs2[1]].Add(fs2[0]);
+                }
+                var stack = new Stack<int>();
+                for (int f = 0; f < nfc; f++)
+                {
+                    if (!isHub[f] || group[f] >= 0) continue;
+                    int gid = ng++;
+                    stack.Push(f); group[f] = gid;
+                    while (stack.Count > 0)
+                    {
+                        int cur = stack.Pop();
+                        if (adjH[cur] == null) continue;
+                        foreach (int nb in adjH[cur])
+                            if (group[nb] < 0) { group[nb] = gid; stack.Push(nb); }
+                    }
                 }
             }
             for (int f = 0; f < nfc; f++) if (group[f] < 0) group[f] = ng++; // tris/leftovers stay single
