@@ -24,7 +24,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "to leave a raw rubble face + flat joints. overfill = overfill0 + 0.34*columnness and " +
                 "inflate grow column stones to seal the legs. Reads .obj stones from a folder. " +
                 "Stage 4 of 4; output is the rubble vault.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

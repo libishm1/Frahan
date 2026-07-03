@@ -51,7 +51,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "the out-of-process frahan_cra_worker (in-process fallback) — the canvas stays responsive. " +
                 "The raw ETH-fitted rubble stays a skin; CRA runs on the idealized abutting cells. " +
                 "Blue-noise/quad cells; for the thrust-aligned contact-by-construction model use Vault Shell CRA.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

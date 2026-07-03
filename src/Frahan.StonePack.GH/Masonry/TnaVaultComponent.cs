@@ -37,7 +37,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "funicular mesh + branch forces. Left boundary = retaining wall; right " +
                 "boundary = column tops. Asymmetric supports produce the Park Güell lean " +
                 "automatically. Use as structural template for RubblePack + Stability Check.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

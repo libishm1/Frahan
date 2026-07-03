@@ -25,7 +25,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "with a chunky aspect-ratio filter and optional category/lithology selection. The output stone " +
                 "meshes feed Stone-Cell Match to place a SELECTED category onto a vault's cells (the polygonal " +
                 "rubble vault). Deterministic for a given Seed.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

@@ -25,7 +25,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Sorts the supports into a convex ring, solves tension-only node equilibrium for the tie forces, " +
                 "and sizes a round steel bar per tie. For a regular N-gon with equal radial thrust H this gives " +
                 "the classic ring force T = H / (2 sin(pi/N)).",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

@@ -22,7 +22,7 @@ namespace Frahan.StonePack.GH.Masonry
             : base("Catenary Curve", "Catenary",
                 "True catenary (hanging chain) through two points with arc length = Length Factor x chord. " +
                 "The Gaudí form-finding primitive: invert it for a compression arch. Analytic cosh solve.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-0011-4A11-B500-0000000000B1");
         public override GH_Exposure Exposure => GH_Exposure.senary;
@@ -74,7 +74,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Flat triangulated form-finding NET from a closed planar boundary curve. Outputs the net " +
                 "plus its naked-boundary anchor points (default supports for Catenary Relax). Keep the net " +
                 "under ~1500 vertices (the relax uses a dense solve).",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-000E-4A11-B500-0000000000AE");
         public override GH_Exposure Exposure => GH_Exposure.senary;
@@ -113,7 +113,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "net from the anchors under a vertical load, then invert across the support plane " +
                 "(Gaudí hanging chain) for the compression vault. Anchors empty = all naked-boundary " +
                 "vertices fixed. Force Density vs Load sets the sag: lower q = deeper catenary.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-000F-4A11-B500-0000000000AF");
         public override GH_Exposure Exposure => GH_Exposure.senary;
@@ -159,7 +159,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "Smooth a control/form-found mesh through SubD subdivision (Catmull-Clark) and return the " +
                 "subdivided mesh — the same route that produced the Güell portico surface from its control " +
                 "cage. Density 2 is the validated setting.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         { }
         public override Guid ComponentGuid => new Guid("B7A11500-0010-4A11-B500-0000000000B0");
         public override GH_Exposure Exposure => GH_Exposure.senary;

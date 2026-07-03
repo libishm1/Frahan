@@ -25,7 +25,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "potential sliding plane. Reports the longest run and its fraction of the span: low = " +
                 "interlocked (random rubble bond / staggered courses), high = sliding-plane risk. Verifies " +
                 "the free stagger of a Voronoi rubble vault AND the imposed running-bond stagger of quad courses.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

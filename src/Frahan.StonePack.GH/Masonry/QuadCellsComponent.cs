@@ -24,7 +24,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "(validated: columns split 2x, shrink 0.92). Feed Cells/Frames/Columnness into Vault " +
                 "Voussoir Moulds then Vault Stone Fit & Trim for a coursed ETH-stone rubble skin that " +
                 "follows the thrust grid. Zero remeshing happens here - the quad mesh drives everything.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

@@ -22,7 +22,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "protrude) along the cell normal. depth D = dVault + (dCol - dVault)*columnness " +
                 "(thinner on the legs). Outputs the closed mould meshes plus the aligned cells / " +
                 "frames / columnness. Stage 3 of 4; feeds Vault Stone Fit & Trim.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

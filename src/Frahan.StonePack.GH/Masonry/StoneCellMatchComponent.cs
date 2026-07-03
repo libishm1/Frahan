@@ -29,7 +29,7 @@ namespace Frahan.StonePack.GH.Masonry
                  "stock; Cyclopean Cannibalism datum ≈0.27) and gap ratios, and outputs the stones placed " +
                  "into their cells. Refs: Clifford & McGee 2018 (ACADIA); Kuhn 1955 (Hungarian); " +
                  "Frahan SLM+ROSES masonry review 2026-06-10.",
-                 "Frahan", "Masonry")
+                 "Frahan", "Vault")
         { }
 
         public override Guid ComponentGuid => new Guid("D5F10016-6C2D-4F1B-B3E8-7A95D0C41F62");

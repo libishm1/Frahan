@@ -47,7 +47,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "with openings where single-chart parametrization folds: holes are preserved and the output " +
                 "is 100% quads. Thrust Field off = QuadWild's own curvature field. Async: canvas stays " +
                 "responsive; toggle Run.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

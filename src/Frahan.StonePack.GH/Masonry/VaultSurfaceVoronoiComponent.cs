@@ -25,7 +25,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "neighbours in, and clips a square by each perpendicular bisector. Seal gradient " +
                 "shrink = 0.92 + 0.22*columnness (vault hairline -> column overlap). Outputs cell " +
                 "polylines + frames + aligned columnness. Stage 2 of 4; feeds Vault Voussoir Moulds.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

@@ -27,7 +27,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "high side (auto-detected). Outputs the kept shell, the removed piece (bake to verify), " +
                 "and a report. Feed the kept shell to Thrust Quad Remesh -> Vault Shell CRA to test " +
                 "whether the trim improves stability.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

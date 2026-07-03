@@ -24,7 +24,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "the disk radius from rVault (broad vault) down to rCol (slender legs). Outputs sample " +
                 "points, surface normals, and the per-sample columnness field. Stage 1 of 4; feeds " +
                 "Vault Surface Voronoi.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

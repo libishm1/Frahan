@@ -26,7 +26,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "the given density, centroid), and an optional flat inspection LAYOUT (blocks re-arranged " +
                 "on a ground grid in ID order). Wire Blocks from Vault Shell CRA, Voussoirs from Vault " +
                 "Quad Courses, or Rubble from Vault Stone Fit & Trim.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

@@ -28,7 +28,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "course (rigid-block equilibrium, native OSQP). Outputs the quad mesh, course centerlines, " +
                 "per-course stability, and a coverage mesh coloured by how many of the <=2 courses through " +
                 "each face are stable (green both-way / yellow one-way / red none).",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

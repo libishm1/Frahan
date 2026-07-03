@@ -56,7 +56,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "out-of-process frahan_cra_worker (in-process fallback), so the canvas stays responsive. " +
                 "Outputs the contact-ready blocks, a coverage mesh (blue = support, green = stable / red " +
                 "= no admissible state), the interface axes, and the stability verdict.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 

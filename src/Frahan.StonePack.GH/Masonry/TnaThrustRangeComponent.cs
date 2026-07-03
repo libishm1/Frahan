@@ -24,7 +24,7 @@ namespace Frahan.StonePack.GH.Masonry
                 "length if none given), and returns the admissible thrust interval [Hmin, Hmax], the range " +
                 "factor, and the two extreme thrust lines that touch the intrados/extrados. Exact for one " +
                 "arch; feed a masonry course centerline.",
-                "Frahan", "Masonry")
+                "Frahan", "Vault")
         {
         }
 
