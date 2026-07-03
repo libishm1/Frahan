@@ -175,7 +175,7 @@ namespace Frahan.Masonry.Vault
         // where both faces share a group (the healed head joint).
         // =====================================================================
         public static ShellAssemblyResult BuildStaggered(Mesh shell, double thickness,
-            double density = 2400.0, double supportBand = 0.08)
+            double density = 2400.0, double supportBand = 0.08, double minBlockFraction = 0.45)
         {
             if (shell == null) throw new ArgumentNullException(nameof(shell));
             var res = new ShellAssemblyResult();
@@ -277,23 +277,68 @@ namespace Frahan.Masonry.Vault
                 return (za / a.Count).CompareTo(zb / b.Count);
             });
 
-            // ---- face -> group (merge pairs, offset by one on odd courses) ----
+            // ---- face -> group: adaptive running bond with a MINIMUM block size
+            // (Libish 2026-07-03: near singularity fans the quads shrink — keep
+            // merging along the course until a block reaches minBlockFraction x
+            // the LARGEST standard block, so the hub never gets granular). ----
+            var bedLen = new double[nfc];
+            double maxBed = 0;
+            for (int f = 0; f < nfc; f++)
+            {
+                var vs = faceVerts[f];
+                if (vs.Length != 4) continue;
+                double vert01 = 0, vert12 = 0;
+                double len01 = 0, len12 = 0;
+                for (int k = 0; k < 4; k++)
+                {
+                    Vector3d d = P[vs[(k + 1) % 4]] - P[vs[k]];
+                    double vfrac = Math.Abs(d.Z) / Math.Max(1e-12, d.Length);
+                    if (k % 2 == 0) { vert01 += vfrac; len01 += d.Length; } else { vert12 += vfrac; len12 += d.Length; }
+                }
+                // bed edges = the LESS vertical pair (course-direction length)
+                bedLen[f] = 0.5 * (vert01 >= vert12 ? len12 : len01);
+                if (bedLen[f] > maxBed) maxBed = bedLen[f];
+            }
+            double minLen = Math.Max(0.0, Math.Min(1.0, minBlockFraction)) * 2.0 * maxBed; // vs the standard 2-quad block
             var group = new int[nfc];
             for (int i = 0; i < nfc; i++) group[i] = -1;
             int ng = 0;
             for (int s = 0; s < strips.Count; s++)
             {
                 var strip = strips[s];
-                int start = s % 2;                 // the running-bond offset
+                bool half = s % 2 == 1;            // running-bond offset: odd courses start with a half block
                 int i2 = 0;
-                if (start == 1 && strip.Count > 0) { group[strip[0]] = ng++; i2 = 1; }
-                for (; i2 + 1 < strip.Count; i2 += 2)
+                var stripGroups = new List<List<int>>();
+                while (i2 < strip.Count)
                 {
-                    group[strip[i2]] = ng;
-                    group[strip[i2 + 1]] = ng;
+                    var g = new List<int>();
+                    double acc = 0;
+                    double target = half && stripGroups.Count == 0 ? 0.5 * minLen : minLen;
+                    while (i2 < strip.Count && (g.Count < (target >= minLen ? 2 : 1) || acc < target))
+                    {
+                        g.Add(strip[i2]);
+                        acc += bedLen[strip[i2]];
+                        i2++;
+                        if (g.Count >= 2 && acc >= target) break;
+                    }
+                    stripGroups.Add(g);
+                }
+                // absorb a runt tail into the previous block (keeps the bond clean)
+                if (stripGroups.Count >= 2)
+                {
+                    var tail = stripGroups[stripGroups.Count - 1];
+                    double tl = 0; foreach (int f2 in tail) tl += bedLen[f2];
+                    if (tl < 0.5 * minLen)
+                    {
+                        stripGroups[stripGroups.Count - 2].AddRange(tail);
+                        stripGroups.RemoveAt(stripGroups.Count - 1);
+                    }
+                }
+                foreach (var g in stripGroups)
+                {
+                    foreach (int f2 in g) group[f2] = ng;
                     ng++;
                 }
-                if (i2 < strip.Count) group[strip[i2]] = ng++;
             }
             for (int f = 0; f < nfc; f++) if (group[f] < 0) group[f] = ng++; // tris/leftovers stay single
 
