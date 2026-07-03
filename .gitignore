@@ -43,3 +43,6 @@
 # OS / editor
 Thumbs.db
 .DS_Store
+
+install/yak_build/
+*.yak

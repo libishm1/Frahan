@@ -1,0 +1,25 @@
+---
+name: FrahanStonePack
+version: 0.2.0
+authors:
+  - Libish Murugesan
+description: >
+  Stone-fabrication readiness for Rhino/Grasshopper. Compression-only masonry
+  vaults (TNA form-finding + rigid-block CRA), quarry geology (GPR, discontinuity
+  sets, DFN, in-situ block size, block-cutting optimisation), 2D/3D stone packing
+  and nesting, edge-matching reassembly, and pre-CAM cut-plan export (DXF /
+  wire-saw feasibility / robot targets / COMPAS bridge). A GPLv3 research
+  prototype.
+url: https://github.com/libishm1/Frahan
+icon: icon.png
+keywords:
+  - stone
+  - masonry
+  - vault
+  - quarry
+  - geology
+  - fabrication
+  - packing
+  - nesting
+  - CRA
+  - TNA

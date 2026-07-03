@@ -85,7 +85,8 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         {
             da.SetData(0, string.Empty);
             da.SetData(1, polys.Count);
-            da.SetData(2, laid.Select(pl => pl != null && pl.Count > 1 ? (Curve)pl.ToPolylineCurve() : null));
+            // Layout (output 2, list) is already set by the SetDataList above; do NOT
+            // re-set it with SetData (a lazy IEnumerable can't convert to a single GH_Curve).
             da.SetData(3, $"Dry run: {polys.Count} profile(s) laid out. Set Write = true to write '{path}'.");
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Write = false (dry run). Set Write = true to write the .dxf.");
             return;
