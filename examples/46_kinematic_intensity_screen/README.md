@@ -13,6 +13,7 @@ survey_discontinuities.csv --> Discontinuity Ingest --> Terzaghi Correction
 
 tongjiang_sets.csv --------> Discontinuity Ingest --+--> Kinematic Feasibility  (self-drawing stereonet)
                                                     +--> Fracture Intensity     (P32 / P10)
+                                                    +--> In-Situ Block Size      (Monte-Carlo IBSD)
 ```
 
 - **Terzaghi Correction** (Frahan ▸ Quarry) — corrects the 26-plane survey for
@@ -30,6 +31,12 @@ tongjiang_sets.csv --------> Discontinuity Ingest --+--> Kinematic Feasibility  
   rock volume, the scale-independent DFN measure), per-set and total. Here total
   **P32 = 2.31 1/m**, which equals the Palmström Jv for persistent joints
   (cross-checks Stereonet + Block Size).
+- **In-Situ Block Size** (Frahan ▸ Quarry) — Monte-Carlo IBSD: samples Fisher
+  orientation scatter + a spacing PDF over N realizations and reports the block-
+  volume distribution (`Vb = s₁s₂s₃/q`, q = |det(n₁,n₂,n₃)|), shape mix, and the
+  **right-prism fraction** — the geology→fabrication signal (how sawable-to-
+  rectangular the natural fabric is). Here P50 ≈ **0.70 m³**, Deq ≈ 0.89 m, and
+  only **1 % right-prism** → the Tongjiang fabric yields few rectangular blocks.
 
 ## Data
 
