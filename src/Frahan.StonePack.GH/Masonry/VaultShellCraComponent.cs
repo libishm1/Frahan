@@ -31,6 +31,7 @@ namespace Frahan.StonePack.GH.Masonry
         {
             public Mesh Shell;
             public double Edge, Thick, Friction, Density, Band;
+            public bool Stagger;
         }
 
         public sealed class Payload
@@ -40,6 +41,7 @@ namespace Frahan.StonePack.GH.Masonry
             public string SolverNote;
             public double Edge, Thick, Friction;
             public bool NoSupports;
+            public bool Stagger;
         }
 
         public VaultShellCraComponent()
@@ -68,6 +70,8 @@ namespace Frahan.StonePack.GH.Masonry
             p.AddNumberParameter("Density", "D", "Stone density (kg/m^3) for self-weight.", GH_ParamAccess.item, 2400.0);
             p.AddNumberParameter("Support Band", "Sb", "Fix blocks whose naked edge sits within this fraction of the height above the lowest point (the springing).", GH_ParamAccess.item, 0.08);
             p.AddBooleanParameter("Run", "R", "Build the assembly + run CRA (async; canvas stays responsive).", GH_ParamAccess.item, false);
+            // APPENDED (wiring-safe): whole-shell running bond.
+            p.AddBooleanParameter("Stagger", "St", "Running bond: alternate courses merge quad PAIRS with an offset of one, so head joints never align (contact-by-construction preserved).", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -95,10 +99,13 @@ namespace Frahan.StonePack.GH.Masonry
             }
             da.GetData(1, ref edge); da.GetData(2, ref thick); da.GetData(3, ref friction);
             da.GetData(4, ref density); da.GetData(5, ref band);
+            bool stagger = false;
+            da.GetData(7, ref stagger);
             snapshot = new Snapshot
             {
                 Shell = shell.DuplicateMesh(),
                 Edge = edge, Thick = thick, Friction = friction, Density = density, Band = band,
+                Stagger = stagger,
             };
             return true;
         }
@@ -114,8 +121,10 @@ namespace Frahan.StonePack.GH.Masonry
             }
             token.ThrowIfCancellationRequested();
 
-            progress?.Invoke("building assembly...");
-            var sa = VaultShellAssembly.Build(quad, s.Thick, s.Density, s.Band);
+            progress?.Invoke(s.Stagger ? "building STAGGERED assembly..." : "building assembly...");
+            var sa = s.Stagger
+                ? VaultShellAssembly.BuildStaggered(quad, s.Thick, s.Density, s.Band)
+                : VaultShellAssembly.Build(quad, s.Thick, s.Density, s.Band);
             token.ThrowIfCancellationRequested();
 
             bool stable;
@@ -147,6 +156,7 @@ namespace Frahan.StonePack.GH.Masonry
                 Sa = sa, Stable = stable, SolverNote = note,
                 Edge = s.Edge, Thick = s.Thick, Friction = s.Friction,
                 NoSupports = sa.SupportCount == 0,
+                Stagger = s.Stagger,
             };
         }
 
@@ -186,6 +196,7 @@ namespace Frahan.StonePack.GH.Masonry
                 $"Whole-shell CRA: {(r.Stable ? "STABLE" : "NOT stable")}. " +
                 $"{sa.BlockCount} voussoirs, {sa.InterfaceCount} contact interfaces, {sa.SupportCount} support blocks. " +
                 $"thickness {r.Thick:F2}m, friction {r.Friction:F2}, edge {r.Edge:F2}m. " +
+                (r.Stagger ? "RUNNING BOND (staggered pairs). " : "") +
                 $"Contact by construction (shared shell vertices). Solver: {r.SolverNote}");
             Message = r.Stable ? "STABLE" : "unstable";
         }
