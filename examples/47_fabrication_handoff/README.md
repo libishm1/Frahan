@@ -10,9 +10,10 @@ stone decisions; the machine's own CAM (or COMPAS) does the rest.
 tongjiang_sets.csv --> Discontinuity Ingest --> Cut Orientation --> DXF Cut Plan
                                                 (bench saw grid)    (layered cut sheet)
 
-hypar cut surface  --> Wire-Saw Feasibility        (ruled? developable? kerf offset)
+raw quarry block   --> Block Yield --> cut blocks --> COMPAS Export
+                       (max yield, waste-min)        (blocks -> compas_cra / compas_fab)
 
-voussoir blocks    --> COMPAS Export               (blocks + frames -> compas_cra / compas_fab)
+hypar cut surface  --> Wire-Saw Feasibility          (ruled? developable? kerf offset)
 ```
 
 - **Cut Orientation** (Frahan ▸ Fabricate) — orients a rectangular saw grid to the
@@ -26,7 +27,12 @@ voussoir blocks    --> COMPAS Export               (blocks + frames -> compas_cr
 - **Wire-Saw Feasibility** (Frahan ▸ Fabricate) — checks a target cut surface is
   wire-sawable (ruled ⇒ a straight wire can sweep it) and emits the kerf-offset
   toolpath. The hypar is **ruled but doubly-curved** → sawable, wire twists.
-- **COMPAS Export** (Frahan ▸ Fabricate) — hands the voussoir blocks (+ optional
+- **Block Yield** (Frahan ▸ Fabricate) — saws a raw quarry block (2.1×1.3×1.0 m)
+  into rectangular product blocks, flexing the size within ±10% tolerance and
+  picking the axis assignment that tiles the block with the least off-cut waste:
+  **36 blocks @ 0.52×0.43×0.33 m, 97 % yield** (vs 79 % at a fixed 0.5×0.4×0.3).
+  Feed the **Cut frame** from Cut Orientation to cut on the fabric-aligned grid.
+- **COMPAS Export** (Frahan ▸ Fabricate) — hands the yield-optimised cut blocks (+ optional
   placement/robot frames) to the COMPAS ecosystem as a stable JSON + a Python
   loader, so a user can run `compas_cra`'s equilibrium solver or `compas_fab`'s
   robot stack. Interop, not compete.
