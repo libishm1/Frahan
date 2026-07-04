@@ -179,9 +179,12 @@ public class DiscontinuitySetsAsyncComponent : GH_TaskCapableComponent<Discontin
             };
             using (var proc = Process.Start(psi))
             {
-                proc.StandardOutput.ReadToEnd();
-                proc.StandardError.ReadToEnd();
+                // Drain both streams async, THEN wait: a synchronous stdout+stderr ReadToEnd before
+                // WaitForExit deadlocks on a chatty child and defeats the timeout on a hang.
+                var outTask = proc.StandardOutput.ReadToEndAsync();
+                var errTask = proc.StandardError.ReadToEndAsync();
                 if (!proc.WaitForExit(600000)) { try { proc.Kill(); } catch { } return new DiscResult { Ok = false, Report = "Worker timed out (>600 s)." }; }
+                _ = outTask.Result; _ = errTask.Result;   // flush the async readers
                 if (proc.ExitCode != 0) return new DiscResult { Ok = false, Report = "Worker exit code " + proc.ExitCode + "." };
             }
 

@@ -107,16 +107,18 @@ public sealed class PythonSubprocessFractureDetector : IFractureDetector
         using (var proc = Process.Start(psi))
         {
             if (proc == null) throw new InvalidOperationException("Process.Start returned null");
-            string outTask = proc.StandardOutput.ReadToEnd();
-            string errTask = proc.StandardError.ReadToEnd();
+            // Drain both streams async, THEN wait: a synchronous stdout+stderr ReadToEnd before
+            // WaitForExit deadlocks on a chatty child and defeats the timeout on a hang.
+            var outTask = proc.StandardOutput.ReadToEndAsync();
+            var errTask = proc.StandardError.ReadToEndAsync();
             if (!proc.WaitForExit(TimeoutSeconds * 1000))
             {
                 try { proc.Kill(); } catch { /* best effort; net48 has no Kill(bool) */ }
                 throw new TimeoutException(
                     $"Python detector did not finish within {TimeoutSeconds}s (script={ScriptPath})");
             }
-            stdout = outTask;
-            stderr = errTask;
+            stdout = outTask.Result;
+            stderr = errTask.Result;
             exitCode = proc.ExitCode;
         }
 

@@ -88,14 +88,18 @@ namespace Frahan.Masonry.Vault
                 using (var proc = Process.Start(psi))
                 {
                     if (proc == null) { LastError = "failed to start Instant Meshes worker"; return null; }
-                    proc.StandardOutput.ReadToEnd();
-                    string err = proc.StandardError.ReadToEnd();
+                    // Drain both streams async, THEN wait: a synchronous stdout+stderr ReadToEnd
+                    // before WaitForExit(timeoutMs) deadlocks when the child fills a pipe buffer
+                    // and defeats the timeout on a hang.
+                    var outTask = proc.StandardOutput.ReadToEndAsync();
+                    var errTask = proc.StandardError.ReadToEndAsync();
                     if (!proc.WaitForExit(timeoutMs))
                     {
                         try { proc.Kill(); } catch { }
                         LastError = "Instant Meshes worker timed out after " + timeoutMs + " ms";
                         return null;
                     }
+                    string err = errTask.Result;
                     if (!File.Exists(outPath))
                     {
                         LastError = "Instant Meshes worker produced no output (exit 0x" +

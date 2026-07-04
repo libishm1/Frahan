@@ -197,15 +197,19 @@ namespace Frahan.Masonry.Vault
                 // drain stderr asynchronously while reading stdout: a synchronous
                 // stdout-then-stderr drain deadlocks when the child fills the stderr
                 // pipe buffer (quadwild is verbose on both streams).
+                // Drain both streams async, THEN wait: awaiting errTask.Result (or a blocking
+                // stdout ReadToEnd) before WaitForExit(timeoutMs) defeats the timeout on a hung
+                // child and leaks the process. WaitForExit must gate the reads.
+                var outTask = proc.StandardOutput.ReadToEndAsync();
                 var errTask = proc.StandardError.ReadToEndAsync();
-                stdout = proc.StandardOutput.ReadToEnd();
-                string err = errTask.Result;
                 if (!proc.WaitForExit(timeoutMs))
                 {
                     try { proc.Kill(); } catch { }
                     LastError = Path.GetFileName(exe) + " timed out after " + timeoutMs + " ms";
                     return false;
                 }
+                stdout = outTask.Result;
+                string err = errTask.Result;
                 if (proc.ExitCode != 0)
                 {
                     LastError = Path.GetFileName(exe) + " exit code " + proc.ExitCode + ". " + err;

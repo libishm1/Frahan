@@ -66,8 +66,12 @@ namespace Frahan.Masonry.Solvers
                 using (var proc = Process.Start(psi))
                 {
                     if (proc == null) { LastError = "failed to start frahan_cra_worker"; return false; }
-                    var errTask = proc.StandardError.ReadToEndAsync();   // async drain (deadlock-safe)
-                    proc.StandardOutput.ReadToEnd();
+                    // Drain BOTH streams asynchronously, THEN enforce the timeout. A blocking
+                    // StandardOutput.ReadToEnd() before WaitForExit(timeoutMs) defeats the timeout:
+                    // a hung native solve keeps stdout open, the read never returns, the deadline
+                    // never fires, and the worker leaks (observed 2026-07-04 on the Guell CRA).
+                    var outTask = proc.StandardOutput.ReadToEndAsync();
+                    var errTask = proc.StandardError.ReadToEndAsync();
                     if (!proc.WaitForExit(timeoutMs))
                     {
                         try { proc.Kill(); } catch { }
