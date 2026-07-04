@@ -36,6 +36,32 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 > Examples 15-27 (statue-to-blocks, surface packers, voussoirs 21/22, slab/marble 23-25,
 > polygonal masonry 27) also ship in their folders; see `../docs/PERSONA_MAP.md` for the full map.
 
+## More workflows (33-50 + vaults)
+Each ships its own README (hero render, "what it shows", data provenance). The GPR chain (33-35, 40)
+runs on real georeferenced surveys; 47-50 are the pre-CAM fabrication + BIM handoff tail.
+
+| Folder | Demonstrates |
+|---|---|
+| `33_gpr_marble_guillotine/` | GPR marble -> stationary wire-saw guillotine blocks (the manufacturable hero) |
+| `34_gpr_marble_oblique/` | oblique (dip-following) quarry cuts on the marble beds (the georeferencing prize) |
+| `35_gpr_quarry_full_workflow/` | GPR quarry full spine: ingest -> beds -> slabs -> blocks |
+| `36_fractured_block_to_slabs/` | fractured block -> two fracture-bounded slabs |
+| `37_block_to_cladding_facade/` | block -> slabs -> cladding panels -> curved facade, with costing |
+| `38_surface_discretize_tiles/` | surface discretization -> matched cut tiles -> slabs (Panel Tile Surface) |
+| `39_concave_nest/` | concave-in-concave nesting (the honest high-yield trim) |
+| `40_travertine_crosslithology/` | cross-lithology cut-yield across marble, travertine, andesite (native `.gsf`) |
+| `41_floor_tiling/` | floor tile (boundary-trimmed) with grain direction + texture mapping |
+| `42_wholeside_reassembly/` | whole-side reassembly (Whole-Side Assemble) |
+| `43_nbo_dry_stone_wall/` | next-best-object dry-stone wall placement |
+| `44_nbo_to_robot/` | NBO pose -> robot frame + Force-Seat URScript (robot handoff) |
+| `45_cut_and_fill_excavation/` | cut-and-fill / soil excavation down to the rock face |
+| `46_kinematic_intensity_screen/` | kinematic feasibility + fracture-intensity rock-mass screen |
+| `47_fabrication_handoff/` | pre-CAM cut plan -> CAM / robot / COMPAS (the fabrication tail) |
+| `48_block_matching_3d/` | 3D block matching / reassembly (Soft ICP 3D) |
+| `49_extraction_order_plan/` | quarry inventory -> yield -> extraction order -> saw-bed schedule -> report |
+| `50_castle_keep_ifc/` | castle keep -> masonry stability -> IFC / BIM export (the BIM handoff) |
+| `vault_generation/` | compression-only masonry vaults (TNA form-finding + whole-shell CRA) |
+
 ## Digital-fabrication entrypoint renders (examples 10-14)
 Built and solved live, then captured. Each is at correct per-application physical scale (meters for
 slab/block/monument, millimetres for mosaic/vessel) and sits on the z=0 ground plane (2D nests flat on XY).
