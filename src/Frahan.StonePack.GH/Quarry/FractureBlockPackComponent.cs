@@ -79,6 +79,12 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         p.AddNumberParameter("Recovered Volume", "V", "Recovered block volume per bin (m^3).", GH_ParamAccess.list);
         p.AddNumberParameter("Yield", "Y", "Recovered / intact volume per bin (0..1).", GH_ParamAccess.list);
         p.AddTextParameter("Report", "Rpt", "Per-bin yield summary.", GH_ParamAccess.item);
+        p.AddLineParameter("Saw passes", "SP",
+            "Ordered saw passes per bin (one branch per bin): the distinct vertical cut centre-lines " +
+            "recovered from the placed block faces (face coord +- kerf/2), X rips ascending then Y " +
+            "cross-cuts ascending, each spanning only the blocks it actually frees. Horizontal lifts " +
+            "are the bin boundaries themselves. Feed DXF Cut Plan > Cut lines for a numbered " +
+            "CUT_SEQUENCE sheet (one bin per sheet).", GH_ParamAccess.tree);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -102,6 +108,7 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         var counts = new List<int>();
         var vols = new List<double>();
         var yields = new List<double>();
+        var passes = new Grasshopper.DataTree<Line>();
         var rpt = new StringBuilder();
         string pkName = packer <= 0 ? "0 grid" : packer == 1 ? "1 best-of" : packer == 2 ? "2 combined-grid"
                         : packer == 3 ? "3 voxel-dlbf" : packer == 4 ? "4 voxel-dlbf-multi"
@@ -113,9 +120,11 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         for (int s = 0; s < bins.Count; s++)
         {
             var mesh = bins[s];
-            if (mesh == null || !mesh.IsValid) { counts.Add(0); vols.Add(0); yields.Add(0); continue; }
+            if (mesh == null || !mesh.IsValid)
+            { counts.Add(0); vols.Add(0); yields.Add(0); passes.EnsurePath(new Grasshopper.Kernel.Data.GH_Path(s)); continue; }
             mesh.Normals.ComputeNormals(); mesh.Compact();
             var placedBoxes = PackSlab(mesh, Lx, Ly, Lz, kerf, effClr, packer, out string layoutDesc);
+            passes.AddRange(SawPassLines(placedBoxes, kerf), new Grasshopper.Kernel.Data.GH_Path(s));
             double rv = 0.0;
             foreach (var pbx in placedBoxes)
             {
@@ -142,6 +151,43 @@ public sealed class FractureBlockPackComponent : FrahanComponentBase
         da.SetDataList(3, vols);
         da.SetDataList(4, yields);
         da.SetData(5, rpt.ToString().TrimEnd());
+        da.SetDataTree(6, passes);
+    }
+
+    // Saw-pass centre-lines for one bin, recovered from the placed block faces: every distinct
+    // vertical cut plane (X or Y axis) lies at face coord +- kerf/2 (the shared kerf centre between
+    // neighbours, or the boundary trim outside edge blocks). Each pass spans only the blocks whose
+    // faces it frees, so sub-span cuts of the recursive guillotine are not over-drawn as full rips.
+    // Ordered X rips (ascending) then Y cross-cuts (ascending) at the top of the bin's placed extent
+    // -- the plan-view wire-saw sequence. Horizontal lifts (Z) are not emitted: in plan view they are
+    // the bin outline, and the fracture-bounded bins ARE the bed-parallel lifts.
+    private static List<Line> SawPassLines(List<BoundingBox> bs, double kerf)
+    {
+        var lines = new List<Line>();
+        if (bs == null || bs.Count == 0) return lines;
+        double zTop = double.MinValue;
+        foreach (var b in bs) if (b.Max.Z > zTop) zTop = b.Max.Z;
+        // key = rounded cut-centre coordinate; value = span of the perpendicular extent it frees
+        var xCuts = new SortedDictionary<double, (double lo, double hi)>();
+        var yCuts = new SortedDictionary<double, (double lo, double hi)>();
+        void Add(SortedDictionary<double, (double lo, double hi)> d, double coord, double lo, double hi)
+        {
+            double c = Math.Round(coord, 3);
+            if (d.TryGetValue(c, out var span)) d[c] = (Math.Min(span.lo, lo), Math.Max(span.hi, hi));
+            else d[c] = (lo, hi);
+        }
+        foreach (var b in bs)
+        {
+            Add(xCuts, b.Min.X - kerf * 0.5, b.Min.Y - kerf * 0.5, b.Max.Y + kerf * 0.5);
+            Add(xCuts, b.Max.X + kerf * 0.5, b.Min.Y - kerf * 0.5, b.Max.Y + kerf * 0.5);
+            Add(yCuts, b.Min.Y - kerf * 0.5, b.Min.X - kerf * 0.5, b.Max.X + kerf * 0.5);
+            Add(yCuts, b.Max.Y + kerf * 0.5, b.Min.X - kerf * 0.5, b.Max.X + kerf * 0.5);
+        }
+        foreach (var kv in xCuts)
+            lines.Add(new Line(new Point3d(kv.Key, kv.Value.lo, zTop), new Point3d(kv.Key, kv.Value.hi, zTop)));
+        foreach (var kv in yCuts)
+            lines.Add(new Line(new Point3d(kv.Value.lo, kv.Key, zTop), new Point3d(kv.Value.hi, kv.Key, zTop)));
+        return lines;
     }
 
     // Pack one fracture-bounded slab. packer<=0 = the baseline fixed grid (orientation as given,
