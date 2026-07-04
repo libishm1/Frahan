@@ -7,10 +7,10 @@
          after the 2026-05-04 namespace rename (R1 source-only phase). -->
     <AssemblyName>Frahan.StonePack.Tests</AssemblyName>
     <RootNamespace>Frahan.Tests</RootNamespace>
-    <!-- R3 PR 8 transition release: 0.7.0. See CHANGELOG.md. -->
-    <Version>0.7.0</Version>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
-    <FileVersion>0.7.0.0</FileVersion>
+    <!-- v0.1.0: aligned to the public / Zenodo release (was 0.7.0). -->
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
     <!-- 2026-05-04 - force x64 so rhcommon_c.dll (x64-only since Rhino 7+)
          loads. Without this, the test exe bound to AnyCPU runs as i386 on
          this host and DllImport reports "DLL init failed" (HRESULT 0x8007045A)
