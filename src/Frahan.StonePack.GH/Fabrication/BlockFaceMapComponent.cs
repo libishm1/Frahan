@@ -26,7 +26,7 @@ namespace Frahan.GH.Fabrication;
 // =============================================================================
 
 [Algorithm("Unfolded block face map", "Cross-unfold of the block faces; fracture traces via mesh-plane sections, saw passes mapped per face",
-    Note = "The shop-drawing view a fabricator reads. Plan passes keep their saw-sequence numbers; elevation traces are views of the same passes.")]
+    Note = "The shop-drawing view a fabricator reads. Cut labels pass through the mapping: a plan pass and its elevation views share one label (one physical cut = one number across views).")]
 [RelatedComponent("Frahan > Fabricate > DXF Cut Plan", Reason = "Face outlines / ids / fracture traces / cut traces feed straight into the DXF export (FRACTURES + CUT_SEQUENCE layers).")]
 [RelatedComponent("Frahan > Block > Fracture Block Pack", Reason = "Its Saw passes output is the Cut lines input here.")]
 [RelatedComponent("Frahan > Quarry > GPR Fracture Surfaces 3D", Reason = "Its kriged bed meshes are the Fractures input.")]
@@ -62,6 +62,10 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
         p[2].Optional = true;
         p.AddNumberParameter("Gap", "G", "Spacing between unfolded faces (model units).", GH_ParamAccess.item, 0.15);
         p.AddBooleanParameter("Bottom", "Bt", "Also emit the bottom face.", GH_ParamAccess.item, false);
+        p.AddTextParameter("Cut labels", "Cll",
+            "Optional label per cut line, parallel to Cut lines (e.g. Q1../F1.. from Cut Stage Split). " +
+            "Absent = sequential 1..N.", GH_ParamAccess.list);
+        p[5].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -73,6 +77,9 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
             "Saw-pass traces: plan passes first (input order, so their sheet numbers match the saw " +
             "sequence), then the elevation views of each pass.", GH_ParamAccess.list);
         p.AddTextParameter("Report", "Re", "Per-face summary.", GH_ParamAccess.item);
+        p.AddTextParameter("Trace labels", "Tl",
+            "Label per cut trace, parallel to Cut traces. Plan traces carry their pass label; each " +
+            "elevation view repeats the label of the pass it shows.", GH_ParamAccess.list);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -84,6 +91,7 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
         var cutLinesIn = new List<Line>(); da.GetDataList(2, cutLinesIn);
         double gap = 0.15; da.GetData(3, ref gap);
         bool bottom = false; da.GetData(4, ref bottom);
+        var labels = new List<string>(); da.GetDataList(5, labels);
 
         var bb = box.BoundingBox;
         Point3d min = bb.Min, max = bb.Max;
@@ -164,11 +172,17 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
             }
         }
 
-        // ---- cut traces: plan passes (input order) first, then each pass's elevation view(s) ----
+        // ---- cut traces: plan passes (input order) first, then each pass's elevation view(s).
+        // Labels pass through: a plan trace and every elevation view of the same pass share
+        // one label (one physical cut = one number across views, standard drafting). ----
         var cutTraces = new List<Line>();
+        var traceLabels = new List<string>();
+        string LabelOf(int i) => (i < labels.Count && !string.IsNullOrEmpty(labels[i]))
+            ? labels[i] : (i + 1).ToString(CI);
         double tol = 0.02 * Math.Max(L, W);
-        foreach (var line in cutLinesIn)
+        for (int i = 0; i < cutLinesIn.Count; i++)
         {
+            var line = cutLinesIn[i];
             double dx = Math.Abs(line.To.X - line.From.X);
             double dy = Math.Abs(line.To.Y - line.From.Y);
             bool xRip = dx < dy;
@@ -190,10 +204,12 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
                     ff.MapToFace(Face.Plan, new Point3d(lo, c, min.Z)),
                     ff.MapToFace(Face.Plan, new Point3d(hi, c, min.Z))));
             }
+            traceLabels.Add(LabelOf(i));
         }
         int elevationViews = 0;
-        foreach (var line in cutLinesIn)
+        for (int i = 0; i < cutLinesIn.Count; i++)
         {
+            var line = cutLinesIn[i];
             double dx = Math.Abs(line.To.X - line.From.X);
             double dy = Math.Abs(line.To.Y - line.From.Y);
             bool xRip = dx < dy;
@@ -208,6 +224,7 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
                     cutTraces.Add(new Line(
                         ff.MapToFace(Face.North, new Point3d(c, max.Y, min.Z)),
                         ff.MapToFace(Face.North, new Point3d(c, max.Y, max.Z))));
+                    traceLabels.Add(LabelOf(i));
                     elevationViews++;
                 }
                 if (faces.Contains(Face.South) && lo <= min.Y + tol)
@@ -215,6 +232,7 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
                     cutTraces.Add(new Line(
                         ff.MapToFace(Face.South, new Point3d(c, min.Y, min.Z)),
                         ff.MapToFace(Face.South, new Point3d(c, min.Y, max.Z))));
+                    traceLabels.Add(LabelOf(i));
                     elevationViews++;
                 }
             }
@@ -229,6 +247,7 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
                     cutTraces.Add(new Line(
                         ff.MapToFace(Face.East, new Point3d(max.X, c, min.Z)),
                         ff.MapToFace(Face.East, new Point3d(max.X, c, max.Z))));
+                    traceLabels.Add(LabelOf(i));
                     elevationViews++;
                 }
                 if (faces.Contains(Face.West) && lo <= min.X + tol)
@@ -236,6 +255,7 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
                     cutTraces.Add(new Line(
                         ff.MapToFace(Face.West, new Point3d(min.X, c, min.Z)),
                         ff.MapToFace(Face.West, new Point3d(min.X, c, max.Z))));
+                    traceLabels.Add(LabelOf(i));
                     elevationViews++;
                 }
             }
@@ -248,13 +268,14 @@ public sealed class BlockFaceMapComponent : FrahanComponentBase
         foreach (var face in faces)
             rpt.AppendLine($"  {FaceName(face)}: {chunkCounts[face]} fracture trace chunk(s)");
         rpt.AppendLine($"cut traces: {cutLinesIn.Count} plan pass(es) + {elevationViews} elevation view(s)");
-        rpt.AppendLine("plan pass sheet numbers 1..N match the saw sequence; higher numbers are elevation views of the same passes.");
+        rpt.AppendLine("plan traces and elevation views share one label per physical pass (see Trace labels).");
 
         da.SetDataList(0, outlines);
         da.SetDataList(1, ids);
         da.SetDataList(2, fractureTraces);
         da.SetDataList(3, cutTraces);
         da.SetData(4, rpt.ToString().TrimEnd());
+        da.SetDataList(5, traceLabels);
     }
 
     private static void EmitChunk(List<Point3d> chunk, List<Curve> traces, Dictionary<Face, int> counts, Face face)
