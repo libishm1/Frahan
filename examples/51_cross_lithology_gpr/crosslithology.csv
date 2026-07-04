@@ -1,0 +1,10 @@
+lithology,packer,yield_pct,phi,note
+marble_mean_g1g2g3,baseline,30.1,1.0,dense bedding/stylolites
+marble_mean_g1g2g3,volumetric,52.7,<1,dense bedding/stylolites
+marble_mean_g1g2g3,guillotine,50.6,1.0,dense bedding/stylolites
+travertine_carpinis,baseline,41.7,1.0,sparse gravitational cracks >2m
+travertine_carpinis,volumetric,55.3,<1,sparse gravitational cracks >2m
+travertine_carpinis,guillotine,51.7,1.0,sparse gravitational cracks >2m
+andesite_pietroasa,baseline,44.9,1.0,"homogeneous volcanic, widely-spaced joints"
+andesite_pietroasa,volumetric,64.6,<1,"homogeneous volcanic, widely-spaced joints"
+andesite_pietroasa,guillotine,77.8,1.0,"homogeneous volcanic, widely-spaced joints"
