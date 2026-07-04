@@ -67,6 +67,43 @@ A loose .cs file gives "Debugging C# files without a project is only supported
 for .NET 10+" and hot reload never applies. HotReloadLab.csproj was added to
 Frahan.StonePack.sln for exactly this reason.
 
+## Field log 2026-07-04 (evening): what is PROVEN and what is left
+
+PROVEN agent-side, no hands:
+- DebugMCP: attach -> breakpoint (by line content) -> inspect live SolveInstance
+  locals -> evaluate_expression in-frame -> continue. Full inspect loop works.
+- Raw streamable-HTTP driving of vscode-as-mcp-server: POST / on its port,
+  stateless (no session id). tools/call works for text_editor (skip_dialog:true
+  bypasses the confirmation), focus_editor, start_debug_session,
+  list_debug_sessions. start_debug_session workspaceFolder needs a LOWERCASE
+  drive letter ('d:\\frahan-stonepack').
+- Agent attach to Rhino via start_debug_session: works (Debugger.IsAttached
+  confirmed in-process).
+
+NOT yet green - the hot-reload APPLY on an attach session:
+- Symptom: "Document ... not found in AST tracker" (renderer.log) on every
+  apply; the save handler runs but the C# Dev Kit change tracker never ingests
+  the document - not for external disk edits, not for text_editor
+  (WorkspaceEdit) edits followed by a save.
+- Runtime side is ready: Rhino runs with DOTNET_MODIFIABLE_ASSEMBLIES=debug
+  (via router env + user shortcut).
+- NEXT DECISIVE TEST: during a visible F5 attach session, a HUMAN types an edit
+  in the editor and saves. If the apply works -> tracker ingests only real
+  typing events; agent path = typed-edit emulation or tracker API. If it fails
+  -> VS Code C# hot reload does not support attach in this setup; use
+  launch-mode (below) or a custom in-process MetadataUpdater harness.
+- Launch-mode gotcha: Rhino.exe is a RE-EXEC SHIM - 'request: launch' binds the
+  parent, which exits after spawning the real Rhino -> session terminates (the
+  child survives and hits the license dialog). Try launching with the runtime
+  flag (e.g. args '/netcore') to avoid the respawn, or launch + auto-attach to
+  the child.
+- text_editor quirk: writes go to the BUFFER (unsaved); its str_replace matching
+  reads DISK - a second replace against unsaved text reports 'not found'. Save
+  between dependent edits (focus_editor + Ctrl+S via SendKeys).
+- Two-window port split (user setting, frahan workspace): mcpServer.port 60101,
+  debugmcp.serverPort 3002; code_ws window keeps 60100/3001. frahan/.mcp.json
+  points debugmcp at 3002.
+
 ## MCP coexistence rules (audited 2026-07-04, no conflicts)
 
 Six servers in `D:\code_ws\.mcp.json`: rhino (router, slots on 10500),

@@ -1,5 +1,7 @@
 {
   "dotnet.defaultSolution": "Frahan.StonePack.sln",
+  "mcpServer.port": 60101,
+  "debugmcp.serverPort": 3002,
   "csharp.experimental.debug.hotReload": true,
   "csharp.debug.hotReloadOnSave": true,
   "csharp.debug.hotReloadVerbosity": "detailed",
