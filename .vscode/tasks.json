@@ -1,0 +1,98 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Frahan.StonePack.sln",
+        "-c",
+        "Debug",
+        "/p:DebugType=portable",
+        "/p:DebugSymbols=true"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "build-release",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Frahan.StonePack.sln",
+        "-c",
+        "Release"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "deploy",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-File",
+        "${workspaceFolder}/install/deploy.ps1"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "dependsOn": "build-release"
+    },
+    {
+      "label": "build-deploy",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}'; dotnet build src/Frahan.StonePack.GH/Frahan.StonePack.GH.csproj -c Release -nologo; pwsh -File install/stage.ps1; pwsh -File install/deploy.ps1"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "build-hotlab",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/dev/HotReloadLab/HotReloadLab.csproj",
+        "-c",
+        "Debug",
+        "-nologo"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "build-native-tna",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-File",
+        "${workspaceFolder}/native/tna_solver/build_native.ps1"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "build-native-lapjv",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-File",
+        "${workspaceFolder}/native/lapjv_shim/build_native.ps1"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

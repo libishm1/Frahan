@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Rhino 8",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "Rhino",
+      "justMyCode": false,
+      "symbolOptions": {
+        "searchMicrosoftSymbolServer": false,
+        "searchNuGetSymbolServer": false
+      },
+      "suppressJITOptimizations": true
+    },
+    {
+      "name": "Build + Attach to Rhino 8",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "Rhino",
+      "justMyCode": false,
+      "suppressJITOptimizations": true,
+      "preLaunchTask": "build-deploy"
+    }
+  ]
+}

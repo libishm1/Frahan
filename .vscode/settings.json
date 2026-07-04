@@ -1,0 +1,16 @@
+{
+  "dotnet.defaultSolution": "Frahan.StonePack.sln",
+  "csharp.experimental.debug.hotReload": true,
+  "csharp.debug.hotReloadOnSave": true,
+  "csharp.debug.hotReloadVerbosity": "detailed",
+  "editor.formatOnSave": true,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.useModernNet": false,
+  "omnisharp.path": "latest",
+  "omnisharp.sdkPath": "C:\\Program Files\\dotnet",
+  "csharp.suppressDotnetRestoreNotification": true,
+  "files.exclude": {
+    "**/bin": false,
+    "**/obj": true
+  }
+}
