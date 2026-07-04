@@ -103,8 +103,17 @@ namespace Frahan.Masonry.Solvers
 
             // OSQP status values: 1=SOLVED, 2=SOLVED_INACCURATE, -3=PRIMAL_INF,
             // -4=DUAL_INF, -7=NON_CVX.
-            if (statusVal == 1 || statusVal == 2)
+            // status 1 = SOLVED to the requested tolerance -> Optimal (certifiable).
+            if (statusVal == 1)
                 return new ConvexQpResult(ConvexQpStatus.Optimal, xOut, objOut, msgStr);
+            // status 2 = SOLVED_INACCURATE: converged only to a loose tolerance. Reporting
+            // this as Optimal certifies STABLE from a non-converged solve (false positive on
+            // ill-conditioned assemblies). Return Inaccurate so the stability checkers, which
+            // require Optimal, do NOT certify -- they fall back / report non-stable instead.
+            if (statusVal == 2)
+                return new ConvexQpResult(ConvexQpStatus.Inaccurate, xOut, objOut,
+                    (string.IsNullOrEmpty(msgStr) ? "" : msgStr + " ") +
+                    "[OSQP SOLVED_INACCURATE: loose tolerance only; not certified]");
             if (statusVal == -3)
                 return new ConvexQpResult(ConvexQpStatus.Infeasible, null, 0, msgStr);
             if (statusVal == -4)
