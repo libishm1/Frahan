@@ -280,7 +280,12 @@ public sealed class IrregularSheetFillNfpBlf
 
             // Obstacles: holes (always) + placed parts whose reach can hit the IFP.
             var ifpBox = LoopsBounds(ifp);
-            var reach  = Math.Max(rot.W, rot.H);
+            // reach must be in SCALED space: rot.W/H are model-space extents (= (max-min)/Scale,
+            // see RotPart), but ifpBox and pp.Max/Min below are scaled (x Scale). Comparing a
+            // model-space reach against scaled coords understates it ~1000x, so the cull drops
+            // placed parts from the obstacle set, their NFP is never subtracted, and a BL vertex
+            // can land inside a placed part -> real overlap (worst in the default no-verify ctor).
+            var reach  = Math.Max(rot.W, rot.H) * Scale;
             var obstacles = new List<List<(double X, double Y)>>();
             foreach (var hole in sheet.HolesScaled)
             {
