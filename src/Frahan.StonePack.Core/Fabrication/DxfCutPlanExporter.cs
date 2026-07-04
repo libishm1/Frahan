@@ -9,12 +9,13 @@ using Rhino.Geometry;
 namespace Frahan.Core.Fabrication;
 
 // =============================================================================
-// DxfCutPlanExporter -- writes a minimal, CAM-readable ASCII DXF (AutoCAD R2000)
-// of a stone cut plan: one LWPOLYLINE per cut profile on a per-piece LAYER, plus
-// a TEXT label. DXF is the lingua franca every stone CAM ingests (ALPHACAM, DDX
-// EasySTONE, Breton, Intermac), so this is the pre-CAM handoff: Frahan owns the
-// stone logic (which cut, order, kerf, block id) and hands a clean, layered DXF
-// to the machine's own CAM instead of trying to be the CAM.
+// DxfCutPlanExporter -- writes a minimal, CAM-readable ASCII DXF (AutoCAD R12 /
+// AC1009) of a stone cut plan: one POLYLINE per cut profile on a per-piece LAYER,
+// plus a TEXT label. DXF R12 is the lingua franca every stone CAM ingests
+// (ALPHACAM, DDX EasySTONE, Breton, Intermac) AND every strict ODA-based reader
+// (Rhino) opens without the full R2000 symbol-table set. The pre-CAM handoff:
+// Frahan owns the stone logic (which cut, order, kerf, block id) and hands a
+// clean, layered DXF to the machine's own CAM instead of trying to be the CAM.
 //
 // WriteCutPlan additionally lays down a MASON-READABLE CUTTING SCHEDULE on its own
 // layers so a yard/site crew (not just a CAM operator) can work from the sheet:
@@ -26,12 +27,13 @@ namespace Frahan.Core.Fabrication;
 // title are anchored below the nested pieces; cut lines are drawn as supplied
 // (feed them in the same frame as the profiles, best with Flatten nest = false).
 //
-// This is a thin INTERFACE, not a CAD kernel: LWPOLYLINE + LINE + TEXT + LAYER
+// This is a thin INTERFACE, not a CAD kernel: POLYLINE + LINE + TEXT + LAYER
 // only. Pure managed string + file IO (Rhino value types only), headless-unit-
 // testable. STEP/IGES solids go through Rhino's native File > Export.
 //
-// Reference: AutoCAD DXF Reference (LWPOLYLINE 90/70/10/20; LINE 10/20/11/21;
-// TEXT 40/1; LAYER table 2/62/6). ALPHACAM/EasySTONE DXF import (research 2026-07).
+// Reference: AutoCAD DXF Reference R12 (POLYLINE 66/70 + VERTEX 10/20 + SEQEND;
+// LINE 10/20/11/21; TEXT 40/1; LAYER table 2/62/6). ALPHACAM/EasySTONE DXF
+// import (research 2026-07). Verified: Rhino 8 -Import round-trip 2026-07-04.
 // =============================================================================
 
 public static class DxfCutPlanExporter
@@ -141,11 +143,13 @@ public static class DxfCutPlanExporter
         if (hasFractures) { overlayNames.Add(LFractures); overlayColors.Add(30); } // orange
 
         var sb = new StringBuilder();
-        // ---- HEADER (minimal, declares R2000 so LWPOLYLINE is valid) ----
+        // ---- HEADER ----
+        // R12 (AC1009) on purpose: it is the one DXF dialect every reader accepts with a
+        // minimal TABLES section. AC1015 (R2000) requires the full symbol-table set
+        // (LTYPE/STYLE/APPID/BLOCK_RECORD/BLOCKS/OBJECTS) or ODA-based importers - Rhino
+        // included - refuse the file with "Missing Symbol Table" (hit 2026-07-04).
         W(sb, 0, "SECTION"); W(sb, 2, "HEADER");
-        W(sb, 9, "$ACADVER"); W(sb, 1, "AC1015");
-        W(sb, 9, "$INSUNITS"); W(sb, 70, units == "mm" ? "4" : "6");   // 4 mm, 6 m (informational)
-        W(sb, 9, "$HANDSEED"); W(sb, 5, "FFFF");
+        W(sb, 9, "$ACADVER"); W(sb, 1, "AC1009");
         W(sb, 0, "ENDSEC");
         // ---- TABLES (LAYER) ----
         W(sb, 0, "SECTION"); W(sb, 2, "TABLES");
@@ -165,7 +169,6 @@ public static class DxfCutPlanExporter
         // ---- ENTITIES ----
         W(sb, 0, "SECTION"); W(sb, 2, "ENTITIES");
         int written = 0;
-        int handle = 0x100;
 
         // overall extent of the pieces (anchor for the title + schedule table)
         double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
@@ -180,19 +183,16 @@ public static class DxfCutPlanExporter
             int nv = closed ? pl.Count - 1 : pl.Count;   // drop duplicate closing vertex
             if (nv < 2) continue;
 
-            W(sb, 0, "LWPOLYLINE"); W(sb, 5, (handle++).ToString("X", CI));
-            W(sb, 100, "AcDbEntity"); W(sb, 8, San(layer)); W(sb, 100, "AcDbPolyline");
-            W(sb, 90, nv.ToString(CI)); W(sb, 70, closed ? "1" : "0");
+            AppendPolyline(sb, San(layer), pl, nv, closed);
             for (int v = 0; v < nv; v++)
             {
-                W(sb, 10, pl[v].X.ToString("0.######", CI)); W(sb, 20, pl[v].Y.ToString("0.######", CI));
                 if (pl[v].X < minX) minX = pl[v].X; if (pl[v].X > maxX) maxX = pl[v].X;
                 if (pl[v].Y < minY) minY = pl[v].Y; if (pl[v].Y > maxY) maxY = pl[v].Y;
             }
 
             // label at centroid
             var c = Centroid(pl, nv);
-            AppendText(sb, ref handle, San(layer), c.X, c.Y, textHeight, San(layer));
+            AppendText(sb, San(layer), c.X, c.Y, textHeight, San(layer));
             written++;
         }
 
@@ -205,11 +205,7 @@ public static class DxfCutPlanExporter
                 bool trClosed = tr.Count >= 3 && tr[0].DistanceTo(tr[tr.Count - 1]) < 1e-9;
                 int tn = trClosed ? tr.Count - 1 : tr.Count;
                 if (tn < 2) continue;
-                W(sb, 0, "LWPOLYLINE"); W(sb, 5, (handle++).ToString("X", CI));
-                W(sb, 100, "AcDbEntity"); W(sb, 8, LFractures); W(sb, 100, "AcDbPolyline");
-                W(sb, 90, tn.ToString(CI)); W(sb, 70, trClosed ? "1" : "0");
-                for (int v = 0; v < tn; v++)
-                { W(sb, 10, tr[v].X.ToString("0.######", CI)); W(sb, 20, tr[v].Y.ToString("0.######", CI)); }
+                AppendPolyline(sb, LFractures, tr, tn, trClosed);
             }
         }
 
@@ -220,12 +216,12 @@ public static class DxfCutPlanExporter
             {
                 var ln = cutLines[i];
                 if (!ln.IsValid || ln.Length < 1e-9) continue;
-                AppendLine(sb, ref handle, LCutSeq, ln.FromX, ln.FromY, ln.ToX, ln.ToY);
+                AppendLine(sb, LCutSeq, ln.FromX, ln.FromY, ln.ToX, ln.ToY);
                 string lab = (cutLabels != null && i < cutLabels.Count && !string.IsNullOrWhiteSpace(cutLabels[i]))
                     ? cutLabels[i] : (i + 1).ToString(CI);
                 double mx = 0.5 * (ln.FromX + ln.ToX);
                 double my = 0.5 * (ln.FromY + ln.ToY);
-                AppendText(sb, ref handle, LCutSeq, mx, my, textHeight, lab);
+                AppendText(sb, LCutSeq, mx, my, textHeight, lab);
             }
         }
 
@@ -239,9 +235,9 @@ public static class DxfCutPlanExporter
 
             if (hasTitle)
             {
-                AppendText(sb, ref handle, LTitle, x0, y, th * 1.6, title.ToUpperInvariant());
+                AppendText(sb, LTitle, x0, y, th * 1.6, title.ToUpperInvariant());
                 y -= th * 1.6 * 1.8;
-                AppendText(sb, ref handle, LTitle, x0, y, th * 0.9, "units: " + units +
+                AppendText(sb, LTitle, x0, y, th * 0.9, "units: " + units +
                     "   (SCHEDULE = cut list, CUT_SEQUENCE = saw order" + (hasFractures ? ", FRACTURES = bed/flaw traces)" : ")"));
                 y -= th * 2.2;
             }
@@ -251,7 +247,7 @@ public static class DxfCutPlanExporter
                 var rows = schedule != null && schedule.Count > 0
                     ? new List<CutScheduleRow>(schedule)
                     : AutoScheduleFromProfiles(profiles, ids);
-                AppendScheduleTable(sb, ref handle, LSchedule, x0, y, th, units, rows);
+                AppendScheduleTable(sb, LSchedule, x0, y, th, units, rows);
             }
         }
 
@@ -266,7 +262,7 @@ public static class DxfCutPlanExporter
         if (hasCuts) extra.Append($" + {cutLines.Count} numbered cut line(s)");
         if (hasFractures) extra.Append($" + {fractureTraces.Count} fracture trace(s)");
         if (hasTitle) extra.Append(" + title");
-        report = $"Wrote {written} profile(s) on {layerOrder.Count} piece layer(s){extra} to {Path.GetFileName(path)} (DXF R2000).";
+        report = $"Wrote {written} profile(s) on {layerOrder.Count} piece layer(s){extra} to {Path.GetFileName(path)} (DXF R12).";
         return true;
     }
 
@@ -333,7 +329,7 @@ public static class DxfCutPlanExporter
 
     // Draw a boxed cut list: header + one row per piece group, with a LINE grid.
     private static void AppendScheduleTable(
-        StringBuilder sb, ref int handle, string layer,
+        StringBuilder sb, string layer,
         double x0, double yTop, double th, string units, IReadOnlyList<CutScheduleRow> rows)
     {
         // column layout (widths in model units)
@@ -350,12 +346,12 @@ public static class DxfCutPlanExporter
         double yBot = yTop - nRow * rowH;
 
         // grid: outer border + row/col separators
-        for (int r = 0; r <= nRow; r++) AppendLine(sb, ref handle, layer, cx[0], yTop - r * rowH, cx[nCol], yTop - r * rowH);
-        for (int c = 0; c <= nCol; c++) AppendLine(sb, ref handle, layer, cx[c], yTop, cx[c], yBot);
+        for (int r = 0; r <= nRow; r++) AppendLine(sb, layer, cx[0], yTop - r * rowH, cx[nCol], yTop - r * rowH);
+        for (int c = 0; c <= nCol; c++) AppendLine(sb, layer, cx[c], yTop, cx[c], yBot);
 
         // header text
         for (int c = 0; c < nCol; c++)
-            AppendText(sb, ref handle, layer, cx[c] + pad, yTop - rowH + pad, th * 0.85, hdr[c]);
+            AppendText(sb, layer, cx[c] + pad, yTop - rowH + pad, th * 0.85, hdr[c]);
 
         // rows
         for (int i = 0; i < rows.Count; i++)
@@ -365,30 +361,40 @@ public static class DxfCutPlanExporter
             string size = r.Depth > 0
                 ? $"{F(r.Width)} x {F(r.Height)} x {F(r.Depth)}"
                 : $"{F(r.Width)} x {F(r.Height)}";
-            AppendText(sb, ref handle, layer, cx[0] + pad, yr, th * 0.8, (i + 1).ToString(CI));
-            AppendText(sb, ref handle, layer, cx[1] + pad, yr, th * 0.8, San(string.IsNullOrWhiteSpace(r.Id) ? "piece" : r.Id));
-            AppendText(sb, ref handle, layer, cx[2] + pad, yr, th * 0.8, size);
-            AppendText(sb, ref handle, layer, cx[3] + pad, yr, th * 0.8, (r.Qty > 0 ? r.Qty : 1).ToString(CI));
-            AppendText(sb, ref handle, layer, cx[4] + pad, yr, th * 0.8, San(string.IsNullOrWhiteSpace(r.Op) ? "saw" : r.Op));
+            AppendText(sb, layer, cx[0] + pad, yr, th * 0.8, (i + 1).ToString(CI));
+            AppendText(sb, layer, cx[1] + pad, yr, th * 0.8, San(string.IsNullOrWhiteSpace(r.Id) ? "piece" : r.Id));
+            AppendText(sb, layer, cx[2] + pad, yr, th * 0.8, size);
+            AppendText(sb, layer, cx[3] + pad, yr, th * 0.8, (r.Qty > 0 ? r.Qty : 1).ToString(CI));
+            AppendText(sb, layer, cx[4] + pad, yr, th * 0.8, San(string.IsNullOrWhiteSpace(r.Op) ? "saw" : r.Op));
         }
     }
 
-    // ---------- entity helpers ----------
+    // ---------- entity helpers (R12: no handles, no subclass markers) ----------
     private static void W(StringBuilder sb, int code, string val)
     { sb.Append(code.ToString(CI)); sb.Append('\n'); sb.Append(val); sb.Append('\n'); }
 
-    private static void AppendText(StringBuilder sb, ref int handle, string layer, double x, double y, double h, string text)
+    // Classic POLYLINE + VERTEX + SEQEND (the R12 polyline; LWPOLYLINE needs R2000+).
+    private static void AppendPolyline(StringBuilder sb, string layer, Polyline pl, int nv, bool closed)
     {
-        W(sb, 0, "TEXT"); W(sb, 5, (handle++).ToString("X", CI));
-        W(sb, 100, "AcDbEntity"); W(sb, 8, San(layer)); W(sb, 100, "AcDbText");
+        W(sb, 0, "POLYLINE"); W(sb, 8, layer); W(sb, 66, "1"); W(sb, 70, closed ? "1" : "0");
+        for (int v = 0; v < nv; v++)
+        {
+            W(sb, 0, "VERTEX"); W(sb, 8, layer);
+            W(sb, 10, pl[v].X.ToString("0.######", CI)); W(sb, 20, pl[v].Y.ToString("0.######", CI)); W(sb, 30, "0");
+        }
+        W(sb, 0, "SEQEND"); W(sb, 8, layer);
+    }
+
+    private static void AppendText(StringBuilder sb, string layer, double x, double y, double h, string text)
+    {
+        W(sb, 0, "TEXT"); W(sb, 8, San(layer));
         W(sb, 10, x.ToString("0.######", CI)); W(sb, 20, y.ToString("0.######", CI)); W(sb, 30, "0");
         W(sb, 40, h.ToString("0.######", CI)); W(sb, 1, text);
     }
 
-    private static void AppendLine(StringBuilder sb, ref int handle, string layer, double x1, double y1, double x2, double y2)
+    private static void AppendLine(StringBuilder sb, string layer, double x1, double y1, double x2, double y2)
     {
-        W(sb, 0, "LINE"); W(sb, 5, (handle++).ToString("X", CI));
-        W(sb, 100, "AcDbEntity"); W(sb, 8, San(layer)); W(sb, 100, "AcDbLine");
+        W(sb, 0, "LINE"); W(sb, 8, San(layer));
         W(sb, 10, x1.ToString("0.######", CI)); W(sb, 20, y1.ToString("0.######", CI)); W(sb, 30, "0");
         W(sb, 11, x2.ToString("0.######", CI)); W(sb, 21, y2.ToString("0.######", CI)); W(sb, 31, "0");
     }

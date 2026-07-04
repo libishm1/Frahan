@@ -24,8 +24,8 @@ namespace Frahan.GH.Fabrication;
 // a clean layered DXF to the machine's own CAM.
 // =============================================================================
 
-[Algorithm("DXF cut-plan export", "Minimal AutoCAD R2000 DXF (LWPOLYLINE + LINE + TEXT + LAYER); the universal stone-CAM import",
-    Note = "Thin interface, not a CAM engine. Flatten + shelf-nest to a 2D cut sheet optional.")]
+[Algorithm("DXF cut-plan export", "Minimal AutoCAD R12 DXF (POLYLINE + LINE + TEXT + LAYER); the universal stone-CAM import",
+    Note = "Thin interface, not a CAM engine. R12 on purpose: opens in strict ODA readers (Rhino) AND every CAM. Flatten + shelf-nest optional.")]
 [Algorithm("Mason cutting schedule", "Title block + cut-list/BOM table (piece / size / qty / op) + numbered saw passes on TITLE/SCHEDULE/CUT_SEQUENCE layers",
     Note = "For a site/yard crew reading the sheet, not just the CAM. Table auto-groups identical pieces; feed Sizes for L x W x H.")]
 [RelatedComponent("Frahan > Fabricate > Cut Orientation", Reason = "Its cut rectangles/profiles feed straight into this export.")]
