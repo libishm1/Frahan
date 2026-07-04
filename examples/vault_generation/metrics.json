@@ -1,0 +1,53 @@
+{
+  "schema": "frahan-vault-metrics/1",
+  "validated": "2026-07-02..03",
+  "solver": {
+    "method": "penalty-RBE QP (CRA, Kao 2022), friction pyramid K=8, mu 0.84, density 2400 kg/m^3",
+    "backend": "native OSQP + sparse managed ADMM; out-of-process frahan_cra_worker above ~300 blocks"
+  },
+  "certificates": [
+    {
+      "case": "three_prong_staggered_cra (hub keystone)",
+      "blocks": 150, "interfaces": 393,
+      "stable": true, "status": "Optimal"
+    },
+    {
+      "case": "three_prong_staggered_cra (hub split wedges)",
+      "blocks": 171, "interfaces": 478,
+      "stable": true, "status": "Optimal"
+    },
+    {
+      "case": "guell_barrel_shell (columns cut, whole boundary supported)",
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 5980, "frictionUtil": 0.92, "tensionN": 0
+    },
+    {
+      "case": "guell_barrel_shell (springing + wall supported)",
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 8058, "frictionUtil": 1.08, "tensionN": 1.6
+    },
+    {
+      "case": "guell_portico_full (WITH 7 leaning single-pier columns)",
+      "stable": false, "status": "SolverError",
+      "note": "infeasible at every thickness 0.28/0.40/0.50, mesh density c3/c5, and trim (8+ runs). The columns, not the shell, are the infeasibility source. Design lever = lean-to-thrust / multi-block piers / steel cores (Vault Steel Ties)."
+    },
+    {
+      "case": "funicular_barrel (live whole-shell CRA capture, 2026-07-04)",
+      "blocks": 132, "interfaces": 241, "supports": 24,
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 5135, "frictionUtil": 0.05, "solveMs": 359
+    }
+  ],
+  "open_scale_item": {
+    "case": "whole-Guell 3159-stone rubble CRA",
+    "status": "not yet certified",
+    "blocker": "LS-dual step is a dense meq^2 Cholesky (fine to ~3k rows); the 3159-stone assembly needs a SPARSE dual before it certifies at full skin resolution",
+    "note": "the compiled 3159-mould geometry (guell_rubble_COMPILED_v001.gh) is the FORM; the STRUCTURE is certified on the coarse thrust-quad shell + the three-prong."
+  },
+  "recipes": {
+    "guell": { "dV": 0.26, "dC": 0.18 },
+    "three_prong": { "dV": 0.15, "dC": 0.12, "basis": "span/30" },
+    "common": { "shrink": 0.92, "seed": 18, "overfill": 1.16, "poolAR": 2.2, "mu": 0.84, "K": 8, "density": 2400 },
+    "thrust_quad_remesh": { "coarseness_examples": { "1": 7283, "1.5": 3297, "2": 1879, "5": 450 }, "alpha": 0.05 }
+  }
+}
