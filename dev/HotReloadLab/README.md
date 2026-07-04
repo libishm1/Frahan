@@ -67,6 +67,29 @@ A loose .cs file gives "Debugging C# files without a project is only supported
 for .NET 10+" and hot reload never applies. HotReloadLab.csproj was added to
 Frahan.StonePack.sln for exactly this reason.
 
+## MCP coexistence rules (audited 2026-07-04, no conflicts)
+
+Six servers in `D:\code_ws\.mcp.json`: rhino (router, slots on 10500),
+grasshopper (bridge on 8080), context7 + anki (remote HTTP), vscode
+(vscode-as-mcp-server, extension port 60100), debugmcp (DebugMCP, HTTP
+localhost:3001). Port map is disjoint; MCP tool names are namespaced per
+server (mcp__vscode__*, mcp__debugmcp__*) so no collisions are possible.
+The FUNCTIONAL rules that keep them from stepping on each other:
+
+1. ONE debugger per process. Only DebugMCP starts/stops/restarts debug
+   sessions (`start_debugging`, breakpoints, stepping, `evaluate_expression`).
+   vscode-as-mcp-server is for `execute_vscode_command` / `text_editor` /
+   hot-reload apply / `code_checker` - never for session lifecycle.
+2. NEVER call mcp__rhino__* tools while stopped at a breakpoint - Rhino's
+   UI thread is frozen and run_csharp/g1/capture calls hang until timeout.
+   `continue_execution` first, then drive the canvas.
+3. One writer at a time: during an attached session edit source via the
+   vscode `text_editor` tool (its save events fire hotReloadOnSave); direct
+   disk edits are for non-debug work.
+4. DebugMCP auto-starts its HTTP server with VS Code; vscode-as-mcp-server
+   needs the status-bar toggle. If port 3001/60100 is ever taken, both are
+   configurable (debugmcp.serverPort / mcpServer.port).
+
 ## Applying this to Frahan.StonePack
 
 Frahan targets net48 (loads fine on Rhino 8's CoreCLR as a compatibility
