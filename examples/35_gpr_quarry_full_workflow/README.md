@@ -76,10 +76,15 @@ recomputed from the 8 `.DT` radargrams on open; nothing is typed in.
 3. **Fracture Bounded Slabs -> Fracture Block Pack (Packer 5 = staged wire-saw guillotine)** - packs
    the ENTIRE 7 x 4 x 4.4 m fracture-bounded bench: **463 blocks (0.9 x 0.7 x 0.4 m), 83.3 m^3
    recovered, 67.4% overall yield, 100% guillotine-separable** across 4 bed-bounded bins.
-4. **DXF Cut Plan** - writes the mason sheet `quarry_fab_cutplan.dxf`: bench outline, the cut-list /
-   BOM table for the selected bin, and the bin's **numbered saw passes on CUT_SEQUENCE** (from the
-   pack's new `Saw passes` output: distinct kerf centre-lines recovered from the placed block faces,
-   X rips then Y cross-cuts). Pick the level with the `Saw sheet bin` slider; one bin per sheet.
+4. **Block Face Map -> DXF Cut Plan** - the fabricator sheet `quarry_fab_cutplan.dxf`. Block Face
+   Map cross-unfolds the bench faces (PLAN + 4 elevations) and maps onto every face the **bed traces**
+   (mesh-plane sections of the kriged fractures, on the orange FRACTURES layer) and the **saw passes**
+   (plan passes keep their saw-sequence numbers on CUT_SEQUENCE; the elevation views show where each
+   pass crosses each face). The bin's cut-list / BOM table completes the sheet. Pick the level with
+   the `Saw sheet bin` slider; one bin per sheet. Bed traces stop where the GPR pick hull stops -
+   the sheet shows exactly what the survey supports.
+
+   ![Unfolded face map](quarry_fab_facemap.jpg)
 5. **COMPAS Export** - `quarry_fab_blocks_compas.json` + `frahan_compas_loader.py` with all 463 blocks.
 
 `Write DXF` / `Write COMPAS` toggles ship OFF (dry run). Shipped artifacts were written from the live
