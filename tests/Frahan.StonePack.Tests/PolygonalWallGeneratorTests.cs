@@ -127,6 +127,31 @@ static class MasonryStabilityCheckerTests
             throw new Exception("a floating block must not be reported stable");
     }
 
+    // Scale-invariance pin for the degenerate-block guard. A zero-volume (flat /
+    // coplanar) FREE block has no self-weight, so it "balances" trivially and would
+    // earn a SILENT false-'stable' verdict — the exact hazard a raw scan-rubble
+    // feeder hits. The guard must reject it REGARDLESS of the coordinate scale,
+    // including GEOREFERENCED input (UTM-magnitude coordinates, ~1e5). The absolute
+    // |V| < 1e-12 floor holds here because a flat box has COINCIDENT top/bottom
+    // vertices, so the divergence-theorem sum cancels to EXACTLY 0 in IEEE
+    // arithmetic at any magnitude — no roundoff drift. This test locks that in: if a
+    // future change to the volume math or the guard breaks it, the UTM case catches it.
+    public static void DegenerateFlatBlock_RejectedAtAnyScale()
+    {
+        foreach (double S in new[] { 1.0, 1.0e5 })
+        {
+            Box(0, 0, 0.0, 1 * S, 1 * S, 0.5 * S, out var c0, out var t0); // ground (fixed)
+            Box(0, 0, 0.5 * S, 1 * S, 1 * S, 0.5 * S, out var c1, out var t1); // FLAT: z1 == z0 => |V| = 0
+            var r = Frahan.Masonry.Solvers.MasonryStabilityChecker.CheckMeshes(
+                new[] { (IReadOnlyList<double>)c0, c1 },
+                new[] { (IReadOnlyList<int>)t0, t1 });
+            if (r.IsStable)
+                throw new Exception(
+                    $"S={S:0.0e0}: a zero-volume (flat) free block must NOT be certified stable " +
+                    $"(degenerate-block guard); got {r.Status}: {r.Message}");
+        }
+    }
+
     public static void CantileverBeyondSupport_IsUnstable()
     {
         // Support occupies x in [0,1]; the top box sits on the strip x in

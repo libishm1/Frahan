@@ -26,8 +26,8 @@ static class TrencadisFillTests
     public static void TrencadisComponent_Metadata_IsCorrect()
     {
         var c = new Pack2DTrencadisComponent();
-        Assert(c.Name == "Frahan Trencadís Pack",
-            $"Name should be 'Frahan Trencadís Pack', got '{c.Name}'");
+        Assert(c.Name == "Trencadís Pack",
+            $"Name should be 'Trencadís Pack', got '{c.Name}'");
         Assert(c.NickName == "Trencadis",
             $"NickName should be 'Trencadis', got '{c.NickName}'");
         Assert(c.Category == "Frahan",

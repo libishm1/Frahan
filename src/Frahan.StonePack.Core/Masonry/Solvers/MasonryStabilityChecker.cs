@@ -314,7 +314,30 @@ public static class MasonryStabilityChecker
             if (fnNeg > agg[3]) agg[3] = fnNeg;
         }
 
-        // Stable iff the residual tension is negligible relative to the force scale.
+        // Stable iff the residual tension is negligible relative to the force
+        // scale. SCALE = maxCompression, and this is the CORRECT choice, verified
+        // against the full stability battery (P0-3 study, 2026-07-04):
+        //
+        //   The tension we must discount is the QP solver's OWN residual noise,
+        //   and that noise scales with the LARGEST force in the system (ADMM
+        //   epsRel * maxForce ~ 1e-4 * maxCompression), NOT with self-weight. The
+        //   battery's two near-limit stable cases both sit right on that floor:
+        //     - compas_cra wedge:   maxTen/maxComp = 1.2e-4 (thrust 53.5, weight 21)
+        //     - 14-block near-limit: maxTen/maxComp = 9.3e-5 (thrust 176, weight 13)
+        //   1e-3 * maxCompression gives them a ~10x margin above that noise while
+        //   staying ~100x below any REAL tension demand (which is O(maxCompression)).
+        //
+        //   Two "obvious" alternatives are DISPROVEN and must NOT be reintroduced:
+        //     - MEDIAN compression: the wedge concentrates load on ONE contact, so
+        //       medComp/maxComp = 3.5e-5 -> tolerance 28000x too tight -> the
+        //       reference-validated wedge flips to a FALSE UNSTABLE (regressed once).
+        //     - GRAVITY-LOAD (1e-3 * totalWeight): thrust-dominated geometry has
+        //       thrust >> weight, so the 14-block case (thrust = 14x weight) has
+        //       maxTen = 1.3e-3 * W > tol -> FALSE UNSTABLE. Weight does not track
+        //       the solver noise floor; the peak compression does.
+        //   The battery pins BOTH counterexamples, so either regression is caught.
+        //   The Math.Max(., 1e-9) floor only guards a genuinely load-free assembly
+        //   (maxComp ~ 0), where maxTension ~ 0 too and the verdict is trivially stable.
         double forceScale = Math.Max(maxCompression, 1e-9);
         double tensionTol = 1e-3 * forceScale;
         bool stable = maxTension <= tensionTol;

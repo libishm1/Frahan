@@ -323,6 +323,7 @@ var tests = new List<(string Name, Action Body)>
     ("wallgen size grading widens area distribution", PolygonalWallGeneratorTests.Generate_SizeGradingIncreasesAreaSpread),
     ("stability two-box stack is stable", MasonryStabilityCheckerTests.TwoBoxStack_IsStable),
     ("stability floating block is unstable", MasonryStabilityCheckerTests.FloatingBlock_IsUnstable),
+    ("stability degenerate flat block rejected at any scale", MasonryStabilityCheckerTests.DegenerateFlatBlock_RejectedAtAnyScale),
     ("stability cantilever beyond support is unstable", MasonryStabilityCheckerTests.CantileverBeyondSupport_IsUnstable),
     ("stability inscribed friction shrinks mu by cos(pi/K)", MasonryStabilityCheckerTests.InscribedFriction_ShrinksMuByCosPiOverK),
     ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
