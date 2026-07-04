@@ -41,17 +41,31 @@ revision to AssemblyInformationalVersion each build; this project pins
 
 ## Agent-harness protocol
 
-The human starts ONE attach session (F5) and leaves it running. After that the
-agent loop per iteration is:
+FULLY AGENT-DRIVEN via the `vscode-as-mcp-server` extension
+(acomagu.vscode-as-mcp-server, installed 2026-07-04; registered as the `vscode`
+server in `D:\code_ws\.mcp.json` via `C:\Program Files\nodejs\npx.cmd
+vscode-as-mcp-server`). Requires: VS Code open on `D:\frahan-stonepack`, the
+extension's MCP server started (status bar icon), and a Claude Code session
+restart after first registration. The loop:
 
-1. Agent edits the component source (Edit tool) - file save triggers the
-   VS Code hot-reload apply automatically.
-2. Agent re-solves and reads outputs via Rhino MCP `run_csharp`
-   (`doc.NewSolution(true)` + read `VolatileData`), or asks the human to eyeball
-   the canvas.
+1. `start_debug_session` with the "Attach to Rhino 8" configuration (or
+   `execute_vscode_command` -> `workbench.action.debug.start`). Once per session.
+2. Agent edits the component source with the `text_editor` tool - edits go
+   through VS Code, so the save event fires `csharp.debug.hotReloadOnSave` and
+   the delta applies to the RUNNING Rhino. (Plain disk writes are seen as
+   external changes and may NOT trigger the apply - use `text_editor`, or
+   `execute_vscode_command` with the hot-reload apply command; discover its id
+   via `list_vscode_commands`.)
+3. Agent re-solves and reads outputs via Rhino MCP `run_csharp`
+   (`doc.NewSolution(true)` + read `VolatileData`).
 
 No build, no deploy, no restart per iteration. Restart only on signature /
-ribbon changes.
+ribbon changes (rude edits).
+
+GOTCHA (hit live 2026-07-04): the project MUST be in the loaded solution.
+A loose .cs file gives "Debugging C# files without a project is only supported
+for .NET 10+" and hot reload never applies. HotReloadLab.csproj was added to
+Frahan.StonePack.sln for exactly this reason.
 
 ## Applying this to Frahan.StonePack
 
