@@ -184,11 +184,19 @@ public static class GeogramMesh
             throw new InvalidOperationException($"Geogram decimate_mesh failed (rc={rc}): {err}");
         }
 
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        FreeAll(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            FreeAll(outV, outT);
+        }
 
         return new MeshSnapshot(rv, rt);
     }
@@ -224,11 +232,19 @@ public static class GeogramMesh
             FreeAll(outV, outT);
             throw new InvalidOperationException($"Geogram repair_mesh failed (rc={rc}): {err}");
         }
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        FreeAll(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            FreeAll(outV, outT);
+        }
         return new MeshSnapshot(rv, rt);
     }
 
@@ -267,11 +283,19 @@ public static class GeogramMesh
             FreeAll(outV, outT);
             throw new InvalidOperationException($"Geogram fill_holes failed (rc={rc}): {err}");
         }
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        FreeAll(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            FreeAll(outV, outT);
+        }
         return new MeshSnapshot(rv, rt);
     }
 
@@ -343,11 +367,19 @@ public static class GeogramMesh
             FreeAll(outV, outT);
             throw new InvalidOperationException($"Geogram remesh_uniform failed (rc={rc}): {err}");
         }
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        FreeAll(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            FreeAll(outV, outT);
+        }
         return new MeshSnapshot(rv, rt);
     }
 
@@ -385,11 +417,19 @@ public static class GeogramMesh
             FreeAll(outV, outTets);
             throw new InvalidOperationException($"Geogram tetrahedralize failed (rc={rc}): {err}");
         }
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 4];
-        if (outTc > 0) Marshal.Copy(outTets, rt, 0, outTc * 4);
-        FreeAll(outV, outTets);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 4];
+            if (outTc > 0) Marshal.Copy(outTets, rt, 0, outTc * 4);
+        }
+        finally
+        {
+            FreeAll(outV, outTets);
+        }
         return new TetMeshSnapshot(rv, rt);
     }
 
@@ -424,9 +464,16 @@ public static class GeogramMesh
             if (outP != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outP);
             throw new InvalidOperationException($"Geogram cvt_compute failed (rc={rc}): {err}");
         }
-        var pts = new double[outPc * 3];
-        if (outPc > 0) Marshal.Copy(outP, pts, 0, outPc * 3);
-        if (outP != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outP);
+        double[] pts;
+        try
+        {
+            pts = new double[outPc * 3];
+            if (outPc > 0) Marshal.Copy(outP, pts, 0, outPc * 3);
+        }
+        finally
+        {
+            if (outP != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outP);
+        }
         return pts;
     }
 
@@ -470,16 +517,24 @@ public static class GeogramMesh
             throw new InvalidOperationException($"Geogram rvd_compute failed (rc={rc}): {err}");
         }
 
-        var allVerts = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, allVerts, 0, outVc * 3);
-        var allTris = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, allTris, 0, outTc * 3);
-        var seedIds = new int[outIdc];
-        if (outIdc > 0) Marshal.Copy(outIds, seedIds, 0, outIdc);
-
-        if (outV   != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outV);
-        if (outT   != IntPtr.Zero) Native.frahan_geogram_free_pint(outT);
-        if (outIds != IntPtr.Zero) Native.frahan_geogram_free_pint(outIds);
+        double[] allVerts;
+        int[] allTris;
+        int[] seedIds;
+        try
+        {
+            allVerts = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, allVerts, 0, outVc * 3);
+            allTris = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, allTris, 0, outTc * 3);
+            seedIds = new int[outIdc];
+            if (outIdc > 0) Marshal.Copy(outIds, seedIds, 0, outIdc);
+        }
+        finally
+        {
+            if (outV   != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outV);
+            if (outT   != IntPtr.Zero) Native.frahan_geogram_free_pint(outT);
+            if (outIds != IntPtr.Zero) Native.frahan_geogram_free_pint(outIds);
+        }
 
         return new RvdResult(SplitBySeedId(allVerts, allTris, seedIds));
     }
@@ -580,16 +635,24 @@ public static class GeogramMesh
             throw new InvalidOperationException($"Geogram {call} failed (rc={rc}): {err}");
         }
 
-        var allVerts = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, allVerts, 0, outVc * 3);
-        var allTris = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, allTris, 0, outTc * 3);
-        var seedIds = new int[outIdc];
-        if (outIdc > 0) Marshal.Copy(outIds, seedIds, 0, outIdc);
-
-        if (outV   != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outV);
-        if (outT   != IntPtr.Zero) Native.frahan_geogram_free_pint(outT);
-        if (outIds != IntPtr.Zero) Native.frahan_geogram_free_pint(outIds);
+        double[] allVerts;
+        int[] allTris;
+        int[] seedIds;
+        try
+        {
+            allVerts = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, allVerts, 0, outVc * 3);
+            allTris = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, allTris, 0, outTc * 3);
+            seedIds = new int[outIdc];
+            if (outIdc > 0) Marshal.Copy(outIds, seedIds, 0, outIdc);
+        }
+        finally
+        {
+            if (outV   != IntPtr.Zero) Native.frahan_geogram_free_pdouble(outV);
+            if (outT   != IntPtr.Zero) Native.frahan_geogram_free_pint(outT);
+            if (outIds != IntPtr.Zero) Native.frahan_geogram_free_pint(outIds);
+        }
 
         return new RvdResult(SplitBySeedId(allVerts, allTris, seedIds));
     }
