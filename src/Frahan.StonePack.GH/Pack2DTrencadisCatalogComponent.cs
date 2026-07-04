@@ -43,7 +43,7 @@ namespace Frahan.GH;
 public sealed class Pack2DTrencadisCatalogComponent : FrahanComponentBase
 {
     public Pack2DTrencadisCatalogComponent()
-        : base("Frahan Trencadís Catalog Pack", "TrencadisCat",
+        : base("Trencadís Catalog Pack", "TrencadisCat",
             "Trencadís catalog packer: partition each sheet into CVD-Lloyd " +
             "cells, then optimally assign catalog parts to cells via the " +
             "Hungarian algorithm. Best when piece count matches target " +

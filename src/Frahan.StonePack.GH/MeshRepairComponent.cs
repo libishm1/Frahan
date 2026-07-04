@@ -26,7 +26,7 @@ namespace Frahan.GH;
 public sealed class MeshRepairComponent : FrahanComponentBase
 {
     public MeshRepairComponent()
-        : base("Frahan Mesh Repair", "MeshFix",
+        : base("Mesh Repair", "MeshFix",
             "Run the Frahan mesh-repair pipeline (cull degenerate / weld / cull " +
             "unused / heal naked edges / unify normals / recompute normals) and " +
             "return the repaired mesh plus a per-step trace. [Botsch et al. 2010]",

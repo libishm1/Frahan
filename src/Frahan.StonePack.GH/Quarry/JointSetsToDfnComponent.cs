@@ -44,7 +44,7 @@ namespace Frahan.GH.Quarry;
 public sealed class JointSetsToDfnComponent : FrahanComponentBase
 {
     public JointSetsToDfnComponent()
-        : base("Joint Sets to DFN", "Sets2DFN",
+        : base("Joint Sets to DFN", "JointsToDFN",
             "Bridge joint sets (dip / dip-direction / spacing) into a discrete fracture network mesh clipped " +
             "to a bench box, ready for the Block Cut Optimiser. Uses only the joint-set statistics, not the " +
             "scan mesh, so an incomplete scan still works. Deterministic by seed.",

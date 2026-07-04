@@ -42,7 +42,7 @@ public sealed class CoacdMeshDecomposeComponent : FrahanComponentBase
             "input is non-manifold and the OpenVDB-equipped build is not " +
             "loaded. " +
             "Wraps CoACD (Wei et al. 2022).",
-            "Frahan", "Lab")
+            "Frahan", "Block")
     {
     }
 

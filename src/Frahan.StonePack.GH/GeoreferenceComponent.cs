@@ -35,7 +35,7 @@ namespace Frahan.GH;
 public sealed class GeoreferenceComponent : FrahanComponentBase
 {
     public GeoreferenceComponent()
-        : base("Georeference (Align by Points)", "GeorefPts",
+        : base("Align by Control Points (2)", "GeorefPts",
             "Best-fit transform from 3+ corresponding control points (Horn's " +
             "absolute orientation). Aligns GPR / scan / quarry geometry into one " +
             "georeferenced frame: Source = control points in the frame you move, " +

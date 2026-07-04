@@ -32,7 +32,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBlockCutOptExtractGridComponent()
             : base(
-                "BlockCutOpt Extract Grid", "BCOExtract",
+                "BlockCutOpt Extract Grid", "ExtractGrid",
                 "Brute-force search + extract the winning OrientedBlock grid. " +
                 "Outputs the non-intersected blocks as Rhino Boxes plus the " +
                 "BlockCutOptResult headline numbers.",
@@ -134,7 +134,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBenchBlockToSlabsComponent()
             : base(
-                "Frahan BenchBlock Cut → Slabs", "QCut",
+                "BenchBlock Cut → Slabs", "QuarryCut",
                 "Run BlockCutOpt per BenchBlock in the ExtractionPlan order " +
                 "and emit the winning cut-grid as Slabs (Mesh form). " +
                 "Closes the Layer 7 → Layer 5 / 6 handoff.",
@@ -260,7 +260,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanMeshFacesToFracturePlanesComponent()
             : base(
-                "Frahan Mesh → Fracture Planes", "Mesh2FxPl",
+                "Mesh → Fracture Planes", "MeshToFracPlanes",
                 "Convert a hand-drawn Rhino Mesh into a List<FracturePlane> " +
                 "consumable by Slab Cut By Fractures. One plane per face " +
                 "(centroid + face normal). Lets you author fractures on the " +

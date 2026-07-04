@@ -35,7 +35,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanQuarryInventoryComponent()
             : base(
-                "Frahan Quarry Inventory", "QInv",
+                "Quarry Inventory", "QuarryInv",
                 "Aggregate a list of bench-block AABBs into a QuarryInventory. " +
                 "All units in metres.",
                 "Frahan", "Block")
@@ -124,7 +124,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanQuarryYieldEstimatorComponent()
             : base(
-                "Frahan Quarry Yield Estimator", "QYield",
+                "Quarry Yield Estimator", "QuarryYield",
                 "Per-block yield estimate via BlockCutOpt as a sub-routine. " +
                 "Returns one BlockYieldEstimate per BenchBlock.",
                 "Frahan", "Block")
@@ -228,7 +228,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanExtractionOrderOptimizerComponent()
             : base(
-                "Frahan Extraction Order Optimizer", "QOrder",
+                "Extraction Order Optimizer", "ExtractionOrder",
                 "Order BenchBlocks by score = w_yield*yield - w_risk*risk - " +
                 "w_access*access. Blocks under min yield are skipped. Frahan-original method.",
                 "Frahan", "Block")
@@ -327,7 +327,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanSawBedScheduleComponent()
             : base(
-                "Frahan Saw-Bed Schedule", "QSched",
+                "Saw-Bed Schedule", "SawBedSchedule",
                 "Greedy LPT schedule of accepted blocks onto N saw beds. " +
                 "Returns per-bed timelines and the total makespan. Implements greedy LPT scheduling (Graham 1969).",
                 "Frahan", "Block")
@@ -402,7 +402,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanQuarryReportComponent()
             : base(
-                "Frahan Quarry Report", "QRep",
+                "Quarry Report", "QuarryReport",
                 "Aggregate Inventory + ExtractionPlan + SawBedSchedule into " +
                 "a Markdown summary plus headline numbers.",
                 "Frahan", "Block")

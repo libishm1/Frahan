@@ -29,7 +29,7 @@ namespace Frahan.GH.Quarry;
 public sealed class InSituBlockSizeComponent : FrahanComponentBase
 {
     public InSituBlockSizeComponent()
-        : base("In-Situ Block Size", "IBSD",
+        : base("In-Situ Block Size", "BlockSize",
             "Monte-Carlo in-situ block-size distribution. Feed per-set Dip / Dip dir / Spacing (from Discontinuity " +
             "Sets); samples Fisher orientation scatter + a spacing PDF over N realizations. Outputs the block-volume " +
             "distribution (P10/P50/P90), shape mix, and the right-prism fraction (q>=0.95) -- how sawable-to-rectangular " +

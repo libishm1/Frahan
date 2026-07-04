@@ -29,7 +29,7 @@ public sealed class AutoMeshRepairComponent : FrahanComponentBase
             "Topology-aware mesh repair via the best available backend " +
             "(Geogram first, CGAL fallback). Backend output reports " +
             "which one ran.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000D0-A070-4F2D-A0D0-7E60A07000D0");
     // 2026-05-28: retired (Obsolete + Hidden). Superseded by "Sanitize Mesh"
     // (Frahan > Mesh, Backend = Auto), which runs the same MeshOps.Repair
@@ -99,7 +99,7 @@ public sealed class AutoMeshDecimateComponent : FrahanComponentBase
             "Mesh decimation via the best available backend (Geogram " +
             "vertex-clustering preferred; CGAL edge-collapse fallback). " +
             "Single ratio in (0,1) is mapped to backend-specific params.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000D1-A070-4F2D-A0D1-7E60A07000D1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("Downsample.png");
@@ -164,7 +164,7 @@ public sealed class AutoObbComponent : FrahanComponentBase
             "Oriented bounding box via the best available backend " +
             "(Geogram preferred - lighter, no Eigen). CGAL fallback " +
             "requires the shim to be built with Eigen.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000D2-A070-4F2D-A0D2-7E60A07000D2");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("MeshBvh.png");

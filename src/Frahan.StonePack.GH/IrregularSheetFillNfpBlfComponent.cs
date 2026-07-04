@@ -45,7 +45,7 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
     }
 
     public override Guid ComponentGuid => new Guid("2d351646-2cb0-402a-bbd8-3950b5bb1fbc");
-    public override GH_Exposure Exposure => GH_Exposure.hidden;   // consolidated: superseded by Sheet Nest (Hole-Aware)
+    public override GH_Exposure Exposure => GH_Exposure.primary;  // exact-NFP AND hole-aware (holes as obstacles); the strict-0-overlap nester
     protected override Bitmap Icon => IconProvider.Load("Pack2D.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

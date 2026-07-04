@@ -25,7 +25,7 @@ namespace Frahan.GH;
 public sealed class ChartFlatnessReportComponent : FrahanComponentBase
 {
     public ChartFlatnessReportComponent()
-        : base("Frahan Chart Flatness Report", "ChartFlat",
+        : base("Chart Flatness Report", "ChartFlat",
             "Classify per-face area ratios against a flatness threshold. " +
             "Threshold is interpreted as max(ratio, 1/ratio); 0.5 and 2.0 are " +
             "equally distorted from 1.0. Frahan-original method.",

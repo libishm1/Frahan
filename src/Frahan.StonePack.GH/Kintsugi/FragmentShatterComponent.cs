@@ -56,7 +56,7 @@ namespace Frahan.GH.Kintsugi;
 public sealed class FragmentShatterComponent : FrahanComponentBase
 {
     public FragmentShatterComponent()
-        : base("Frahan Fragment Shatter",
+        : base("Fragment Shatter",
             "Shatter",
             "Voronoi-shatter a solid input mesh into N fragments suitable " +
             "for round-trip testing of Frahan Kintsugi. " +

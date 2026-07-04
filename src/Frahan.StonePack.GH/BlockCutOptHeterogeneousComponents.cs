@@ -47,7 +47,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanMixedSizeBlockPack3DComponent()
             : base(
-                "Frahan Mixed-Size Block Pack 3D", "BCOMixedPack3D",
+                "Mixed-Size Block Pack 3D", "BCOMixedPack3D",
                 "3D generalisation of DLBF (Chehrazad 2025). Each piece has " +
                 "its own (Width, Depth, Height); pieces sort by revenue-per-" +
                 "volume. Floor-only mode (default) places every piece at " +
@@ -180,7 +180,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanHeterogeneousExtractionComponent()
             : base(
-                "Frahan Heterogeneous Quarry Extraction", "HeteroExt",
+                "Heterogeneous Quarry Extraction", "HeteroExt",
                 "Composite 4-step extraction pipeline: BlockCutOpt to find " +
                 "the fracture-clean regions, then 3D DLBF mixed-size pack " +
                 "(monuments + dimension stones + slabs) avoiding fractured " +

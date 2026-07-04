@@ -43,7 +43,7 @@ namespace Frahan.GH;
 public sealed class Pack2DTrencadisComponent : FrahanComponentBase
 {
     public Pack2DTrencadisComponent()
-        : base("Frahan Trencadís Pack", "Trencadis",
+        : base("Trencadís Pack", "Trencadis",
             "Trencadís ('broken-tile') 2D mosaic packer. Places irregular " +
             "pieces with bounded overlap, then boolean-differences " +
             "the overlapping bits so pieces butt edge-to-edge with " +

@@ -36,7 +36,7 @@ namespace Frahan.GH.Masonry
     {
         public MeshQualityReportComponent()
             : base(
-                "Mesh Quality Report", "MQ",
+                "Mesh Quality Report", "MeshQC",
                 "Topology + geometry diagnostics for a Rhino mesh. Use as " +
                 "a precondition for contact detection, packing, or cutting. " +
                 "Metrics per Frey & Borouchaki 1999.",

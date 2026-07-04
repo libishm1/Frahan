@@ -36,7 +36,7 @@ namespace Frahan.GH;
 public sealed class BoundaryRailIndexComponent : FrahanComponentBase
 {
     public BoundaryRailIndexComponent()
-        : base("Frahan Boundary Rail Index", "RailIdx",
+        : base("Boundary Rail Index", "RailIdx",
             "Diagnostic component. Build a boundary-rail index from one or " +
             "more boundary curves; each curve is sliding-window-sampled into " +
             "(length, tangent angle, curvature) buckets and stored as a " +

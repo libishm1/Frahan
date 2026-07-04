@@ -25,7 +25,7 @@ namespace Frahan.GH;
 public sealed class ResidualVoidsComponent : FrahanComponentBase
 {
     public ResidualVoidsComponent()
-        : base("Frahan Residual Voids", "ResVoid",
+        : base("Residual Voids", "ResVoid",
             "Detect 2D residual voids inside a sheet polygon not covered by any " +
             "placed part. Uses cell-grid sampling + 4-neighbour connected-component " +
             "labelling. Reports each void's bounding rectangle and approximate area; " +

@@ -32,7 +32,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanMonumentInventoryComponent()
             : base(
-                "Frahan Monument Inventory", "MonInv",
+                "Monument Inventory", "MonumentInv",
                 "Bundle Rhino meshes as a MonumentInventory consumable by " +
                 "the Frahan Bench Monument Pack components. Each mesh becomes " +
                 "one Monument; ids are optional and auto-generated when blank.",
@@ -106,7 +106,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanBenchMonumentPackComponent()
             : base(
-                "Frahan Bench Monument Pack", "MonPack",
+                "Bench Monument Pack", "MonumentPack",
                 "Pack a MonumentInventory inside a fractured bench (BlockGraph) " +
                 "using 24-rotation SO(3) sampling and greedy AABB placement " +
                 "per cell. Monuments stay inside one cell — no fracture crossings. Frahan-original method.",
@@ -192,7 +192,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanPackMonumentsInCellComponent()
             : base(
-                "Frahan Pack Monuments In Cell", "MonInCell",
+                "Pack Monuments In Cell", "PackInCell",
                 "Pack a MonumentInventory inside ONE BlockCell. Useful when " +
                 "you want to assign specific monuments to specific cells " +
                 "rather than letting the bench-wide packer order them. Frahan-original method.",

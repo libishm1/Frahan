@@ -39,7 +39,7 @@ namespace Frahan.GH;
 public sealed class IrregularSheetFillComponent : FrahanComponentBase
 {
     public IrregularSheetFillComponent()
-        : base("Frahan Sheet Pack (Unified)", "FreeNestU",
+        : base("Sheet Pack (Unified)", "FreeNestU",
             "Unified entry point for Frahan's four 2D irregular-sheet solver " +
             "variants (V1 / V2 / V3 / V506). Pick the variant with the Variant " +
             "input; default is V506. Synchronous solve only - for the async " +

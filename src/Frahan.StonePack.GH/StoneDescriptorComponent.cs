@@ -28,7 +28,7 @@ namespace Frahan.GH;
 public sealed class StoneDescriptorComponent : FrahanComponentBase
 {
     public StoneDescriptorComponent()
-        : base("Frahan Stone Descriptor", "StoneDesc",
+        : base("Stone Descriptor", "StoneDesc",
             "Convert Rhino meshes into StoneDescriptors. Output is consumable " +
             "by Frahan Pack3D and other 3D-packing tools. Frahan-original method.",
             "Frahan", "3D Packing")
