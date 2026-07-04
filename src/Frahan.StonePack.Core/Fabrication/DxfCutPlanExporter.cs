@@ -43,6 +43,7 @@ public static class DxfCutPlanExporter
     private const string LTitle = "TITLE";
     private const string LSchedule = "SCHEDULE";
     private const string LCutSeq = "CUT_SEQUENCE";
+    private const string LFractures = "FRACTURES";
 
     /// <summary>A row of the mason cut list / BOM. Depth &lt;= 0 renders as a 2D piece.</summary>
     public struct CutScheduleRow
@@ -90,6 +91,28 @@ public static class DxfCutPlanExporter
         IReadOnlyList<Line> cutLines,
         IReadOnlyList<string> cutLabels,
         out string report)
+        => WriteCutPlan(path, profiles, ids, textHeight, title, units, includeSchedule,
+            schedule, cutLines, cutLabels, fractureTraces: null, out report);
+
+    /// <summary>
+    /// As <see cref="WriteCutPlan(string,IReadOnlyList{Polyline},IReadOnlyList{string},double,string,string,bool,IReadOnlyList{CutScheduleRow},IReadOnlyList{Line},IReadOnlyList{string},out string)"/>,
+    /// plus <paramref name="fractureTraces"/>: bed / flaw / joint traces (already mapped
+    /// into the sheet frame, e.g. by Block Face Map) drawn as open LWPOLYLINEs on a
+    /// dedicated FRACTURES layer so the fabricator sees flaw positions on every face.
+    /// </summary>
+    public static bool WriteCutPlan(
+        string path,
+        IReadOnlyList<Polyline> profiles,
+        IReadOnlyList<string> ids,
+        double textHeight,
+        string title,
+        string units,
+        bool includeSchedule,
+        IReadOnlyList<CutScheduleRow> schedule,
+        IReadOnlyList<Line> cutLines,
+        IReadOnlyList<string> cutLabels,
+        IReadOnlyList<Polyline> fractureTraces,
+        out string report)
     {
         report = "";
         if (string.IsNullOrWhiteSpace(path)) { report = "No path."; return false; }
@@ -99,6 +122,7 @@ public static class DxfCutPlanExporter
         bool hasSchedule = includeSchedule || (schedule != null && schedule.Count > 0);
         bool hasCuts = cutLines != null && cutLines.Count > 0;
         bool hasTitle = !string.IsNullOrWhiteSpace(title);
+        bool hasFractures = fractureTraces != null && fractureTraces.Count > 0;
 
         // distinct piece layers, in first-seen order
         var layerOrder = new List<string>();
@@ -114,6 +138,7 @@ public static class DxfCutPlanExporter
         if (hasTitle) { overlayNames.Add(LTitle); overlayColors.Add(5); }       // blue
         if (hasSchedule) { overlayNames.Add(LSchedule); overlayColors.Add(7); } // white/black
         if (hasCuts) { overlayNames.Add(LCutSeq); overlayColors.Add(1); }       // red
+        if (hasFractures) { overlayNames.Add(LFractures); overlayColors.Add(30); } // orange
 
         var sb = new StringBuilder();
         // ---- HEADER (minimal, declares R2000 so LWPOLYLINE is valid) ----
@@ -171,6 +196,23 @@ public static class DxfCutPlanExporter
             written++;
         }
 
+        // ---- fracture / bed / flaw traces (open polylines, no labels) ----
+        if (hasFractures)
+        {
+            foreach (var tr in fractureTraces)
+            {
+                if (tr == null || tr.Count < 2) continue;
+                bool trClosed = tr.Count >= 3 && tr[0].DistanceTo(tr[tr.Count - 1]) < 1e-9;
+                int tn = trClosed ? tr.Count - 1 : tr.Count;
+                if (tn < 2) continue;
+                W(sb, 0, "LWPOLYLINE"); W(sb, 5, (handle++).ToString("X", CI));
+                W(sb, 100, "AcDbEntity"); W(sb, 8, LFractures); W(sb, 100, "AcDbPolyline");
+                W(sb, 90, tn.ToString(CI)); W(sb, 70, trClosed ? "1" : "0");
+                for (int v = 0; v < tn; v++)
+                { W(sb, 10, tr[v].X.ToString("0.######", CI)); W(sb, 20, tr[v].Y.ToString("0.######", CI)); }
+            }
+        }
+
         // ---- cut-sequence lines (numbered saw passes) ----
         if (hasCuts)
         {
@@ -199,7 +241,8 @@ public static class DxfCutPlanExporter
             {
                 AppendText(sb, ref handle, LTitle, x0, y, th * 1.6, title.ToUpperInvariant());
                 y -= th * 1.6 * 1.8;
-                AppendText(sb, ref handle, LTitle, x0, y, th * 0.9, "units: " + units + "   (SCHEDULE = cut list, CUT_SEQUENCE = saw order)");
+                AppendText(sb, ref handle, LTitle, x0, y, th * 0.9, "units: " + units +
+                    "   (SCHEDULE = cut list, CUT_SEQUENCE = saw order" + (hasFractures ? ", FRACTURES = bed/flaw traces)" : ")"));
                 y -= th * 2.2;
             }
 
@@ -221,6 +264,7 @@ public static class DxfCutPlanExporter
         var extra = new StringBuilder();
         if (hasSchedule) extra.Append(" + cut-list table");
         if (hasCuts) extra.Append($" + {cutLines.Count} numbered cut line(s)");
+        if (hasFractures) extra.Append($" + {fractureTraces.Count} fracture trace(s)");
         if (hasTitle) extra.Append(" + title");
         report = $"Wrote {written} profile(s) on {layerOrder.Count} piece layer(s){extra} to {Path.GetFileName(path)} (DXF R2000).";
         return true;

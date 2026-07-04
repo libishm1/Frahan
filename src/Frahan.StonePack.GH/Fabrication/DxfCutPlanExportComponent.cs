@@ -67,6 +67,10 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         p[10].Optional = true;
         p.AddTextParameter("Title", "Ti", "Sheet title for the schedule block.", GH_ParamAccess.item, "Stone cutting schedule");
         p.AddTextParameter("Units", "U", "Units label for the schedule (m / mm).", GH_ParamAccess.item, "m");
+        p.AddCurveParameter("Fracture traces", "Ft",
+            "Bed / flaw / joint traces to draw on a dedicated FRACTURES layer (orange), already in the sheet " +
+            "frame - e.g. Block Face Map > Fracture traces. Best with Flatten nest = false.", GH_ParamAccess.list);
+        p[13].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -94,6 +98,8 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         var sizes = new List<Vector3d>(); da.GetDataList(10, sizes);
         string title = "Stone cutting schedule"; da.GetData(11, ref title);
         string units = "m"; da.GetData(12, ref units);
+        var fractureCrvs = new List<Curve>(); da.GetDataList(13, fractureCrvs);
+        var fractures = fractureCrvs.Select(ToPolyline).Where(pl => pl != null && pl.Count > 1).ToList();
 
         var polys = new List<Polyline>();
         foreach (var c in crvs) polys.Add(ToPolyline(c));
@@ -111,7 +117,8 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
             da.SetData(0, string.Empty);
             da.SetData(1, polys.Count);
             string sMsg = schedule ? $" (+ cutting schedule: {(rows != null ? rows.Count : DistinctFootprints(laid))} row(s)" +
-                (cutLines.Count > 0 ? $", {cutLines.Count} numbered cut line(s))" : ")") : "";
+                (cutLines.Count > 0 ? $", {cutLines.Count} numbered cut line(s)" : "") +
+                (fractures.Count > 0 ? $", {fractures.Count} fracture trace(s))" : ")") : "";
             da.SetData(3, $"Dry run: {polys.Count} profile(s) laid out{sMsg}. Set Write = true to write '{path}'.");
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Write = false (dry run). Set Write = true to write the .dxf.");
             return;
@@ -122,7 +129,8 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         bool ok = DxfCutPlanExporter.WriteCutPlan(
             path, laid, ids.Count > 0 ? ids : null, th,
             schedule ? title : null, units, schedule, rows,
-            cutLines.Count > 0 ? cutLines : null, null, out string report);
+            cutLines.Count > 0 ? cutLines : null, null,
+            fractures.Count > 0 ? fractures : null, out string report);
         if (!ok) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, report); da.SetData(3, report); return; }
         da.SetData(0, path);
         da.SetData(1, laid.Count(pl => pl != null && pl.Count > 1));
