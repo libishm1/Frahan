@@ -1,48 +1,64 @@
 {
   "schema": "frahan-vault-metrics/1",
-  "validated": "2026-07-02..03",
+  "validated": "2026-07-02..04",
   "solver": {
     "method": "penalty-RBE QP (CRA, Kao 2022), friction pyramid K=8, mu 0.84, density 2400 kg/m^3",
     "backend": "native OSQP + sparse managed ADMM; out-of-process frahan_cra_worker above ~300 blocks"
   },
   "certificates": [
     {
+      "case": "guell_barrel (architecturally trimmed, columns separated off, whole boundary supported)",
+      "mesh": "guell_barrel_shell_v002.3dm",
+      "blocks": 452, "interfaces": 841,
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 5980, "frictionUtil": 0.92, "tensionN": 0,
+      "provenance": "barrel2_full — outputs/2026-07-04/guell_barrel_cra_certificate/barrel2_full.log"
+    },
+    {
+      "case": "guell_barrel (springing + wall supported)",
+      "mesh": "guell_barrel_shell_v002.3dm",
+      "blocks": 452, "interfaces": 841,
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 8058, "frictionUtil": 1.08, "tensionN": 1.6,
+      "provenance": "barrel2_spring — outputs/2026-07-04/guell_barrel_cra_certificate/barrel2_spring.log"
+    },
+    {
       "case": "three_prong_staggered_cra (hub keystone)",
       "blocks": 150, "interfaces": 393,
-      "stable": true, "status": "Optimal"
+      "stable": true, "status": "Optimal",
+      "maxCompressionN": 542, "frictionUtil": 0.92, "tensionN": 0,
+      "provenance": "stag_mode1 — outputs/2026-07-04/guell_barrel_cra_certificate/stag_mode1.log"
     },
     {
       "case": "three_prong_staggered_cra (hub split wedges)",
       "blocks": 171, "interfaces": 478,
-      "stable": true, "status": "Optimal"
-    },
-    {
-      "case": "guell_barrel_shell (columns cut, whole boundary supported)",
       "stable": true, "status": "Optimal",
-      "maxCompressionN": 5980, "frictionUtil": 0.92, "tensionN": 0
+      "maxCompressionN": 544, "frictionUtil": 0.92, "tensionN": 0,
+      "provenance": "stag_mode2 — outputs/2026-07-04/guell_barrel_cra_certificate/stag_mode2.log"
     },
     {
-      "case": "guell_barrel_shell (springing + wall supported)",
-      "stable": true, "status": "Optimal",
-      "maxCompressionN": 8058, "frictionUtil": 1.08, "tensionN": 1.6
-    },
-    {
-      "case": "guell_portico_full (WITH 7 leaning single-pier columns)",
-      "stable": false, "status": "SolverError",
-      "note": "infeasible at every thickness 0.28/0.40/0.50, mesh density c3/c5, and trim (8+ runs). The columns, not the shell, are the infeasibility source. Design lever = lean-to-thrust / multi-block piers / steel cores (Vault Steel Ties)."
-    },
-    {
-      "case": "funicular_barrel (live whole-shell CRA capture, 2026-07-04)",
+      "case": "funicular_barrel (independent live whole-shell CRA capture, 2026-07-04)",
       "blocks": 132, "interfaces": 241, "supports": 24,
       "stable": true, "status": "Optimal",
-      "maxCompressionN": 5135, "frictionUtil": 0.05, "solveMs": 359
+      "maxCompressionN": 5135, "frictionUtil": 0.05, "solveMs": 359,
+      "note": "a separate smaller funicular sanity capture (figures/whole_shell_cra_barrel.jpg); the 452-block Guell barrel above is the authoritative portico certificate."
     }
   ],
+  "infeasible_full_portico_WITH_7_leaning_columns": {
+    "note": "every full-portico-WITH-columns attempt is SolverError/OOM at every thickness (0.28/0.40/0.50), mesh density (c3/c5) and trim (blunt/plan/arch/curve). The columns, not the shell, are the infeasibility source. Design lever = lean-to-thrust / multi-block piers / steel cores (Vault Steel Ties).",
+    "runs": [
+      { "case": "portico_barrel_T28",   "blocks": 541,  "interfaces": 969,  "status": "SolverError" },
+      { "case": "portico_trim_T28",     "blocks": 463,  "interfaces": 856,  "status": "SolverError" },
+      { "case": "portico_uncut_d3_T28", "blocks": 1336, "interfaces": 2571, "status": "SolverError" },
+      { "case": "portico_curvecut_T28", "blocks": 2081, "interfaces": 4056, "status": "SolverError" },
+      { "case": "cra_trim",             "status": "OutOfMemory (dense ToDense wall, pre-sparse-QP)" }
+    ]
+  },
   "open_scale_item": {
     "case": "whole-Guell 3159-stone rubble CRA",
     "status": "not yet certified",
     "blocker": "LS-dual step is a dense meq^2 Cholesky (fine to ~3k rows); the 3159-stone assembly needs a SPARSE dual before it certifies at full skin resolution",
-    "note": "the compiled 3159-mould geometry (guell_rubble_COMPILED_v001.gh) is the FORM; the STRUCTURE is certified on the coarse thrust-quad shell + the three-prong."
+    "note": "the compiled 3159-mould geometry (guell_rubble_COMPILED_v001.gh) is the FORM; the STRUCTURE is certified on the coarse thrust-quad barrel (452 blocks) + the three-prong."
   },
   "recipes": {
     "guell": { "dV": 0.26, "dC": 0.18 },

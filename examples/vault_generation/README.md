@@ -37,15 +37,21 @@ OSQP + sparse managed ADMM, out-of-process worker above ~300 blocks).
 | `trim_shell_by_curves_v001` | Trim a shell along plan curves (draw-a-curve-say-cut). |
 | `fabrication_schedule_v001` | Voussoirs -> IDs (largest-first), CSV (bbox/volume/weight/centroid), inspection layout. |
 
-## Validated CRA certificates (this repo, 2026-07-02..03)
+## Validated CRA certificates (this repo, 2026-07-02..04)
 
-See `metrics.json` for the machine-readable table. Highlights:
+See `metrics.json` for the machine-readable table; the raw solver verdicts are
+preserved in `outputs/2026-07-04/guell_barrel_cra_certificate/`. Highlights:
 
+- **Güell barrel — architecturally trimmed, columns separated off** — STABLE /
+  **Optimal** as a **452-block / 841-interface** whole-shell CRA: whole boundary
+  max compression **5980 N**, friction util **0.92**, **0 residual tension**
+  (`barrel2_full`); springing+wall support **8058 N**, util **1.08**, ~1.6 N
+  tension (`barrel2_spring`). This is the authoritative portico certificate — the
+  barrel stands once the leaning colonnade is removed. Saved mesh
+  `guell_barrel_shell_v002.3dm` (verified: opens as one valid mesh).
 - **Three-prong staggered shell CRA** — STABLE / **Optimal** at both hub modes:
-  keystone **150 blocks / 393 interfaces**, split **171 blocks / 478 interfaces**.
-- **Güell barrel (columns cut off, supported at springing)** — STABLE / Optimal:
-  whole boundary max compression **5980 N**, friction util **0.92**, **0 tension**;
-  springing+wall max compression **8058 N**, util **1.08**, ~1.6 N tension.
+  keystone **150 blocks / 393 interfaces** (max comp 542 N), split **171 blocks /
+  478 interfaces** (544 N), util 0.92, 0 tension.
 
 ### The Güell portico structural finding (settled)
 
@@ -91,8 +97,13 @@ markers). Three-prong `outputs/2026-06-29/three_prong/`. ETH stones bundled subs
 
 See the master handoff `outputs/2026-07-02/thrust_quad_component/HANDOFF_MASTER.md`.
 
-Captured certificate (live, `MasonryStabilityChecker`): a funicular catenary
-**barrel of 132 voussoirs / 241 interfaces / 24 supports** certifies **STABLE /
-Optimal, max compression 5135 N, friction util 0.05, in 359 ms** in-process
-(figure `figures/whole_shell_cra_barrel.jpg`; blue = springing supports, green =
-stable). This is the whole-shell contact-by-construction CRA at a real block count.
+Captured certificates. The authoritative portico result is the **452-block /
+841-interface Güell barrel** (`guell_barrel_shell_v002.3dm`) — architecturally
+trimmed on the sides and with the leaning colonnade separated off — which
+certifies **STABLE / Optimal** (5980 N, util 0.92, 0 tension). The full portico
+WITH the 7 columns attached is SolverError/OOM at every tested thickness, density
+and trim (541 / 463 / 1336 / 2081-block runs). Raw verdict logs + the colonnade-cut
+diagnostics are preserved in `outputs/2026-07-04/guell_barrel_cra_certificate/`.
+A separate smaller funicular sanity capture (132 voussoirs, STABLE / Optimal,
+359 ms; `figures/whole_shell_cra_barrel.jpg`, blue = supports, green = stable)
+shows the in-process path on a clean geometry.

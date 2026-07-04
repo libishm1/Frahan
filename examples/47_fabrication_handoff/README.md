@@ -23,7 +23,13 @@ hypar cut surface  --> Wire-Saw Feasibility          (ruled? developable? kerf o
 - **DXF Cut Plan** (Frahan ▸ Fabricate) — flattens + shelf-nests the cut profiles
   into a CAM-readable DXF (one layer per piece). Here a **dry run** (Write = false)
   lays out 3 profiles; set Write = true to write the .dxf that Alphacam / DDX
-  EasySTONE / Breton import.
+  EasySTONE / Breton import. With **Schedule = true** it also lays down a
+  **mason-readable cutting schedule** on its own layers — a title block, a cut
+  list / BOM table (`# | PIECE | SIZE | QTY | OP`, dimensions from the **Sizes**
+  input or the outline), and the ordered saw passes drawn as **numbered cut lines**
+  (`Cut lines` input) on a `CUT_SEQUENCE` layer — so a yard/site crew can work
+  straight off the plotted sheet, not just the CAM. (Layers `TITLE` / `SCHEDULE` /
+  `CUT_SEQUENCE`; validated headless — see `outputs/2026-07-04/dxf_cutting_schedule/`.)
 - **Wire-Saw Feasibility** (Frahan ▸ Fabricate) — checks a target cut surface is
   wire-sawable (ruled ⇒ a straight wire can sweep it) and emits the kerf-offset
   toolpath. The hypar is **ruled but doubly-curved** → sawable, wire twists.
