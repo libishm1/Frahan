@@ -71,6 +71,10 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
             "Bed / flaw / joint traces to draw on a dedicated FRACTURES layer (orange), already in the sheet " +
             "frame - e.g. Block Face Map > Fracture traces. Best with Flatten nest = false.", GH_ParamAccess.list);
         p[13].Optional = true;
+        p.AddTextParameter("Cut labels", "Cll",
+            "Optional label per cut line (e.g. Q1..Qn quarry / F1..Fm factory from Cut Stage Split). " +
+            "Absent = sequential 1..N.", GH_ParamAccess.list);
+        p[14].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -100,6 +104,7 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         string units = "m"; da.GetData(12, ref units);
         var fractureCrvs = new List<Curve>(); da.GetDataList(13, fractureCrvs);
         var fractures = fractureCrvs.Select(ToPolyline).Where(pl => pl != null && pl.Count > 1).ToList();
+        var cutLabels = new List<string>(); da.GetDataList(14, cutLabels);
 
         var polys = new List<Polyline>();
         foreach (var c in crvs) polys.Add(ToPolyline(c));
@@ -129,7 +134,8 @@ public sealed class DxfCutPlanExportComponent : FrahanComponentBase
         bool ok = DxfCutPlanExporter.WriteCutPlan(
             path, laid, ids.Count > 0 ? ids : null, th,
             schedule ? title : null, units, schedule, rows,
-            cutLines.Count > 0 ? cutLines : null, null,
+            cutLines.Count > 0 ? cutLines : null,
+            cutLabels.Count > 0 ? cutLabels : null,
             fractures.Count > 0 ? fractures : null, out string report);
         if (!ok) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, report); da.SetData(3, report); return; }
         da.SetData(0, path);
