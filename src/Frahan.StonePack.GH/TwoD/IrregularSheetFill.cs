@@ -29,11 +29,12 @@ public enum SolverVariant
 }
 
 /// <summary>
-/// **R3 PR 1 stub** - unified entry point for all four 2D irregular-sheet
-/// solver variants. Today V506 is fully wired; V1, V2, V3 throw
-/// <see cref="NotImplementedException"/> until refactor R3 PRs 2 - 4 inline
-/// the legacy class bodies. The throwing variants surface the migration
-/// status loudly so callers cannot silently rely on a not-yet-wired path.
+/// Unified entry point for all four 2D irregular-sheet solver variants.
+/// ALL FOUR variants are wired: each ForV* factory delegates to the working
+/// legacy class (V1 -&gt; IrregularSheetFillRhino, V2/V3/V506 -&gt; their
+/// V-suffixed classes); nothing throws. (An earlier R3-PR-1 stub had V1-V3
+/// throwing NotImplementedException — that phase is complete; the legacy
+/// class bodies still await inlining per R3 PRs 2 - 5.)
 ///
 /// See <c>docs/future_work/R3_versioned_solver_collapse_plan.md</c> for the
 /// full migration plan, equivalence-test design, and per-PR file lists.

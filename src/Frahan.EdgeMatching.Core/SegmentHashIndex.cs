@@ -45,12 +45,17 @@ namespace Frahan.EdgeMatching
                 return a.TorsionVarBin.CompareTo(b.TorsionVarBin);
             });
 
+        // Phase 0 #2: scale-relative length bin width when an assembly Scale is set;
+        // otherwise the legacy absolute LengthBinSize.
+        private double EffectiveLengthBinSize =>
+            _opt.Scale > 0.0 ? _opt.Scale * _opt.RelativeLengthBinFraction : _opt.LengthBinSize;
+
         public SegmentHashKey KeyOf(Segment s)
         {
             double mean = Mean(s.TurningSignature);
             double std = StdDev(s.TurningSignature, mean);
             return new SegmentHashKey(
-                (int)Math.Round(s.ChordLength / _opt.LengthBinSize),
+                (int)Math.Round(s.ChordLength / EffectiveLengthBinSize),
                 (int)Math.Round(s.TotalTurning / _opt.TurningBinSize),
                 (int)Math.Round(mean / _opt.MeanBinSize),
                 (int)Math.Round(std / _opt.StdBinSize),
@@ -119,6 +124,7 @@ namespace Frahan.EdgeMatching
 
         private List<Segment> Query2D(Segment s)
         {
+            if (_opt.UseMultiProbe) return Query2DMultiProbe(s);
             var key = KeyOf(s);
             int n = _opt.BinNeighbourhood;
             var hits = new List<Segment>();
@@ -142,6 +148,7 @@ namespace Frahan.EdgeMatching
 
         private List<Segment> Query3D(Segment s)
         {
+            if (_opt.UseMultiProbe) return Query3DMultiProbe(s);
             var key = KeyOf3D(s);
             int n = _opt.BinNeighbourhood;
             var hits = new List<Segment>();
@@ -163,6 +170,91 @@ namespace Frahan.EdgeMatching
                 var probe = new SegmentHashKey3D(probeBase, key.PlanarityBin, key.TorsionVarBin);
                 if (_buckets3D.TryGetValue(probe, out var list))
                     hits.AddRange(list);
+            }
+            SortDeterministic(hits);
+            return hits;
+        }
+
+        // -------- Phase 0 #1: query-directed multi-probe over the 4 banded dims --------
+        // Complement-query continuous coordinates (in bin units) and home bins.
+        // Complementarity transform: length same, turning + mean negate, std invariant.
+        private void ComplementCoords(Segment s, out double[] coord, out int[] home)
+        {
+            double mean = Mean(s.TurningSignature);
+            double std = StdDev(s.TurningSignature, mean);
+            double lb = EffectiveLengthBinSize;
+            coord = new[]
+            {
+                s.ChordLength / lb,
+                -s.TotalTurning / _opt.TurningBinSize,
+                -mean / _opt.MeanBinSize,
+                std / _opt.StdBinSize,
+            };
+            home = new int[4];
+            for (int i = 0; i < 4; i++) home[i] = (int)Math.Round(coord[i]);
+        }
+
+        // Top-T perturbation vectors over the 4 dims, ranked by squared boundary distance
+        // (the standard multi-probe score). Reaches +/-MaxProbeStep where the query straddles
+        // a boundary, while keeping the probe count bounded.
+        private List<int[]> RankedProbes(double[] coord, int[] home)
+        {
+            int step = Math.Max(0, _opt.MaxProbeStep);
+            var cands = new List<KeyValuePair<double, int[]>>();
+            for (int d0 = -step; d0 <= step; d0++)
+            for (int d1 = -step; d1 <= step; d1++)
+            for (int d2 = -step; d2 <= step; d2++)
+            for (int d3 = -step; d3 <= step; d3++)
+            {
+                var dv = new[] { d0, d1, d2, d3 };
+                double sc = 0.0;
+                for (int d = 0; d < 4; d++)
+                {
+                    int t = dv[d];
+                    if (t == 0) continue;
+                    double delta = coord[d] - home[d];           // residual in [-0.5, 0.5]
+                    double dist = t > 0 ? (t - 0.5 - delta) : (-t - 0.5 + delta);
+                    sc += dist * dist;
+                }
+                cands.Add(new KeyValuePair<double, int[]>(sc, dv));
+            }
+            cands.Sort((a, b) =>
+            {
+                int c = a.Key.CompareTo(b.Key); if (c != 0) return c;
+                for (int d = 0; d < 4; d++) { c = a.Value[d].CompareTo(b.Value[d]); if (c != 0) return c; }
+                return 0;
+            });
+            int take = Math.Min(Math.Max(1, _opt.MultiProbeT), cands.Count);
+            var outl = new List<int[]>(take);
+            for (int i = 0; i < take; i++) outl.Add(cands[i].Value);
+            return outl;
+        }
+
+        private List<Segment> Query2DMultiProbe(Segment s)
+        {
+            ComplementCoords(s, out var coord, out var home);
+            int signC = -s.Sign;
+            var hits = new List<Segment>();
+            foreach (var dv in RankedProbes(coord, home))
+            {
+                var probe = new SegmentHashKey(home[0] + dv[0], home[1] + dv[1], home[2] + dv[2], home[3] + dv[3], signC);
+                if (_buckets2D.TryGetValue(probe, out var list)) hits.AddRange(list);
+            }
+            SortDeterministic(hits);
+            return hits;
+        }
+
+        private List<Segment> Query3DMultiProbe(Segment s)
+        {
+            var k3 = KeyOf3D(s);   // validates torsion presence + gives planarity/torsion-var bins
+            ComplementCoords(s, out var coord, out var home);
+            int signC = -s.Sign;
+            var hits = new List<Segment>();
+            foreach (var dv in RankedProbes(coord, home))
+            {
+                var baseProbe = new SegmentHashKey(home[0] + dv[0], home[1] + dv[1], home[2] + dv[2], home[3] + dv[3], signC);
+                var probe = new SegmentHashKey3D(baseProbe, k3.PlanarityBin, k3.TorsionVarBin);
+                if (_buckets3D.TryGetValue(probe, out var list)) hits.AddRange(list);
             }
             SortDeterministic(hits);
             return hits;

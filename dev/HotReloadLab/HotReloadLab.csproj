@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Rhino 8 loads net7 plugins on its .NET 8 runtime. -->
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetExt>.gha</TargetExt>
+    <LangVersion>10</LangVersion>
+    <Nullable>disable</Nullable>
+    <DebugType>portable</DebugType>
+    <!-- Prevents the ENC0003 "updating attribute requires restarting" hot
+         reload failure: without this, the SDK appends a source revision to
+         AssemblyInformationalVersion on every build, and the hot-reload
+         agent treats that as an attribute change requiring a restart. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- Fixed version, no auto-bump, so it never drifts between builds. -->
+    <Version>1.0.0</Version>
+    <!-- System.Drawing.Bitmap (used by GH_Component.Icon) is not part of
+         the bare net7.0-windows reference set. UseWindowsForms pulls in
+         the already-installed Microsoft.WindowsDesktop.App.Ref framework
+         reference (no NuGet download, no package install). -->
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>C:\Program Files\Rhino 8\System\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Grasshopper">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="GH_IO">
+      <HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

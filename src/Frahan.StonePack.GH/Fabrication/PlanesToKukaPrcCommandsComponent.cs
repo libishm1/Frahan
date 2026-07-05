@@ -88,11 +88,13 @@ public sealed class PlanesToKukaPrcCommandsComponent : FrahanComponentBase
             "D5F10030). If wired, the wrapper distinguishes Rapid (PTP) from " +
             "Linear/Arc (LIN) per-plane via the Segment Indices lookup.",
             GH_ParamAccess.item);
+        p[3].Optional = true;   // named optional; was registered required -> component never solved without it
         p.AddIntegerParameter("Segment Indices (optional)", "Si",
             "Optional: per-plane source segment index (from GCodeToPlanes). " +
             "Required when Cut Path is wired so the wrapper can look up the " +
             "CutSegmentKind for motion-type mapping.",
             GH_ParamAccess.list);
+        p[4].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)

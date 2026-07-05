@@ -45,7 +45,12 @@ public sealed class IrregularSheetFillNfpBlfComponent : GH_TaskCapableComponent<
     }
 
     public override Guid ComponentGuid => new Guid("2d351646-2cb0-402a-bbd8-3950b5bb1fbc");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    // Hidden 2026-07-05 (packer consolidation): superseded by Sheet Nest (Live) /
+    // Sheet Nest (Hole-Aware) on the ContactNfpHoleNester core — exact-NFP,
+    // hole-aware BOTH ways (sheet defects + part holes), truly async (this one's
+    // GH_TaskCapable only parallelizes data branches), benchmarked equal-or-better
+    // (docs/results/RESULTS.md 2026-07-05). Kept loadable for old canvases.
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
     protected override Bitmap Icon => IconProvider.Load("Pack2D.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

@@ -38,6 +38,8 @@ namespace Frahan.GH.Masonry
         {
         }
 
+        public override GH_Exposure Exposure => GH_Exposure.senary;
+
         public override Guid ComponentGuid =>
             new Guid("DEF01234-5678-9ABC-DEF0-123456789ABC");
 

@@ -36,7 +36,7 @@ namespace Frahan.GH;
 public sealed class BoundaryRailIndexComponent : FrahanComponentBase
 {
     public BoundaryRailIndexComponent()
-        : base("Frahan Boundary Rail Index", "RailIdx",
+        : base("Boundary Rail Index", "RailIdx",
             "Diagnostic component. Build a boundary-rail index from one or " +
             "more boundary curves; each curve is sliding-window-sampled into " +
             "(length, tangent angle, curvature) buckets and stored as a " +
@@ -49,7 +49,7 @@ public sealed class BoundaryRailIndexComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("AB12C001-1A2B-4C3D-9E4F-5A6B7C8D9E01");
     protected override Bitmap? Icon => IconProvider.Load("BoundarySegmenter.png");
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
+    public override GH_Exposure Exposure => GH_Exposure.hidden;   // superseded: EdgeAffinityScorer never built; ICP pipeline handles this
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {

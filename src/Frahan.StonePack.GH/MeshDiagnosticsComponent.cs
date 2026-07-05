@@ -23,7 +23,7 @@ namespace Frahan.GH;
 public sealed class MeshDiagnosticsComponent : FrahanComponentBase
 {
     public MeshDiagnosticsComponent()
-        : base("Frahan Mesh Diagnostics", "MeshDiag",
+        : base("Mesh Diagnostics", "MeshDiag",
             "Read a Rhino Mesh and report vertex/face/triangle/quad counts, " +
             "IsClosed, IsManifold, HasConsistentWinding, AverageEdgeLength, " +
             "BoundingBoxVolume. " +

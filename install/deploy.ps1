@@ -23,6 +23,21 @@ Get-ChildItem (Join-Path $here "plugin") -File | ForEach-Object {
     Copy-Item $_.FullName $lib -Force
     Write-Host ("  plugin  " + $_.Name)
 }
+# Subfolders (arm's-length third-party workers, e.g. thirdparty/quadwild-bimdf
+# with bin/ + config/ + LICENSE). Copied recursively, structure preserved.
+Get-ChildItem (Join-Path $here "plugin") -Directory | ForEach-Object {
+    Copy-Item $_.FullName $lib -Recurse -Force
+    Write-Host ("  plugin  " + $_.Name + "\ (recursive)")
+}
+# Bundled ETH1100 subset (16 closed stones) - the stone-fit fallback pool when
+# machine-specific ETH paths are absent (published examples work anywhere).
+$ethSub = Join-Path $here "..\data\eth1100_subset"
+if (Test-Path $ethSub) {
+    $ethDst = Join-Path $lib "data\eth1100_subset"
+    New-Item -ItemType Directory -Force -Path $ethDst | Out-Null
+    Copy-Item (Join-Path $ethSub "*") $ethDst -Force
+    Write-Host "  data    eth1100_subset (16 stones)"
+}
 # BFF (optional; used by Surface Chart for distortion-free charts).
 Copy-Item (Join-Path $here "tools\bff-command-line.exe") $lib -Force
 Write-Host "  tool    bff-command-line.exe"

@@ -33,7 +33,7 @@ namespace Frahan.GH.Masonry
 
         public override Guid ComponentGuid => new Guid("D5F10017-3E5A-4B9C-8D26-1F70A4C85E93");
         protected override Bitmap Icon => Frahan.GH.IconProvider.Load("IfcExport.png");
-        public override GH_Exposure Exposure => GH_Exposure.secondary;
+        public override GH_Exposure Exposure => GH_Exposure.septenary;
 
         protected override void RegisterInputParams(GH_InputParamManager p)
         {

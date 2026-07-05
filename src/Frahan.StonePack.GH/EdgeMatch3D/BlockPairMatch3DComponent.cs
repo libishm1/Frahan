@@ -80,7 +80,7 @@ public sealed class BlockPairMatch3DComponent : FrahanComponentBase
     public override Guid ComponentGuid =>
         new Guid("D5F10008-ED9E-4ED9-A008-ED9EED9E0008");
 
-    public override GH_Exposure Exposure => GH_Exposure.hidden;  // first-cut matcher; hidden to match the two sibling 3D stubs
+    public override GH_Exposure Exposure => GH_Exposure.primary;  // working plane-to-plane matcher; coarse pre-align feeding Soft ICP 3D
 
     protected override Bitmap Icon => IconProvider.Load("EdgeMatchSolve.png"); // reuse until 3D icon ships
 

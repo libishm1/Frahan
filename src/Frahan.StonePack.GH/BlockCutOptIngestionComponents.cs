@@ -33,14 +33,14 @@ namespace Frahan.GH.Quarry
     {
         public FrahanPhotoToPlyComponent()
             : base(
-                "Frahan Photo Detect → PLY", "Photo2Ply",
+                "Photo Detect → PLY", "Photo2Ply",
                 "v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2 " +
                 "in world metres) and emits the vertical-extruded PLY consumable by " +
                 "BlockCutOpt. The on-image fracture detector is not yet wired (the " +
                 "Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer " +
                 "to write the CSV from a GeoFractNet run, or hand-author the CSV from " +
                 "QGIS / AutoCAD digitisation.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -115,12 +115,12 @@ namespace Frahan.GH.Quarry
     {
         public FrahanAlgebraicConvexPolyComponent()
             : base(
-                "Frahan Algebraic Convex Polyhedron", "AlgConv",
+                "Algebraic Convex Polyhedron", "ConvexBlock",
                 "Build a convex polyhedron from N half-space inequalities " +
                 "Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14). " +
                 "Each parallel-list row defines one face's outward normal " +
                 "and offset. Returns a triangulated Rhino Mesh. Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -196,14 +196,14 @@ namespace Frahan.GH.Quarry
     {
         public FrahanSyntheticTnGraniteComponent()
             : base(
-                "Frahan Synthetic TN Granite", "TnGran",
+                "Synthetic TN Granite", "TnGran",
                 "Generate a deterministic synthetic discrete fracture network " +
                 "for Tamil Nadu granite (three joint sets: NE-SW, NW-SE, " +
                 "sub-horizontal bedding). Outputs a CSV of 2D traces at " +
                 "z=midheight + a PLY of 3D fracture polygons + the fracture " +
                 "Mesh in-process. Lets you regression-test BlockCutOpt " +
                 "without a field dataset. Implements synthetic joint-set DFN generation (ISRM/Priest 1993; Goodman & Shi 1985).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

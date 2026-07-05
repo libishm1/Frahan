@@ -176,6 +176,26 @@ public static class MasonryStabilityChecker
                 0, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
         }
 
+        // ---- Guard: a degenerate (near-zero signed volume) FREE block. Self-weight is
+        // density*|V|*g and BlockCenterOfMass zeroes V below 1e-12 (open / inward-wound /
+        // flat triangulation), so the block becomes WEIGHTLESS -- and a weightless block
+        // trivially "balances", producing a SILENT false-'stable' verdict. This is the
+        // exact hazard a raw triangle-mesh / scan-rubble feeder hits. Reject it instead
+        // of certifying garbage; the fix is upstream (weld + unify normals + close). ----
+        for (int i = 0; i < assembly.Blocks.Count; i++)
+        {
+            var b = assembly.Blocks[i];
+            if (assembly.BoundaryConditions.IsFixed(b.Id)) continue;
+            if (Math.Abs(BlockCenterOfMass.SignedVolume(b)) < 1e-12)
+            {
+                return new DetailedStabilityResult(new StabilityResult(false, ConvexQpStatus.Infeasible,
+                    $"Free block '{b.Id}' has degenerate signed volume (open / inward-wound / flat) -> zero self-weight; " +
+                    "the verdict would be a false 'stable'. Repair the block (weld + unify normals + close it) before checking.",
+                    0, 0, -1, new List<InterfaceUtilization>(),
+                    freeCount, assembly.Interfaces.Count, 0), null, new List<VertexForce>());
+            }
+        }
+
         // ---- Formulate + solve the PENALTY RBE QP (Kao 2022 Eq. 14 semantics,
         // minus the displacement coupling, which is evolution phase P2):
         // f_n = f_n+ - f_n-, both >= 0, with a large Hessian weight gamma on
@@ -217,14 +237,22 @@ public static class MasonryStabilityChecker
         // ADMM (cold ADMM degrades steeply past ~50 exact-joint interfaces).
         // When the LS path declines (non-diagonal H, singular dual system),
         // behaviour is exactly the previous cold-start solve.
-        var solver = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4);
+        // SPARSE-built problems (RbeQpFormulation size gate, 2026-07-02): the LS
+        // closed form now consumes the COO blocks directly (column views), so it
+        // runs for BOTH representations — certified points short-circuit, and
+        // uncertified points WARM-START the sparse/CG ADMM (cold ADMM degrades
+        // steeply past ~50 interfaces). Only the native OSQP marshal remains
+        // dense-only.
+        bool sparseQp = qp.EqualityMatrix == null && qp.EqualitySparse != null;
         double[] lsPoint = TryLsFirstKktPoint(equilibrium, qp, out bool lsCertified, out string lsCertificate);
         ConvexQpResult sol;
         if (lsPoint != null && lsCertified)
             sol = new ConvexQpResult(ConvexQpStatus.Optimal, lsPoint,
                                      DiagonalQpObjective(qp, lsPoint), lsCertificate);
+        else if (!sparseQp && MasonrySolverRegistry.Default is OsqpQpSolver osqp)
+            sol = osqp.Solve(qp); // native OSQP (frahan_osqp) — robust on ill-conditioned QPs
         else
-            sol = solver.Solve(qp, lsPoint); // lsPoint may be null -> cold start (unchanged)
+            sol = new AdmmQpSolver(epsAbs: 1e-4, epsRel: 1e-4).Solve(qp, lsPoint); // managed sparse/CG path, LS warm start
 
         int vertexCount = equilibrium.ForceColumns.Count / Math.Max(1, equilibrium.ForceComponentsPerVertex);
 
@@ -286,7 +314,30 @@ public static class MasonryStabilityChecker
             if (fnNeg > agg[3]) agg[3] = fnNeg;
         }
 
-        // Stable iff the residual tension is negligible relative to the force scale.
+        // Stable iff the residual tension is negligible relative to the force
+        // scale. SCALE = maxCompression, and this is the CORRECT choice, verified
+        // against the full stability battery (P0-3 study, 2026-07-04):
+        //
+        //   The tension we must discount is the QP solver's OWN residual noise,
+        //   and that noise scales with the LARGEST force in the system (ADMM
+        //   epsRel * maxForce ~ 1e-4 * maxCompression), NOT with self-weight. The
+        //   battery's two near-limit stable cases both sit right on that floor:
+        //     - compas_cra wedge:   maxTen/maxComp = 1.2e-4 (thrust 53.5, weight 21)
+        //     - 14-block near-limit: maxTen/maxComp = 9.3e-5 (thrust 176, weight 13)
+        //   1e-3 * maxCompression gives them a ~10x margin above that noise while
+        //   staying ~100x below any REAL tension demand (which is O(maxCompression)).
+        //
+        //   Two "obvious" alternatives are DISPROVEN and must NOT be reintroduced:
+        //     - MEDIAN compression: the wedge concentrates load on ONE contact, so
+        //       medComp/maxComp = 3.5e-5 -> tolerance 28000x too tight -> the
+        //       reference-validated wedge flips to a FALSE UNSTABLE (regressed once).
+        //     - GRAVITY-LOAD (1e-3 * totalWeight): thrust-dominated geometry has
+        //       thrust >> weight, so the 14-block case (thrust = 14x weight) has
+        //       maxTen = 1.3e-3 * W > tol -> FALSE UNSTABLE. Weight does not track
+        //       the solver noise floor; the peak compression does.
+        //   The battery pins BOTH counterexamples, so either regression is caught.
+        //   The Math.Max(., 1e-9) floor only guards a genuinely load-free assembly
+        //   (maxComp ~ 0), where maxTension ~ 0 too and the verdict is trivially stable.
         double forceScale = Math.Max(maxCompression, 1e-9);
         double tensionTol = 1e-3 * forceScale;
         bool stable = maxTension <= tensionTol;
@@ -490,21 +541,34 @@ public static class MasonryStabilityChecker
         int n = qp.VariableCount;
         int meq = qp.EqualityRowCount;
         if (meq == 0 || n == 0) return null;
-        var aeq = qp.EqualityMatrix;
         var beq = qp.EqualityRhs;
         var c = qp.LinearObjective;
 
-        // ---- H must be diagonal positive (it is, for every RBE formulation). ----
-        var hess = qp.Hessian;
+        // ---- H must be diagonal positive (it is, for every RBE formulation).
+        // Sparse-built problems (2026-07-02) carry the diagonal directly. ----
         var invH0 = new double[n];
-        for (int i = 0; i < n; i++)
+        if (qp.Hessian != null)
         {
-            for (int j = 0; j < n; j++)
-                if (i != j && hess[i, j] != 0) return null; // not diagonal -> decline
-            double d = hess[i, i];
-            if (d <= 0) return null;
-            invH0[i] = 1.0 / d;
+            var hess = qp.Hessian;
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                    if (i != j && hess[i, j] != 0) return null; // not diagonal -> decline
+                double d = hess[i, i];
+                if (d <= 0) return null;
+                invH0[i] = 1.0 / d;
+            }
         }
+        else if (qp.HessianDiagonal != null)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                double d = qp.HessianDiagonal[i];
+                if (d <= 0) return null;
+                invH0[i] = 1.0 / d;
+            }
+        }
+        else return null;
         // Fixed columns (lb == ub, e.g. the CRA complementarity restriction
         // pins forces to 0): exclude from the KKT system via invH = 0, which
         // forces f = 0 there. Only the fixed-at-zero case is supported.
@@ -517,25 +581,23 @@ public static class MasonryStabilityChecker
             }
         }
 
-        // ---- Column row-support (each force column touches <= 12 equality rows). ----
-        var colRows = new int[n][];
-        {
-            var scratch = new List<int>(16);
-            for (int k = 0; k < n; k++)
-            {
-                scratch.Clear();
-                for (int r = 0; r < meq; r++)
-                    if (aeq[r, k] != 0) scratch.Add(r);
-                colRows[k] = scratch.ToArray();
-            }
-        }
+        // ---- Column-sparse views of BOTH constraint blocks (rows/vals aligned).
+        // Representation-agnostic: built from the dense arrays or (2026-07-02)
+        // straight from the sparse-built COO blocks — the entire LS machinery
+        // below is column-driven, so this is the only adaptation point. ----
+        BuildColumnView(qp.EqualityMatrix, qp.EqualitySparse, n, meq,
+            out int[][] colRows, out double[][] colVals);
+        int[][] ineqColRows = null; double[][] ineqColVals = null;
+        if (qp.InequalityMatrix != null || qp.InequalitySparse != null)
+            BuildColumnView(qp.InequalityMatrix, qp.InequalitySparse, n, qp.InequalityRowCount,
+                out ineqColRows, out ineqColVals);
 
         // ---- Round 0: plain equality-KKT. Certified directly when it already
         // sits inside the friction cone (the common case for squat coursed
         // walls — the LS point is then the QP optimum restricted to the
         // equality manifold and feasible, hence admissible). ----
         double[] f0 = SolveLsCertificateRound(
-            equilibrium, qp, invH0, colRows, new List<int>(),
+            equilibrium, qp, invH0, colRows, colVals, ineqColRows, ineqColVals, new List<int>(),
             out bool ok0, out string cert0, out List<(int Row, double Violation)> violated0);
         if (f0 == null) return null;
         if (ok0)
@@ -553,7 +615,7 @@ public static class MasonryStabilityChecker
         // also zeroes fn- => the polished point is exactly cone-, bound- and
         // tension-feasible; only the equality residual needs the gate). ----
         double[] fp = PolishConeByAlternatingProjection(
-            equilibrium, qp, invH0, colRows, f0, out bool okP, out string certP);
+            equilibrium, qp, invH0, colRows, colVals, ineqColRows, ineqColVals, f0, out bool okP, out string certP);
         if (fp != null && okP)
         {
             certified = true;
@@ -571,7 +633,8 @@ public static class MasonryStabilityChecker
     /// <paramref name="violatedConeRows"/> lists the cone rows it violated.</summary>
     private static double[] SolveLsCertificateRound(
         EquilibriumSystem equilibrium, ConvexQpProblem qp,
-        double[] invH, int[][] colRows, List<int> activeConeRows,
+        double[] invH, int[][] colRows, double[][] colVals,
+        int[][] ineqColRows, double[][] ineqColVals, List<int> activeConeRows,
         out bool certified, out string certificate,
         out List<(int Row, double Violation)> violatedConeRows)
     {
@@ -580,10 +643,8 @@ public static class MasonryStabilityChecker
         violatedConeRows = null;
         int n = qp.VariableCount;
         int meq = qp.EqualityRowCount;
-        var aeq = qp.EqualityMatrix;
         var beq = qp.EqualityRhs;
         var c = qp.LinearObjective;
-        var aineq = qp.InequalityMatrix;
         int na = activeConeRows.Count;
         int mAug = meq + na;
 
@@ -591,30 +652,37 @@ public static class MasonryStabilityChecker
         // plus the active cone rows (each Afr row touches one vertex's 4
         // columns). Augmented row r >= meq maps to aineq[activeConeRows[r-meq]]. ----
         var colRowsAug = colRows;
+        var colValsAug = colVals;
         if (na > 0)
         {
+            var slotOf = new Dictionary<int, int>(na); // ineq source row -> augmented slot
+            for (int j = 0; j < na; j++) slotOf[activeConeRows[j]] = meq + j;
             colRowsAug = new int[n][];
-            var extra = new List<int>[n];
-            for (int j = 0; j < na; j++)
-            {
-                int src = activeConeRows[j];
-                for (int k = 0; k < n; k++)
-                {
-                    if (aineq[src, k] == 0) continue;
-                    if (extra[k] == null) extra[k] = new List<int>(4);
-                    extra[k].Add(meq + j);
-                }
-            }
+            colValsAug = new double[n][];
             for (int k = 0; k < n; k++)
             {
-                if (extra[k] == null) { colRowsAug[k] = colRows[k]; continue; }
-                var merged = new int[colRows[k].Length + extra[k].Count];
-                Array.Copy(colRows[k], merged, colRows[k].Length);
-                for (int t = 0; t < extra[k].Count; t++) merged[colRows[k].Length + t] = extra[k][t];
-                colRowsAug[k] = merged;
+                List<int> exR = null; List<double> exV = null;
+                var ir = ineqColRows[k]; var iv = ineqColVals[k];
+                for (int a = 0; a < ir.Length; a++)
+                {
+                    if (iv[a] == 0 || !slotOf.TryGetValue(ir[a], out int slot)) continue;
+                    if (exR == null) { exR = new List<int>(4); exV = new List<double>(4); }
+                    exR.Add(slot); exV.Add(iv[a]);
+                }
+                if (exR == null) { colRowsAug[k] = colRows[k]; colValsAug[k] = colVals[k]; continue; }
+                var mergedR = new int[colRows[k].Length + exR.Count];
+                var mergedV = new double[colVals[k].Length + exV.Count];
+                Array.Copy(colRows[k], mergedR, colRows[k].Length);
+                Array.Copy(colVals[k], mergedV, colVals[k].Length);
+                for (int t = 0; t < exR.Count; t++)
+                {
+                    mergedR[colRows[k].Length + t] = exR[t];
+                    mergedV[colVals[k].Length + t] = exV[t];
+                }
+                colRowsAug[k] = mergedR;
+                colValsAug[k] = mergedV;
             }
         }
-        double A(int r, int k) => r < meq ? aeq[r, k] : aineq[activeConeRows[r - meq], k];
 
         // ---- Dual system M y = bAug + A H⁻¹ c, M = A H⁻¹ Aᵀ (mAug x mAug);
         // bAug = [beq; 0] (active cone rows sit exactly on the boundary). ----
@@ -626,15 +694,16 @@ public static class MasonryStabilityChecker
             double w = invH[k];
             if (w == 0) continue;
             var rows = colRowsAug[k];
+            var vals = colValsAug[k];
             for (int a = 0; a < rows.Length; a++)
             {
                 int r1 = rows[a];
-                double v1 = w * A(r1, k);
+                double v1 = w * vals[a];
                 rhsY[r1] += v1 * c[k];
                 for (int b = a; b < rows.Length; b++)
                 {
                     int r2 = rows[b];
-                    mtx[r1, r2] += v1 * A(r2, k);
+                    mtx[r1, r2] += v1 * vals[b];
                 }
             }
         }
@@ -668,7 +737,8 @@ public static class MasonryStabilityChecker
             if (invH[k] == 0) { f[k] = 0; continue; }
             double s = -c[k];
             var rows = colRowsAug[k];
-            for (int a = 0; a < rows.Length; a++) s += A(rows[a], k) * y[rows[a]];
+            var vals = colValsAug[k];
+            for (int a = 0; a < rows.Length; a++) s += vals[a] * y[rows[a]];
             f[k] = invH[k] * s;
         }
 
@@ -696,11 +766,18 @@ public static class MasonryStabilityChecker
         for (int i = 0; i < meq; i++) if (Math.Abs(beq[i]) > scale) scale = Math.Abs(beq[i]);
 
         double eqRes = 0;
-        for (int i = 0; i < meq; i++)
         {
-            double s = -beq[i];
-            for (int k = 0; k < n; k++) s += aeq[i, k] * f[k];
-            if (Math.Abs(s) > eqRes) eqRes = Math.Abs(s);
+            var res = new double[meq];
+            for (int i = 0; i < meq; i++) res[i] = -beq[i];
+            for (int k = 0; k < n; k++)
+            {
+                double fk = f[k];
+                if (fk == 0) continue;
+                var rows = colRows[k];
+                var vals = colVals[k];
+                for (int a = 0; a < rows.Length; a++) res[rows[a]] += vals[a] * fk;
+            }
+            for (int i = 0; i < meq; i++) if (Math.Abs(res[i]) > eqRes) eqRes = Math.Abs(res[i]);
         }
         bool feasible = eqRes <= 1e-6 * scale;
 
@@ -710,18 +787,26 @@ public static class MasonryStabilityChecker
                 if (f[k] < qp.LowerBounds[k] - 1e-9 * scale ||
                     f[k] > qp.UpperBounds[k] + 1e-9 * scale) feasible = false;
         }
-        if (feasible && aineq != null)
+        if (feasible && ineqColRows != null)
         {
             int mineq = qp.InequalityRowCount;
+            var s = new double[mineq];
+            for (int i = 0; i < mineq; i++) s[i] = -qp.InequalityRhs[i];
+            for (int k = 0; k < n; k++)
+            {
+                double fk = f[k];
+                if (fk == 0) continue;
+                var ir = ineqColRows[k];
+                var iv = ineqColVals[k];
+                for (int a = 0; a < ir.Length; a++) s[ir[a]] += iv[a] * fk;
+            }
             for (int i = 0; i < mineq; i++)
             {
-                double s = -qp.InequalityRhs[i];
-                for (int k = 0; k < n; k++) s += aineq[i, k] * f[k];
-                if (s > 1e-7 * scale)
+                if (s[i] > 1e-7 * scale)
                 {
                     feasible = false;
                     if (violatedConeRows == null) violatedConeRows = new List<(int, double)>();
-                    violatedConeRows.Add((i, s));
+                    violatedConeRows.Add((i, s[i]));
                 }
             }
             if (violatedConeRows != null) return f; // next round pins these
@@ -770,16 +855,15 @@ public static class MasonryStabilityChecker
     /// </summary>
     private static double[] PolishConeByAlternatingProjection(
         EquilibriumSystem equilibrium, ConvexQpProblem qp, double[] invH,
-        int[][] colRows, double[] start, out bool certified, out string certificate)
+        int[][] colRows, double[][] colVals, int[][] ineqColRows, double[][] ineqColVals,
+        double[] start, out bool certified, out string certificate)
     {
         certified = false;
         certificate = null;
         int n = qp.VariableCount;
         int meq = qp.EqualityRowCount;
-        var aeq = qp.EqualityMatrix;
         var beq = qp.EqualityRhs;
-        var aineq = qp.InequalityMatrix;
-        if (aineq == null || equilibrium.ForceComponentsPerVertex != 4 || n % 4 != 0) return null;
+        if (ineqColRows == null || equilibrium.ForceComponentsPerVertex != 4 || n % 4 != 0) return null;
         int vGroups = n / 4;
         int mineq = qp.InequalityRowCount;
         if (vGroups == 0 || mineq % vGroups != 0) return null;
@@ -793,7 +877,7 @@ public static class MasonryStabilityChecker
         var aSoc = new double[vGroups];
         for (int g = 0; g < vGroups; g++)
         {
-            double mu = -aineq[g * faceK, g * 4];
+            double mu = -IneqValueAt(ineqColRows[g * 4], ineqColVals[g * 4], g * faceK);
             if (mu <= 0) return null;
             aSoc[g] = mu * cosK;
         }
@@ -805,11 +889,12 @@ public static class MasonryStabilityChecker
             double w = invH[k];
             if (w == 0) continue;
             var rows = colRows[k];
+            var vals = colVals[k];
             for (int a = 0; a < rows.Length; a++)
             {
-                double v1 = w * aeq[rows[a], k];
+                double v1 = w * vals[a];
                 for (int b = a; b < rows.Length; b++)
-                    mtx[rows[a], rows[b]] += v1 * aeq[rows[b], k];
+                    mtx[rows[a], rows[b]] += v1 * vals[b];
             }
         }
         for (int i = 0; i < meq; i++)
@@ -881,7 +966,8 @@ public static class MasonryStabilityChecker
                 double fk = f[k];
                 if (fk == 0) continue;
                 var rows = colRows[k];
-                for (int a = 0; a < rows.Length; a++) resid[rows[a]] += aeq[rows[a], k] * fk;
+                var vals = colVals[k];
+                for (int a = 0; a < rows.Length; a++) resid[rows[a]] += vals[a] * fk;
             }
             double eqRes = 0;
             for (int i = 0; i < meq; i++) if (Math.Abs(resid[i]) > eqRes) eqRes = Math.Abs(resid[i]);
@@ -900,8 +986,10 @@ public static class MasonryStabilityChecker
                     int c0 = 4 * g;
                     for (int r = g * faceK; r < (g + 1) * faceK; r++)
                     {
-                        double s = aineq[r, c0] * f[c0] + aineq[r, c0 + 1] * f[c0 + 1]
-                                 + aineq[r, c0 + 2] * f[c0 + 2] + aineq[r, c0 + 3] * f[c0 + 3]
+                        double s = IneqValueAt(ineqColRows[c0], ineqColVals[c0], r) * f[c0]
+                                 + IneqValueAt(ineqColRows[c0 + 1], ineqColVals[c0 + 1], r) * f[c0 + 1]
+                                 + IneqValueAt(ineqColRows[c0 + 2], ineqColVals[c0 + 2], r) * f[c0 + 2]
+                                 + IneqValueAt(ineqColRows[c0 + 3], ineqColVals[c0 + 3], r) * f[c0 + 3]
                                  - qp.InequalityRhs[r];
                         if (s > coneViol) coneViol = s;
                     }
@@ -926,7 +1014,8 @@ public static class MasonryStabilityChecker
                 if (w == 0) continue;
                 double s = 0;
                 var rows = colRows[k];
-                for (int a = 0; a < rows.Length; a++) s += aeq[rows[a], k] * z[rows[a]];
+                var vals = colVals[k];
+                for (int a = 0; a < rows.Length; a++) s += vals[a] * z[rows[a]];
                 f[k] -= w * s;
             }
         }
@@ -938,8 +1027,75 @@ public static class MasonryStabilityChecker
     {
         double obj = 0;
         for (int k = 0; k < f.Length; k++)
-            obj += 0.5 * qp.Hessian[k, k] * f[k] * f[k] + qp.LinearObjective[k] * f[k];
+        {
+            double h = qp.Hessian != null ? qp.Hessian[k, k] : qp.HessianDiagonal[k];
+            obj += 0.5 * h * f[k] * f[k] + qp.LinearObjective[k] * f[k];
+        }
         return obj;
+    }
+
+    /// <summary>
+    /// Column-sparse (rows, vals) view of a constraint block, built from either
+    /// the dense array or the sparse-built COO (2026-07-02). COO duplicates are
+    /// merged (COO semantics are accumulative; the LS algebra needs one value
+    /// per (row, col)). vals[k] is aligned with rows[k].
+    /// </summary>
+    private static void BuildColumnView(
+        double[,] dense, Frahan.Masonry.Equilibrium.SparseMatrixCoo coo, int n, int rowCount,
+        out int[][] colRows, out double[][] colVals)
+    {
+        colRows = new int[n][];
+        colVals = new double[n][];
+        if (coo != null)
+        {
+            var accum = new Dictionary<int, double>[n];
+            var order = new List<int>[n];
+            var ri = coo.RowIndices; var ci = coo.ColIndices; var vv = coo.Values;
+            int nnz = coo.NonZeroCount;
+            for (int e = 0; e < nnz; e++)
+            {
+                int k = ci[e]; int r = ri[e];
+                if (accum[k] == null) { accum[k] = new Dictionary<int, double>(12); order[k] = new List<int>(12); }
+                if (accum[k].TryGetValue(r, out double cur)) accum[k][r] = cur + vv[e];
+                else { accum[k][r] = vv[e]; order[k].Add(r); }
+            }
+            for (int k = 0; k < n; k++)
+            {
+                if (accum[k] == null) { colRows[k] = Array.Empty<int>(); colVals[k] = Array.Empty<double>(); continue; }
+                var rowsK = order[k];
+                var rArr = new int[rowsK.Count];
+                var vArr = new double[rowsK.Count];
+                for (int t = 0; t < rowsK.Count; t++) { rArr[t] = rowsK[t]; vArr[t] = accum[k][rowsK[t]]; }
+                colRows[k] = rArr; colVals[k] = vArr;
+            }
+        }
+        else if (dense != null)
+        {
+            var rScratch = new List<int>(16);
+            var vScratch = new List<double>(16);
+            for (int k = 0; k < n; k++)
+            {
+                rScratch.Clear(); vScratch.Clear();
+                for (int r = 0; r < rowCount; r++)
+                {
+                    double v = dense[r, k];
+                    if (v != 0) { rScratch.Add(r); vScratch.Add(v); }
+                }
+                colRows[k] = rScratch.ToArray();
+                colVals[k] = vScratch.ToArray();
+            }
+        }
+        else
+        {
+            for (int k = 0; k < n; k++) { colRows[k] = Array.Empty<int>(); colVals[k] = Array.Empty<double>(); }
+        }
+    }
+
+    /// <summary>Value of a column-sparse block at (row, this column); 0 if absent.</summary>
+    private static double IneqValueAt(int[] rows, double[] vals, int row)
+    {
+        for (int a = 0; a < rows.Length; a++) if (rows[a] == row) return vals[a];
+        return 0.0;
     }
 
     /// <summary>Dense SPD solve M x = rhs by Cholesky; null when M is not SPD.</summary>

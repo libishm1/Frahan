@@ -67,7 +67,7 @@ namespace Frahan.GH;
 public sealed class Pack2DTrencadisDynamicComponent : FrahanComponentBase
 {
     public Pack2DTrencadisDynamicComponent()
-        : base("Frahan Trencadís Dynamic Settle", "TrencadisDyn",
+        : base("Trencadís Dynamic Settle", "TrencadisDyn",
             "Light Kangaroo 2 settle for trimmed trencadís packing. " +
             "Each piece is one centroid particle. SphereCollide pushes " +
             "overlapping centroids apart, Anchor pulls back to post- " +

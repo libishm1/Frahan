@@ -29,12 +29,12 @@ namespace Frahan.GH.Quarry
     {
         public BlockCutOptLoadFracturesComponent()
             : base(
-                "BlockCutOpt Load Fractures", "BCOLoadFx",
+                "BlockCutOpt Load Fractures", "LoadFractures",
                 "Load fractures from disk (PLY, CSV, .lines, .txt). World " +
                 "coordinates in metres. For 2D-trace formats, zMin / zMax " +
                 "define the vertical extrusion range. Output is a Rhino " +
                 "Mesh consumable by BlockCutOpt Solve.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -107,11 +107,11 @@ namespace Frahan.GH.Quarry
     {
         public BlockCutOptSolveComponent()
             : base(
-                "BlockCutOpt Solve", "BCOSolve",
+                "BlockCutOpt Solve", "BlockCutSolve",
                 "Brute-force search for the optimum cutting direction + " +
                 "displacement that maximises the count of non-intersected " +
                 "blocks. All units in metres. [Elkarmoty et al. 2020]",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -220,11 +220,11 @@ namespace Frahan.GH.Quarry
     {
         public BlockCutOptAmrrPlanComponent()
             : base(
-                "BlockCutOpt AMRR Plan", "BCOAmrr",
+                "BlockCutOpt AMRR Plan", "RemovalPlan",
                 "Plan a sequence of plane cuts (Shao 2022) that reduces the " +
                 "starting block toward a target bounding sphere. Maximises " +
                 "the average material removal rate. Implements AMRR in-block plane-sequence cutting (Shao 2022).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>
@@ -312,11 +312,11 @@ namespace Frahan.GH.Quarry
     {
         public BlockCutOptOmniSolveComponent()
             : base(
-                "BlockCutOpt Omni Solve", "BCOOmni",
+                "BlockCutOpt Omni Solve", "BlockCutMulti",
                 "Run the omni-solver: uniform (mx, my) sub-division per zone, " +
                 "4-axis Pareto multi-objective (recovery, revenue, kerf-time, " +
                 "BCSdbBV). Returns one row per zone. Implements BlockCutOpt omni-solve (Elkarmoty 2020; Jalalian 2023).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         { }
 
         public override Guid ComponentGuid =>

@@ -26,7 +26,7 @@ namespace Frahan.GH;
 public sealed class PackingReportComponent : FrahanComponentBase
 {
     public PackingReportComponent()
-        : base("Frahan Packing Report", "PackRpt",
+        : base("Packing Report", "PackRpt",
             "Compute summary metrics for a 3D PackResult: placements, failures, " +
             "fill ratio, average placement score, item-volume stats, per-reason " +
             "failure counts.",

@@ -1,0 +1,2 @@
+solved 541 blocks / 969 interfaces -> IsStable=False (SolverError)
+  Penalty-RBE QP SolverError: ADMM did not converge in 8000 iterations (rho=3.125e2, r_pri=2.444e3/eps 2.739e1, r_dua=4.716e3/eps 6.353e1).

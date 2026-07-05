@@ -213,11 +213,19 @@ public static class CgalMeshBoolean
         }
 
         // Marshal output and free native buffers.
-        var verts = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outVerts, verts, 0, outVc * 3);
-        var tris = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outTris, tris, 0, outTc * 3);
-        Native.frahan_cgal_free_buffers(outVerts, outTris);
+        double[] verts;
+        int[] tris;
+        try
+        {
+            verts = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outVerts, verts, 0, outVc * 3);
+            tris = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outTris, tris, 0, outTc * 3);
+        }
+        finally
+        {
+            Native.frahan_cgal_free_buffers(outVerts, outTris);
+        }
 
         backend = CsgBackend.Cgal;
         return new MeshSnapshot(verts, tris);

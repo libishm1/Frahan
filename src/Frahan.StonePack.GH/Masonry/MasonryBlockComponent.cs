@@ -40,6 +40,8 @@ namespace Frahan.GH.Masonry
 
         // GUID is also written here as a comment so the smoke test can
         // cross-reference the literal: D4F8A1B2-2C3D-4E5F-9A1B-3C4D5E6F7A8B
+        public override GH_Exposure Exposure => GH_Exposure.quarternary;
+
         public override Guid ComponentGuid =>
             new Guid("D4F8A1B2-2C3D-4E5F-9A1B-3C4D5E6F7A8B");
 

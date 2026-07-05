@@ -49,6 +49,65 @@ namespace Frahan.EdgeMatching
         /// </summary>
         public int NonCrossingMaxGap { get; set; } = 0;
 
+        // --- Phase 1: cycle-consistency consensus on the Agglomerative pair graph (opt-in) ---
+        // Greedy MST commits to the lowest-residual edge per pair and never re-checks it
+        // against the global graph, so one tight-but-wrong match locks in and propagates.
+        // When enabled, every triangle of the pair graph is closed (compose the three
+        // relative poses around the loop; a consistent loop returns to identity). Edges
+        // whose triangles persistently fail to close (median loop deviation above the
+        // tolerance) get CycleConsistencyPenalty added to their MST/seed weight, so the
+        // assembly avoids them. Default off = byte-identical legacy MST.
+        public bool UseCycleConsistency { get; set; } = false;
+
+        /// <summary>Scale-relative loop-closure tolerance: |rotation (rad)| + |translation|/scale.</summary>
+        public double CycleConsistencyTolerance { get; set; } = 0.12;
+
+        /// <summary>Weight added to an edge sitting in inconsistent loops (soft rejection; preserves connectivity).</summary>
+        public double CycleConsistencyPenalty { get; set; } = 1.0e6;
+
+        // --- Phase 1b: contact-seam-length match discriminator (opt-in) ---
+        // The ICP residual cannot tell a true neighbour (shares a long contiguous
+        // complementary seam) from a spurious match (one coincidental short fragment) --
+        // spurious matches can have residuals AS LOW AS or lower than true ones. After
+        // the ICP pose, measure what fraction of the candidate perimeter lands within
+        // ContactToleranceFraction*scale of the hit boundary; reject matches below
+        // MinContactFraction and rank survivors by contact (then residual). This removes
+        // the spurious fragment matches at the source, before the pair graph is built.
+        // Default off = legacy residual-only behaviour (all current tests unchanged).
+        public bool UseContactScore { get; set; } = false;
+
+        /// <summary>Contact band as a fraction of object scale (median panel bbox diagonal).</summary>
+        public double ContactToleranceFraction { get; set; } = 0.02;
+
+        /// <summary>Minimum fraction of candidate perimeter in contact to accept a match (0 = no gate).
+        /// 0.18 default tuned on the jigsaw harness (true seams ~0.25-0.36, spurious fragments ~0.14-0.17);
+        /// raise toward 0.24 to cut more false edges, but above ~0.30 it starts dropping true seams.</summary>
+        public double MinContactFraction { get; set; } = 0.18;
+
+        /// <summary>Number of arc-length samples along the candidate perimeter for the contact test.</summary>
+        public int ContactSamples { get; set; } = 64;
+
+        // --- Phase 1c: best-buddies mutual-best-match gate (opt-in) ---
+        // Local edge scores (residual / contact / chamfer) cannot separate a true seam
+        // from a non-adjacent piece that mates ~as well locally (real jigsaw ambiguity).
+        // Best-Buddies (Gallagher 2012 / Paikin-Tal 2015, the same fix ryan-puzzle-solver
+        // relies on): an edge (A,B) is trustworthy only if B is A's lowest-weight match
+        // AND A is B's lowest-weight match. The impostor edge is some OTHER piece's true
+        // neighbour, so it is not mutual -> it gets BestBuddyPenalty added to its MST
+        // weight and is used only when a node has no mutual-best edge. Default off.
+        public bool UseBestBuddies { get; set; } = false;
+
+        /// <summary>Weight added to a non-mutual-best edge (soft; keeps the graph connected as a fallback).</summary>
+        public double BestBuddyPenalty { get; set; } = 1.0e3;
+
+        // --- Whole-side best-first assembler (BestFirstAssembler; standalone solver) ---
+        /// <summary>Acceptance gate for the whole-side best-first assembler: the maximum
+        /// length-normalized side-fit cost (dimensionless L1/maxLen) admitted to the
+        /// frontier. Default 2.5 (validated 9/9 on the jigsaw harness; must exceed the
+        /// highest TRUE seam cost, e.g. ~1.86, or a far part column can orphan). Only
+        /// read by <see cref="BestFirstAssembler"/>.</summary>
+        public double WholeSideFitGate { get; set; } = 2.5;
+
         // --- A1: scale-relative acceptance gates (opt-in) ---------------------
         // The original gates are ABSOLUTE: the phase-correlation similarity gate
         // is a fixed 0.5 and ResidualThreshold is a fixed model-unit distance.

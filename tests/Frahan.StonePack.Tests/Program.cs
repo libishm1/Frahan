@@ -132,6 +132,9 @@ var tests = new List<(string Name, Action Body)>
     ("recon cleanup drops degenerate + duplicate triangles", ReconstructionCleanupTests.Clean_DropsDegenerateAndDuplicateTriangles),
     ("recon cleanup Translate adds centroid back", ReconstructionCleanupTests.Translate_AddsCentroidBack),
     ("recon recenter+translate round-trips at quarry scale", ReconstructionCleanupTests.RecenterTranslate_RoundTrips_AtQuarryScale),
+    ("recon EstimateSpacing recovers uniform grid spacing", ReconstructionCleanupTests.EstimateSpacing_UniformGrid_RecoversSpacing),
+    ("recon EstimateSpacing scales with model (unit-invariant)", ReconstructionCleanupTests.EstimateSpacing_ScalesWithModel),
+    ("recon EstimateSpacing degenerate returns zero", ReconstructionCleanupTests.EstimateSpacing_Degenerate_ReturnsZero),
     ("recon cleanup null/empty is safe", ReconstructionCleanupTests.Clean_EmptyOrNull_IsSafe),
     // 2026-06-04 - OverburdenVolume (cut-fill -> rock-face core A5, pure managed)
     ("overburden constant depth = area*depth", OverburdenVolumeTests.ConstantDepth_VolumeEqualsAreaTimesDepth),
@@ -148,6 +151,18 @@ var tests = new List<(string Name, Action Body)>
     ("plan report component has 4 inputs and 4 outputs", PackingPlanReportComponentTests.Component_HasFourInputsAndFourOutputs),
     ("plan report component fourth input is Edge Match Tree", PackingPlanReportComponentTests.Component_FourthInput_IsEdgeMatchTree),
     ("plan report component third input still item-access", PackingPlanReportComponentTests.Component_ThirdInput_EdgeMatchScores_StillItemAccess),
+    // Discrete Frechet distance primitive (R1: ordered mating-edge verification)
+    ("frechet identical curves is zero", FrechetDistanceTests.Identical_IsZero),
+    ("frechet parallel offset equals offset", FrechetDistanceTests.ParallelOffset_EqualsOffset),
+    ("frechet is symmetric", FrechetDistanceTests.Symmetric),
+    ("frechet direction-sensitive (reverse is far)", FrechetDistanceTests.DirectionSensitive_ReverseIsFar),
+    ("frechet is max not mean (local bump dominates)", FrechetDistanceTests.MaxNotMean_LocalBumpDominates),
+    ("frechet >= hausdorff", FrechetDistanceTests.GreaterOrEqualHausdorff),
+    ("frechet single points is distance", FrechetDistanceTests.SinglePoints_IsDistance),
+    ("frechet null/empty throws", FrechetDistanceTests.NullOrEmpty_Throws),
+    ("Edge Gap (Frechet) component metadata", EdgeGapFrechetComponentTests.Metadata_IsExpectedValues),
+    ("Robot Targets optional inputs are optional", FabricationHandoffComponentTests.RobotTargets_OptionalInputs_AreOptional),
+    ("KUKAprc optional inputs are optional", FabricationHandoffComponentTests.KukaPrc_OptionalInputs_AreOptional),
     // BoundaryRailMatcher + EdgeMatch + MatchOptions (pure managed)
     ("matcher MatchEdge null index throws", BoundaryRailMatcherTests.MatchEdge_NullIndex_Throws),
     ("matcher MatchEdge null query throws", BoundaryRailMatcherTests.MatchEdge_NullQuery_Throws),
@@ -323,6 +338,7 @@ var tests = new List<(string Name, Action Body)>
     ("wallgen size grading widens area distribution", PolygonalWallGeneratorTests.Generate_SizeGradingIncreasesAreaSpread),
     ("stability two-box stack is stable", MasonryStabilityCheckerTests.TwoBoxStack_IsStable),
     ("stability floating block is unstable", MasonryStabilityCheckerTests.FloatingBlock_IsUnstable),
+    ("stability degenerate flat block rejected at any scale", MasonryStabilityCheckerTests.DegenerateFlatBlock_RejectedAtAnyScale),
     ("stability cantilever beyond support is unstable", MasonryStabilityCheckerTests.CantileverBeyondSupport_IsUnstable),
     ("stability inscribed friction shrinks mu by cos(pi/K)", MasonryStabilityCheckerTests.InscribedFriction_ShrinksMuByCosPiOverK),
     ("stability generated coursed wall prisms are stable", MasonryStabilityCheckerTests.GeneratedWall_PrismStones_AreStable),
@@ -364,6 +380,10 @@ var tests = new List<(string Name, Action Body)>
     ("CNH shields native-kernel interleaved bench (7 shields x5, lane-tagged)", ContactNfpHoleNesterBenchTests.Cnh_Shields_NativeKernel_Bench),
     ("CNH multi-start denser-or-equal + valid + deterministic (25 irregular blobs)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DenserOrEqual_Valid_Deterministic),
     ("CNH multi-start density A/B K=1 vs K=4 (3 tight irregular instances, reported)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DensityAB_Reported),
+    ("CNH boundaryMode:0 is byte-identical to the default overload", CnhBoundaryModeTests.BoundaryModeOff_IsByteIdenticalToBaseline),
+    ("CNH boundary-hug rectangles reach the sheet rim (evolution of V506 boundary affinity)", CnhBoundaryModeTests.BoundaryHug_RectanglesReachTheRim),
+    ("CNH boundary-hug spreads across distinct rim arcs (no clustering)", CnhBoundaryModeTests.BoundaryHug_SpreadsWithoutClustering),
+    ("CNH boundary-hug impossible threshold falls back to bottom-left", CnhBoundaryModeTests.HighThreshold_FallsBackToBottomLeft),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
@@ -669,6 +689,7 @@ var tests = new List<(string Name, Action Body)>
     ("CGAL union fallback matches BSP when DLL absent", CgalMeshBooleanTests.Union_FallbackMatchesBspWhenDllAbsent),
     ("CGAL intersection fallback correct volume", CgalMeshBooleanTests.Intersection_FallbackProducesCorrectVolume),
     ("CGAL difference fallback correct volume", CgalMeshBooleanTests.Difference_FallbackProducesCorrectVolume),
+    ("CGAL native trim of ETH stone is clean+manifold+unified", CgalMeshBooleanTests.CgalTrim_EthStone_ProducesCleanUnifiedMesh),
     ("CGAL null args throw", CgalMeshBooleanTests.NullArgs_Throw),
     ("masonry GH MasonryAssemblyComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryAssemblyComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryAssemblyComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryAssemblyComponent_Metadata_IsCorrect),
@@ -1040,6 +1061,12 @@ var tests = new List<(string Name, Action Body)>
     ("edgematch Dispatch mixed solver runs without crash (Rhino)", EdgeMatchingDispatchTests.AssemblySolver_MixedPanels_RunsWithoutCrash),
     ("edgematch Determinism two runs same input → same output (Rhino)", EdgeMatchingDeterminismTests.TwoRuns_SameInput_SameOutput),
     ("edgematch Determinism hash identical across runs (Rhino)", EdgeMatchingDeterminismTests.TwoRuns_HashIdentical),
+    ("edgematch WholeSide best-first reassembles 2x2 jigsaw (Rhino)", WholeSideAssemblerTests.WholeSide_WavyJigsaw_AllPlaced),
+    ("edgematch WholeSide best-first deterministic (Rhino)", WholeSideAssemblerTests.WholeSide_Deterministic),
+    ("nbo box sanity: hybrid orient + gate (Rhino)", NboPlannerTests.Nbo_BoxSanity),
+    ("nbo FillWall deterministic (Rhino)", NboPlannerTests.Nbo_FillDeterministic),
+    ("nbo FillWall all committed stable (Rhino)", NboPlannerTests.Nbo_FillAllStable),
+    ("nbo grasp TCP points down + UR pose (Rhino)", NboPlannerTests.Nbo_GraspTcpDown),
     ("edgematch component EdgeMatchSolve GUID parses", EdgeMatchingComponentGuidTests.EdgeMatchSolveComponent_GuidParses),
     ("edgematch component EdgeMatchSegments GUID parses", EdgeMatchingComponentGuidTests.EdgeMatchSegmentsComponent_GuidParses),
     ("edgematch component TrencadisEdgeMatch GUID parses", EdgeMatchingComponentGuidTests.TrencadisEdgeMatchComponent_GuidParses),
@@ -1258,6 +1285,8 @@ var tests = new List<(string Name, Action Body)>
     ("GH PolygonalMasonrySequence3D metadata (Rhino)", PolygonalMasonrySequence3DComponentTests.Metadata_IsExpectedValues),
     ("GH BoxToMesh metadata (Rhino)", BoxToMeshComponentTests.Metadata_IsExpectedValues),
     ("GH CSV Parts Reader metadata (Rhino)", CsvPartsReaderComponentTests.Metadata_IsExpectedValues),
+    // Sheet Nest (Live) — Run-gated AsyncScanComponent consolidating HoleNest/FreeNestX/Unified (2026-07-05)
+    ("GH Sheet Nest (Live) metadata (Rhino)", SheetNestLiveComponentTests.Metadata_IsExpectedValues),
     // Rubble Wall Settle — Z-up concave-aware rubble settle Core port (Rhino runtime SKIP without rhcommon_c)
     ("RubbleWallSettle all stones placed order preserved (Rhino)", RubbleWallSettleTests.Settle_AllStonesPlaced_OrderPreserved),
     ("RubbleWallSettle no two placed stones interpenetrate (Rhino)", RubbleWallSettleTests.Settle_NoTwoPlacedStonesInterpenetrate),
@@ -1405,7 +1434,10 @@ var tests = new List<(string Name, Action Body)>
     // TEMPORARY (revert before commit) — KB-10 local registration; the
     // orchestrator integrates the final tuples.
     ("kb10 6x4 exact-joint wall certifies (was SolverError)", Kb10ExactJointConditioningTests.Wall6x4_ExactJoints_CertifiesWithoutSolverError),
-    ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError)
+    ("kb10 exact-joint wall sweep 6x4/8x5/10x6 reports verdict+ms", Kb10ExactJointConditioningTests.WallSweep_ExactJoints_NoSolverError),
+
+    // Rubble-vault tessellation Core pipeline on the real Park Güell archive SubD (Checkpoint 1)
+    ("Vault tessellation pipeline reproduces v004 scale on archive SubD (Rhino)", VaultTessellationTests.Vault_ArchiveSubD_Pipeline_ProducesV004ScaleTessellation)
 };
 
 // Dev hook (permanent, documented): FRAHAN_TEST_FILTER=<substring> narrows the

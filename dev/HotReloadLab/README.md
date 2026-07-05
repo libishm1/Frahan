@@ -1,0 +1,137 @@
+# HotReloadLab - edit Grasshopper .NET code live, no Rhino restart
+
+Verified setup facts (2026-07-04): Rhino 8.30 runs on .NET 8.0.28 (CoreCLR) by
+default on Windows. VS Code's C# debugger (coreclr attach) supports .NET Hot
+Reload: method-body edits apply to the RUNNING Rhino. The classic failure
+(ENC0003 "updating attribute requires restarting") is the SDK appending a source
+revision to AssemblyInformationalVersion each build; this project pins
+`IncludeSourceRevisionInInformationalVersion=false` to prevent it.
+
+## One-time setup (done)
+
+1. `dotnet build dev/HotReloadLab/HotReloadLab.csproj -c Debug` (net7.0-windows,
+   portable PDB, references Rhino 8 system DLLs with Private=false).
+2. Copy `bin/Debug/net7.0-windows/HotReloadLab.gha` + `.pdb` to
+   `%APPDATA%\Grasshopper\Libraries\`.
+3. Start Rhino once after the copy (the ONLY restart in the workflow).
+   Component appears as **Dev > HotReload > Hot Lab** (verified: solves 2+3=5,
+   note "HotLab v1: A+B").
+
+## The live loop
+
+1. In VS Code (folder `D:\frahan-stonepack`): Run and Debug -> **Attach to
+   Rhino 8** (F5). Pick the Rhino process if prompted.
+2. Open `dev/HotReloadLab/HotLabComponent.cs`. Edit the body of
+   `SolveInstance` - e.g. change `a + b` to `a * b` and the note to
+   "HotLab v2: A*B".
+3. Save. `csharp.debug.hotReloadOnSave` applies the change to the running
+   Rhino (watch the fire icon / debug console; manual apply = Ctrl+Shift+Enter).
+4. In Grasshopper: right-click the Hot Lab component -> Recompute (or wiggle a
+   slider). Output changes to 6 / "HotLab v2: A*B". No restart, no redeploy.
+
+## What hot reload can and cannot do
+
+- CAN: edit method bodies - logic, math, strings, branches, local vars. This
+  covers most SolveInstance iteration.
+- CANNOT (debugger reports a rude edit; restart required): change method /
+  component signatures, add or remove inputs/outputs or components, change
+  attributes, rename types. GUID rules from AGENTS.md unchanged.
+- Debug config only. The deployed Release .gha still ships via
+  `install/stage.ps1` + `install/deploy.ps1`.
+
+## Agent-harness protocol
+
+FULLY AGENT-DRIVEN via the `vscode-as-mcp-server` extension
+(acomagu.vscode-as-mcp-server, installed 2026-07-04; registered as the `vscode`
+server in `D:\code_ws\.mcp.json` via `C:\Program Files\nodejs\npx.cmd
+vscode-as-mcp-server`). Requires: VS Code open on `D:\frahan-stonepack`, the
+extension's MCP server started (status bar icon), and a Claude Code session
+restart after first registration. The loop:
+
+1. `start_debug_session` with the "Attach to Rhino 8" configuration (or
+   `execute_vscode_command` -> `workbench.action.debug.start`). Once per session.
+2. Agent edits the component source with the `text_editor` tool - edits go
+   through VS Code, so the save event fires `csharp.debug.hotReloadOnSave` and
+   the delta applies to the RUNNING Rhino. (Plain disk writes are seen as
+   external changes and may NOT trigger the apply - use `text_editor`, or
+   `execute_vscode_command` with the hot-reload apply command; discover its id
+   via `list_vscode_commands`.)
+3. Agent re-solves and reads outputs via Rhino MCP `run_csharp`
+   (`doc.NewSolution(true)` + read `VolatileData`).
+
+No build, no deploy, no restart per iteration. Restart only on signature /
+ribbon changes (rude edits).
+
+GOTCHA (hit live 2026-07-04): the project MUST be in the loaded solution.
+A loose .cs file gives "Debugging C# files without a project is only supported
+for .NET 10+" and hot reload never applies. HotReloadLab.csproj was added to
+Frahan.StonePack.sln for exactly this reason.
+
+## Field log 2026-07-04 (evening): what is PROVEN and what is left
+
+PROVEN agent-side, no hands:
+- DebugMCP: attach -> breakpoint (by line content) -> inspect live SolveInstance
+  locals -> evaluate_expression in-frame -> continue. Full inspect loop works.
+- Raw streamable-HTTP driving of vscode-as-mcp-server: POST / on its port,
+  stateless (no session id). tools/call works for text_editor (skip_dialog:true
+  bypasses the confirmation), focus_editor, start_debug_session,
+  list_debug_sessions. start_debug_session workspaceFolder needs a LOWERCASE
+  drive letter ('d:\\frahan-stonepack').
+- Agent attach to Rhino via start_debug_session: works (Debugger.IsAttached
+  confirmed in-process).
+
+NOT yet green - the hot-reload APPLY on an attach session:
+- Symptom: "Document ... not found in AST tracker" (renderer.log) on every
+  apply; the save handler runs but the C# Dev Kit change tracker never ingests
+  the document - not for external disk edits, not for text_editor
+  (WorkspaceEdit) edits followed by a save.
+- Runtime side is ready: Rhino runs with DOTNET_MODIFIABLE_ASSEMBLIES=debug
+  (via router env + user shortcut).
+- NEXT DECISIVE TEST: during a visible F5 attach session, a HUMAN types an edit
+  in the editor and saves. If the apply works -> tracker ingests only real
+  typing events; agent path = typed-edit emulation or tracker API. If it fails
+  -> VS Code C# hot reload does not support attach in this setup; use
+  launch-mode (below) or a custom in-process MetadataUpdater harness.
+- Launch-mode gotcha: Rhino.exe is a RE-EXEC SHIM - 'request: launch' binds the
+  parent, which exits after spawning the real Rhino -> session terminates (the
+  child survives and hits the license dialog). Try launching with the runtime
+  flag (e.g. args '/netcore') to avoid the respawn, or launch + auto-attach to
+  the child.
+- text_editor quirk: writes go to the BUFFER (unsaved); its str_replace matching
+  reads DISK - a second replace against unsaved text reports 'not found'. Save
+  between dependent edits (focus_editor + Ctrl+S via SendKeys).
+- Two-window port split (user setting, frahan workspace): mcpServer.port 60101,
+  debugmcp.serverPort 3002; code_ws window keeps 60100/3001. frahan/.mcp.json
+  points debugmcp at 3002.
+
+## MCP coexistence rules (audited 2026-07-04, no conflicts)
+
+Six servers in `D:\code_ws\.mcp.json`: rhino (router, slots on 10500),
+grasshopper (bridge on 8080), context7 + anki (remote HTTP), vscode
+(vscode-as-mcp-server, extension port 60100), debugmcp (DebugMCP, HTTP
+localhost:3001). Port map is disjoint; MCP tool names are namespaced per
+server (mcp__vscode__*, mcp__debugmcp__*) so no collisions are possible.
+The FUNCTIONAL rules that keep them from stepping on each other:
+
+1. ONE debugger per process. Only DebugMCP starts/stops/restarts debug
+   sessions (`start_debugging`, breakpoints, stepping, `evaluate_expression`).
+   vscode-as-mcp-server is for `execute_vscode_command` / `text_editor` /
+   hot-reload apply / `code_checker` - never for session lifecycle.
+2. NEVER call mcp__rhino__* tools while stopped at a breakpoint - Rhino's
+   UI thread is frozen and run_csharp/g1/capture calls hang until timeout.
+   `continue_execution` first, then drive the canvas.
+3. One writer at a time: during an attached session edit source via the
+   vscode `text_editor` tool (its save events fire hotReloadOnSave); direct
+   disk edits are for non-debug work.
+4. DebugMCP auto-starts its HTTP server with VS Code; vscode-as-mcp-server
+   needs the status-bar toggle. If port 3001/60100 is ever taken, both are
+   configurable (debugmcp.serverPort / mcpServer.port).
+
+## Applying this to Frahan.StonePack
+
+Frahan targets net48 (loads fine on Rhino 8's CoreCLR as a compatibility
+assembly), but hot reload wants a CoreCLR-targeted Debug build. To get the same
+loop on Frahan components: add `net7.0-windows` to `<TargetFrameworks>`
+(multi-target per the McNeel migration guide), deploy the net7 Debug build to
+Libraries during dev sessions, and keep net48 Release for shipping. Queued as
+follow-up work; validate `compat` and the native shims first.

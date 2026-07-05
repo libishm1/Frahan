@@ -43,7 +43,7 @@ public sealed class ScanToBlockInventoryComponent : FrahanComponentBase
             "project parts into. Orientation: 0 = mesh frame, 1 = PCA " +
             "(longest principal axis → X), 2 = world Z. Method: 0 = OBB, " +
             "1 = inscribed AABB after PCA align, 2 = ConvexHull.",
-            "Frahan", "Quarry")
+            "Frahan", "Block")
     {
     }
 

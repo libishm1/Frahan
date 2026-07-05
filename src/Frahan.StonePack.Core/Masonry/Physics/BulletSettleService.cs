@@ -36,6 +36,16 @@ namespace Frahan.Masonry.Physics
         public IReadOnlyList<double[]> ConvexPieces { get; set; }
         /// <summary>Mass (proportional to volume). Floored internally.</summary>
         public double Mass { get; set; } = 1.0;
+        /// <summary>Optional CENTER OF MASS in world coords [x,y,z]. When set, the body rotates about
+        /// this point (the physical CoM). Leave null to use the hull's VERTEX centroid -- which for an
+        /// irregular stone is offset from the true CoM, so gravity applies a false torque and the stone
+        /// tumbles even when it is actually stable. Callers with the mesh should pass the volume centroid.</summary>
+        public double[] CenterOfMass { get; set; }
+        /// <summary>When true, this stone is a FIXED (static, immovable) support: it holds its placed
+        /// pose and the dynamic stones settle ONTO it. Used by the incremental settle-as-placed loop
+        /// (already-built courses are fixed while the next stone seats), which avoids the whole-wall
+        /// mutual push-apart that scatters an un-settled point-contact wall. Not lifted.</summary>
+        public bool Fixed { get; set; }
     }
 
     /// <summary>Axis-aligned box container [0,W] x [0,D] x [0,H] (open top).</summary>
@@ -53,6 +63,9 @@ namespace Frahan.Masonry.Physics
         public int SettleSteps { get; set; } = 1500;
         public int SolverIterations { get; set; } = 80;
         public double TimeStep { get; set; } = 1.0 / 600.0;
+        /// <summary>Sub-steps per gravity-ramp phase (4 phases gentle-&gt;full). Lower = faster, fine
+        /// for a single body dropping onto a FIXED base (little initial overlap to resolve gently).</summary>
+        public int RampStepsPerPhase { get; set; } = 250;
         /// <summary>Lift applied to every body at seed time to clear convex-proxy overlap.</summary>
         public double Lift { get; set; } = 0.06;
         /// <summary>Vertical tamp rounds (strong-gravity bursts) to densify after settling.</summary>
@@ -110,7 +123,11 @@ namespace Frahan.Masonry.Physics
             var centroids = new List<double[]>(stones.Count);
             foreach (var s in stones)
             {
-                var c = Centroid(s.ConvexPieces);
+                // Rotate about the physical CoM when the caller supplies it; the hull vertex-centroid
+                // (the fallback) is offset for irregular stones and tumbles them under a false torque.
+                var c = (s.CenterOfMass != null && s.CenterOfMass.Length == 3)
+                        ? s.CenterOfMass
+                        : Centroid(s.ConvexPieces);
                 centroids.Add(c);
                 var compound = new CompoundShape();
                 foreach (var piece in s.ConvexPieces)
@@ -118,25 +135,34 @@ namespace Frahan.Masonry.Physics
                     var hull = new ConvexHullShape();
                     for (int i = 0; i + 2 < piece.Length; i += 3)
                         hull.AddPoint(new Vector3(piece[i] - c[0], piece[i + 1] - c[1], piece[i + 2] - c[2]), false);
+                    // Bullet's default 0.04 m collision margin INFLATES the hull and rounds its contact
+                    // faces -- a stone then rests on rounded edges and rolls off even a face it is stable
+                    // on. Shrink it to a thin skin so the hull matches the real stone (~mm scale).
+                    hull.Margin = 0.0015;
                     hull.RecalcLocalAabb();
                     compound.AddChildShape(Matrix.Identity, hull);
                 }
-                double mass = Math.Max(s.Mass, 1e-4);
-                compound.CalculateLocalInertia(mass, out var inertia);
-                var seed = Matrix.Translation(c[0], c[1], c[2] + opt.Lift);
+                // A Fixed stone is a STATIC support (mass 0): it never moves and is not lifted, so the
+                // dynamic stones settle onto the already-built wall with no whole-wall push-apart cascade.
+                double mass = s.Fixed ? 0.0 : Math.Max(s.Mass, 1e-4);
+                var inertia = Vector3.Zero;
+                if (!s.Fixed) compound.CalculateLocalInertia(mass, out inertia);
+                var seed = Matrix.Translation(c[0], c[1], c[2] + (s.Fixed ? 0.0 : opt.Lift));
                 var ms = new DefaultMotionState(seed);
                 var body = new RigidBody(new RigidBodyConstructionInfo(mass, ms, compound, inertia))
                 { Friction = opt.Friction, Restitution = 0.0 };
-                body.SetDamping(0.4, 0.4);
+                if (s.Fixed) body.CollisionFlags |= CollisionFlags.StaticObject;
+                else body.SetDamping(0.4, 0.4);
                 world.AddRigidBody(body);
                 bodies.Add(body);
             }
 
             // Ramp gravity gentle -> full so seeded near-contacts resolve softly.
+            int rampSteps = Math.Max(1, opt.RampStepsPerPhase);
             foreach (var g in new[] { -0.5, -2.0, -5.0, opt.GravityZ })
             {
                 world.Gravity = new Vector3(0, 0, g);
-                for (int i = 0; i < 250; i++) world.StepSimulation(opt.TimeStep, 4, opt.TimeStep);
+                for (int i = 0; i < rampSteps; i++) world.StepSimulation(opt.TimeStep, 4, opt.TimeStep);
             }
             for (int i = 0; i < opt.SettleSteps; i++) world.StepSimulation(opt.TimeStep, 4, opt.TimeStep);
             for (int t = 0; t < opt.TampRounds; t++)

@@ -67,7 +67,12 @@ public sealed class AdaptiveBlockMatch3DComponent : FrahanComponentBase
     public override Guid ComponentGuid =>
         new Guid("D5F1000A-ED9E-4ED9-A00A-ED9EED9E000A");
 
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    // Hidden 2026-07-05: this component is a SKELETON (the CGAL trim path lands in
+    // v1.x), so it should not sit on the ribbon in the first public release -- a
+    // user would place it expecting a minimal-trim fit and get none. Consistent
+    // with its 3 sibling stubs (BlockChain / Cyclopean / Template), already hidden.
+    // Un-hide when the trim ships.
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
 
     protected override Bitmap Icon => IconProvider.Load("EdgeMatchSolve.png"); // placeholder
 

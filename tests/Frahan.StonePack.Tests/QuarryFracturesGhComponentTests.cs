@@ -77,7 +77,7 @@ static class QuarryFracturesGhComponentTests
         var c = new QuarryDecomposeComponent();
         Assert(c.Name == "Quarry Decompose", $"Name '{c.Name}'");
         Assert(c.Category == "Frahan", $"Category '{c.Category}'");
-        Assert(c.SubCategory == "Quarry", $"SubCategory '{c.SubCategory}'");
+        Assert(c.SubCategory == "Block", $"SubCategory '{c.SubCategory}'");
         Assert(c.Params.Input.Count == 5, $"Input count {c.Params.Input.Count}");
         Assert(c.Params.Output.Count == 3, $"Output count {c.Params.Output.Count} (Slabs+Parents+Mesh)");
     }
@@ -132,7 +132,7 @@ static class QuarryFracturesGhComponentTests
         var c = new MeshShellSplitComponent();
         Assert(c.Name == "Mesh Shell Split", $"Name '{c.Name}'");
         Assert(c.Category == "Frahan", $"Category '{c.Category}'");
-        Assert(c.SubCategory == "Quarry", $"SubCategory '{c.SubCategory}'");
+        Assert(c.SubCategory == "Block", $"SubCategory '{c.SubCategory}'");
         Assert(c.Params.Input.Count == 1, $"Input count {c.Params.Input.Count}");
         Assert(c.Params.Output.Count == 2, $"Output count {c.Params.Output.Count} (Slabs+Mesh)");
     }
@@ -149,7 +149,7 @@ static class QuarryFracturesGhComponentTests
         var c = new ConvexHullSlabComponent();
         Assert(c.Name == "Convex Hull Slab", $"Name '{c.Name}'");
         Assert(c.Category == "Frahan", $"Category '{c.Category}'");
-        Assert(c.SubCategory == "Quarry", $"SubCategory '{c.SubCategory}'");
+        Assert(c.SubCategory == "Block", $"SubCategory '{c.SubCategory}'");
         Assert(c.Params.Input.Count == 1, $"Input count {c.Params.Input.Count}");
         Assert(c.Params.Output.Count == 2, $"Output count {c.Params.Output.Count} (Slab+Mesh)");
     }

@@ -67,13 +67,17 @@ public sealed class ScanReconstructComponent
         p[1].Optional = true;
         p.AddIntegerParameter("Mode", "M",
             "0 = Auto, 1 = AlphaShape, 2 = Poisson (Geogram), 3 = AdvancingFront, " +
-            "4 = Poisson (CGAL). Auto picks AlphaShape with find_optimal_alpha(1) " +
-            "and falls back to Advancing-Front. All run in an isolated worker " +
-            "process, so a backend crash cannot take down Rhino.",
+            "4 = Poisson (CGAL). Auto prefers Poisson when oriented normals are " +
+            "present (a complete watertight surface) and AlphaShape otherwise " +
+            "(density-adaptive; interpolates the data, no hallucinated fill); " +
+            "either falls through the remaining backends if empty. All run in an " +
+            "isolated worker process, so a backend crash cannot take down Rhino.",
             GH_ParamAccess.item, 0);
         p.AddNumberParameter("Alpha", "A",
-            "Alpha value for AlphaShape mode. <= 0 uses CGAL's " +
-            "find_optimal_alpha(1).",
+            "Alpha (squared radius) for AlphaShape mode. <= 0 auto-picks a " +
+            "density-adaptive alpha = (2 * median point spacing)^2, which keeps " +
+            "the surface at point density with far fewer sliver facets than " +
+            "find_optimal_alpha (the fallback if the density alpha comes back empty).",
             GH_ParamAccess.item, 0.0);
         p.AddIntegerParameter("Poisson Depth", "D",
             "Octree depth for Poisson mode. Typical 7-9. <= 0 uses 8.",
@@ -265,49 +269,38 @@ public sealed class ScanReconstructComponent
         string usedMode = "None";
         string firstError = null;
 
-        int tried = s.Mode == 0 ? 1 : s.Mode; // Auto starts with AlphaShape
-        switch (tried)
+        // Auto (Mode 0) chooses the backend from the input and falls through the
+        // remaining no-normals-needed backends if one comes back empty:
+        //   - oriented normals present -> Poisson first (a complete, watertight
+        //     surface), then AlphaShape, then AdvancingFront;
+        //   - no normals -> AlphaShape (density-adaptive; interpolates the data,
+        //     no hallucinated fill), then AdvancingFront.
+        // An explicit Mode runs that one backend only.
+        int[] chain;
+        if (s.Mode == 0)
+            chain = (nrm != null) ? new[] { 2, 1, 3 } : new[] { 1, 3 };
+        else if (s.Mode >= 1 && s.Mode <= 4)
+            chain = new[] { s.Mode };
+        else
+            return new Payload
+            {
+                Failure = $"Mode must be 0 (Auto), 1 (AlphaShape), 2 (Poisson/geogram), 3 (AdvancingFront), or 4 (Poisson/CGAL); got {s.Mode}.",
+            };
+
+        var reconErrors = new List<string>();
+        foreach (int m in chain)
         {
-            case 1:
-                progress($"alpha-shape on {nPts} points (isolated worker)...");
-                if (OutOfProcessReconstructor.TryReconstruct(1, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt, out verts, out tris, out string e1))
-                    usedMode = "AlphaShape";
-                else
-                {
-                    firstError = e1;
-                    if (s.Mode == 0)
-                    {
-                        progress("alpha-shape failed; advancing-front fallback...");
-                        if (OutOfProcessReconstructor.TryReconstruct(3, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt, out verts, out tris, out string e2))
-                            usedMode = "AdvancingFront";
-                        else firstError = $"AlphaShape: {e1}; AdvancingFront: {e2}";
-                    }
-                }
+            progress($"{ReconModeName(m)} on {nPts} points (isolated worker)...");
+            if (OutOfProcessReconstructor.TryReconstruct(m, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt,
+                                                         out verts, out tris, out string em))
+            {
+                usedMode = ReconModeName(m);
                 break;
-            case 2:
-                progress($"poisson (geogram, isolated worker) on {nPts} oriented points...");
-                if (OutOfProcessReconstructor.TryReconstruct(2, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt, out verts, out tris, out string e3))
-                    usedMode = "Poisson";
-                else firstError = e3;
-                break;
-            case 3:
-                progress($"advancing-front (isolated worker) on {nPts} points...");
-                if (OutOfProcessReconstructor.TryReconstruct(3, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt, out verts, out tris, out string e4))
-                    usedMode = "AdvancingFront";
-                else firstError = e4;
-                break;
-            case 4:
-                progress($"poisson (CGAL, isolated worker) on {nPts} oriented points...");
-                if (OutOfProcessReconstructor.TryReconstruct(4, pts, nrm, s.Alpha, s.Depth, s.Spn, s.Rr, s.Bt, out verts, out tris, out string e5))
-                    usedMode = "Poisson(CGAL)";
-                else firstError = e5;
-                break;
-            default:
-                return new Payload
-                {
-                    Failure = $"Mode must be 0 (Auto), 1 (AlphaShape), 2 (Poisson/geogram), 3 (AdvancingFront), or 4 (Poisson/CGAL); got {s.Mode}.",
-                };
+            }
+            reconErrors.Add($"{ReconModeName(m)}: {em}");
         }
+        if (verts == null || tris == null)
+            firstError = string.Join("; ", reconErrors);
 
         if (verts == null || tris == null)
             return new Payload { Failure = firstError ?? "(unknown)", InputCount = nPts };
@@ -333,6 +326,18 @@ public sealed class ScanReconstructComponent
             InputCount = nPts,
             Report = $"In: {nPts} pts; Out: V={verts.Length / 3} T={cleanT}; Mode={usedMode} (isolated worker; recentered T1; cleaned {rawT - cleanT} stray tris)",
         };
+    }
+
+    private static string ReconModeName(int mode)
+    {
+        switch (mode)
+        {
+            case 1: return "AlphaShape";
+            case 2: return "Poisson";
+            case 3: return "AdvancingFront";
+            case 4: return "Poisson(CGAL)";
+            default: return "Mode" + mode;
+        }
     }
 
     protected override void EmitResult(IGH_DataAccess da, Payload r)

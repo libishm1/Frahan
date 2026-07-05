@@ -60,6 +60,15 @@ public enum ConvexQpStatus
 
     /// <summary>The selected solver implementation does not yet handle this problem shape.</summary>
     NotImplemented,
+
+    /// <summary>
+    /// The solver converged only to a LOOSE tolerance, not the requested tight one
+    /// (e.g. OSQP SOLVED_INACCURATE / max-iter with a near-feasible point). The
+    /// returned x is a usable approximation but MUST NOT be read as a certificate:
+    /// stability checkers treat this as non-Optimal and do not certify STABLE from it.
+    /// Added at the end so existing ordinals (and any serialized status) are unchanged.
+    /// </summary>
+    Inaccurate,
 }
 
 /// <summary>

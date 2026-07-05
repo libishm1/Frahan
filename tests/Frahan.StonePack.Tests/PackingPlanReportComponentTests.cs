@@ -30,9 +30,10 @@ static class PackingPlanReportComponentTests
     {
         var c = new PackingPlanReportComponent();
         // Renamed 2026-05-29 (P0 hygiene): disambiguated from the other
-        // "Frahan Packing Report" (PackingReportComponent) which kept the name.
-        Assert(c.Name == "Frahan Packing Plan Report",
-            $"Name should be 'Frahan Packing Plan Report', got '{c.Name}'");
+        // "Packing Report" (PackingReportComponent). 2026-07-04 legibility
+        // sweep dropped the "Frahan " display-name prefix (Category stays "Frahan").
+        Assert(c.Name == "Packing Plan Report",
+            $"Name should be 'Packing Plan Report', got '{c.Name}'");
         Assert(c.Category == "Frahan",
             $"Category should be 'Frahan', got '{c.Category}'");
         Assert(c.SubCategory == "Reports",

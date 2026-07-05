@@ -130,7 +130,7 @@ public sealed class CgalMeshCsgComponent : FrahanComponentBase
             "shim. Falls back transparently to in-tree BSP CSG when the " +
             "shim is absent. Reports which back-end actually ran. " +
             "Wraps CGAL corefine_and_compute_boolean_operations.",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -264,7 +264,7 @@ public sealed class CgalStraightSkeletonComponent : FrahanComponentBase
             "holes) via CGAL Straight_skeleton_2. Outer ring CCW, holes " +
             "CW; the shim auto-reverses if winding is wrong. " +
             "Wraps CGAL Straight_skeleton_2.",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -409,7 +409,7 @@ public sealed class CgalMeshRepairComponent : FrahanComponentBase
             "borders, removes degenerate triangles, and orients faces " +
             "outward when the mesh is closed. " +
             "Wraps CGAL PMP repair routines.",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -519,7 +519,7 @@ public sealed class CgalMeshDecimateComponent : FrahanComponentBase
             "length. Run before CoACD to speed up decomposition on " +
             "scanned statue input. " +
             "Wraps CGAL Surface_mesh_simplification (Lindstrom-Turk policies).",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -642,7 +642,7 @@ public sealed class CgalPolygonPartitionComponent : FrahanComponentBase
             "Decompose a 2D simple polygon into convex sub-polygons or " +
             "y-monotone pieces via CGAL Partition_2. " +
             "Wraps CGAL Partition_2 (Hertel-Mehlhorn and Greene).",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -768,7 +768,7 @@ public sealed class CgalSdfSegmentationComponent : FrahanComponentBase
             "Returns one mesh per segment. NOT a Voronoi-style spatial " +
             "split: convex inputs collapse to one segment. " +
             "Wraps CGAL Surface_mesh_segmentation (SDF).",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000A6-CADC-4F2D-A0A6-7E60CADA15A0");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("CoacdDecompose.png");
@@ -881,7 +881,7 @@ public sealed class CgalAngleSegmentationComponent : FrahanComponentBase
             "Tuning: 5-15 deg = strict planarity, 30-60 deg = smooth-" +
             "band detection, 90+ = only orthogonal-ish creases. " +
             "Wraps CGAL detect_sharp_edges.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000A7-CADC-4F2D-A0A7-7E60CADA15A0");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("CoacdDecompose.png");
@@ -970,7 +970,7 @@ public sealed class CgalGeodesicVoronoiComponent : FrahanComponentBase
             "curvature - neat boundaries on curved meshes where " +
             "Euclidean Voronoi would slice through the form. " +
             "Wraps CGAL Heat_method_3.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000A8-CADC-4F2D-A0A8-7E60CADA15A0");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("GeodesicPath.png");

@@ -60,11 +60,46 @@ holds in both.
   pick CSV; the offline twin used to verify the kriging + slab/block discipline at the 300 s MCP cap.
 - `gpr_data/` - the 8 g1 `.DT` slices (4 LA + 4 TA).
 
+## Fabrication tail (`quarry_full_workflow_fab_tail.gh`)
+
+The companion graph carries the same real survey through to the mason handoff. Every number is
+recomputed from the 8 `.DT` radargrams on open; nothing is typed in.
+
+![Fab tail](quarry_fab_tail_hero.jpg)
+
+1. **GPR Survey Grid -> GPR Fracture Surfaces 3D** - same validated ingest as the main graph
+   (1066 picks -> 3 kriged beds).
+2. **Deconstruct Mesh -> Plane Fit -> dip / dip-dir expressions** - fits one plane per bed and
+   converts the normals to geologic dip / dip-direction (sign-safe for flipped normals). The real
+   Botticino g1 beds come out sub-horizontal (0-6 deg), so **Cut Orientation** runs bench-constrained
+   (one horizontal cut + optimised vertical grid).
+3. **Fracture Bounded Slabs -> Fracture Block Pack (Packer 5 = staged wire-saw guillotine)** - packs
+   the ENTIRE 7 x 4 x 4.4 m fracture-bounded bench: **463 blocks (0.9 x 0.7 x 0.4 m), 83.3 m^3
+   recovered, 67.4% overall yield, 100% guillotine-separable** across 4 bed-bounded bins.
+4. **Block Face Map -> DXF Cut Plan** - the fabricator sheet `quarry_fab_cutplan.dxf`. Block Face
+   Map cross-unfolds the bench faces (PLAN + 4 elevations) and maps onto every face the **bed traces**
+   (mesh-plane sections of the kriged fractures, on the orange FRACTURES layer) and the **saw passes**
+   (plan passes keep their saw-sequence numbers on CUT_SEQUENCE; the elevation views show where each
+   pass crosses each face). The bin's cut-list / BOM table completes the sheet. Pick the level with
+   the `Saw sheet bin` slider; one bin per sheet. Bed traces stop where the GPR pick hull stops -
+   the sheet shows exactly what the survey supports.
+
+   ![Unfolded face map](quarry_fab_facemap.jpg)
+5. **COMPAS Export** - `quarry_fab_blocks_compas.json` + `frahan_compas_loader.py` with all 463 blocks.
+
+`Write DXF` / `Write COMPAS` toggles ship OFF (dry run). Shipped artifacts were written from the live
+canvas: bin 2 sheet = 38 numbered passes, BOM row `block | 0.9 x 0.7 x 0.4 | 224 | saw`.
+
+Note the demonstrated GPR payoff on this dataset: a 2 x 1.5 x 1.2 m corner bench cut blind below
+grade gives 34% sound yield (Block Yield, beds crossing the courses); the same target sizes with the
+bench set between the kriged beds gives 97%.
+
 ## Run
 
 1. Open Rhino 8 + Grasshopper with the Frahan `.gha` deployed.
 2. Open `quarry_full_workflow.gh`; point `GPR .DT files` at this folder's `gpr_data` (or any LA + TA mix).
 3. Solve. The Bench box covers a 7 x 4 x 4.4 m volume; adjust it for a larger survey.
+4. For the fabrication handoff, open `quarry_full_workflow_fab_tail.gh` the same way.
 
 ## Data provenance
 

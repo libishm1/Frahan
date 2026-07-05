@@ -80,6 +80,40 @@ static class ReconstructionCleanupTests
         Assert(t2.Length == 0, "empty -> empty");
     }
 
+    // --- density-adaptive AlphaShape auto-alpha: the EstimateSpacing helper ---
+
+    private static double[] PlanarGrid(int m, double s)
+    {
+        var pts = new double[m * m * 3]; int k = 0;
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < m; j++) { pts[k++] = i * s; pts[k++] = j * s; pts[k++] = 0.0; }
+        return pts;
+    }
+
+    public static void EstimateSpacing_UniformGrid_RecoversSpacing()
+    {
+        // 40x40 planar grid at spacing 0.5: median NN distance must be ~0.5.
+        double est = OutOfProcessReconstructor.EstimateSpacing(PlanarGrid(40, 0.5));
+        Assert(Math.Abs(est - 0.5) < 0.05, $"expected ~0.5, got {est}");
+    }
+
+    public static void EstimateSpacing_ScalesWithModel()
+    {
+        // Same grid scaled 1000x (metres -> millimetres style): spacing must
+        // scale with it (so the density auto-alpha is unit-invariant).
+        double est = OutOfProcessReconstructor.EstimateSpacing(PlanarGrid(40, 500.0));
+        Assert(Math.Abs(est - 500.0) < 25.0, $"expected ~500, got {est}");
+    }
+
+    public static void EstimateSpacing_Degenerate_ReturnsZero()
+    {
+        Assert(OutOfProcessReconstructor.EstimateSpacing(null) == 0.0, "null -> 0");
+        Assert(OutOfProcessReconstructor.EstimateSpacing(new double[] { 0, 0, 0 }) == 0.0, "1 point -> 0");
+        // all points coincident -> zero extent -> 0 (no divide-by-zero)
+        Assert(OutOfProcessReconstructor.EstimateSpacing(new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }) == 0.0,
+            "coincident -> 0");
+    }
+
     private static void Assert(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException("ReconstructionCleanup: " + message);

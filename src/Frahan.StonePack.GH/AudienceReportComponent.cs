@@ -32,7 +32,7 @@ namespace Frahan.GH;
 public sealed class AudienceReportComponent : FrahanComponentBase
 {
     public AudienceReportComponent()
-        : base("Frahan Report / Export", "Report",
+        : base("Report / Export", "Report",
             "Audience-tailored report terminal. Pick Audience (0 engineer, 1 artist, " +
             "2 geologist). Consumes Frahan report records + optional pipe-delimited " +
             "Sections; emits Markdown + CSV. Engineer release is refused without a " +

@@ -37,7 +37,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanGprRadargramReaderComponent()
             : base(
-                "Frahan GPR Radargram Reader", "GprRead",
+                "GPR Radargram Reader", "GprRead",
                 "SUPERSEDED BY: GPR File Loader + GPR Fracture Extract, which read " +
                 "vendor formats natively and run the validated processing chain. " +
                 "Kept loadable for old canvases. " +
@@ -124,7 +124,7 @@ namespace Frahan.GH.Quarry
     {
         public FrahanGeoFractNetInferenceComponent()
             : base(
-                "Frahan GeoFractNet Inference", "GFNInfer",
+                "GeoFractNet Inference", "GeoFractNet",
                 "Load pre-computed GeoFractNet fracture predictions from CSV " +
                 "and emit a BlockCutOpt-ready fracture Mesh clipped to a bench " +
                 "AABB. Inference itself runs externally (net48 cannot host " +

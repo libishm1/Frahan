@@ -36,7 +36,7 @@ namespace Frahan.GH.Masonry
     {
         public MeshQualityReportComponent()
             : base(
-                "Mesh Quality Report", "MQ",
+                "Mesh Quality Report", "MeshQC",
                 "Topology + geometry diagnostics for a Rhino mesh. Use as " +
                 "a precondition for contact detection, packing, or cutting. " +
                 "Metrics per Frey & Borouchaki 1999.",
@@ -47,7 +47,7 @@ namespace Frahan.GH.Masonry
         public override Guid ComponentGuid =>
             new Guid("9ABCDEF0-1234-5678-9ABC-DEF012345678");
 
-        public override GH_Exposure Exposure => GH_Exposure.secondary;
+        public override GH_Exposure Exposure => GH_Exposure.senary;
 
         protected override Bitmap Icon => IconProvider.Load("PackDiagnostics.png");
 

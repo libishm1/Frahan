@@ -38,7 +38,7 @@ namespace Frahan.GH.Masonry
                 "Ashlar Pack. Frahan-original method. Selection: convex pieces " +
                 "-> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell " +
                 "partition -> By Voronoi.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         {
         }
 

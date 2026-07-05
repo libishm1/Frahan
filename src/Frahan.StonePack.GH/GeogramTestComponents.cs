@@ -39,7 +39,7 @@ public sealed class GeogramMeshDecimateComponent : FrahanComponentBase
             "controlled spatial sampling, and CGAL's for precise count " +
             "targeting. " +
             "Wraps Geogram mesh_decimate_vertex_clustering.",
-            "Frahan", "Lab")
+            "Frahan", "Mesh")
     {
     }
 
@@ -174,7 +174,7 @@ public sealed class GeogramMeshRepairComponent : FrahanComponentBase
             "Topology-aware mesh repair via GEO::mesh_repair " +
             "(colocate + remove duplicate facets + triangulate). BSD-3. " +
             "Wraps Geogram mesh_repair.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C1-6E06-4F2D-A0C1-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("PoissonReconstruct.png");
@@ -249,7 +249,7 @@ public sealed class GeogramObbComponent : FrahanComponentBase
             "Oriented bounding box via PrincipalAxes3d (PCA). " +
             "BSD-3 parallel to OBB (CGAL); no Eigen dependency. " +
             "Frahan-original method.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C2-6E06-4F2D-A0C2-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("MeshBvh.png");
@@ -321,7 +321,7 @@ public sealed class GeogramRemeshComponent
             "Mesh OR a File Path (.ply / .obj / .stl / .wrl; takes precedence). " +
             "Runs on a background thread (Run gate) so the canvas never freezes. " +
             "Wraps Geogram remesh_smooth.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C3-6E06-4F2D-A0C3-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("SurfaceTile.png");
@@ -545,7 +545,7 @@ public sealed class GeogramTetrahedralizeComponent : FrahanComponentBase
             "OFF for BSD-3 license cleanliness; in that mode this " +
             "component returns a clear error pointing at the rebuild. " +
             "Wraps Geogram mesh_tetrahedralize (TetGen).",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C4-6E06-4F2D-A0C4-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("CoacdDecompose.png");
@@ -714,7 +714,7 @@ public sealed class GeogramVoronoiPartitionComponent : FrahanComponentBase
             "Statue → Decimate → Repair → Remesh → CVT → this " +
             "→ BlockGraph → GeoCut → QuarryCutOpt. " +
             "Wraps Geogram restricted Voronoi diagram.",
-            "Frahan", "Lab") { }
+            "Frahan", "Block") { }
     public override Guid ComponentGuid => new Guid("F2D000C6-6E06-4F2D-A0C6-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("Voronoi.png");
@@ -834,7 +834,7 @@ public sealed class GeogramMeshFillHolesComponent : FrahanComponentBase
             "keeping the main outer boundary open - exactly what BFF needs " +
             "to flatten without self-overlap. BSD-3 (GEO::fill_holes). " +
             "Wraps Geogram fill_holes.",
-            "Frahan", "Lab") { }
+            "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C7-6E06-4F2D-A0C7-7E60660C0AC1");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("PoissonReconstruct.png");

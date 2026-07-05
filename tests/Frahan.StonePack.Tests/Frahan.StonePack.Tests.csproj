@@ -7,10 +7,10 @@
          after the 2026-05-04 namespace rename (R1 source-only phase). -->
     <AssemblyName>Frahan.StonePack.Tests</AssemblyName>
     <RootNamespace>Frahan.Tests</RootNamespace>
-    <!-- R3 PR 8 transition release: 0.7.0. See CHANGELOG.md. -->
-    <Version>0.7.0</Version>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
-    <FileVersion>0.7.0.0</FileVersion>
+    <!-- v0.1.0: aligned to the public / Zenodo release (was 0.7.0). -->
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
     <!-- 2026-05-04 - force x64 so rhcommon_c.dll (x64-only since Rhino 7+)
          loads. Without this, the test exe bound to AnyCPU runs as i386 on
          this host and DllImport reports "DLL init failed" (HRESULT 0x8007045A)
@@ -81,5 +81,22 @@
        all four csproj files from HintPath to <PackageReference Include="RhinoCommon">,
        which decouples version selection from the Rhino install path. Tracked
        as B11 follow-up. -->
+
+  <!-- 2026-07-05: stage the native CGAL shim + its gmp/mpfr deps into the test
+       output so CgalMeshBoolean.IsAvailable engages the NATIVE path (not the
+       BSP fallback). This is what lets CgalTrim_EthStone_ProducesCleanUnifiedMesh
+       actually exercise CGAL — and would have caught the un-bundled mpfr-6.dll
+       that silently disabled CGAL. Non-fatal: if install/plugin is absent or the
+       LFS blobs are not pulled, the copy is skipped and the test SKIPs cleanly. -->
+  <ItemGroup>
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\frahan_cgal.dll" />
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\gmp-10.dll" />
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\mpfr-6.dll" />
+  </ItemGroup>
+  <Target Name="StageNativeCgalForTests" AfterTargets="Build">
+    <Copy SourceFiles="@(NativeCgalDep)" DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" ContinueOnError="true"
+          Condition="Exists('%(NativeCgalDep.Identity)')" />
+  </Target>
 
 </Project>

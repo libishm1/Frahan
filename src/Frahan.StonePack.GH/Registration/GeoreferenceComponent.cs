@@ -41,7 +41,7 @@ namespace Frahan.GH.Registration;
 public sealed class GeoreferenceComponent : FrahanComponentBase
 {
     public GeoreferenceComponent()
-        : base("Georeference", "GeorefCRS",
+        : base("Georeference (Datum / CRS)", "GeorefCRS",
             "Rigid scan→world transform from N≥3 control-point pairs in a " +
             "global coordinate system. Supports WGS84 LLH degrees, UTM, " +
             "and pre-converted ENU metres. World points are converted to " +

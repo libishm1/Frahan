@@ -248,7 +248,7 @@ public sealed class CgalQuarryDecomposeByMeshComponent : FrahanComponentBase
             "plane-based Quarry Decompose does not apply because the " +
             "quarry mesh is not convex. Implements CGAL PMP corefinement. " +
             "Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.",
-            "Frahan", "Quarry")
+            "Frahan", "Block")
     {
     }
 

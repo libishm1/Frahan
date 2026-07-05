@@ -41,7 +41,7 @@ namespace Frahan.GH;
 public sealed class IrregularSheetFillComponentAsync : GH_TaskCapableComponent<PackingResult>
 {
     public IrregularSheetFillComponentAsync()
-        : base("Frahan Sheet Pack (Unified Async)", "FreeNestUA",
+        : base("Sheet Pack (Unified Async)", "FreeNestUA",
             "Async variant of Frahan Sheet Pack (Unified). Same Variant routing " +
             "as the sync version but runs on a background thread so Grasshopper " +
             "stays responsive during long packs. Pick the variant with the Variant " +

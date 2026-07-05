@@ -32,7 +32,7 @@ namespace Frahan.GH.Registration;
 public sealed class MarkerRegistrationComponent : FrahanComponentBase
 {
     public MarkerRegistrationComponent()
-        : base("Marker Registration", "MarkerReg",
+        : base("Align by Control Points", "MarkerReg",
             "Closed-form rigid alignment of N≥3 source/target point pairs " +
             "(Horn 1987 quaternion absolute orientation). Use for marker- " +
             "or reference-object-based scan-to-world registration. " +

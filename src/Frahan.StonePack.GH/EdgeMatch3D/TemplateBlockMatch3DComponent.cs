@@ -158,6 +158,7 @@ public sealed class TemplateBlockMatch3DComponent : FrahanComponentBase
             var cellIdx = new List<int>();
             var stoneIdx = new List<int>();
             var unassigned = new List<int>();
+            double totalCost = 0.0;
             for (int i = 0; i < M; i++)
             {
                 if (assignment[i] >= 0)
@@ -165,6 +166,7 @@ public sealed class TemplateBlockMatch3DComponent : FrahanComponentBase
                     placed.Add(inventory[assignment[i]]);
                     cellIdx.Add(i);
                     stoneIdx.Add(assignment[i]);
+                    totalCost += cost[i * N + assignment[i]];
                 }
                 else
                 {
@@ -180,7 +182,7 @@ public sealed class TemplateBlockMatch3DComponent : FrahanComponentBase
             DA.SetDataList(2, stoneIdx);
             DA.SetDataList(3, unassigned);
             DA.SetDataList(4, unused);
-            DA.SetData(5, 0.0); // TODO compute Hungarian objective
+            DA.SetData(5, totalCost); // Hungarian objective = sum of assigned cell costs
             DA.SetDataList(6, new List<string>
             {
                 "STUB v1.x: Hungarian assignment done on volume-difference cost. " +

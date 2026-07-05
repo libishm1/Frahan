@@ -2,8 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Frahan.Masonry.Geometry;
 using Clipper2Lib;
+
+// boundaryMode test coverage (CnhBoundaryModeTests) calls the internal
+// BoundaryContactLength helper directly so the test and the engine share one
+// contact-measurement implementation instead of a duplicated copy drifting.
+[assembly: InternalsVisibleTo("Frahan.StonePack.Tests")]
 
 namespace Frahan.Packing.TwoD
 {
@@ -70,6 +76,42 @@ namespace Frahan.Packing.TwoD
     // (<= floor + grid rounding of candidate vertices, i.e. <= ~2e-5 caller
     // units); deeper penetrations cannot be accepted on any path because
     // Validate() applies the same compound gate path-independently.
+    //
+    // ── BOUNDARY MODE (2026-06-13, evolution of V506 boundary affinity) ────
+    // boundaryMode = 0 (default) is exactly the engine above, byte-for-byte
+    // unchanged. boundaryMode = 1 ("boundary hug") biases where OUTER parts
+    // land so they seat against the sheet's own rim while still packing.
+    //
+    // The legacy comparison point is IrregularSheetFillV506's
+    // ComputeBoundaryAffinity: it pre-classifies each part edge into a
+    // descriptor bucket (length/angle/curvature), matches buckets against a
+    // rail index of the sheet boundary, then spreads the matches with a
+    // golden-ratio angular stride for roughly uniform coverage. Two problems
+    // follow directly from that design. First, the angle bucket is measured
+    // in WORLD-XY space, so rotating a part before placement invalidates its
+    // descriptor — the classification is orientation-locked. Second, the
+    // golden-ratio stride is a uniformity heuristic, not a fit measurement,
+    // so it can still cluster parts on a concave sheet where angular
+    // position stops tracking arc-length distance.
+    //
+    // Boundary hug measures TRUE geometric contact at each candidate pose
+    // instead of classifying edges up front. After the ordinary NFP/IFP
+    // feasible-region walk verifies a placement is legal (same exact
+    // compound gate as boundaryMode 0), BoundaryContactLength samples the
+    // ALREADY-ROTATED placed outline against the actual sheet-boundary
+    // polyline and sums the sample length lying within tolerance. That is
+    // rotation-invariant by construction (there is no pre-rotation
+    // descriptor to invalidate) and exact (no angular stride to approximate
+    // spread with) — it directly rewards whichever candidate touches the
+    // most rim. A running list of already-hugged sheet-boundary arc
+    // intervals penalizes candidates that would pile onto a stretch another
+    // part already claimed, so parts spread along the rim from measured
+    // overlap, not from a stride heuristic.
+    //
+    // FALLBACK: boundary hug is self-limiting. A part with no pose reaching
+    // minBoundaryContact of its own (or the sheet's) perimeter falls back to
+    // the exact existing bottom-left placement, so interior parts still pack
+    // tight — only rim-reachable parts get pulled outward.
     public sealed class HoleNestPart
     {
         public IReadOnlyList<(double X, double Y)> Outer;
@@ -112,7 +154,9 @@ namespace Frahan.Packing.TwoD
             int contactRotations = 6,
             bool enableRectFastPath = true, // append-only (2026-06-12): opt-out for the exact rect shelf fast-path
             Action<HoleNestResult> onPlacement = null, // append-only: progressive snapshot after each placement (caller-space copies)
-            int multiStartOrders = 1) // append-only (2026-06-13): K deterministic part orders, keep the best layout (1 = today's single-pass, byte-for-byte)
+            int multiStartOrders = 1, // append-only (2026-06-13): K deterministic part orders, keep the best layout (1 = today's single-pass, byte-for-byte)
+            int boundaryMode = 0, // append-only (2026-06-13): 0 = today's engine verbatim; 1 = boundary-hug contact scoring for outer parts (see header doc)
+            double minBoundaryContact = 0.25) // boundaryMode==1 only: min contact / min(part,sheet perimeter) required before a hug candidate beats the bottom-left fallback
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
             var res = new HoleNestResult();
@@ -170,7 +214,11 @@ namespace Frahan.Packing.TwoD
             // place. If the fast path leaves ANY part unplaced, discard it and
             // run the general engine — speed never trades away placements.
             string engine;
-            if (enableRectFastPath && spacing == 0.0 &&
+            // Boundary mode lives in PackGeneral's placement loop, so the rect
+            // shelf fast-path (which ranks bottom-left internally) must stand
+            // aside whenever boundaryMode is on — otherwise all-rectangle input
+            // silently ignores the rim-hug request.
+            if (enableRectFastPath && boundaryMode == 0 && spacing == 0.0 &&
                 TryRectFastPath(sheetOuter, sheetHoles, parts, order, res) &&
                 res.Placements.Count == parts.Count)
             {
@@ -224,7 +272,8 @@ namespace Frahan.Packing.TwoD
                         };
                         onPlacement(snap);
                     };
-                    PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res, progressTick);
+                    PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, order, res, progressTick,
+                        boundaryMode, minBoundaryContact);
                 }
                 else
                 {
@@ -244,7 +293,8 @@ namespace Frahan.Packing.TwoD
                     {
                         var cand = new HoleNestResult();
                         var candOrder = oi == 0 ? order : BuildOrder(parts, oi);
-                        PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, candOrder, cand, null);
+                        PackGeneral(sheetOuter, sheetHoles, parts, spacing, baseRotationCount, contactRotations, candOrder, cand, null,
+                            boundaryMode, minBoundaryContact);
                         // scaled-space validity + UsedArea (Validate sets UsedArea
                         // from PlacedOuter, which is still scaled at this point).
                         // Validate() returns the verdict but does NOT write cand.Valid,
@@ -328,7 +378,9 @@ namespace Frahan.Packing.TwoD
             int contactRotations = 6,
             bool enableRectFastPath = true,
             Action<HoleNestResult> onPlacement = null,
-            int multiStartOrders = 1) // append-only (2026-06-13): per-sheet multi-start order count (each Pack call multi-starts)
+            int multiStartOrders = 1, // append-only (2026-06-13): per-sheet multi-start order count (each Pack call multi-starts)
+            int boundaryMode = 0, // append-only (2026-06-13): threaded to every per-sheet Pack() call; see Pack() header doc
+            double minBoundaryContact = 0.25)
         {
             var results = new List<HoleNestResult>();
             if (sheets == null || sheets.Count == 0) return results;
@@ -366,7 +418,8 @@ namespace Frahan.Packing.TwoD
                 var holes = sheetHolesPerSheet != null && si < sheetHolesPerSheet.Count
                     ? sheetHolesPerSheet[si] : null;
                 var res = Pack(sheets[si], holes, remaining, spacing,
-                    baseRotationCount, contactRotations, enableRectFastPath, tick, multiStartOrders);
+                    baseRotationCount, contactRotations, enableRectFastPath, tick, multiStartOrders,
+                    boundaryMode, minBoundaryContact);
 
                 var placedLocal = new HashSet<int>();
                 foreach (var pl in res.Placements)
@@ -516,7 +569,8 @@ namespace Frahan.Packing.TwoD
             IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
             IReadOnlyList<HoleNestPart> parts,
             double spacing, int baseRotationCount, int contactRotations,
-            List<int> order, HoleNestResult res, Action progressTick = null)
+            List<int> order, HoleNestResult res, Action progressTick = null,
+            int boundaryMode = 0, double minBoundaryContact = 0.25)
         {
             // placed material (outer minus its own holes), as transformed loops,
             // kept for NFP obstacles + overlap re-checks
@@ -551,13 +605,28 @@ namespace Frahan.Packing.TwoD
             var hostsFirst = order.Where(i => parts[i].Holes != null && parts[i].Holes.Count > 0).ToList();
             var nonHosts = order.Where(i => parts[i].Holes == null || parts[i].Holes.Count == 0).ToList();
 
-            // 1) place hosts by NFP-BLF
+            // BOUNDARY MODE (2026-06-13): sheet-outer arc intervals already
+            // claimed by a boundary-hug placement, in this sheet's own
+            // arc-length parameterization. Local to this PackGeneral call
+            // (same cache-safety reasoning as nfpCache above): a fresh list
+            // per pass, never shared across multi-start orders.
+            var occupiedArcs = new List<(double T0, double T1)>();
+
+            // 1) place hosts by NFP-BLF (boundaryMode 1: contact-scored, with
+            // an internal fallback to the exact bottom-left logic below)
             foreach (int pi in hostsFirst)
             {
-                if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp, nfpCache))
+                bool got; HoleNestPlacement plB;
+                if (boundaryMode == 1)
+                    got = TryPlaceOuterBoundary(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
+                        spacing, baseRotationCount, contactRotations, minBoundaryContact, occupiedArcs,
+                        out plB, ref usedNativeNfp, nfpCache);
+                else
+                    got = TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
+                        spacing, baseRotationCount, contactRotations, out plB, ref usedNativeNfp, nfpCache);
+                if (got)
                 {
-                    Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
+                    Commit(plB, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
                     progressTick?.Invoke();
                 }
@@ -579,11 +648,19 @@ namespace Frahan.Packing.TwoD
             }
 
             // ---- Phase B: place the remaining outer parts by NFP-BLF --------
+            // (boundaryMode 1: contact-scored, same internal fallback as above)
             foreach (int pi in nonHosts)
             {
                 if (consumed[pi]) continue;
-                if (TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
-                        spacing, baseRotationCount, contactRotations, out var pl, ref usedNativeNfp, nfpCache))
+                bool got; HoleNestPlacement pl;
+                if (boundaryMode == 1)
+                    got = TryPlaceOuterBoundary(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
+                        spacing, baseRotationCount, contactRotations, minBoundaryContact, occupiedArcs,
+                        out pl, ref usedNativeNfp, nfpCache);
+                else
+                    got = TryPlaceOuter(pi, parts[pi], sheetOuter, sheetHoles, placedMaterial,
+                        spacing, baseRotationCount, contactRotations, out pl, ref usedNativeNfp, nfpCache);
+                if (got)
                 {
                     Commit(pl, parts[pi], placedMaterial, placedHoles, placedIndex, res);
                     consumed[pi] = true;
@@ -1204,6 +1281,135 @@ namespace Frahan.Packing.TwoD
             return true; // native lane ran (best may still be null = no fit)
         }
 
+        // ---- boundary-hug variant of TryPlaceOuter (2026-06-13) -------------
+        // Walks the SAME rotation set and feasible-region candidates as the
+        // plain bottom-left engine above (managed lane only — the native
+        // batched-NFP kernel ranks bottom-left internally and has no way to
+        // return multiple candidates for scoring, so boundary mode never
+        // calls TryPlaceOuterNativeNfp for its own candidate walk). Instead
+        // of stopping at the first verified bottom-left survivor, it
+        // collects every verified candidate across all rotations, capped at
+        // K = 24 total, scores each by rim contact minus already-claimed rim
+        // overlap, and keeps the best. If nothing clears minBoundaryContact
+        // it falls back to the exact existing TryPlaceOuter (which may still
+        // use the native lane) — self-limiting, so interior parts still
+        // pack tight.
+        private static bool TryPlaceOuterBoundary(
+            int pi, HoleNestPart part,
+            IReadOnlyList<(double X, double Y)> sheetOuter,
+            IReadOnlyList<IReadOnlyList<(double X, double Y)>> sheetHoles,
+            List<List<(double X, double Y)>> placedMaterial,
+            double spacing, int baseRotationCount, int contactRotations,
+            double minBoundaryContact,
+            List<(double T0, double T1)> occupiedArcs,
+            out HoleNestPlacement best, ref bool usedNativeNfp,
+            Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>> nfpCache = null)
+        {
+            best = null;
+
+            // RIM-FULL EARLY-OUT (large-job speed): once the occupied arc intervals
+            // leave less free rim than this part's minimum contact requirement, no
+            // boundary candidate can qualify — skip the K-candidate scoring pass
+            // entirely and place bottom-left. Without this, EVERY remaining part of
+            // a big nest pays the boundary tax after the rim filled (~first dozen).
+            double sheetPerim = LoopPerimeter(sheetOuter);
+            double occupiedLen = 0;
+            for (int i = 0; i < occupiedArcs.Count; i++)
+                occupiedLen += Math.Max(0.0, occupiedArcs[i].T1 - occupiedArcs[i].T0);
+            double partPerim = LoopPerimeter(part.Outer);
+            double needed = minBoundaryContact * Math.Min(partPerim, sheetPerim);
+            if (sheetPerim - occupiedLen < needed)
+                return TryPlaceOuter(pi, part, sheetOuter, sheetHoles, placedMaterial,
+                    spacing, baseRotationCount, contactRotations, out best, ref usedNativeNfp, nfpCache);
+
+            const int K = 24;
+            var candidates = new List<(double Score, double Contact, List<(double T0, double T1)> Arcs, HoleNestPlacement Placement)>();
+            var seenRot = new HashSet<string>();
+
+            foreach (double ang in RotationSet(part.Outer, sheetOuter, placedMaterial, baseRotationCount, contactRotations))
+            {
+                if (candidates.Count >= K) break;
+                var rot = Rotate(part.Outer, ang);
+                var rotSig = RotSignature(rot);
+                if (!seenRot.Add(rotSig)) continue; // same shape already tried
+                if (spacing > 0) rot = InflateOuter(rot, spacing);
+                var refl = Reflect(rot);
+
+                var feasible = InnerFit(rot, sheetOuter);
+                if (feasible.Count == 0) continue;
+
+                // same translation-space obstacle cull as TryPlaceOuter above
+                BBoxLoops(feasible, out double fminx, out double fminy, out double fmaxx, out double fmaxy);
+                BBox(rot, out double rminx, out double rminy, out double rmaxx, out double rmaxy);
+                var reflSimp = SimplifyLoop(refl, NfpSimplifyTol(rot));
+                var obstacles = new List<List<(double X, double Y)>>();
+                int holeId = 0;
+                foreach (var q in sheetHoles)
+                {
+                    obstacles.AddRange(CachedNfp(nfpCache, holeId, rotSig,
+                        () => Clipper2Adapter.MinkowskiSum(SimplifyLoop(ToList(q), NfpSimplifyTol(q)), reflSimp)));
+                    holeId++;
+                }
+                for (int mi = 0; mi < placedMaterial.Count; mi++)
+                {
+                    var m = placedMaterial[mi];
+                    BBox(m, out double mminx, out double mminy, out double mmaxx, out double mmaxy);
+                    double tminx = mminx - rmaxx, tmaxx = mmaxx - rminx;
+                    double tminy = mminy - rmaxy, tmaxy = mmaxy - rminy;
+                    if (tmaxx < fminx - Eps || tminx > fmaxx + Eps ||
+                        tmaxy < fminy - Eps || tminy > fmaxy + Eps) continue;
+                    obstacles.AddRange(CachedNfp(nfpCache, sheetHoles.Count + mi, rotSig,
+                        () => Clipper2Adapter.MinkowskiSum(SimplifyLoop(m, NfpSimplifyTol(m)), reflSimp)));
+                }
+                if (obstacles.Count > 0)
+                    feasible = SubtractLoops(feasible, UnionAll(obstacles));
+                if (feasible.Count == 0) continue;
+
+                // COLLECT every verified survivor (bottom-left walk order),
+                // instead of stopping at the first — scoring needs a pool of
+                // candidates, not just the single tightest corner.
+                foreach (var (tx, ty) in OrderedVertices(feasible, AdaptiveCandidateCap(placedMaterial.Count)))
+                {
+                    if (candidates.Count >= K) break;
+                    if (!TryVerifiedCandidate(rot, tx, ty, sheetOuter, sheetHoles, placedMaterial,
+                            out double atx, out double aty)) continue;
+
+                    var placedLoop = Translate(rot, atx, aty);
+                    double meanSpacing = LoopPerimeter(placedLoop) / Math.Max(1, placedLoop.Count);
+                    double tol = spacing + 2.5 * meanSpacing;
+                    double contact = BoundaryContactLength(placedLoop, sheetOuter, tol, out var arcs);
+                    double overlap = TotalArcOverlap(arcs, occupiedArcs);
+                    double score = contact - 2.0 * overlap;
+                    candidates.Add((score, contact, arcs, new HoleNestPlacement
+                    {
+                        PartIndex = pi, AngleRad = ang, Tx = atx, Ty = aty, PlacedOuter = placedLoop
+                    }));
+                }
+            }
+
+            if (candidates.Count > 0)
+            {
+                // max-score wins; LINQ OrderByDescending is a stable sort, so
+                // ties resolve to the first-collected (walk-order) candidate
+                // — deterministic for identical inputs.
+                var top = candidates.OrderByDescending(c => c.Score).First();
+                double threshold = minBoundaryContact *
+                    Math.Min(LoopPerimeter(part.Outer), LoopPerimeter(sheetOuter));
+                if (top.Contact >= threshold)
+                {
+                    best = top.Placement;
+                    occupiedArcs.AddRange(top.Arcs);
+                    return true;
+                }
+            }
+
+            // FALLBACK: no boundary-hug candidate cleared the threshold (or
+            // none verified at all) — exact existing bottom-left placement,
+            // identical to what boundaryMode==0 would place for this part.
+            return TryPlaceOuter(pi, part, sheetOuter, sheetHoles, placedMaterial,
+                spacing, baseRotationCount, contactRotations, out best, ref usedNativeNfp, nfpCache);
+        }
+
         // ---- nest a small part into some host's hole ------------------------
         private static bool TryNestInHostHole(
             int si, HoleNestPart small,
@@ -1492,6 +1698,150 @@ namespace Frahan.Packing.TwoD
             var inf = Clipper2Adapter.InflateLoops(new List<IReadOnlyList<(double X, double Y)>> { p }, d);
             return inf.Count > 0 ? inf[0] : new List<(double X, double Y)>(p);
         }
+        // ── boundary-hug geometry (2026-06-13) ───────────────────────────────
+        private static double LoopPerimeter(IReadOnlyList<(double X, double Y)> p)
+        {
+            double len = 0; int n = p.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var a = p[i]; var b = p[(i + 1) % n];
+                len += Math.Sqrt(Sq2(b.X - a.X) + Sq2(b.Y - a.Y));
+            }
+            return len;
+        }
+
+        // cumulative arc-length at each vertex of a CLOSED loop (index n =
+        // the total perimeter, i.e. back at vertex 0).
+        private static double[] CumulativeArcLengths(IReadOnlyList<(double X, double Y)> loop, out double total)
+        {
+            int n = loop.Count;
+            var cum = new double[n + 1];
+            for (int i = 0; i < n; i++)
+            {
+                var a = loop[i]; var b = loop[(i + 1) % n];
+                cum[i + 1] = cum[i] + Math.Sqrt(Sq2(b.X - a.X) + Sq2(b.Y - a.Y));
+            }
+            total = cum[n];
+            return cum;
+        }
+
+        // nearest-point arc-length parameter of (x,y) against `loop`, using
+        // its precomputed cumulative arc-length table.
+        private static double NearestArcParam(double x, double y,
+            IReadOnlyList<(double X, double Y)> loop, double[] cum, out double dist)
+        {
+            dist = double.MaxValue;
+            double bestParam = 0;
+            int n = loop.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var a = loop[i]; var b = loop[(i + 1) % n];
+                double dx = b.X - a.X, dy = b.Y - a.Y;
+                double l2 = dx * dx + dy * dy;
+                double t = l2 < 1e-24 ? 0 : ((x - a.X) * dx + (y - a.Y) * dy) / l2;
+                if (t < 0) t = 0; else if (t > 1) t = 1;
+                double cx = a.X + t * dx, cy = a.Y + t * dy;
+                double d2 = Sq2(x - cx) + Sq2(y - cy);
+                if (d2 < dist * dist)
+                {
+                    dist = Math.Sqrt(d2);
+                    bestParam = cum[i] + t * Math.Sqrt(l2);
+                }
+            }
+            return bestParam;
+        }
+
+        // BOUNDARY MODE (2026-06-13): rim contact between a placed outer and
+        // the sheet-outer boundary. Samples `placedOuter` at its OWN vertex
+        // spacing (each vertex represents the half-length of its two
+        // adjacent edges, so the per-sample lengths sum to the full
+        // perimeter); a sample counts as "in contact" when its nearest
+        // distance to the sheetOuter polyline is <= tol. Also returns the
+        // touched sheet-boundary arc interval(s): the min..max arc-length
+        // parameter of the contact run's nearest points. A run whose
+        // params span more than half the sheet perimeter is assumed to
+        // wrap through the t=0 seam and is SPLIT into two ordinary
+        // (non-modular) intervals instead of represented as a wrapping
+        // range, so downstream overlap math stays plain interval arithmetic.
+        internal static double BoundaryContactLength(
+            IReadOnlyList<(double X, double Y)> placedOuter,
+            IReadOnlyList<(double X, double Y)> sheetOuter,
+            double tol,
+            out List<(double T0, double T1)> touchedArcs)
+        {
+            touchedArcs = new List<(double T0, double T1)>();
+            int n = placedOuter.Count;
+            if (n == 0) return 0;
+
+            var segLen = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                var a = placedOuter[i]; var b = placedOuter[(i + 1) % n];
+                segLen[i] = Math.Sqrt(Sq2(b.X - a.X) + Sq2(b.Y - a.Y));
+            }
+            var cum = CumulativeArcLengths(sheetOuter, out double total);
+
+            double contact = 0;
+            var paramsRun = new List<double>();
+            for (int i = 0; i < n; i++)
+            {
+                double sampleSpacing = 0.5 * (segLen[i] + segLen[(i - 1 + n) % n]);
+                double t = NearestArcParam(placedOuter[i].X, placedOuter[i].Y, sheetOuter, cum, out double d);
+                if (d <= tol)
+                {
+                    contact += sampleSpacing;
+                    paramsRun.Add(t);
+                }
+            }
+            if (paramsRun.Count > 0) touchedArcs = ArcParamsToIntervals(paramsRun, total);
+            return contact;
+        }
+
+        private static List<(double T0, double T1)> ArcParamsToIntervals(List<double> paramsRun, double total)
+        {
+            double min = paramsRun[0], max = paramsRun[0];
+            for (int i = 1; i < paramsRun.Count; i++)
+            {
+                if (paramsRun[i] < min) min = paramsRun[i];
+                if (paramsRun[i] > max) max = paramsRun[i];
+            }
+            var result = new List<(double T0, double T1)>();
+            if (total > 0 && (max - min) > total * 0.5)
+            {
+                // likely wraps the t=0 seam: split into the low tail and the
+                // high tail instead of one modular interval.
+                double lowMax = double.MinValue, highMin = double.MaxValue;
+                foreach (var p in paramsRun)
+                {
+                    if (p < total * 0.5) { if (p > lowMax) lowMax = p; }
+                    else { if (p < highMin) highMin = p; }
+                }
+                if (lowMax > double.MinValue) result.Add((0, lowMax));
+                if (highMin < double.MaxValue) result.Add((highMin, total));
+            }
+            else
+            {
+                result.Add((min, max));
+            }
+            return result;
+        }
+
+        private static double IntervalOverlap(double aT0, double aT1, double bT0, double bT1)
+        {
+            double lo = Math.Max(aT0, bT0), hi = Math.Min(aT1, bT1);
+            return hi > lo ? hi - lo : 0;
+        }
+
+        private static double TotalArcOverlap(
+            List<(double T0, double T1)> candidateArcs, List<(double T0, double T1)> occupied)
+        {
+            double sum = 0;
+            foreach (var c in candidateArcs)
+                foreach (var o in occupied)
+                    sum += IntervalOverlap(c.T0, c.T1, o.T0, o.T1);
+            return sum;
+        }
+
         private static List<List<(double X, double Y)>> UnionLoops(
             List<List<(double X, double Y)>> a, List<List<(double X, double Y)>> b)
         {

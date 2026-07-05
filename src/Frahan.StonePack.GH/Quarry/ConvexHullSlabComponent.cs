@@ -34,7 +34,7 @@ namespace Frahan.GH.Masonry
                 "Builds the convex hull of a Rhino mesh's vertices and emits " +
                 "the hull as a Slab. Loses concavity by definition; opt in " +
                 "for fast Mesh -> Slab on roughly-convex inputs. Implements QuickHull (Barber-Dobkin-Huhdanpaa 1996).",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         {
         }
 

@@ -1,11 +1,11 @@
 # Frahan StonePack - icon library
 
-Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons referenced by 230 components.
+Resources dir: `src/Frahan.StonePack.GH/Resources` (166 PNGs). 117 distinct icons referenced by 275 components.
 
 ## Coverage
 
 - Components WITHOUT an explicit icon: **0**.
-- Referenced icons with NO file on disk: **5**.
+- Referenced icons with NO file on disk: **0**.
 - Icons on disk NOT referenced: **49**.
 
 ## Component -> icon
@@ -18,29 +18,67 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | 2D Irregular Sheet Pack | 2D Packing | Pack2D.png | yes |
 | 2D NFP Pack | 2D Packing | NoFitPolygon.png | yes |
 | CSV Parts Reader | 2D Packing | CurveToPolygon.png | yes |
-| Frahan Residual Voids | 2D Packing | PackMetrics.png | yes |
-| Frahan Sheet Pack (Unified Async) | 2D Packing | IrregularSheet.png | yes |
-| Frahan Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
+| Floor Tile (Boundary-Trimmed) | 2D Packing | FloorTile.png | yes |
 | Freeform Sheet Nest | 2D Packing | Pack2D.png | yes |
 | Freeform Sheet Nest (Exact NFP) | 2D Packing | Pack2D.png | yes |
 | NFP Test | 2D Packing | NoFitPolygon.png | yes |
+| Residual Voids | 2D Packing | PackMetrics.png | yes |
 | Sheet Nest (Hole-Aware) | 2D Packing | NoFitPolygon.png | yes |
+| Sheet Nest (Live) | 2D Packing | NoFitPolygon.png | yes |
+| Sheet Pack (Unified Async) | 2D Packing | IrregularSheet.png | yes |
+| Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
 | CoM In-Container Check | 3D Packing | StabilityCheck.png | yes |
-| Frahan Stone Descriptor | 3D Packing | PackQuality.png | yes |
 | Pack3D Irregular | 3D Packing | Pack3D.png | yes |
 | Pack3D Irregular Container | 3D Packing | PackIntoBlock.png | yes |
 | Pack3D Mesh Heightmap | 3D Packing | LayeredPack.png | yes |
 | Packed-Pile Stability | 3D Packing | StabilityCheck.png | yes |
 | Per-Stone Overlap | 3D Packing | Pack3DNfp.png | yes |
 | Settle 3D (Physics) | 3D Packing | PackIntoBlock.png | yes |
+| Stone Descriptor | 3D Packing | PackQuality.png | yes |
 | Validate Packed Transform | 3D Packing | StabilityCheck.png | yes |
-| Frahan Boundary Rail Index | Analysis | BoundarySegmenter.png | yes |
-| Frahan Fragment Descriptors | Analysis | FragmentCluster.png | yes |
-| Frahan Fragment Edge Match | Analysis | EdgeMatchSolve.png | yes |
+| Boundary Rail Index | Analysis | BoundarySegmenter.png | yes |
+| Fragment Descriptors | Analysis | FragmentCluster.png | yes |
+| Fragment Edge Match | Analysis | EdgeMatchSolve.png | yes |
+| Algebraic Convex Polyhedron | Block | CoacdDecompose.png | yes |
+| Bed Block Layout | Block | BlockPackTree.png | yes |
+| BenchBlock Cut → Slabs | Block | QuarryCutOpt.png | yes |
+| Billet Cutter | Block | QuarryCutOpt.png | yes |
+| Block Candidate Generator | Block | BlockCutOpt.png | yes |
+| Block Graph | Block | Voronoi.png | yes |
+| BlockCutOpt AMRR Plan | Block | QuarryCutOpt.png | yes |
+| BlockCutOpt Extract Grid | Block | BlockCutOpt.png | yes |
+| BlockCutOpt Load Fractures | Block | DefectMap.png | yes |
+| BlockCutOpt Omni Solve | Block | BlockCutOpt.png | yes |
+| BlockCutOpt Solve | Block | BlockCutOpt.png | yes |
+| Box To Mesh | Block | QuarryBlock.png | yes |
+| Convex Hull Slab | Block | ConvexHull2D.png | yes |
+| Crack Graph (manual) | Block | DefectMap.png | yes |
+| Extraction Order Optimizer | Block | QuarryCutOpt.png | yes |
+| Fracture Block Pack | Block | BlockCutOpt.png | yes |
+| Fracture Bounded Slabs | Block | Box2Mesh.png | yes |
+| Heterogeneous Quarry Extraction | Block | QuarryBlock.png | yes |
+| Mesh Decompose (CoACD) | Block | CoacdDecompose.png | yes |
+| Mesh Shell Split | Block | CoacdDecompose.png | yes |
+| Mixed-Size Block Pack 3D | Block | BinPack.png | yes |
+| Photo Detect → PLY | Block | PlyReader.png | yes |
+| Quarry Decompose | Block | QuarryCutOpt.png | yes |
+| Quarry Decompose By CoACD | Block | CoacdDecompose.png | yes |
+| Quarry Decompose By Mesh (CGAL) | Block | CoacdDecompose.png | yes |
+| Quarry Decompose By Tet | Block | CoacdDecompose.png | yes |
+| Quarry Decompose By Voronoi | Block | Voronoi.png | yes |
+| Quarry Inventory | Block | StockpileManager.png | yes |
+| Quarry Report | Block | PackDiagnostics.png | yes |
+| Quarry Yield Estimator | Block | YieldEstimator.png | yes |
+| Saw-Bed Schedule | Block | CncRoughing.png | yes |
+| Scan to Block Inventory | Block | QuarryBlock.png | yes |
+| Slab Yield Optimizer | Block | YieldEstimator.png | yes |
+| Synthetic TN Granite | Block | Stratigraphy.png | yes |
+| Voronoi Block Partition (Geogram) | Block | Voronoi.png | yes |
 | Adaptive Block Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Block Chain Along Thrust Line | EdgeMatch | EdgeMatchSolve.png | yes |
 | Block Pair Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Cyclopean Recipe Coursing | EdgeMatch | EdgeMatchSolve.png | yes |
+| Edge Gap (Fréchet) | EdgeMatch | EdgeMatchSolve.png | yes |
 | EdgeMatch Options | EdgeMatch | EdgeMatchOptions.png | yes |
 | EdgeMatch Segments | EdgeMatch | BoundarySegmenter.png | yes |
 | EdgeMatch Solve | EdgeMatch | EdgeMatchSolve.png | yes |
@@ -51,17 +89,25 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Mesh Template Match | EdgeMatch | EdgeMatchSolve.png | yes |
 | Soft ICP 3D | EdgeMatch | EdgeMatchSolve.png | yes |
 | Template Block Match 3D | EdgeMatch | EdgeMatchSolve.png | yes |
+| Whole-Side Assemble | EdgeMatch | WholeSideAssemble.png | yes |
+| Bench Monument Pack | Fabricate | BinPack.png | yes |
+| Block Face Map | Fabricate | DxfCutPlan.png | yes |
+| Block Yield | Fabricate | BlockYield.png | yes |
+| COMPAS Export | Fabricate | CompasExport.png | yes |
+| Cut Orientation | Fabricate | CutOrientation.png | yes |
+| Cut Stage Split | Fabricate | DxfCutPlan.png | yes |
+| DXF Cut Plan | Fabricate | DxfCutPlan.png | yes |
 | Fabrication Prep Report | Fabricate | StockpileManager.png | yes |
-| Frahan Bench Monument Pack | Fabricate | BinPack.png | yes |
-| Frahan Monument Inventory | Fabricate | StockpileManager.png | yes |
-| Frahan Pack Monuments In Cell | Fabricate | PackIntoBlock.png | yes |
-| G-code Parser | Fabricate | StoneCutExport.png | MISSING FILE |
-| G-code to Planes | Fabricate | StoneCutExport.png | MISSING FILE |
-| Planes to KUKAprc Commands | Fabricate | StoneCutExport.png | MISSING FILE |
-| Planes to Robot Targets | Fabricate | StoneCutExport.png | MISSING FILE |
+| G-code Parser | Fabricate | StoneCutExport.png | yes |
+| G-code to Planes | Fabricate | StoneCutExport.png | yes |
+| Monument Inventory | Fabricate | StockpileManager.png | yes |
+| Pack Monuments In Cell | Fabricate | PackIntoBlock.png | yes |
+| Planes to KUKAprc Commands | Fabricate | StoneCutExport.png | yes |
+| Planes to Robot Targets | Fabricate | StoneCutExport.png | yes |
 | Staggered Block Decompose | Fabricate | BondPattern.png | yes |
 | Stone-Aware Cut Export | Fabricate | GcodeExport.png | yes |
-| Wire-Saw Toolpath | Fabricate | StoneCutExport.png | MISSING FILE |
+| Wire-Saw Feasibility | Fabricate | WireSawFeasibility.png | yes |
+| Wire-Saw Toolpath | Fabricate | StoneCutExport.png | yes |
 | Brick-Pattern Fracture Planes | Fracture | BondPattern.png | yes |
 | Fracture Plane Filter | Fracture | DefectMap.png | yes |
 | Fracture Polygon From Curve | Fracture | DefectMap.png | yes |
@@ -79,37 +125,18 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Vector Fractures Loader | Ingest | ShapefileImport.png | yes |
 | Contact Settle | Kintsugi | ContactSettle.png | yes |
 | Fracture Roughen | Kintsugi | DiffusionDenoiser.png | yes |
-| Frahan Fragment Shatter | Kintsugi | SyntheticBlock.png | yes |
-| Frahan Kintsugi | Kintsugi | KintsugiAssemble.png | yes |
+| Fragment Shatter | Kintsugi | SyntheticBlock.png | yes |
+| Kintsugi | Kintsugi | KintsugiAssemble.png | yes |
 | Load BB Sample | Kintsugi | LoadScanFragments.png | yes |
 | Load Scan Fragments | Kintsugi | LoadScanFragments.png | yes |
 | Synthetic Block | Kintsugi | SyntheticBlock.png | yes |
 | CVT Seeds (Geogram) | Lab | Voronoi.png | yes |
+| Density-Watershed Zones | Lab | Voronoi.png | yes |
 | Download Frahan Data | Lab | Downsample.png | yes |
-| Frahan Density-Watershed Zones | Lab | Voronoi.png | yes |
-| Frahan Fisher-Robust BCO | Lab | BlockCutOpt.png | yes |
-| Frahan Mixed-Size Block Pack | Lab | BinPack.png | yes |
-| Frahan Pareto Front Inspector | Lab | YieldEstimator.png | yes |
-| Frahan VTU Export | Lab | GcodeExport.png | yes |
-| Geodesic Voronoi (CGAL) | Lab | GeodesicPath.png | yes |
-| Mesh CSG (CGAL) | Lab | CoacdDecompose.png | yes |
-| Mesh Decimate (Auto) | Lab | Downsample.png | yes |
-| Mesh Decimate (CGAL) | Lab | Downsample.png | yes |
-| Mesh Decimate (Geogram) | Lab | Downsample.png | yes |
-| Mesh Decompose (CoACD) | Lab | CoacdDecompose.png | yes |
-| Mesh Fill Holes (Geogram) | Lab | PoissonReconstruct.png | yes |
-| Mesh Remesh (Geogram) | Lab | SurfaceTile.png | yes |
-| Mesh Repair (Auto) | Lab | PoissonReconstruct.png | yes |
-| Mesh Repair (CGAL) | Lab | PoissonReconstruct.png | yes |
-| Mesh Repair (Geogram) | Lab | PoissonReconstruct.png | yes |
-| Mesh Segmentation (CGAL SDF) | Lab | CoacdDecompose.png | yes |
-| Mesh Segmentation by Angle (CGAL) | Lab | CoacdDecompose.png | yes |
-| OBB (Auto) | Lab | MeshBvh.png | yes |
-| OBB (Geogram) | Lab | MeshBvh.png | yes |
-| Polygon Partition (CGAL) | Lab | Voronoi.png | yes |
-| Straight Skeleton (CGAL) | Lab | PolygonSimplify.png | yes |
-| Tetrahedralize (Geogram) | Lab | CoacdDecompose.png | yes |
-| Voronoi Block Partition (Geogram) | Lab | Voronoi.png | yes |
+| Fisher-Robust BCO | Lab | BlockCutOpt.png | yes |
+| Mixed-Size Block Pack | Lab | BinPack.png | yes |
+| Pareto Front Inspector | Lab | YieldEstimator.png | yes |
+| VTU Export | Lab | GcodeExport.png | yes |
 | Ashlar Pack | Masonry | CourseGenerator.png | yes |
 | Ashlar Pack Options | Masonry | BondPattern.png | yes |
 | Assembly Preview | Masonry | AssemblyState.png | yes |
@@ -124,6 +151,9 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Build Step Preview | Masonry | AssemblyState.png | yes |
 | Build-Order Stability Stream | Masonry | EquilibriumRBE.png | yes |
 | Cut Validation | Masonry | StereotomyJoint.png | yes |
+| Dry-Stone Wall (NBO) | Masonry | DryStoneWallNbo.png | yes |
+| Field-Aligned Remesh | Masonry | FieldAlignedRemesh.png | yes |
+| Force-Seat (URScript) | Masonry | ForceSeatUrScript.png | yes |
 | Fragment Merger | Masonry | KintsugiAssemble.png | yes |
 | IFC Export (Building) | Masonry | IfcBuilding.png | yes |
 | IFC Export (Stone Assembly) | Masonry | IfcExport.png | yes |
@@ -134,6 +164,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Match Block Transform | Masonry | RigidTransform.png | yes |
 | Mesh Planar Polygon Extractor | Masonry | MortarJoint.png | yes |
 | Mesh Quality Report | Masonry | PackDiagnostics.png | yes |
+| Next-Best-Object Pose → Robot Frame | Masonry | NboPoseRobotFrame.png | yes |
 | Pack Diagnostics | Masonry | PackDiagnostics.png | yes |
 | Pack Preview | Masonry | AssemblyState.png | yes |
 | Pick Place Frames | Masonry | FrameBuilder.png | yes |
@@ -143,25 +174,40 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Polygonal Wall (Generator) | Masonry | CourseGenerator.png | yes |
 | Robust Auto Interfaces | Masonry | ContactDetector.png | yes |
 | Rubble Wall Settle | Masonry | RubbleWallSettle.png | yes |
-| Stone-Cell Match (Λ) | Masonry | MatchCandidate.png | yes |
+| Stone Slot Match (LAPJV) | Masonry | DryStoneWallNbo.png | yes |
 | Wall Frame | Masonry | CourseGenerator.png | yes |
+| Align by Control Points | Mesh | MarkerDetect.png | yes |
+| Align by Control Points (2) | Mesh | Downsample.png | yes |
 | Bench From Mesh | Mesh | QuarryBlock.png | yes |
 | Clip Boxes By Mesh | Mesh | QuarryCutOpt.png | yes |
 | Close Holes | Mesh | PoissonReconstruct.png | yes |
 | Cloud ICP | Mesh | PointCloudIcp.png | yes |
 | Estimate Cloud Normals | Mesh | NormalEstimation.png | yes |
-| Frahan Mesh Diagnostics | Mesh | PackDiagnostics.png | yes |
-| Frahan Mesh Repair | Mesh | PoissonReconstruct.png | yes |
-| Georeference | Mesh | GeoreferenceMarker.png | yes |
-| Georeference (Align by Points) | Mesh | Downsample.png | yes |
+| Geodesic Voronoi (CGAL) | Mesh | GeodesicPath.png | yes |
+| Georeference (Datum / CRS) | Mesh | GeoreferenceMarker.png | yes |
 | Load Cloud | Mesh | Downsample.png | yes |
 | Load E57 Cloud | Mesh | Downsample.png | yes |
 | Load Metashape Dense Cloud | Mesh | Downsample.png | yes |
 | Load Photo Set | Mesh | Downsample.png | yes |
-| Marker Registration | Mesh | MarkerDetect.png | yes |
 | Mesh AABB | Mesh | MeshBvh.png | yes |
+| Mesh CSG (CGAL) | Mesh | CoacdDecompose.png | yes |
+| Mesh Decimate (Auto) | Mesh | Downsample.png | yes |
+| Mesh Decimate (CGAL) | Mesh | Downsample.png | yes |
+| Mesh Decimate (Geogram) | Mesh | Downsample.png | yes |
+| Mesh Diagnostics | Mesh | PackDiagnostics.png | yes |
+| Mesh Fill Holes (Geogram) | Mesh | PoissonReconstruct.png | yes |
 | Mesh PCA | Mesh | FrameBuilder.png | yes |
+| Mesh Remesh (Geogram) | Mesh | SurfaceTile.png | yes |
+| Mesh Repair | Mesh | PoissonReconstruct.png | yes |
+| Mesh Repair (Auto) | Mesh | PoissonReconstruct.png | yes |
+| Mesh Repair (CGAL) | Mesh | PoissonReconstruct.png | yes |
+| Mesh Repair (Geogram) | Mesh | PoissonReconstruct.png | yes |
+| Mesh Segmentation (CGAL SDF) | Mesh | CoacdDecompose.png | yes |
+| Mesh Segmentation by Angle (CGAL) | Mesh | CoacdDecompose.png | yes |
 | Move to Origin | Mesh | Downsample.png | yes |
+| OBB (Auto) | Mesh | MeshBvh.png | yes |
+| OBB (Geogram) | Mesh | MeshBvh.png | yes |
+| Polygon Partition (CGAL) | Mesh | Voronoi.png | yes |
 | Read LAS Cloud | Mesh | Downsample.png | yes |
 | Read Metashape Project | Mesh | Downsample.png | yes |
 | Sanitize Mesh | Mesh | PoissonReconstruct.png | yes |
@@ -169,58 +215,35 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Scan Reconstruct | Mesh | PoissonReconstruct.png | yes |
 | Scan Scale Calibrate | Mesh | CalibrationBoard.png | yes |
 | Stone Prep (Scan) | Mesh | OutlierRemoval.png | yes |
+| Straight Skeleton (CGAL) | Mesh | PolygonSimplify.png | yes |
+| Tetrahedralize (Geogram) | Mesh | CoacdDecompose.png | yes |
 | Voxel Downsample | Mesh | Downsample.png | yes |
-| BlockCutOpt AMRR Plan | Quarry | QuarryCutOpt.png | yes |
-| BlockCutOpt Extract Grid | Quarry | BlockCutOpt.png | yes |
-| BlockCutOpt Load Fractures | Quarry | DefectMap.png | yes |
-| BlockCutOpt Omni Solve | Quarry | BlockCutOpt.png | yes |
-| BlockCutOpt Solve | Quarry | BlockCutOpt.png | yes |
-| Box To Mesh | Quarry | QuarryBlock.png | yes |
 | Clean Scan Mesh | Quarry | QuarryBlock.png | yes |
-| Convex Hull Slab | Quarry | ConvexHull2D.png | yes |
+| Construct GPR Preset | Quarry | GprIngest.png | yes |
 | Discontinuity Ingest | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Async) | Quarry | DiscontinuitySets.png | yes |
 | Discontinuity Sets (Cloud) | Quarry | DiscontinuitySets.png | yes |
-| Fracture Block Pack | Quarry | BlockCutOpt.png | yes |
-| Frahan Algebraic Convex Polyhedron | Quarry | CoacdDecompose.png | yes |
-| Frahan BenchBlock Cut → Slabs | Quarry | QuarryCutOpt.png | yes |
-| Frahan Billet Cutter | Quarry | QuarryCutOpt.png | yes |
-| Frahan Block Candidate Generator | Quarry | BlockCutOpt.png | yes |
-| Frahan Block Graph | Quarry | Voronoi.png | yes |
-| Frahan Crack Graph (manual) | Quarry | DefectMap.png | yes |
-| Frahan Extraction Order Optimizer | Quarry | QuarryCutOpt.png | yes |
-| Frahan GPR Radargram Reader | Quarry | GprIngest.png | yes |
-| Frahan GeoFractNet Inference | Quarry | DefectMap.png | yes |
-| Frahan Heterogeneous Quarry Extraction | Quarry | QuarryBlock.png | yes |
-| Frahan Mesh → Fracture Planes | Quarry | DefectMap.png | yes |
-| Frahan Mixed-Size Block Pack 3D | Quarry | BinPack.png | yes |
-| Frahan Photo Detect → PLY | Quarry | PlyReader.png | yes |
-| Frahan Quarry Inventory | Quarry | StockpileManager.png | yes |
-| Frahan Quarry Report | Quarry | PackDiagnostics.png | yes |
-| Frahan Quarry Yield Estimator | Quarry | YieldEstimator.png | yes |
-| Frahan Saw-Bed Schedule | Quarry | CncRoughing.png | yes |
-| Frahan Slab Yield Optimizer | Quarry | YieldEstimator.png | yes |
-| Frahan Synthetic TN Granite | Quarry | Stratigraphy.png | yes |
+| Fracture Intensity | Quarry | FractureIntensity.png | yes |
 | GPR Bedrock Surface | Quarry | GprIngest.png | yes |
 | GPR Fracture Extract | Quarry | GprIngest.png | yes |
 | GPR Fracture Surfaces 3D | Quarry | Stratigraphy.png | yes |
 | GPR Fractures on Mesh | Quarry | Downsample.png | yes |
+| GPR Radargram Reader | Quarry | GprIngest.png | yes |
+| GPR Survey Grid | Quarry | GprIngest.png | yes |
+| GeoFractNet Inference | Quarry | DefectMap.png | yes |
+| In-Situ Block Size | Quarry | InSituBlockSize.png | yes |
 | Joint Set | Quarry | Stratigraphy.png | yes |
 | Joint Sets to DFN | Quarry | DiscontinuitySets.png | yes |
-| Mesh Shell Split | Quarry | CoacdDecompose.png | yes |
+| Kinematic Feasibility | Quarry | KinematicFeasibility.png | yes |
+| Mesh → Fracture Planes | Quarry | DefectMap.png | yes |
 | Overburden To Rock Face | Quarry | QuarryBlock.png | yes |
 | Quarry DFN | Quarry | DefectMap.png | yes |
-| Quarry Decompose | Quarry | QuarryCutOpt.png | yes |
-| Quarry Decompose By CoACD | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Mesh (CGAL) | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Tet | Quarry | CoacdDecompose.png | yes |
-| Quarry Decompose By Voronoi | Quarry | Voronoi.png | yes |
-| Scan to Block Inventory | Quarry | QuarryBlock.png | yes |
 | Stereonet + Block Size | Quarry | DiscontinuitySets.png | yes |
 | Stochastic DFN (Baecher) | Quarry | DiscontinuitySets.png | yes |
-| Frahan Packing Plan Report | Reports | PackDiagnostics.png | yes |
-| Frahan Packing Report | Reports | PackDiagnostics.png | yes |
-| Frahan Report / Export | Reports | PackDiagnostics.png | yes |
+| Terzaghi Correction | Quarry | Terzaghi.png | yes |
+| Packing Plan Report | Reports | PackDiagnostics.png | yes |
+| Packing Report | Reports | PackDiagnostics.png | yes |
+| Report / Export | Reports | PackDiagnostics.png | yes |
 | Carving Stages | Sculpt | CncRoughing.png | yes |
 | Enlarge Sculpture | Sculpt | MorphCorrect.png | yes |
 | Fit In Block | Sculpt | PackIntoBlock.png | yes |
@@ -228,25 +251,39 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (128 PNGs). 80 distinct icons
 | Slab Cut By Tool Mesh (CGAL) | Slab | BlockCutOpt.png | yes |
 | Slab From Mesh | Slab | QuarryBlock.png | yes |
 | Vertical Fracture Planes From Curves | Slab | PoissonReconstruct.png | yes |
-| Frahan Chart Flatness Report | Surface Packing | DistortionMap.png | yes |
+| Chart Flatness Report | Surface Packing | DistortionMap.png | yes |
 | Pack On Surface | Surface Packing | SurfaceTile.png | yes |
 | Pack Surfaces | Surface Packing | SurfaceUnroll.png | yes |
+| Panel Tile Surface | Surface Packing | QuarryBlock.png | yes |
 | Surface Chart | Surface Packing | BffChartPack.png | yes |
-| Frahan Trencadís Catalog Pack | Trencadis | Trencadis.png | yes |
-| Frahan Trencadís Dynamic Settle | Trencadis | ContactSettle.png | yes |
-| Frahan Trencadís EdgeMatch | Trencadis | EdgeMatchSolve.png | yes |
-| Frahan Trencadís Pack | Trencadis | Trencadis.png | yes |
-| Frahan Trencadís Pipeline | Trencadis | Trencadis.png | yes |
+| Trencadís Catalog Pack | Trencadis | Trencadis.png | yes |
+| Trencadís Dynamic Settle | Trencadis | ContactSettle.png | yes |
+| Trencadís EdgeMatch | Trencadis | EdgeMatchSolve.png | yes |
+| Trencadís Pack | Trencadis | Trencadis.png | yes |
+| Trencadís Pipeline | Trencadis | Trencadis.png | yes |
+| Boundary Net | Vault | BoundaryNet.png | yes |
+| Catenary Curve | Vault | CatenaryCurve.png | yes |
+| Catenary Relax | Vault | CatenaryRelax.png | yes |
+| Fabrication Schedule | Vault | FabricationSchedule.png | yes |
+| Quad Cells | Vault | QuadCells.png | yes |
+| Stone Library | Vault | StoneLibrary.png | yes |
+| Stone-Cell Match (Λ) | Vault | MatchCandidate.png | yes |
+| SubD Vault | Vault | SubDVault.png | yes |
+| TNA Thrust Range | Vault | TnaThrustRange.png | yes |
+| TNA Vault (Gaudí) | Vault | TnaVault.png | yes |
+| Thrust Quad Remesh (QuadWild) | Vault | ThrustQuadRemesh.png | yes |
+| Trim Shell by Curves | Vault | TrimShellByCurves.png | yes |
+| Vault Interlock Check | Vault | VaultInterlock.png | yes |
+| Vault Quad Courses (CRA) | Vault | VaultQuadCourses.png | yes |
+| Vault Rubble CRA | Vault | VaultRubbleCra.png | yes |
+| Vault Shell CRA | Vault | VaultShellCra.png | yes |
+| Vault Steel Ties | Vault | VaultSteelTies.png | yes |
+| Vault Stone Fit & Trim | Vault | VaultStoneFitTrim.png | yes |
+| Vault Surface Sampler | Vault | VaultSurfaceSampler.png | yes |
+| Vault Surface Voronoi | Vault | VaultSurfaceVoronoi.png | yes |
+| Vault Voussoir Moulds | Vault | VaultVoussoirMoulds.png | yes |
 | Arch Voussoirs | Voussoir | StereotomyGenerate.png | yes |
 | Pendentive Vault Voussoirs | Voussoir | Voussoir.png | yes |
 | Voussoir Ingest | Voussoir | EdgeMatchSolve.png | yes |
 | Voussoir Pack Into Block | Voussoir | EdgeMatchSolve.png | yes |
 | Voussoir Stone Matcher | Voussoir | EdgeMatchSolve.png | yes |
-
-## Referenced icons with NO file (canvas shows default)
-
-- G-code Parser (Fabricate) -> `StoneCutExport.png`
-- G-code to Planes (Fabricate) -> `StoneCutExport.png`
-- Planes to KUKAprc Commands (Fabricate) -> `StoneCutExport.png`
-- Planes to Robot Targets (Fabricate) -> `StoneCutExport.png`
-- Wire-Saw Toolpath (Fabricate) -> `StoneCutExport.png`

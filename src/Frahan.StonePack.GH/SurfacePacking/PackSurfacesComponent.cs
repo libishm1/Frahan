@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Frahan.Surface;
 using Frahan.Packing.TwoD;
+using Frahan.GH.TwoD;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
@@ -133,6 +134,17 @@ namespace Frahan.GH.Surface
                 "never reduces placements or validity.",
                 GH_ParamAccess.item, 4);
             p[12].Optional = true;
+            p.AddIntegerParameter("Boundary Mode", "BMode",
+                "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the " +
+                "sheet boundary are placed rim-first, scored by measured contact at verified NFP poses and " +
+                "spread by arc-interval occupancy (rotation-invariant).",
+                GH_ParamAccess.item, 0);
+            p[13].Optional = true;
+            p.AddNumberParameter("Min Boundary Contact", "MBC",
+                "Boundary Mode 1 only: minimum rim-contact fraction of the part perimeter (0..1) to seat a " +
+                "part on the boundary; below it the part places bottom-left. Default 0.25.",
+                GH_ParamAccess.item, 0.25);
+            p[14].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -202,6 +214,42 @@ namespace Frahan.GH.Surface
         private Payload _last;
         private volatile bool _selfTrigger;
 
+        // ── progressive live preview (mirrors Sheet Nest (Live)): the 2D partial
+        // layout is fan-meshed in amber while the solve runs; the final 3D-mapped
+        // curves preview via the output params, so this clears on delivery. ──
+        private List<Mesh> _previewMeshes;
+        private List<Color> _previewColors;
+
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+            var meshes = _previewMeshes; var colors = _previewColors;
+            if (meshes != null && colors != null && meshes.Count == colors.Count)
+            {
+                for (int i = 0; i < meshes.Count; i++)
+                {
+                    if (meshes[i] == null) continue;
+                    args.Display.DrawMeshShaded(meshes[i], new Rhino.Display.DisplayMaterial(colors[i]));
+                }
+            }
+            else base.DrawViewportMeshes(args);
+        }
+
+        public override BoundingBox ClippingBox
+        {
+            get
+            {
+                var meshes = _previewMeshes;
+                if (meshes != null && meshes.Count > 0)
+                {
+                    var bb = BoundingBox.Empty;
+                    for (int i = 0; i < meshes.Count; i++)
+                        if (meshes[i] != null) bb.Union(meshes[i].GetBoundingBox(false));
+                    return bb;
+                }
+                return base.ClippingBox;
+            }
+        }
+
         private sealed class Snapshot
         {
             public List<FrahanSurfaceChart> Charts;
@@ -214,6 +262,8 @@ namespace Frahan.GH.Surface
             public List<double> PartZOf;
             public double Tolerance, EngineSpacing, MaxDev;
             public int BaseRotations, ContactRotations, MultiStart;
+            public int BoundaryMode;
+            public double MinBoundaryContact;
             public ulong Hash;
         }
 
@@ -233,7 +283,7 @@ namespace Frahan.GH.Surface
                 // false in the +10ms schedule window, clear the canvas rather
                 // than repainting a layout (matches the AsyncScanComponent gate).
                 bool runST = false; da.GetData(9, ref runST);
-                if (!runST) { Message = "idle"; EmitEmpty(da, "Run is false."); return; }
+                if (!runST) { Message = "idle"; _previewMeshes = null; _previewColors = null; EmitEmpty(da, "Run is false."); return; }
                 Payload sready = null; string serr = null; bool srunning;
                 lock (_gate)
                 {
@@ -242,6 +292,7 @@ namespace Frahan.GH.Surface
                         sready = _readyPayload; serr = _readyError;
                         _readyPayload = null; _readyError = null; _hasReady = false;
                         if (serr == null && sready != null) _last = sready;
+                        _previewMeshes = null; _previewColors = null; // final delivery: amber preview ends
                     }
                     srunning = _task != null && !_task.IsCompleted;
                 }
@@ -259,6 +310,7 @@ namespace Frahan.GH.Surface
             {
                 lock (_gate) { try { _cts?.Cancel(); } catch { } }
                 Message = "idle";
+                _previewMeshes = null; _previewColors = null;
                 EmitEmpty(da, "Run is false.");
                 return;
             }
@@ -274,6 +326,9 @@ namespace Frahan.GH.Surface
                     ready = _readyPayload; readyError = _readyError;
                     _readyPayload = null; _readyError = null; _hasReady = false;
                     if (readyError == null && ready != null) _last = ready;
+                    // final (or failed) delivery: drop the amber in-progress preview —
+                    // the real 3D-mapped curves preview via the output params
+                    _previewMeshes = null; _previewColors = null;
                 }
                 taskRunning = _task != null && !_task.IsCompleted;
                 taskHash = _taskHash;
@@ -334,17 +389,37 @@ namespace Frahan.GH.Surface
                         if (tick.ElapsedMilliseconds < 300) return;
                         tick.Restart();
                         _progress = $"packing {partial.PlacedCount}/{snap.Parts.Count}...";
+                        // progressive live preview: amber partial layout in the
+                        // viewport while the 2D nest runs (final 3D-mapped curves
+                        // replace it via the output params on delivery)
+                        try
+                        {
+                            var meshes = new List<Mesh>(partial.Placements.Count);
+                            var colors = new List<Color>(partial.Placements.Count);
+                            foreach (var pl in partial.Placements)
+                            {
+                                var m = HoleNestShared.FanMeshFromLoop(pl.PlacedOuter);
+                                if (m == null) continue;
+                                meshes.Add(m);
+                                colors.Add(Color.FromArgb(235, 170, 60));
+                            }
+                            _previewMeshes = meshes;   // reference swap: draw-thread safe
+                            _previewColors = colors;
+                            Rhino.RhinoApp.InvokeOnUiThread((Action)(() =>
+                            {
+                                try { Rhino.RhinoDoc.ActiveDoc?.Views.Redraw(); } catch { }
+                            }));
+                        }
+                        catch { /* preview must never kill the solve */ }
                         _selfTrigger = true;
-                        try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
-                        catch { }
+                        AsyncResolve.Kick(doc, iguid);
                     };
                     try { result = ComputePacking(snap, onPlacement, token); }
                     catch (Exception ex) { error = "Surface packing failed: " + ex.Message; }
                     if (token.IsCancellationRequested) return; // stale job: discard
                     lock (_gate) { _readyPayload = result == null ? null : new Payload { Snap = snap, Result = result }; _readyError = error; _hasReady = true; }
                     _selfTrigger = true;
-                    try { doc?.ScheduleSolution(10, d => { if (d?.FindComponent(iguid) is GH_Component c) c.ExpireSolution(true); }); }
-                    catch { }
+                    AsyncResolve.Kick(doc, iguid); // guarded delivery: schedule, then UI-thread fallback
                 }, token);
             }
         }
@@ -373,7 +448,8 @@ namespace Frahan.GH.Surface
                 perSheet = ContactNfpHoleNester.PackSheets(
                     snap.Sheets, snap.SheetHoles, snap.Parts,
                     snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
-                    onPlacement: onPlacement, multiStartOrders: snap.MultiStart);
+                    onPlacement: onPlacement, multiStartOrders: snap.MultiStart,
+                    boundaryMode: snap.BoundaryMode, minBoundaryContact: snap.MinBoundaryContact);
             }
             catch (Exception ex)
             {
@@ -465,6 +541,10 @@ namespace Frahan.GH.Surface
             da.GetData(10, ref contactRotations);
             da.GetData(11, ref resolution);
             da.GetData(12, ref multiStart);
+            int boundaryMode = 0;
+            da.GetData(13, ref boundaryMode);
+            double minBoundaryContact = 0.25;
+            da.GetData(14, ref minBoundaryContact);
 
             spacing = Math.Max(0.0, spacing);
             tolerance = Math.Max(1e-9, tolerance);
@@ -550,6 +630,7 @@ namespace Frahan.GH.Surface
                 HD(c.SpanCount);
             }
             HQ(spacing); HD(baseRotations); HD(contactRotations); HD(resolution); HD(multiStart); HQ(tolerance);
+            HD(boundaryMode); HQ(minBoundaryContact);
             HD(keptCharts.Count);
             foreach (var chart in keptCharts)
             {
@@ -566,6 +647,7 @@ namespace Frahan.GH.Surface
                 Parts = parts, Originals = originals, InputIndexOf = inputIndexOf, PartZOf = partZOf,
                 Tolerance = tolerance, EngineSpacing = engineSpacing, MaxDev = maxDev,
                 BaseRotations = baseRotations, ContactRotations = contactRotations, MultiStart = multiStart,
+                BoundaryMode = boundaryMode, MinBoundaryContact = minBoundaryContact,
                 Hash = h,
             };
         }

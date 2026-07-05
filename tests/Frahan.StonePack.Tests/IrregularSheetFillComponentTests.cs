@@ -28,8 +28,8 @@ static class IrregularSheetFillComponentTests
     public static void Component_Metadata_IsCorrect()
     {
         var c = new IrregularSheetFillComponent();
-        Assert(c.Name == "Frahan Sheet Pack (Unified)",
-            $"Name should be 'Frahan Sheet Pack (Unified)', got '{c.Name}'");
+        Assert(c.Name == "Sheet Pack (Unified)",
+            $"Name should be 'Sheet Pack (Unified)', got '{c.Name}'");
         Assert(c.NickName == "FreeNestU",
             $"NickName should be 'FreeNestU', got '{c.NickName}'");
         Assert(c.Category == "Frahan",

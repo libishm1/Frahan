@@ -34,6 +34,7 @@ public sealed class Pack3DIrregularComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("E36C3F7D-7E2C-495E-9E2A-59312C5CF990");
+    public override GH_Exposure Exposure => GH_Exposure.hidden;   // consolidated: keep Pack3D Irregular Container as the one 3D packer
     protected override Bitmap? Icon => IconProvider.Load("Pack3D.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)

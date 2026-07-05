@@ -39,7 +39,7 @@ namespace Frahan.GH;
 public sealed class IrregularSheetFillComponent : FrahanComponentBase
 {
     public IrregularSheetFillComponent()
-        : base("Frahan Sheet Pack (Unified)", "FreeNestU",
+        : base("Sheet Pack (Unified)", "FreeNestU",
             "Unified entry point for Frahan's four 2D irregular-sheet solver " +
             "variants (V1 / V2 / V3 / V506). Pick the variant with the Variant " +
             "input; default is V506. Synchronous solve only - for the async " +
@@ -50,7 +50,13 @@ public sealed class IrregularSheetFillComponent : FrahanComponentBase
 
     public override Guid ComponentGuid => new Guid("AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B");
     protected override Bitmap? Icon => IconProvider.Load("IrregularSheet.png");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    // Re-hidden 2026-07-05 evening (packer consolidation): briefly surfaced for its
+    // Boundary Mode / affinity options, but that capability was EVOLVED into the
+    // Core solver (ContactNfpHoleNester boundaryMode: measured rim-contact at NFP
+    // poses + arc-occupancy spread, rotation-invariant) and exposed on Sheet Nest
+    // (Live). The V506 descriptor-bucket route is superseded; kept loadable for
+    // old canvases.
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {

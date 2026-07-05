@@ -22,7 +22,7 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 | `04_scan_to_bench_engineer/` | scan cloud -> normals -> reconstruct -> bench (engineer block-plan) | scan-to-bench reconstruction | `data/granite_dells_tls/` or `data/tongjiang/` |
 | `05_artist_pointing_machine/` | scan mesh -> carving stages -> pointing-machine guide (artist) | the carving / pointing-machine spine | a scan mesh: `data/stanford_scans/` (or your own temple scan, DECIMATED per KB-1) |
 | `07_scan_ingest_full/` | full scan-ingest pipeline (load -> downsample -> normals -> ICP -> reconstruct) | the ingest front-end every spine shares | `data/granite_dells_tls/`, `data/tongjiang/`, `data/stanford_scans/` |
-| `10_pack2d/` | 2D slab nesting (exact NFP-BLF, FreeNestX) | cut parts from a slab, 0-overlap | synthetic cut-list (in the .gh); METERS, slab 3.2x2.0 m |
+| `10_pack2d/` | 2D slab nesting (exact NFP, hole-aware: HoleNest / Sheet Nest (Live)) | cut parts from a slab, 0-overlap | synthetic cut-list (in the .gh); METERS, slab 3.2x2.0 m |
 | `11_pack3d/` | 3D block packing (Block Pack Tree, Kim 2025 guillotine) | quarry block subdivision, saw-cuttable | synthetic elements (in the .gh); METERS, block 3.0x1.5x1.5 m |
 | `12_trencadis/` | Trencadis mosaic (Catalog Pack, CVD-Lloyd + Hungarian) | broken-tile cladding panel | synthetic shards (in the .gh); MILLIMETERS, panel ~1100 mm |
 | `13_surface_mapping/` | twisted block -> CGAL split-by-angle -> Trencadis cladding | surfaces from a solid + surface mosaic | synthetic twisted monument (in the .gh); MILLIMETERS, 1.2x1.2x3.5 m |
@@ -35,6 +35,32 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 
 > Examples 15-27 (statue-to-blocks, surface packers, voussoirs 21/22, slab/marble 23-25,
 > polygonal masonry 27) also ship in their folders; see `../docs/PERSONA_MAP.md` for the full map.
+
+## More workflows (33-50 + vaults)
+Each ships its own README (hero render, "what it shows", data provenance). The GPR chain (33-35, 40)
+runs on real georeferenced surveys; 47-50 are the pre-CAM fabrication + BIM handoff tail.
+
+| Folder | Demonstrates |
+|---|---|
+| `33_gpr_marble_guillotine/` | GPR marble -> stationary wire-saw guillotine blocks (the manufacturable hero) |
+| `34_gpr_marble_oblique/` | oblique (dip-following) quarry cuts on the marble beds (the georeferencing prize) |
+| `35_gpr_quarry_full_workflow/` | GPR quarry full spine: ingest -> beds -> slabs -> blocks |
+| `36_fractured_block_to_slabs/` | fractured block -> two fracture-bounded slabs |
+| `37_block_to_cladding_facade/` | block -> slabs -> cladding panels -> curved facade, with costing |
+| `38_surface_discretize_tiles/` | surface discretization -> matched cut tiles -> slabs (Panel Tile Surface) |
+| `39_concave_nest/` | concave-in-concave nesting (the honest high-yield trim) |
+| `40_travertine_crosslithology/` | cross-lithology cut-yield across marble, travertine, andesite (native `.gsf`) |
+| `41_floor_tiling/` | floor tile (boundary-trimmed) with grain direction + texture mapping |
+| `42_wholeside_reassembly/` | whole-side reassembly (Whole-Side Assemble) |
+| `43_nbo_dry_stone_wall/` | next-best-object dry-stone wall placement |
+| `44_nbo_to_robot/` | NBO pose -> robot frame + Force-Seat URScript (robot handoff) |
+| `45_cut_and_fill_excavation/` | cut-and-fill / soil excavation down to the rock face |
+| `46_kinematic_intensity_screen/` | kinematic feasibility + fracture-intensity rock-mass screen |
+| `47_fabrication_handoff/` | pre-CAM cut plan -> CAM / robot / COMPAS (the fabrication tail) |
+| `48_block_matching_3d/` | 3D block matching / reassembly (Soft ICP 3D) |
+| `49_extraction_order_plan/` | quarry inventory -> yield -> extraction order -> saw-bed schedule -> report |
+| `50_castle_keep_ifc/` | castle keep -> masonry stability -> IFC / BIM export (the BIM handoff) |
+| `vault_generation/` | compression-only masonry vaults (TNA form-finding + whole-shell CRA) |
 
 ## Digital-fabrication entrypoint renders (examples 10-14)
 Built and solved live, then captured. Each is at correct per-application physical scale (meters for
@@ -64,7 +90,7 @@ Two navigation docs route you to the right examples and components:
   surveyors (04/07/26), computational designers/architects (16/17/27, voussoirs 21/22), stone masons
   (11/24/25), artists (05/12/14/15), OSS developers (Lab primitives).
 - [`../docs/SUPERSESSION_MAP.md`](../docs/SUPERSESSION_MAP.md) — which legacy components were superseded
-  by which evolved forms, with the benchmarks. Legacy stays loadable; use the evolved forms in new
+  by which current forms, with the benchmarks. Legacy stays loadable; use the current forms in new
   canvases.
 
 ## Status + the live refresh

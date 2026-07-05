@@ -298,16 +298,24 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL straight skeleton failed (rc={rc}): {err}");
         }
 
-        var verts = new double[vc * 2];
-        if (vc > 0) Marshal.Copy(pVerts, verts, 0, vc * 2);
-        var edges = new int[ec * 2];
-        if (ec > 0) Marshal.Copy(pEdges, edges, 0, ec * 2);
-        var times = new double[tc];
-        if (tc > 0) Marshal.Copy(pTimes, times, 0, tc);
-
-        Native.frahan_cgal_free_pdouble(pVerts);
-        Native.frahan_cgal_free_pint(pEdges);
-        Native.frahan_cgal_free_pdouble(pTimes);
+        double[] verts;
+        int[] edges;
+        double[] times;
+        try
+        {
+            verts = new double[vc * 2];
+            if (vc > 0) Marshal.Copy(pVerts, verts, 0, vc * 2);
+            edges = new int[ec * 2];
+            if (ec > 0) Marshal.Copy(pEdges, edges, 0, ec * 2);
+            times = new double[tc];
+            if (tc > 0) Marshal.Copy(pTimes, times, 0, tc);
+        }
+        finally
+        {
+            Native.frahan_cgal_free_pdouble(pVerts);
+            Native.frahan_cgal_free_pint(pEdges);
+            Native.frahan_cgal_free_pdouble(pTimes);
+        }
 
         return new StraightSkeletonResult(verts, edges, times);
     }
@@ -352,11 +360,19 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL repair_mesh failed (rc={rc}): {err}");
         }
 
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        CgalMeshBoolean_FreeBuffers(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            CgalMeshBoolean_FreeBuffers(outV, outT);
+        }
 
         return new MeshSnapshot(rv, rt);
     }
@@ -403,11 +419,19 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL decimate_mesh failed (rc={rc}): {err}");
         }
 
-        var rv = new double[outVc * 3];
-        if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
-        var rt = new int[outTc * 3];
-        if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
-        CgalMeshBoolean_FreeBuffers(outV, outT);
+        double[] rv;
+        int[] rt;
+        try
+        {
+            rv = new double[outVc * 3];
+            if (outVc > 0) Marshal.Copy(outV, rv, 0, outVc * 3);
+            rt = new int[outTc * 3];
+            if (outTc > 0) Marshal.Copy(outT, rt, 0, outTc * 3);
+        }
+        finally
+        {
+            CgalMeshBoolean_FreeBuffers(outV, outT);
+        }
 
         return new MeshSnapshot(rv, rt);
     }
@@ -443,16 +467,24 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL partition failed (rc={rc}): {err}");
         }
 
-        var ov = new double[vc * 2];
-        if (vc > 0) Marshal.Copy(pVerts, ov, 0, vc * 2);
-        var oi = new int[ic];
-        if (ic > 0) Marshal.Copy(pIndices, oi, 0, ic);
-        var os = new int[pc + 1];
-        if (pc + 1 > 0) Marshal.Copy(pStarts, os, 0, pc + 1);
-
-        Native.frahan_cgal_free_pdouble(pVerts);
-        Native.frahan_cgal_free_pint(pIndices);
-        Native.frahan_cgal_free_pint(pStarts);
+        double[] ov;
+        int[] oi;
+        int[] os;
+        try
+        {
+            ov = new double[vc * 2];
+            if (vc > 0) Marshal.Copy(pVerts, ov, 0, vc * 2);
+            oi = new int[ic];
+            if (ic > 0) Marshal.Copy(pIndices, oi, 0, ic);
+            os = new int[pc + 1];
+            if (pc + 1 > 0) Marshal.Copy(pStarts, os, 0, pc + 1);
+        }
+        finally
+        {
+            Native.frahan_cgal_free_pdouble(pVerts);
+            Native.frahan_cgal_free_pint(pIndices);
+            Native.frahan_cgal_free_pint(pStarts);
+        }
 
         return new PolygonPartitionResult(ov, oi, os);
     }
@@ -506,9 +538,16 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL segment_sdf failed (rc={rc}): {err}");
         }
 
-        var segIds = new int[idCount];
-        if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
-        if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        int[] segIds;
+        try
+        {
+            segIds = new int[idCount];
+            if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
+        }
+        finally
+        {
+            if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        }
 
         var subMeshes = SplitTrianglesBySegmentId(v, t, segIds);
         return new SdfSegmentResult(subMeshes, actualClusters);
@@ -555,9 +594,16 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL segment_by_angle failed (rc={rc}): {err}");
         }
 
-        var segIds = new int[idCount];
-        if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
-        if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        int[] segIds;
+        try
+        {
+            segIds = new int[idCount];
+            if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
+        }
+        finally
+        {
+            if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        }
 
         var subMeshes = SplitTrianglesBySegmentId(v, t, segIds);
         return new SdfSegmentResult(subMeshes, actualClusters);
@@ -604,9 +650,16 @@ public static class CgalGeometry
             throw new InvalidOperationException($"CGAL geodesic_voronoi failed (rc={rc}): {err}");
         }
 
-        var segIds = new int[idCount];
-        if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
-        if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        int[] segIds;
+        try
+        {
+            segIds = new int[idCount];
+            if (idCount > 0) Marshal.Copy(pIds, segIds, 0, idCount);
+        }
+        finally
+        {
+            if (pIds != IntPtr.Zero) Native.frahan_cgal_free_pint(pIds);
+        }
 
         var subMeshes = SplitTrianglesBySegmentId(v, t, segIds);
         return new SdfSegmentResult(subMeshes, actualClusters);

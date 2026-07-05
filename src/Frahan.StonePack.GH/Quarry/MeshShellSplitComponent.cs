@@ -34,7 +34,7 @@ namespace Frahan.GH.Masonry
                 "Separates a multi-shell Rhino mesh into one Slab per " +
                 "connected shell. Each output shell is assumed convex " +
                 "(Slab's input requirement). Frahan-original method.",
-                "Frahan", "Quarry")
+                "Frahan", "Block")
         {
         }
 

@@ -36,7 +36,7 @@ namespace Frahan.GH;
 public sealed class TrencadisEdgeMatchComponent : FrahanComponentBase
 {
     public TrencadisEdgeMatchComponent()
-        : base("Frahan Trencadís EdgeMatch", "TrencEM",
+        : base("Trencadís EdgeMatch", "TrencEM",
             "Trencadís packer driven by the EdgeMatch beam-search solver. " +
             "Each sheet outline becomes an anchored frame; parts are placed " +
             "by their complementary edges against the frame and against " +

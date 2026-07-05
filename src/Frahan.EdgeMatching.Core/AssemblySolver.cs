@@ -346,7 +346,9 @@ namespace Frahan.EdgeMatching
                         var mB = BestMatchOrdered(pj, pi);
 
                         // Pick the lower-residual direction; strict id tie-break keeps
-                        // determinism if residuals are exactly equal.
+                        // determinism if residuals are exactly equal. (The spurious-match
+                        // filtering happens upstream in BestMatchOrdered via the contact
+                        // gate + ranking; the surviving edges are weighted by residual.)
                         PairEdge? best = null;
                         if (mA != null)
                             best = new PairEdge(pi.Id, pj.Id, childId: pi.Id, parentId: pj.Id, mA.AontoB, mA.Residual, mA);
@@ -361,6 +363,98 @@ namespace Frahan.EdgeMatching
                         }
 
                         if (best != null) edges.Add(best.Value);
+                    }
+                }
+            }
+
+            // --- 1b. Phase 1 consensus: cycle-consistency outlier penalty. ---
+            // Close every triangle of the pair graph (compose the three relative poses
+            // around the loop; a consistent loop returns to identity). Edges whose loops
+            // persistently fail to close are penalized so the greedy seed/MST avoids the
+            // tight-but-wrong matches it would otherwise lock in. Opt-in; null = legacy.
+            Dictionary<string, double>? cyclePenalty = null;
+            if (_opt.UseCycleConsistency && edges.Count >= 3)
+            {
+                // Low-local -> High-local relative pose per undirected pair.
+                var rel = new Dictionary<string, Transform>(StringComparer.Ordinal);
+                foreach (var e in edges)
+                {
+                    Transform lowToHigh;
+                    if (string.Equals(e.ChildId, e.LowId, StringComparison.Ordinal))
+                        lowToHigh = e.Relative;                       // child=Low,parent=High: maps Low->High
+                    else if (!e.Relative.TryGetInverse(out lowToHigh))
+                        lowToHigh = Transform.Identity;               // child=High: invert High->Low
+                    rel[e.LowId + "|" + e.HighId] = lowToHigh;
+                }
+                var devs = new Dictionary<string, List<double>>(StringComparer.Ordinal);
+                foreach (var e in edges) devs[e.LowId + "|" + e.HighId] = new List<double>();
+
+                // Directed relative pose from->to via the Low|High table.
+                Func<string, string, Transform> relDir = (from, to) =>
+                {
+                    bool fromLow = string.CompareOrdinal(from, to) <= 0;
+                    var lh = rel[fromLow ? from + "|" + to : to + "|" + from];
+                    if (fromLow) return lh;
+                    lh.TryGetInverse(out var inv); return inv;
+                };
+
+                var nodeIds = nodes.Select(p => p.Id).ToList();       // already id-sorted
+                for (int i = 0; i < nodeIds.Count; i++)
+                for (int j = i + 1; j < nodeIds.Count; j++)
+                {
+                    string a = nodeIds[i], b = nodeIds[j];
+                    if (!rel.ContainsKey(a + "|" + b)) continue;
+                    for (int k = j + 1; k < nodeIds.Count; k++)
+                    {
+                        string c = nodeIds[k];
+                        if (!rel.ContainsKey(b + "|" + c) || !rel.ContainsKey(a + "|" + c)) continue;
+                        // loop a->b->c->a; consistent => identity.
+                        var loop = Transform.Multiply(relDir(c, a), Transform.Multiply(relDir(b, c), relDir(a, b)));
+                        double dev = LoopDeviation(loop, _scale);
+                        devs[a + "|" + b].Add(dev);
+                        devs[b + "|" + c].Add(dev);
+                        devs[a + "|" + c].Add(dev);
+                    }
+                }
+                cyclePenalty = new Dictionary<string, double>(StringComparer.Ordinal);
+                foreach (var kv in devs)
+                {
+                    var list = kv.Value;
+                    if (list.Count == 0) { cyclePenalty[kv.Key] = 0.0; continue; }
+                    list.Sort();
+                    double median = list[list.Count / 2];   // robust: a correct edge is bad only in loops with a wrong edge
+                    cyclePenalty[kv.Key] = median > _opt.CycleConsistencyTolerance ? _opt.CycleConsistencyPenalty : 0.0;
+                }
+            }
+
+            // --- 1c. Phase 1c best-buddies: penalize non-mutual-best edges. ---
+            // An edge is trustworthy only if it is the lowest-weight edge for BOTH its
+            // endpoints. The impostor (a non-adjacent piece that mates ~as well locally)
+            // is some other piece's true neighbour, so it is not mutual-best -> penalize
+            // it so the MST/seed prefers mutual edges, falling back to non-mutual only
+            // when a node has no mutual edge. Folded into the same penalty dict.
+            if (_opt.UseBestBuddies && edges.Count > 0)
+            {
+                var bestKey = new Dictionary<string, string>(StringComparer.Ordinal);
+                var bestW = new Dictionary<string, double>(StringComparer.Ordinal);
+                // Edges are in deterministic (LowId,HighId) order; strict < keeps the
+                // first-seen lowest as the unique best (deterministic tie-break).
+                foreach (var e in edges)
+                {
+                    string k = e.LowId + "|" + e.HighId;
+                    if (!bestW.TryGetValue(e.LowId, out var wl) || e.Weight < wl) { bestW[e.LowId] = e.Weight; bestKey[e.LowId] = k; }
+                    if (!bestW.TryGetValue(e.HighId, out var wh) || e.Weight < wh) { bestW[e.HighId] = e.Weight; bestKey[e.HighId] = k; }
+                }
+                cyclePenalty = cyclePenalty ?? new Dictionary<string, double>(StringComparer.Ordinal);
+                foreach (var e in edges)
+                {
+                    string k = e.LowId + "|" + e.HighId;
+                    bool mutual = bestKey.TryGetValue(e.LowId, out var kl) && kl == k
+                               && bestKey.TryGetValue(e.HighId, out var kh) && kh == k;
+                    if (!mutual)
+                    {
+                        cyclePenalty.TryGetValue(k, out var cur);
+                        cyclePenalty[k] = cur + _opt.BestBuddyPenalty;
                     }
                 }
             }
@@ -405,8 +499,9 @@ namespace Frahan.EdgeMatching
                 var bestEdge = edges[0];
                 foreach (var e in edges)
                 {
-                    if (e.Weight < bestEdge.Weight
-                        || (e.Weight == bestEdge.Weight && CompareEdgeId(e, bestEdge) < 0))
+                    double we = e.Weight + EdgePenalty(cyclePenalty, e);
+                    double wb = bestEdge.Weight + EdgePenalty(cyclePenalty, bestEdge);
+                    if (we < wb || (we == wb && CompareEdgeId(e, bestEdge) < 0))
                         bestEdge = e;
                 }
                 // Lower-id endpoint of the best edge is the seed (deterministic).
@@ -477,7 +572,7 @@ namespace Frahan.EdgeMatching
                             childAbs = Transform.Multiply(absolute[inId], inv);
                         }
 
-                        double score = e.Weight;
+                        double score = e.Weight + EdgePenalty(cyclePenalty, e);
                         if (placedContours != null)
                         {
                             var childCurve = TransformedContour(byId[other], childAbs);
@@ -540,6 +635,7 @@ namespace Frahan.EdgeMatching
                 : BoundarySegmenter.Segment(candidate, _segOpt);
 
             MatchResult? best = null;
+            double bestContact = -1.0;
             foreach (var cs in candSegments)
             {
                 var hits = _index.QueryComplement(cs);
@@ -568,16 +664,65 @@ namespace Frahan.EdgeMatching
 
                     if (refined.Residual > residualGate) continue;
 
-                    // Lowest residual wins; strict segment-index tie-break for
-                    // determinism (candidate id is fixed, hit id is fixed here).
-                    if (best == null
-                        || refined.Residual < best.Residual
-                        || (refined.Residual == best.Residual
-                            && SegmentTieBreak(refined, best) < 0))
-                        best = refined;
+                    // Phase 1b: contact-seam-length discriminator. A true neighbour
+                    // shares a long contiguous complementary seam; a spurious match
+                    // shares one coincidental fragment with an equally-low residual.
+                    // Reject below the contact floor and rank survivors by contact
+                    // first (then residual). When off, contact = 1.0 (no gate) and the
+                    // ranking falls back to lowest-residual exactly as before.
+                    double contact = 1.0;
+                    if (_opt.UseContactScore)
+                    {
+                        contact = ContactFraction(candidate, hitPanel, refined.AontoB);
+                        if (contact < _opt.MinContactFraction) continue;
+                    }
+
+                    bool take;
+                    if (best == null) take = true;
+                    else if (_opt.UseContactScore)
+                    {
+                        int cc = contact.CompareTo(bestContact);
+                        if (cc != 0) take = cc > 0;                       // higher contact wins
+                        else
+                        {
+                            int rc = refined.Residual.CompareTo(best.Residual);
+                            take = rc != 0 ? rc < 0 : SegmentTieBreak(refined, best) < 0;
+                        }
+                    }
+                    else
+                    {
+                        take = refined.Residual < best.Residual
+                            || (refined.Residual == best.Residual && SegmentTieBreak(refined, best) < 0);
+                    }
+
+                    if (take) { best = refined; bestContact = contact; }
                 }
             }
             return best;
+        }
+
+        // Phase 1b: fraction of the candidate perimeter that lands within a scale-relative
+        // band of the hit boundary once the candidate is moved by the match pose. Both
+        // contours are panel-local; AontoB maps candidate-local -> hit-local, so the
+        // transformed candidate shares the hit's frame. A true mate touches along one
+        // whole seam (~1/sides of the perimeter); a spurious fragment touches a sliver.
+        private double ContactFraction(Panel candidate, Panel hitPanel, Transform aontoB)
+        {
+            var cc = (PolylineCurve)candidate.SourceContour.DuplicateCurve();
+            cc.Transform(aontoB);
+            var hit = hitPanel.SourceContour;
+            double eps = Math.Max(1e-6, _opt.ContactToleranceFraction * (_scale > 1e-9 ? _scale : 1.0));
+            int n = Math.Max(8, _opt.ContactSamples);
+            var ts = cc.DivideByCount(n, true);
+            if (ts == null || ts.Length == 0) return 0.0;
+            int within = 0;
+            foreach (var t in ts)
+            {
+                var pt = cc.PointAt(t);
+                if (hit.ClosestPoint(pt, out double hp) && pt.DistanceTo(hit.PointAt(hp)) <= eps)
+                    within++;
+            }
+            return (double)within / ts.Length;
         }
 
         private static int SegmentTieBreak(MatchResult x, MatchResult y)
@@ -589,6 +734,22 @@ namespace Frahan.EdgeMatching
             c = string.CompareOrdinal(x.B.PanelId, y.B.PanelId);
             if (c != 0) return c;
             return x.B.Index.CompareTo(y.B.Index);
+        }
+
+        // Phase 1: cycle-consistency penalty for an edge (0 when off or consistent).
+        private static double EdgePenalty(Dictionary<string, double>? cyclePenalty, PairEdge e)
+            => cyclePenalty != null && cyclePenalty.TryGetValue(e.LowId + "|" + e.HighId, out var p) ? p : 0.0;
+
+        // Deviation of a loop-closure transform from identity: rotation angle (rad,
+        // trace-based, valid for 2D Z-rotations and 3D) + scale-relative translation.
+        private static double LoopDeviation(Transform t, double scale)
+        {
+            double cos = (t.M00 + t.M11 + t.M22 - 1.0) * 0.5;
+            if (cos > 1.0) cos = 1.0; else if (cos < -1.0) cos = -1.0;
+            double ang = Math.Acos(cos);
+            double tmag = Math.Sqrt(t.M03 * t.M03 + t.M13 * t.M13 + t.M23 * t.M23);
+            double s = scale > 1e-9 ? scale : 1.0;
+            return ang + tmag / s;
         }
 
         // Ordinal compare on the (LowId, HighId) endpoint pair: a stable,
