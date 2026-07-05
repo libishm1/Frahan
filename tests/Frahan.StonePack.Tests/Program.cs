@@ -151,6 +151,16 @@ var tests = new List<(string Name, Action Body)>
     ("plan report component has 4 inputs and 4 outputs", PackingPlanReportComponentTests.Component_HasFourInputsAndFourOutputs),
     ("plan report component fourth input is Edge Match Tree", PackingPlanReportComponentTests.Component_FourthInput_IsEdgeMatchTree),
     ("plan report component third input still item-access", PackingPlanReportComponentTests.Component_ThirdInput_EdgeMatchScores_StillItemAccess),
+    // Discrete Frechet distance primitive (R1: ordered mating-edge verification)
+    ("frechet identical curves is zero", FrechetDistanceTests.Identical_IsZero),
+    ("frechet parallel offset equals offset", FrechetDistanceTests.ParallelOffset_EqualsOffset),
+    ("frechet is symmetric", FrechetDistanceTests.Symmetric),
+    ("frechet direction-sensitive (reverse is far)", FrechetDistanceTests.DirectionSensitive_ReverseIsFar),
+    ("frechet is max not mean (local bump dominates)", FrechetDistanceTests.MaxNotMean_LocalBumpDominates),
+    ("frechet >= hausdorff", FrechetDistanceTests.GreaterOrEqualHausdorff),
+    ("frechet single points is distance", FrechetDistanceTests.SinglePoints_IsDistance),
+    ("frechet null/empty throws", FrechetDistanceTests.NullOrEmpty_Throws),
+    ("Edge Gap (Frechet) component metadata", EdgeGapFrechetComponentTests.Metadata_IsExpectedValues),
     // BoundaryRailMatcher + EdgeMatch + MatchOptions (pure managed)
     ("matcher MatchEdge null index throws", BoundaryRailMatcherTests.MatchEdge_NullIndex_Throws),
     ("matcher MatchEdge null query throws", BoundaryRailMatcherTests.MatchEdge_NullQuery_Throws),
