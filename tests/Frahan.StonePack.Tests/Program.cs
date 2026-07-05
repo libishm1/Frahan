@@ -378,6 +378,10 @@ var tests = new List<(string Name, Action Body)>
     ("CNH shields native-kernel interleaved bench (7 shields x5, lane-tagged)", ContactNfpHoleNesterBenchTests.Cnh_Shields_NativeKernel_Bench),
     ("CNH multi-start denser-or-equal + valid + deterministic (25 irregular blobs)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DenserOrEqual_Valid_Deterministic),
     ("CNH multi-start density A/B K=1 vs K=4 (3 tight irregular instances, reported)", ContactNfpHoleNesterBenchTests.Cnh_MultiStart_DensityAB_Reported),
+    ("CNH boundaryMode:0 is byte-identical to the default overload", CnhBoundaryModeTests.BoundaryModeOff_IsByteIdenticalToBaseline),
+    ("CNH boundary-hug rectangles reach the sheet rim (evolution of V506 boundary affinity)", CnhBoundaryModeTests.BoundaryHug_RectanglesReachTheRim),
+    ("CNH boundary-hug spreads across distinct rim arcs (no clustering)", CnhBoundaryModeTests.BoundaryHug_SpreadsWithoutClustering),
+    ("CNH boundary-hug impossible threshold falls back to bottom-left", CnhBoundaryModeTests.HighThreshold_FallsBackToBottomLeft),
     // settle v2 (P5): Furrer/Johns candidate ranking vs legacy, real ETH stones
     ("settle v2 ETH stones not-worse stability + better seating (Rhino, skips without dataset)", RubbleSettleV2BenchmarkTests.SettleV2_EthStones_NotWorseStability_BetterSeating),
     // IFC terminal (P6): write -> reopen -> assert graph + psets (pure managed)
@@ -1279,6 +1283,8 @@ var tests = new List<(string Name, Action Body)>
     ("GH PolygonalMasonrySequence3D metadata (Rhino)", PolygonalMasonrySequence3DComponentTests.Metadata_IsExpectedValues),
     ("GH BoxToMesh metadata (Rhino)", BoxToMeshComponentTests.Metadata_IsExpectedValues),
     ("GH CSV Parts Reader metadata (Rhino)", CsvPartsReaderComponentTests.Metadata_IsExpectedValues),
+    // Sheet Nest (Live) — Run-gated AsyncScanComponent consolidating HoleNest/FreeNestX/Unified (2026-07-05)
+    ("GH Sheet Nest (Live) metadata (Rhino)", SheetNestLiveComponentTests.Metadata_IsExpectedValues),
     // Rubble Wall Settle — Z-up concave-aware rubble settle Core port (Rhino runtime SKIP without rhcommon_c)
     ("RubbleWallSettle all stones placed order preserved (Rhino)", RubbleWallSettleTests.Settle_AllStonesPlaced_OrderPreserved),
     ("RubbleWallSettle no two placed stones interpenetrate (Rhino)", RubbleWallSettleTests.Settle_NoTwoPlacedStonesInterpenetrate),

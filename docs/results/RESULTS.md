@@ -58,6 +58,16 @@ and the tight density contest (0.74 vs 0.56; 12 vs 9 placed) and matches validit
 trades slower general-irregular NFP time. Real packed sheets:
 ![hole-aware layouts](../../wiki/research/packing/figures/holepack_layouts.png)
 
+2026-07-05 re-match vs OpenNest 2.89's NEW native NFP engine (`nfp_nest.dll`, exactNfp=1,
+5 s GA budget, rotations 4, seed 42; both engines in one Rhino 8 process; one shared
+hole-aware boolean-intersection validity checker applied to both): shields-7 concave -
+both 7/7 valid, CNH 853 ms vs 5000 ms; blobs-25 tight 95x70 - CNH K=1 17/25 util 0.775
+VALID 770 ms, K=4 18/25 util 0.762 VALID 3.0 s, OpenNest 18/25 util 0.695 INVALID
+(1965 sq-units true overlap + 5 parts out of sheet; identical at curveTolerance 0.05);
+true-hole instance (sheet defect + 4 hosts with part-holes + 8 fillers) - both 12/12
+valid, CNH <1 ms (rect-shelf) vs 5001 ms. CNH = equal-or-better placements among VALID
+layouts, +8 pp utilization on the tight instance, 6-5000x faster, exact 0-overlap.
+
 ![3d volumetric](../../wiki/research/packing/figures/pack3d_volumetric.png)
 3D volumetric: Dlbf best-of-orientation 70.4% (vs 66.4% baseline); TreePackForest 37.2% (100% guillotine);
 masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.
