@@ -15,8 +15,14 @@ abstract: >-
   cutting, masonry equilibrium, and fabrication export, with a research-grade
   algorithm library. Released as a research preview for educational and research use.
 version: "0.1.0-alpha"
+doi: 10.5281/zenodo.21209690
+date-released: "2026-07-05"
 license: GPL-3.0-only
 repository-code: "https://github.com/libishm1/Frahan"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21209690
+    description: "Zenodo archive of v0.1.0-alpha"
 keywords:
   - stone fabrication
   - dimension stone
