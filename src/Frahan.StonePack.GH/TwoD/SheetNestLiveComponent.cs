@@ -47,7 +47,7 @@ namespace Frahan.GH.TwoD;
 [Algorithm("Clipper2 polygon Minkowski sum + Boolean back-end",
     "Johnson, A. Clipper2 (BSL-1.0); Minkowski sum + NonZero Boolean operations")]
 [Algorithm("Contact-adaptive rotations (edge-alignment angle set) + holes-first host nesting",
-    "Frahan ContactNfpHoleNester evolution study, outputs/2026-06-12/hole_packer_evolution",
+    "Frahan ContactNfpHoleNester benchmark study, outputs/2026-06-12/hole_packer_evolution",
     Note = "Frahan-original; head-to-head benchmark protocol and comparators documented in the study")]
 [Algorithm("Run-gated background Task async shape (AsyncScanComponent)",
     "Frahan async-canvas pattern, src/Frahan.StonePack.GH/ScanIngest/AsyncScanComponent.cs",
@@ -154,11 +154,10 @@ public sealed class SheetNestLiveComponent
         pManager[8].Optional = true;
         pManager.AddIntegerParameter("Boundary Mode", "BMode",
             "0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the " +
-            "sheet boundary are placed rim-first, scored by MEASURED contact length at verified NFP poses " +
-            "(rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. The " +
-            "evolution of the legacy V506 Boundary Mode (which used orientation-locked descriptor buckets " +
-            "and a golden-ratio stride). Parts that cannot reach the contact threshold fall back to " +
-            "bottom-left, so interior packing stays tight. Runs the managed lane.",
+            "sheet boundary are placed rim-first, scored by measured contact length at verified NFP poses " +
+            "(rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. Parts " +
+            "that cannot reach the contact threshold fall back to bottom-left, so interior packing stays " +
+            "tight.",
             GH_ParamAccess.item, 0);
         pManager[9].Optional = true;
         pManager.AddNumberParameter("Min Boundary Contact", "MBC",
@@ -282,8 +281,8 @@ public sealed class SheetNestLiveComponent
 
         // Same Core call as HoleNestComponent.StartCompute — the shared,
         // unmodified solver; only the async shape around it differs. Boundary
-        // Mode 1 adds the evolved rim-hug placement (measured contact + arc
-        // occupancy) in the Core solver; 0 is byte-identical bottom-left.
+        // Mode 1 adds rim-hug placement (measured contact + arc occupancy) in
+        // the Core solver; 0 is byte-identical bottom-left.
         var perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
             snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
             onPlacement: onPlacement, multiStartOrders: snap.MultiStart,

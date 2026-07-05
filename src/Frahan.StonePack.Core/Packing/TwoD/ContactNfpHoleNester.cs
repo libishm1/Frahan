@@ -214,7 +214,11 @@ namespace Frahan.Packing.TwoD
             // place. If the fast path leaves ANY part unplaced, discard it and
             // run the general engine — speed never trades away placements.
             string engine;
-            if (enableRectFastPath && spacing == 0.0 &&
+            // Boundary mode lives in PackGeneral's placement loop, so the rect
+            // shelf fast-path (which ranks bottom-left internally) must stand
+            // aside whenever boundaryMode is on — otherwise all-rectangle input
+            // silently ignores the rim-hug request.
+            if (enableRectFastPath && boundaryMode == 0 && spacing == 0.0 &&
                 TryRectFastPath(sheetOuter, sheetHoles, parts, order, res) &&
                 res.Placements.Count == parts.Count)
             {

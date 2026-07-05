@@ -40,9 +40,9 @@ async: it nests in the background and the result pops in when ready (no Run togg
 
 The sibling `Sheet Nest (Live)` / NestLive is the same solver behind a Run gate: it nests on a
 background thread (the canvas never freezes on big jobs), draws a live per-sheet colored preview, and
-adds the evolved `Boundary Mode` (rim-hug placement scored by measured sheet-boundary contact — for
-parts that should seat against the slab edge). The older `Freeform Sheet Nest (Exact NFP)` / FreeNestX
-and `Sheet Pack (Unified)` are superseded and hidden (old canvases still load).
+adds `Boundary Mode` (rim-hug placement scored by measured sheet-boundary contact — for parts that
+should seat against the slab edge). The older `Freeform Sheet Nest (Exact NFP)` / FreeNestX and
+`Sheet Pack (Unified)` are superseded and hidden (old canvases still load).
 
 ## Data
 Internalized varied parts (rectangles + a pentagon + triangles) in the `.gh`. For a real job, replace the

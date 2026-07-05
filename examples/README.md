@@ -90,7 +90,7 @@ Two navigation docs route you to the right examples and components:
   surveyors (04/07/26), computational designers/architects (16/17/27, voussoirs 21/22), stone masons
   (11/24/25), artists (05/12/14/15), OSS developers (Lab primitives).
 - [`../docs/SUPERSESSION_MAP.md`](../docs/SUPERSESSION_MAP.md) — which legacy components were superseded
-  by which evolved forms, with the benchmarks. Legacy stays loadable; use the evolved forms in new
+  by which current forms, with the benchmarks. Legacy stays loadable; use the current forms in new
   canvases.
 
 ## Status + the live refresh

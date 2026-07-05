@@ -135,8 +135,8 @@ namespace Frahan.GH.Surface
             p[12].Optional = true;
             p.AddIntegerParameter("Boundary Mode", "BMode",
                 "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the " +
-                "sheet boundary are placed rim-first, scored by MEASURED contact at verified NFP poses and " +
-                "spread by arc-interval occupancy (evolved from the V506 Boundary Mode; rotation-invariant).",
+                "sheet boundary are placed rim-first, scored by measured contact at verified NFP poses and " +
+                "spread by arc-interval occupancy (rotation-invariant).",
                 GH_ParamAccess.item, 0);
             p[13].Optional = true;
             p.AddNumberParameter("Min Boundary Contact", "MBC",

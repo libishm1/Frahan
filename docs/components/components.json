@@ -1800,7 +1800,7 @@
         "nick": "BMode",
         "type": "Integer",
         "access": "item",
-        "desc": "0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact length at verified NFP poses  (rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. The  evolution of the legacy V506 Boundary Mode (which used orientation-locked descriptor buckets  and a golden-ratio stride). Parts that cannot reach the contact threshold fall back to  bottom-left, so interior packing stays tight. Runs the managed lane."
+        "desc": "0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the  sheet boundary are placed rim-first, scored by measured contact length at verified NFP poses  (rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. Parts  that cannot reach the contact threshold fall back to bottom-left, so interior packing stays  tight."
       },
       {
         "name": "Min Boundary Contact",
@@ -23634,7 +23634,7 @@
         "nick": "BMode",
         "type": "Integer",
         "access": "item",
-        "desc": "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact at verified NFP poses and  spread by arc-interval occupancy (evolved from the V506 Boundary Mode; rotation-invariant)."
+        "desc": "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the  sheet boundary are placed rim-first, scored by measured contact at verified NFP poses and  spread by arc-interval occupancy (rotation-invariant)."
       },
       {
         "name": "Min Boundary Contact",
