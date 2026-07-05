@@ -72,8 +72,10 @@ public sealed class ScanReconstructComponent
             "process, so a backend crash cannot take down Rhino.",
             GH_ParamAccess.item, 0);
         p.AddNumberParameter("Alpha", "A",
-            "Alpha value for AlphaShape mode. <= 0 uses CGAL's " +
-            "find_optimal_alpha(1).",
+            "Alpha (squared radius) for AlphaShape mode. <= 0 auto-picks a " +
+            "density-adaptive alpha = (2 * median point spacing)^2, which keeps " +
+            "the surface at point density with far fewer sliver facets than " +
+            "find_optimal_alpha (the fallback if the density alpha comes back empty).",
             GH_ParamAccess.item, 0.0);
         p.AddIntegerParameter("Poisson Depth", "D",
             "Octree depth for Poisson mode. Typical 7-9. <= 0 uses 8.",

@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -24,6 +25,123 @@ public static class OutOfProcessReconstructor
 
     /// <summary>Modes: 1=AlphaShape(CGAL) 2=Poisson(geogram) 3=AdvancingFront(CGAL) 4=Poisson(CGAL).</summary>
     public static bool TryReconstruct(
+        int mode, double[] points, double[] normals,
+        double alpha, int depth, double spn, double rr, double bt,
+        out double[] verts, out int[] tris, out string error,
+        int timeoutMs = DefaultTimeoutMs)
+    {
+        verts = null; tris = null; error = null;
+        if (points == null || points.Length % 3 != 0 || points.Length < 12)
+        { error = "points must be non-null, length divisible by 3, >= 4 points"; return false; }
+        if ((mode == 2 || mode == 4) && (normals == null || normals.Length != points.Length))
+        { error = "Poisson requires oriented normals (same length as points)"; return false; }
+
+        // Density-adaptive auto-alpha for AlphaShape. When the caller leaves
+        // alpha <= 0 the native falls to find_optimal_alpha(1), which is driven by
+        // the SPARSEST gap (it must yield ONE connected component) and so on a
+        // non-uniform quarry scan picks a huge alpha -> a coarse near-hull with
+        // ~1/3 sliver facets. A density-tied alpha = (factor * median NN spacing)^2
+        // instead resolves the surface at point density (~6x fewer slivers,
+        // measured on the Tongjiang scan). CGAL alpha_shape_3's alpha is a SQUARED
+        // radius. If the density alpha yields an empty/degenerate surface we fall
+        // back to find_optimal_alpha (alpha = 0), so its connectivity guarantee is
+        // never lost. Explicit positive alpha from the caller is honoured as-is.
+        if (mode == 1 && alpha <= 0.0)
+        {
+            double spacing = EstimateSpacing(points);
+            if (spacing > 0.0)
+            {
+                double autoAlpha = AutoAlphaSpacingFactor * spacing;
+                autoAlpha *= autoAlpha; // squared radius
+                if (DispatchOnce(mode, points, normals, autoAlpha, depth, spn, rr, bt,
+                                 out verts, out tris, out error, timeoutMs)
+                    && tris != null && tris.Length > 0)
+                    return true;
+                verts = null; tris = null; error = null; // fall back to find_optimal_alpha
+            }
+        }
+        return DispatchOnce(mode, points, normals, alpha, depth, spn, rr, bt,
+                            out verts, out tris, out error, timeoutMs);
+    }
+
+    /// <summary>Multiplier on the median point spacing for the density-adaptive
+    /// AlphaShape auto-alpha (alpha = (factor*spacing)^2). ~2 keeps the surface
+    /// connected while resolving it at point density.</summary>
+    private const double AutoAlphaSpacingFactor = 2.0;
+
+    /// <summary>Rhino-free median nearest-neighbour spacing over a sample of the
+    /// cloud, via a uniform spatial hash (cell ~ surface spacing, 27-cell search).
+    /// Drives the density-adaptive AlphaShape auto-alpha. Returns 0 when the cloud
+    /// is degenerate (fewer than 2 points, or zero extent).</summary>
+    public static double EstimateSpacing(double[] pts, int sample = 1024)
+    {
+        if (pts == null) return 0.0;
+        int n = pts.Length / 3;
+        if (n < 2) return 0.0;
+        double minx = double.MaxValue, miny = double.MaxValue, minz = double.MaxValue;
+        double maxx = double.MinValue, maxy = double.MinValue, maxz = double.MinValue;
+        for (int i = 0; i < n; i++)
+        {
+            double x = pts[3 * i], y = pts[3 * i + 1], z = pts[3 * i + 2];
+            if (x < minx) minx = x; if (y < miny) miny = y; if (z < minz) minz = z;
+            if (x > maxx) maxx = x; if (y > maxy) maxy = y; if (z > maxz) maxz = z;
+        }
+        double dx = maxx - minx, dy = maxy - miny, dz = maxz - minz;
+        double diag = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        if (diag <= 0.0) return 0.0;
+        double cell = diag / Math.Max(1.0, Math.Sqrt(n)); // ~ surface point spacing
+        if (cell <= 0.0) return 0.0;
+        double inv = 1.0 / cell;
+
+        var grid = new Dictionary<long, List<int>>();
+        for (int i = 0; i < n; i++)
+        {
+            long key = PackCell((int)((pts[3 * i] - minx) * inv),
+                                (int)((pts[3 * i + 1] - miny) * inv),
+                                (int)((pts[3 * i + 2] - minz) * inv));
+            if (!grid.TryGetValue(key, out var list)) { list = new List<int>(4); grid[key] = list; }
+            list.Add(i);
+        }
+
+        var dists = new List<double>(sample);
+        int step = Math.Max(1, n / sample);
+        for (int i = 0; i < n; i += step)
+        {
+            double px = pts[3 * i], py = pts[3 * i + 1], pz = pts[3 * i + 2];
+            int cx = (int)((px - minx) * inv), cy = (int)((py - miny) * inv), cz = (int)((pz - minz) * inv);
+            double best = double.MaxValue;
+            for (int ax = -1; ax <= 1; ax++)
+                for (int ay = -1; ay <= 1; ay++)
+                    for (int az = -1; az <= 1; az++)
+                    {
+                        if (!grid.TryGetValue(PackCell(cx + ax, cy + ay, cz + az), out var list)) continue;
+                        foreach (int j in list)
+                        {
+                            if (j == i) continue;
+                            double ex = pts[3 * j] - px, ey = pts[3 * j + 1] - py, ez = pts[3 * j + 2] - pz;
+                            double d2 = ex * ex + ey * ey + ez * ez;
+                            if (d2 < best) best = d2;
+                        }
+                    }
+            if (best < double.MaxValue) dists.Add(Math.Sqrt(best));
+        }
+        if (dists.Count == 0) return 0.0;
+        dists.Sort();
+        return dists[dists.Count / 2];
+    }
+
+    // Pack a cell coordinate triple into a long (21 bits/axis, offset to keep
+    // non-negative). Cells beyond +/-2^20 wrap but only cause rare hash
+    // collisions, which the per-cell distance scan tolerates.
+    private static long PackCell(int cx, int cy, int cz)
+    {
+        long a = (uint)(cx + (1 << 20)) & 0x1FFFFF;
+        long b = (uint)(cy + (1 << 20)) & 0x1FFFFF;
+        long c = (uint)(cz + (1 << 20)) & 0x1FFFFF;
+        return (a << 42) | (b << 21) | c;
+    }
+
+    private static bool DispatchOnce(
         int mode, double[] points, double[] normals,
         double alpha, int depth, double spn, double rr, double bt,
         out double[] verts, out int[] tris, out string error,

@@ -132,6 +132,9 @@ var tests = new List<(string Name, Action Body)>
     ("recon cleanup drops degenerate + duplicate triangles", ReconstructionCleanupTests.Clean_DropsDegenerateAndDuplicateTriangles),
     ("recon cleanup Translate adds centroid back", ReconstructionCleanupTests.Translate_AddsCentroidBack),
     ("recon recenter+translate round-trips at quarry scale", ReconstructionCleanupTests.RecenterTranslate_RoundTrips_AtQuarryScale),
+    ("recon EstimateSpacing recovers uniform grid spacing", ReconstructionCleanupTests.EstimateSpacing_UniformGrid_RecoversSpacing),
+    ("recon EstimateSpacing scales with model (unit-invariant)", ReconstructionCleanupTests.EstimateSpacing_ScalesWithModel),
+    ("recon EstimateSpacing degenerate returns zero", ReconstructionCleanupTests.EstimateSpacing_Degenerate_ReturnsZero),
     ("recon cleanup null/empty is safe", ReconstructionCleanupTests.Clean_EmptyOrNull_IsSafe),
     // 2026-06-04 - OverburdenVolume (cut-fill -> rock-face core A5, pure managed)
     ("overburden constant depth = area*depth", OverburdenVolumeTests.ConstantDepth_VolumeEqualsAreaTimesDepth),
