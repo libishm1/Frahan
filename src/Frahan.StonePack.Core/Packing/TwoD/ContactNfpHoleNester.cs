@@ -1306,6 +1306,22 @@ namespace Frahan.Packing.TwoD
             Dictionary<(int Obst, string Sig), List<List<(double X, double Y)>>> nfpCache = null)
         {
             best = null;
+
+            // RIM-FULL EARLY-OUT (large-job speed): once the occupied arc intervals
+            // leave less free rim than this part's minimum contact requirement, no
+            // boundary candidate can qualify — skip the K-candidate scoring pass
+            // entirely and place bottom-left. Without this, EVERY remaining part of
+            // a big nest pays the boundary tax after the rim filled (~first dozen).
+            double sheetPerim = LoopPerimeter(sheetOuter);
+            double occupiedLen = 0;
+            for (int i = 0; i < occupiedArcs.Count; i++)
+                occupiedLen += Math.Max(0.0, occupiedArcs[i].T1 - occupiedArcs[i].T0);
+            double partPerim = LoopPerimeter(part.Outer);
+            double needed = minBoundaryContact * Math.Min(partPerim, sheetPerim);
+            if (sheetPerim - occupiedLen < needed)
+                return TryPlaceOuter(pi, part, sheetOuter, sheetHoles, placedMaterial,
+                    spacing, baseRotationCount, contactRotations, out best, ref usedNativeNfp, nfpCache);
+
             const int K = 24;
             var candidates = new List<(double Score, double Contact, List<(double T0, double T1)> Arcs, HoleNestPlacement Placement)>();
             var seenRot = new HashSet<string>();

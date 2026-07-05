@@ -150,7 +150,8 @@ public sealed class SheetNestLiveComponent
         pManager.AddIntegerParameter("MultiStart", "MS",
             "Number of deterministic part orders the general engine tries per sheet, keeping the densest " +
             "valid layout (1..4; default 4). Higher values raise irregular-outline density at a near-linear " +
-            "wall-time cost and never reduce placements or validity.", GH_ParamAccess.item, 4);
+            "wall-time cost and never reduce placements or validity. Jobs over ~120 parts run a single " +
+            "pass regardless (the Report notes it) so large nests stay responsive.", GH_ParamAccess.item, 4);
         pManager[8].Optional = true;
         pManager.AddIntegerParameter("Boundary Mode", "BMode",
             "0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the " +
@@ -270,13 +271,48 @@ public sealed class SheetNestLiveComponent
         var snap = s.Shared;
         progress($"nesting {snap.Parts.Count} parts...");
 
+        // Large-job clamp: multi-start reruns the WHOLE nest K times to keep the
+        // densest layout — a fine trade at 30 parts, a 4x wait at 500. Above the
+        // threshold run a single deterministic pass; the Report says so.
+        const int MultiStartClampAt = 120;
+        int effMultiStart = snap.Parts.Count > MultiStartClampAt ? 1 : snap.MultiStart;
+
+        // PROGRESSIVE LIVE PREVIEW: the Core solver reports every placement via
+        // onPlacement. Throttled to ~5 Hz, the partial layout is fan-meshed and
+        // swapped into the preview fields (atomic reference swap; the UI draw
+        // reads whatever pair is current), then a viewport redraw is requested on
+        // the UI thread — parts appear one by one while the canvas stays live.
+        // No GH solution is triggered (that would restart the state machine).
         int lastReported = -1;
+        var previewTick = System.Diagnostics.Stopwatch.StartNew();
         Action<HoleNestResult> onPlacement = partial =>
         {
             if (token.IsCancellationRequested) return;
             if (partial.PlacedCount == lastReported) return;
             lastReported = partial.PlacedCount;
             progress($"nesting {partial.PlacedCount}/{snap.Parts.Count}...");
+
+            if (previewTick.ElapsedMilliseconds < 200) return;
+            previewTick.Restart();
+            try
+            {
+                var meshes = new List<Mesh>(partial.Placements.Count);
+                var colors = new List<Color>(partial.Placements.Count);
+                foreach (var pl in partial.Placements)
+                {
+                    var m = PlanarFanMesh(pl.PlacedOuter);
+                    if (m == null) continue;
+                    meshes.Add(m);
+                    colors.Add(Color.FromArgb(235, 170, 60)); // in-progress amber
+                }
+                _previewMeshes = meshes;   // reference swap: safe for the draw thread
+                _previewColors = colors;
+                Rhino.RhinoApp.InvokeOnUiThread((Action)(() =>
+                {
+                    try { Rhino.RhinoDoc.ActiveDoc?.Views.Redraw(); } catch { }
+                }));
+            }
+            catch { /* preview must never kill the solve */ }
         };
 
         // Same Core call as HoleNestComponent.StartCompute — the shared,
@@ -285,7 +321,7 @@ public sealed class SheetNestLiveComponent
         // the Core solver; 0 is byte-identical bottom-left.
         var perSheet = ContactNfpHoleNester.PackSheets(snap.Sheets, snap.SheetHolesPerSheet,
             snap.Parts, snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
-            onPlacement: onPlacement, multiStartOrders: snap.MultiStart,
+            onPlacement: onPlacement, multiStartOrders: effMultiStart,
             boundaryMode: s.BoundaryMode, minBoundaryContact: s.MinBoundaryContact);
         token.ThrowIfCancellationRequested();
 
@@ -309,6 +345,8 @@ public sealed class SheetNestLiveComponent
         agg.UsedArea = usedArea;
         agg.Density = netArea > 1e-9 ? usedArea / netArea : 0.0;
         agg.Valid = allValid;
+        if (effMultiStart != snap.MultiStart)
+            notes.Add($"large job ({snap.Parts.Count} parts): multi-start clamped to 1 pass");
         agg.Note = string.Join(" ; ", notes);
 
         return new Payload { Snap = snap, Res = agg, PerSheet = perSheet };
@@ -378,6 +416,25 @@ public sealed class SheetNestLiveComponent
         }
         _previewMeshes = meshes;
         _previewColors = colors;
+    }
+
+    /// <summary>Fan-triangulate a raw XY loop (engine PlacedOuter) — the progressive-preview fast path.</summary>
+    private static Mesh PlanarFanMesh(IReadOnlyList<(double X, double Y)> loop)
+    {
+        if (loop == null) return null;
+        int n = loop.Count;
+        if (n > 1 && Math.Abs(loop[0].X - loop[n - 1].X) < 1e-12 && Math.Abs(loop[0].Y - loop[n - 1].Y) < 1e-12) n--;
+        if (n < 3) return null;
+        var mesh = new Mesh();
+        double cx = 0, cy = 0;
+        for (int i = 0; i < n; i++) { cx += loop[i].X; cy += loop[i].Y; }
+        cx /= n; cy /= n;
+        for (int i = 0; i < n; i++) mesh.Vertices.Add(loop[i].X, loop[i].Y, 0.0);
+        int centerIdx = mesh.Vertices.Add(cx, cy, 0.0);
+        for (int i = 0; i < n; i++) mesh.Faces.AddFace(i, (i + 1) % n, centerIdx);
+        mesh.Normals.ComputeNormals();
+        mesh.Compact();
+        return mesh;
     }
 
     /// <summary>Fan-triangulate a closed planar curve (via its rendering polyline) into a single-face-ring mesh.</summary>
