@@ -1,0 +1,77 @@
+# Build + deploy the documentation site to GitHub Pages.
+# Assembles _site_src/ from the repo's markdown + images with the directory
+# structure PRESERVED (so the relative links used throughout wiki/, docs/ and
+# examples/ keep working), then builds with MkDocs Material.
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - "mkdocs.yml"
+      - ".github/workflows/pages.yml"
+      - "docs/**"
+      - "wiki/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # no LFS: binaries stay as tiny pointers and are excluded below anyway
+
+      - name: Assemble site source (markdown + images, structure preserved)
+        run: |
+          mkdir -p _site_src
+          # landing page = the repo README
+          cp README.md _site_src/index.md
+          # copy documentation trees, keeping paths identical so relative
+          # links resolve; docs assets only (md + images), never binaries
+          for dir in docs wiki examples; do
+            [ -d "$dir" ] || continue
+            find "$dir" -type f \( -iname "*.md" -o -iname "*.png" -o -iname "*.jpg" \
+              -o -iname "*.jpeg" -o -iname "*.svg" -o -iname "*.gif" \) \
+              | while read -r f; do
+                  mkdir -p "_site_src/$(dirname "$f")"
+                  cp "$f" "_site_src/$f"
+                done
+          done
+          # top-level docs the README links to
+          for f in LICENSE NOTICE.md CITATION.cff RELEASE_NOTES_v0.1.0-alpha.md; do
+            [ -f "$f" ] && cp "$f" "_site_src/$f" || true
+          done
+          echo "site source files: $(find _site_src -type f | wc -l)"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build with MkDocs Material
+        run: |
+          pip install --quiet mkdocs-material
+          mkdocs build --site-dir _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
