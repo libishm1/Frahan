@@ -68,6 +68,16 @@ true-hole instance (sheet defect + 4 hosts with part-holes + 8 fillers) - both 1
 valid, CNH <1 ms (rect-shelf) vs 5001 ms. CNH = equal-or-better placements among VALID
 layouts, +8 pp utilization on the tight instance, 6-5000x faster, exact 0-overlap.
 
+2026-07-05 consolidation, field-validated on canvas: `Sheet Nest (Live)` (async, Run-gated)
+nests 240 parts into an irregular concave sheet with boundary mode ON in **7.3 s** end to
+end (single pass; `+native-nfp` lane on the post-rim bulk) while drawing the partial layout
+progressively in the viewport (~5 Hz). Boundary mode ("boundary hug") seats parts against
+the sheet rim scored by measured outline contact at verified NFP poses, spread by
+arc-interval occupancy, with bottom-left fallback below the contact threshold; jobs over
+120 parts clamp multi-start to one pass (noted in the Report). Robot handoff verified
+against the installed visose/Robots plugin: `Planes to Robot Targets` output ingested by
+`Create Target` producing real `GH_Target` objects (Joint/Linear motion mapping intact).
+
 ![3d volumetric](../../wiki/research/packing/figures/pack3d_volumetric.png)
 3D volumetric: Dlbf best-of-orientation 70.4% (vs 66.4% baseline); TreePackForest 37.2% (100% guillotine);
 masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.
@@ -78,8 +88,8 @@ masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.
 RecoveryCascade recovers +21% over single-scale BlockCutOpt by re-cutting cracked blocks at finer scales.
 
 ## Test + build health
-1034 tests pass, 0 fail, 147 skip (2026-06-14) from a clean clone; skips are Rhino-runtime +
-optional-dataset gates. All projects build green. See `../INSTALL.md`.
+1056 tests pass, 0 fail, 154 skip (2026-07-05) from a clean clone (`FRAHAN_SKIP_NATIVE=1`);
+skips are Rhino-runtime + optional-dataset gates. All projects build green. See `../INSTALL.md`.
 
 ## Where the numbers come from
 `../../wiki/research/packing/`: PACK2D_STUDY_REPORT, PACK3D_STUDY_REPORT, ROSES_2D_PACKER_GUIDE,
