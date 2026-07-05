@@ -46,3 +46,4 @@ Thumbs.db
 
 install/yak_build/
 *.yak
+.mcp.json

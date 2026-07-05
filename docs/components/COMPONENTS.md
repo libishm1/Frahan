@@ -1,6 +1,6 @@
 # Frahan StonePack - component catalog (inputs / outputs)
 
-Auto-generated from source by `extract_components.py`. 240 components on the `Frahan` ribbon tab.
+Auto-generated from source by `extract_components.py`. 274 components on the `Frahan` ribbon tab.
 Each entry lists its GUID, algorithm citation, inputs, outputs, and related components.
 Source of truth = the component source; regenerate after any component change.
 
@@ -9,20 +9,22 @@ Source of truth = the component source; regenerate after any component change.
 - [2D Packing](#2d-packing) (14)
 - [3D Packing](#3d-packing) (9)
 - [Analysis](#analysis) (3)
-- [EdgeMatch](#edgematch) (15)
-- [Fabricate](#fabricate) (11)
+- [Block](#block) (35)
+- [EdgeMatch](#edgematch) (16)
+- [Fabricate](#fabricate) (18)
 - [Fracture](#fracture) (10)
 - [Ingest](#ingest) (5)
 - [Kintsugi](#kintsugi) (7)
-- [Lab](#lab) (26)
-- [Masonry](#masonry) (38)
-- [Mesh](#mesh) (25)
-- [Quarry](#quarry) (52)
+- [Lab](#lab) (7)
+- [Masonry](#masonry) (39)
+- [Mesh](#mesh) (42)
+- [Quarry](#quarry) (23)
 - [Reports](#reports) (3)
 - [Sculpt](#sculpt) (3)
 - [Slab](#slab) (4)
 - [Surface Packing](#surface-packing) (5)
 - [Trencadis](#trencadis) (5)
+- [Vault](#vault) (21)
 - [Voussoir](#voussoir) (5)
 
 
@@ -169,7 +171,7 @@ Related:
 
 ### 2D NFP Pack  (`NFP Pack`)
 
-- GUID: `0B164F89-A199-4264-88FD-A91E508DBEC3`  |  icon: `NoFitPolygon.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/NfpPack2DComponent.cs`
+- GUID: `0B164F89-A199-4264-88FD-A91E508DBEC3`  |  icon: `NoFitPolygon.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/NfpPack2DComponent.cs`
 - Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
 - NFP-assisted 2D irregular packing with diagnostics and optional sequence optimization. [Burke et al. 2007]
 
@@ -259,100 +261,6 @@ Related:
 Related:
 - Frahan > 2D Packing > Sheet Nest (Hole-Aware) - Irregular-part nesting on a sheet; the floor tiler is its regular-grid, boundary-trimmed sibling.
 
-### Frahan Residual Voids  (`ResVoid`)
-
-- GUID: `AB12C002-1A2B-4C3D-9E4F-5A6B7C8D9E02`  |  icon: `PackMetrics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/ResidualVoidsComponent.cs`
-- Algorithm: **Grid sampling + connected-component void detection** - Frahan-original
-- Detect 2D residual voids inside a sheet polygon not covered by any  placed part. Uses cell-grid sampling + 4-neighbour connected-component  labelling. Reports each void's bounding rectangle and approximate area;  small voids below MinArea are filtered. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Sheet (`S`) | Curve | item | Closed planar curve representing the sheet outline. |
-| Placed Parts (`P`) | Curve | list | Closed planar curves representing already-placed parts. |
-| Cell Size (`C`) | Number | item | Sampling cell size in model units. Smaller = more accurate, slower. |
-| Min Void Area (`M`) | Number | item | Minimum reportable void area in model-unit-squared.  Smaller voids are filtered. |
-| Discretisation Tolerance (`T`) | Number | item | Tolerance used when discretising the sheet and parts to polylines. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Void Bounds (`B`) | Rectangle | list | Axis-aligned bounding rectangle of each detected void. |
-| Void Areas (`A`) | Number | list | Approximate area of each detected void. |
-| Cell Counts (`N`) | Integer | list | Cells per detected void. |
-| Total Void Area (`Tv`) | Number | item | Sum of all reported void areas. |
-| Report (`R`) | Text | item | Human-readable summary. |
-
-### Frahan Sheet Pack (Unified Async)  (`FreeNestUA`)
-
-- GUID: `AB12C00C-1A2B-4C3D-9E4F-5A6B7C8D9E0C`  |  icon: `IrregularSheet.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponentAsync.cs`
-- Algorithm: **NFP-assisted bottom-left irregular nesting** - Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). "Complete and robust no-fit polygon generation for the irregular stock cutting problem." Eur. J. Oper. Res.
-- Async variant of Frahan Sheet Pack (Unified). Same Variant routing  as the sync version but runs on a background thread so Grasshopper  stays responsive during long packs. Pick the variant with the Variant  input; default is V506. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).
-
-| in | type | access | description |
-|---|---|---|---|
-| Parts (`P`) | Curve | list | Closed planar part curves to pack. |
-| Sheet Outlines (`S`) | Curve | list | Closed planar sheet boundary curves. |
-| Sheet Holes (`H`) | Curve | tree | Hole curves as a tree. Branch {0} = sheet 0, {1} = sheet 1, etc. |
-| Spacing (`Gap`) | Number | item | Clearance between parts and between parts and boundaries. |
-| Rotations (`R`) | Number | list | Allowed rotation angles in degrees (default 0, 90, 180, 270). |
-| Sort Mode (`M`) | Integer | item | 0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓. |
-| Tolerance (`T`) | Number | item | Geometric tolerance for containment and collision. |
-| Seed (`Seed`) | Integer | item | 0 = deterministic; non-zero changes tie-breaking. |
-| Run (`Run`) | Boolean | item | Set to true to execute packing. |
-| Max Candidates (`Max`) | Integer | item | Candidate budget per part per rotation. |
-| Corner Mode (`Cnr`) | Integer | item | 0 BottomLeft, 1 BottomRight, 2 TopLeft, 3 TopRight. |
-| Variant (`V`) | Integer | item | 0 V506 (default), 1 V1 polyline, 2 V2 freeform, 3 V3 adaptive non-convex. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
-| Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
-| Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
-| Unplaced (`U`) | Curve | list | Curves that could not be placed. |
-| Failure Reasons (`Why`) | Text | list | Reason for each unplaced curve. |
-| Sheet Preview (`B`) | Curve | list | Outer sheet and hole preview curves. |
-| Report (`R`) | Text | item | Packing report. |
-| Variant Used (`Vu`) | Text | item | Which variant actually ran (echoes the requested Variant input). |
-
-### Frahan Sheet Pack (Unified)  (`FreeNestU`)
-
-- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
-- Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
-- Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]
-
-| in | type | access | description |
-|---|---|---|---|
-| Parts (`P`) | Curve | list | Closed planar part curves to pack. |
-| Sheet Outlines (`S`) | Curve | list | Closed planar sheet boundary curves. |
-| Sheet Holes (`H`) | Curve | tree | Hole curves as a tree. Branch {0} = sheet 0, {1} = sheet 1, etc. |
-| Spacing (`Gap`) | Number | item | Clearance between parts and between parts and boundaries. |
-| Rotations (`R`) | Number | list | Allowed rotation angles in degrees (default 0, 90, 180, 270). |
-| Sort Mode (`M`) | Integer | item | 0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓. |
-| Tolerance (`T`) | Number | item | Geometric tolerance for containment and collision. 0 (default) =  AUTO: use the active document's absolute tolerance, so a millimetre  document gets a millimetre tolerance and a metre document a metre  tolerance (no manual per-scale tuning). Set a positive value to override. |
-| Seed (`Seed`) | Integer | item | 0 = deterministic; non-zero changes tie-breaking. |
-| Run (`Run`) | Boolean | item | Set to true to execute packing. |
-| Max Candidates (`Max`) | Integer | item | Candidate budget per part per rotation. |
-| Corner Mode (`Cnr`) | Integer | item | 0 BottomLeft, 1 BottomRight, 2 TopLeft, 3 TopRight. |
-| Variant (`V`) | Integer | item | 0 V506 (default, recommended), 2 V2 freeform (recommended; V506  delegates to this engine). 1 V1 polyline and 3 V3 adaptive  non-convex are RETAINED FOR REPRODUCIBILITY ONLY: the 2026-06-05  --packbench benchmark measured V1 at 44.6% fill with 9 overlap  pairs and 3166 ms, and V3 at 21/24 placed (dominated by V2's  24/24 at the same fill). Prefer 0 or 2 for new work. See  outputs/2026-06-05/keep_or_cut/PACKING_BENCHMARK.md. |
-| Boundary Mode (`BMode`) | Integer | item | 0 = off (geometric only).  1 = boundary-aware bias: parts with edges matching the sheet  outline / hole edges are placed first AND auto-rotated to align  with the matched boundary tangent; all candidate sources (boundary  anchors + interior grid) used.  2 = strict two-phase ring/interior: boundary-worthy parts use only  boundary-anchor candidates (true ring), then non-boundary parts  fill the interior. Falls back to all candidates if a phase is  saturated.  3 = uniform curve division: divide each boundary curve by arc  length, place each part at its assigned position with longest  edge tangent to the curve. Most predictable ring layout. Min  Boundary Affinity is ignored in this mode.  V506 only — other variants ignore. |
-| Min Boundary Affinity (`BAff`) | Number | item | Edge-match score at or above which an edge is considered  boundary-worthy. Range [0, 1]; default 0.5. Only applies when  Boundary Mode > 0. |
-| Discretization Tolerance (`DTol`) | Number | item | ToPolyline tolerance for both sheet boundaries and part curves.  Set to a positive value to control polyline density independently  of the geometric Tolerance. Default -1 (means: use Tolerance).  Lower = finer polylines, more detail captured but more matching  work. Higher = coarser, faster, but may miss small features. |
-| Trim Tolerance (`TrimT`) | Number | item | Maximum part-to-part overlap depth (in document units) allowed  during placement. After all parts are placed, overlapping pairs  are boolean-differenced — the EARLIER-placed part wins, the  later-placed part loses material at the contact. Sheet outline  and holes are NEVER trimmed (only part-to-part collisions).  0 = trim off (strict no-overlap; THIS IS THE DEFAULT, so packed  parts never overlap out of the box). Set > 0 to allow  overlap-then-trim (the earlier-placed part wins); for meter-scale  shared-contact masonry coursing try 0.003–0.01. Most useful with  Boundary Mode > 0 where parts get pushed close together along the  boundary; the trim cleans the contacts. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Packed Curves (`C`) | Curve | list | Placed part curves. |
-| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
-| Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
-| Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
-| Unplaced (`U`) | Curve | list | Curves that could not be placed. |
-| Failure Reasons (`Why`) | Text | list | Reason for each unplaced curve. |
-| Sheet Preview (`B`) | Curve | list | Outer sheet and hole preview curves. |
-| Report (`R`) | Text | item | Packing report. |
-| Variant Used (`Vu`) | Text | item | Which variant actually ran (echoes the requested Variant input). |
-| Trimmed Curves (`Tc`) | Curve | list | Per-part post-trim curves. Same length as Packed Curves. When  Trim Tolerance == 0, this output is empty. When > 0, each  entry is either the original packed curve (no trim happened)  or the boolean-difference result from being trimmed by an  earlier-placed neighbor. |
-| Trim Adjacency (`Ta`) | Integer | tree | DataTree per packed part: branch i lists the SOURCE indices  of earlier-placed parts that trimmed Trimmed Curves[i]. Empty  branches indicate parts that were not trimmed. |
-
 ### Freeform Sheet Nest  (`FreeNest`)
 
 - GUID: `D5E7A2B1-8C34-4F1E-A096-3B7F5D2E8A4C`  |  icon: `Pack2D.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/Pack2DIrregularSheetV506Component.cs`
@@ -436,6 +344,28 @@ Related:
 | Error Code (`E`) | Integer | item | 1 convex OK, 2 approximation, 0 failed. |
 | Message (`M`) | Text | item | NFP status message. |
 
+### Residual Voids  (`ResVoid`)
+
+- GUID: `AB12C002-1A2B-4C3D-9E4F-5A6B7C8D9E02`  |  icon: `PackMetrics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/ResidualVoidsComponent.cs`
+- Algorithm: **Grid sampling + connected-component void detection** - Frahan-original
+- Detect 2D residual voids inside a sheet polygon not covered by any  placed part. Uses cell-grid sampling + 4-neighbour connected-component  labelling. Reports each void's bounding rectangle and approximate area;  small voids below MinArea are filtered. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Sheet (`S`) | Curve | item | Closed planar curve representing the sheet outline. |
+| Placed Parts (`P`) | Curve | list | Closed planar curves representing already-placed parts. |
+| Cell Size (`C`) | Number | item | Sampling cell size in model units. Smaller = more accurate, slower. |
+| Min Void Area (`M`) | Number | item | Minimum reportable void area in model-unit-squared.  Smaller voids are filtered. |
+| Discretisation Tolerance (`T`) | Number | item | Tolerance used when discretising the sheet and parts to polylines. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Void Bounds (`B`) | Rectangle | list | Axis-aligned bounding rectangle of each detected void. |
+| Void Areas (`A`) | Number | list | Approximate area of each detected void. |
+| Cell Counts (`N`) | Integer | list | Cells per detected void. |
+| Total Void Area (`Tv`) | Number | item | Sum of all reported void areas. |
+| Report (`R`) | Text | item | Human-readable summary. |
+
 ### Sheet Nest (Hole-Aware)  (`HoleNest`)
 
 - GUID: `D5F10019-8A3C-4D17-B5E2-6C90F2A47D31`  |  icon: `NoFitPolygon.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/TwoD/HoleNestComponent.cs`
@@ -469,6 +399,78 @@ Related:
 Related:
 - Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP) - Multi-sheet exact NFP-BLF production sibling without part-in-part-hole nesting; use it when parts have no usable holes.
 
+### Sheet Pack (Unified Async)  (`FreeNestUA`)
+
+- GUID: `AB12C00C-1A2B-4C3D-9E4F-5A6B7C8D9E0C`  |  icon: `IrregularSheet.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponentAsync.cs`
+- Algorithm: **NFP-assisted bottom-left irregular nesting** - Burke, E., Hellier, R., Kendall, G., Whitwell, G. (2007). "Complete and robust no-fit polygon generation for the irregular stock cutting problem." Eur. J. Oper. Res.
+- Async variant of Frahan Sheet Pack (Unified). Same Variant routing  as the sync version but runs on a background thread so Grasshopper  stays responsive during long packs. Pick the variant with the Variant  input; default is V506. Implements NFP-assisted bottom-left nesting (Burke et al. 2007).
+
+| in | type | access | description |
+|---|---|---|---|
+| Parts (`P`) | Curve | list | Closed planar part curves to pack. |
+| Sheet Outlines (`S`) | Curve | list | Closed planar sheet boundary curves. |
+| Sheet Holes (`H`) | Curve | tree | Hole curves as a tree. Branch {0} = sheet 0, {1} = sheet 1, etc. |
+| Spacing (`Gap`) | Number | item | Clearance between parts and between parts and boundaries. |
+| Rotations (`R`) | Number | list | Allowed rotation angles in degrees (default 0, 90, 180, 270). |
+| Sort Mode (`M`) | Integer | item | 0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓. |
+| Tolerance (`T`) | Number | item | Geometric tolerance for containment and collision. |
+| Seed (`Seed`) | Integer | item | 0 = deterministic; non-zero changes tie-breaking. |
+| Run (`Run`) | Boolean | item | Set to true to execute packing. |
+| Max Candidates (`Max`) | Integer | item | Candidate budget per part per rotation. |
+| Corner Mode (`Cnr`) | Integer | item | 0 BottomLeft, 1 BottomRight, 2 TopLeft, 3 TopRight. |
+| Variant (`V`) | Integer | item | 0 V506 (default), 1 V1 polyline, 2 V2 freeform, 3 V3 adaptive non-convex. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Packed Curves (`C`) | Curve | list | Placed part curves. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
+| Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
+| Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
+| Unplaced (`U`) | Curve | list | Curves that could not be placed. |
+| Failure Reasons (`Why`) | Text | list | Reason for each unplaced curve. |
+| Sheet Preview (`B`) | Curve | list | Outer sheet and hole preview curves. |
+| Report (`R`) | Text | item | Packing report. |
+| Variant Used (`Vu`) | Text | item | Which variant actually ran (echoes the requested Variant input). |
+
+### Sheet Pack (Unified)  (`FreeNestU`)
+
+- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
+- Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
+- Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]
+
+| in | type | access | description |
+|---|---|---|---|
+| Parts (`P`) | Curve | list | Closed planar part curves to pack. |
+| Sheet Outlines (`S`) | Curve | list | Closed planar sheet boundary curves. |
+| Sheet Holes (`H`) | Curve | tree | Hole curves as a tree. Branch {0} = sheet 0, {1} = sheet 1, etc. |
+| Spacing (`Gap`) | Number | item | Clearance between parts and between parts and boundaries. |
+| Rotations (`R`) | Number | list | Allowed rotation angles in degrees (default 0, 90, 180, 270). |
+| Sort Mode (`M`) | Integer | item | 0 UserOrder, 1 Area↓, 2 Width↓, 3 Height↓, 4 MaxDim↓. |
+| Tolerance (`T`) | Number | item | Geometric tolerance for containment and collision. 0 (default) =  AUTO: use the active document's absolute tolerance, so a millimetre  document gets a millimetre tolerance and a metre document a metre  tolerance (no manual per-scale tuning). Set a positive value to override. |
+| Seed (`Seed`) | Integer | item | 0 = deterministic; non-zero changes tie-breaking. |
+| Run (`Run`) | Boolean | item | Set to true to execute packing. |
+| Max Candidates (`Max`) | Integer | item | Candidate budget per part per rotation. |
+| Corner Mode (`Cnr`) | Integer | item | 0 BottomLeft, 1 BottomRight, 2 TopLeft, 3 TopRight. |
+| Variant (`V`) | Integer | item | 0 V506 (default, recommended), 2 V2 freeform (recommended; V506  delegates to this engine). 1 V1 polyline and 3 V3 adaptive  non-convex are RETAINED FOR REPRODUCIBILITY ONLY: the 2026-06-05  --packbench benchmark measured V1 at 44.6% fill with 9 overlap  pairs and 3166 ms, and V3 at 21/24 placed (dominated by V2's  24/24 at the same fill). Prefer 0 or 2 for new work. See  outputs/2026-06-05/keep_or_cut/PACKING_BENCHMARK.md. |
+| Boundary Mode (`BMode`) | Integer | item | 0 = off (geometric only).  1 = boundary-aware bias: parts with edges matching the sheet  outline / hole edges are placed first AND auto-rotated to align  with the matched boundary tangent; all candidate sources (boundary  anchors + interior grid) used.  2 = strict two-phase ring/interior: boundary-worthy parts use only  boundary-anchor candidates (true ring), then non-boundary parts  fill the interior. Falls back to all candidates if a phase is  saturated.  3 = uniform curve division: divide each boundary curve by arc  length, place each part at its assigned position with longest  edge tangent to the curve. Most predictable ring layout. Min  Boundary Affinity is ignored in this mode.  V506 only — other variants ignore. |
+| Min Boundary Affinity (`BAff`) | Number | item | Edge-match score at or above which an edge is considered  boundary-worthy. Range [0, 1]; default 0.5. Only applies when  Boundary Mode > 0. |
+| Discretization Tolerance (`DTol`) | Number | item | ToPolyline tolerance for both sheet boundaries and part curves.  Set to a positive value to control polyline density independently  of the geometric Tolerance. Default -1 (means: use Tolerance).  Lower = finer polylines, more detail captured but more matching  work. Higher = coarser, faster, but may miss small features. |
+| Trim Tolerance (`TrimT`) | Number | item | Maximum part-to-part overlap depth (in document units) allowed  during placement. After all parts are placed, overlapping pairs  are boolean-differenced — the EARLIER-placed part wins, the  later-placed part loses material at the contact. Sheet outline  and holes are NEVER trimmed (only part-to-part collisions).  0 = trim off (strict no-overlap; THIS IS THE DEFAULT, so packed  parts never overlap out of the box). Set > 0 to allow  overlap-then-trim (the earlier-placed part wins); for meter-scale  shared-contact masonry coursing try 0.003–0.01. Most useful with  Boundary Mode > 0 where parts get pushed close together along the  boundary; the trim cleans the contacts. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Packed Curves (`C`) | Curve | list | Placed part curves. |
+| Transforms (`X`) | Transform | list | Placement transforms applied to each source curve. |
+| Source Indices (`Src`) | Integer | list | Original input curve index for each packed curve. |
+| Sheet Indices (`Sh`) | Integer | list | Sheet index used for each packed curve. |
+| Unplaced (`U`) | Curve | list | Curves that could not be placed. |
+| Failure Reasons (`Why`) | Text | list | Reason for each unplaced curve. |
+| Sheet Preview (`B`) | Curve | list | Outer sheet and hole preview curves. |
+| Report (`R`) | Text | item | Packing report. |
+| Variant Used (`Vu`) | Text | item | Which variant actually ran (echoes the requested Variant input). |
+| Trimmed Curves (`Tc`) | Curve | list | Per-part post-trim curves. Same length as Packed Curves. When  Trim Tolerance == 0, this output is empty. When > 0, each  entry is either the original packed curve (no trim happened)  or the boolean-difference result from being trimmed by an  earlier-placed neighbor. |
+| Trim Adjacency (`Ta`) | Integer | tree | DataTree per packed part: branch i lists the SOURCE indices  of earlier-placed parts that trimmed Trimmed Curves[i]. Empty  branches indicate parts that were not trimmed. |
+
 
 ## 3D Packing
 
@@ -490,34 +492,9 @@ Related:
 | Centres of Mass (`CoM`) | Point | list | Per-stone vertex-centroid points. |
 | Marginal Ids (`Mr`) | Integer | list | Indices of stones whose CoM lies outside the container. |
 
-### Frahan Stone Descriptor  (`StoneDesc`)
-
-- GUID: `AB12C009-1A2B-4C3D-9E4F-5A6B7C8D9E09`  |  icon: `PackQuality.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/StoneDescriptorComponent.cs`
-- Algorithm: **Stone shape-feature descriptor extractor** - Frahan-original
-- Convert Rhino meshes into StoneDescriptors. Output is consumable  by Frahan Pack3D and other 3D-packing tools. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`S`) | Mesh | list | Stone meshes (one descriptor per mesh). |
-| Ids (`I`) | Text | list | Per-stone id. Defaults to "stone-{index}" if omitted or shorter than the stone list. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Descriptors (`D`) | Generic | list | StoneDescriptor per stone (opaque). |
-| Mesh Volumes (`Vm`) | Number | list | Per-stone mesh volume (0 if mesh is open). |
-| AABB Volumes (`Va`) | Number | list | Per-stone axis-aligned bounding-box volume. |
-| Surface Areas (`A`) | Number | list | Per-stone surface area. |
-| Aspect Ratios (`Ar`) | Number | list | Per-stone aspect ratio (max/min AABB dimension; >= 1). |
-| Compactness (`C`) | Number | list | Per-stone compactness (MeshVol / AabbVol; range (0, 1]). |
-| Triangle Counts (`T`) | Integer | list | Per-stone triangle count. |
-| Is Closed (`Cl`) | Boolean | list | Per-stone closed-mesh flag. |
-| Is Manifold (`Mf`) | Boolean | list | Per-stone manifold flag. |
-| Skipped (`Sk`) | Integer | item | Number of stones skipped (null mesh or builder threw). |
-| Report (`R`) | Text | item | Summary. |
-
 ### Pack3D Irregular  (`Pack3D`)
 
-- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `Pack3D.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
+- GUID: `E36C3F7D-7E2C-495E-9E2A-59312C5CF990`  |  icon: `Pack3D.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/Pack3DIrregularComponent.cs`
 - Algorithm: **Heightmap-greedy 3D bin packing (deepest-bottom-left family)** - Chehrazad, R., Roose, D., Wauters, T. (2025). "A fast and scalable deepest-left-bottom-fill algorithm." Int. J. Production Research 63:6606-6629
 - EVOLVED PATH: for volume packing use Settle 3D (Physics); for saw-cuttable subdivision use Block Pack (Tree). This heightmap packer remains the validated baseline.  Deterministic heightmap packer for early irregular 3D packing workflows. Implements deepest-left-bottom-fill packing (Chehrazad et al. 2025).
 
@@ -671,6 +648,31 @@ Related:
 | Source Indices (`Src`) | Integer | list | Input mesh index per settled mesh. |
 | Report (`R`) | Text | item | Settle report. |
 
+### Stone Descriptor  (`StoneDesc`)
+
+- GUID: `AB12C009-1A2B-4C3D-9E4F-5A6B7C8D9E09`  |  icon: `PackQuality.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/StoneDescriptorComponent.cs`
+- Algorithm: **Stone shape-feature descriptor extractor** - Frahan-original
+- Convert Rhino meshes into StoneDescriptors. Output is consumable  by Frahan Pack3D and other 3D-packing tools. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Mesh | list | Stone meshes (one descriptor per mesh). |
+| Ids (`I`) | Text | list | Per-stone id. Defaults to "stone-{index}" if omitted or shorter than the stone list. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Descriptors (`D`) | Generic | list | StoneDescriptor per stone (opaque). |
+| Mesh Volumes (`Vm`) | Number | list | Per-stone mesh volume (0 if mesh is open). |
+| AABB Volumes (`Va`) | Number | list | Per-stone axis-aligned bounding-box volume. |
+| Surface Areas (`A`) | Number | list | Per-stone surface area. |
+| Aspect Ratios (`Ar`) | Number | list | Per-stone aspect ratio (max/min AABB dimension; >= 1). |
+| Compactness (`C`) | Number | list | Per-stone compactness (MeshVol / AabbVol; range (0, 1]). |
+| Triangle Counts (`T`) | Integer | list | Per-stone triangle count. |
+| Is Closed (`Cl`) | Boolean | list | Per-stone closed-mesh flag. |
+| Is Manifold (`Mf`) | Boolean | list | Per-stone manifold flag. |
+| Skipped (`Sk`) | Integer | item | Number of stones skipped (null mesh or builder threw). |
+| Report (`R`) | Text | item | Summary. |
+
 ### Validate Packed Transform  (`PackXformCheck`)
 
 - GUID: `2AE8987D-83E5-471C-B82F-8A19EC57492A`  |  icon: `StabilityCheck.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/ValidatePackedTransformComponent.cs`
@@ -695,9 +697,9 @@ Related:
 
 ## Analysis
 
-### Frahan Boundary Rail Index  (`RailIdx`)
+### Boundary Rail Index  (`RailIdx`)
 
-- GUID: `AB12C001-1A2B-4C3D-9E4F-5A6B7C8D9E01`  |  icon: `BoundarySegmenter.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BoundaryRailIndexComponent.cs`
+- GUID: `AB12C001-1A2B-4C3D-9E4F-5A6B7C8D9E01`  |  icon: `BoundarySegmenter.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/BoundaryRailIndexComponent.cs`
 - Algorithm: **Boundary-rail affinity bucketing** - Frahan-original
 - Diagnostic component. Build a boundary-rail index from one or  more boundary curves; each curve is sliding-window-sampled into  (length, tangent angle, curvature) buckets and stored as a  BoundaryIntervalInfo. The unified Frahan Sheet Pack now builds  this index internally when Boundary Mode is on; this standalone  component is kept for index inspection and ad-hoc analysis. Frahan-original method.
 
@@ -720,7 +722,7 @@ Related:
 | Known Zones (`Zk`) | Integer | list | Distinct zone buckets observed. |
 | Report (`R`) | Text | item | Human-readable summary. |
 
-### Frahan Fragment Descriptors  (`FragDesc`)
+### Fragment Descriptors  (`FragDesc`)
 
 - GUID: `AB12C007-1A2B-4C3D-9E4F-5A6B7C8D9E07`  |  icon: `FragmentCluster.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/FragmentDescriptorsComponent.cs`
 - Algorithm: **Fragment shape descriptor extraction** - Frahan-original
@@ -742,7 +744,7 @@ Related:
 | Skipped (`Sk`) | Integer | item | Number of fragments skipped (degenerate). |
 | Report (`R`) | Text | item | Summary. |
 
-### Frahan Fragment Edge Match  (`FragMatch`)
+### Fragment Edge Match  (`FragMatch`)
 
 - GUID: `AB12C003-1A2B-4C3D-9E4F-5A6B7C8D9E03`  |  icon: `EdgeMatchSolve.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/FragmentEdgeMatchComponent.cs`
 - Algorithm: **Boundary-rail edge affinity scoring** - Frahan-original
@@ -772,11 +774,828 @@ Related:
 | Report (`R`) | Text | item | Summary. |
 
 
+## Block
+
+### Algebraic Convex Polyhedron  (`ConvexBlock`)
+
+- GUID: `F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
+- Algorithm: **Half-space intersection convex polyhedron** - Frahan-original
+- Build a convex polyhedron from N half-space inequalities  Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14).  Each parallel-list row defines one face's outward normal  and offset. Returns a triangulated Rhino Mesh. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| B (`B`) | Number | list | Right-hand side b per inequality. |
+| Nx (`Nx`) | Number | list | Outward-normal X per inequality. |
+| Ny (`Ny`) | Number | list | Outward-normal Y per inequality. |
+| Nz (`Nz`) | Number | list | Outward-normal Z per inequality. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Polyhedron (`P`) | Mesh | item | Triangulated CPH as Rhino Mesh. |
+| Vertex Count (`V`) | Integer | item | Vertex count. |
+| Face Count (`F`) | Integer | item | Face count. |
+| Volume (m^3) (`Vol`) | Number | item | Polyhedron volume. |
+
+### Bed Block Layout  (`BedBlocks`)
+
+- GUID: `A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06`  |  icon: `BlockPackTree.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs`
+- Algorithm: **Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling** - Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)
+- Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`A`) | Box | item | Bench bounding box (m). The XY footprint + Z range to lay blocks in. |
+| Bed Surfaces (`F`) | Mesh | list | Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom). |
+| Volume Weight (`W`) | Number | item | Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0. |
+| Oblique (`Ob`) | Boolean | item | TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste). |
+| Cut Cost (`Cut`) | Number | item | Diamond-saw cost (USD/m2 of sawn block face). Default 200. |
+| Keep-out (`K`) | Number | item | Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05. |
+| Catalogue (`Cat`) | Number | list | OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes. |
+| Class (`C`) | Text | list | Catalogue class (A/B/C/D...) of each block, aligned to Blocks. |
+| Volume (`V`) | Number | item | Total recovered block volume (m3). |
+| Net Value (`Net`) | Number | item | Net value (USD) = block sale price - diamond-saw cut cost. |
+| Count (`N`) | Integer | item | Number of blocks placed. |
+| Report (`Rpt`) | Text | item | Mix + economics + per-layer summary. |
+
+Related:
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the bed surfaces this lays blocks between.
+- Frahan > Quarry > Fracture Block Pack - Uniform-block guillotine packer; this one is the priced multi-size CATALOGUE layout.
+
+### BenchBlock Cut → Slabs  (`QuarryCut`)
+
+- GUID: `F7A13002-0001-4F2D-A0B0-7E60CADA17C2`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
+- Run BlockCutOpt per BenchBlock in the ExtractionPlan order  and emit the winning cut-grid as Slabs (Mesh form).  Closes the Layer 7 → Layer 5 / 6 handoff.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory. |
+| Plan (`P`) | Generic | item | ExtractionPlan (accepted blocks are cut in plan order). |
+| Fractures (`F`) | Mesh | item | Fracture mesh. |
+| Product X (m) (`Lx`) | Number | item | Dimension-block target X. |
+| Product Y (m) (`Ly`) | Number | item | Dimension-block target Y. |
+| Product Z (m) (`Lz`) | Number | item | Dimension-block target Z. |
+| Kerf (m) (`K`) | Number | item | Saw kerf. |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
+| Dx Step (`DxS`) | Number | item | Dx step (m). |
+| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
+| Dy Step (`DyS`) | Number | item | Dy step (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Mesh | list | Per-BenchBlock cut slabs concatenated in plan order. Wire into Ashlar Pack. |
+| Block Ids (`I`) | Text | list | BenchBlock id parallel to each slab. |
+| Counts (`N`) | Integer | list | Slab count per BenchBlock (parallel to ExtractionPlan.Accepted). |
+| Cut Results (`C`) | Generic | list | List of BenchBlockCutResult objects. |
+
+### Billet Cutter  (`Billets`)
+
+- GUID: `F7A14002-0001-4F2D-A0B0-7E60CADA17D2`  |  icon: `QuarryCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
+- Algorithm: **Axis-parallel kerf-aware slab sub-division** - Frahan-original
+- Sub-divide slabs into billets along an axis at a target  billet width. Kerf-aware. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Mesh | list | Slab inventory (one mesh per slab). |
+| Axis (`A`) | Integer | item | Billet axis: 0=X, 1=Y, 2=Z. |
+| Billet Width (m) (`W`) | Number | item | Target billet width. |
+| Kerf (m) (`K`) | Number | item | Saw kerf. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Billets (`B`) | Mesh | list | Billet meshes (one per cut piece). |
+| Count (`N`) | Integer | item | Total billet count. |
+
+### Block Candidate Generator  (`BCand`)
+
+- GUID: `F7A15003-0001-4F2D-A0B0-7E60CADA17E3`  |  icon: `BlockCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
+- Algorithm: **Per-cell AABB block-candidate generator** - Frahan-original
+- Emit one BlockCandidate per BlockCell using the cell's AABB  as the BenchBlock footprint. Also returns a QuarryInventory  ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Block Graph (`Bg`) | Generic | item | BlockGraph from Frahan Block Graph. |
+| Bench Id (`B`) | Text | item | Bench identifier for the QuarryInventory. bench-1 |
+| Geology Grade (`G`) | Number | item | Per-cell geology grade 0..1. |
+| Uncertainty Buffer (m) (`U`) | Number | item | Buffer applied to each candidate. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory for the Layer 7 pipeline. |
+| Candidates (`C`) | Generic | list | List<BlockCandidate>. |
+| Candidate Boxes (`Bx`) | Box | list | Footprint of each candidate as a Rhino Box. |
+| Count (`N`) | Integer | item | Number of candidates. |
+
+### Block Graph  (`BlkGraph`)
+
+- GUID: `F7A15002-0001-4F2D-A0B0-7E60CADA17E2`  |  icon: `Voronoi.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
+- Algorithm: **CrackGraph to BlockGraph partition** - Frahan-original
+- Partition a bench (Box or Mesh) into BlockCells using a  CrackGraph. Each cell is a convex Slab; small cells are  dropped under Min Cell Volume. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench Mesh (`B`) | Mesh | item | Bench geometry (convex mesh). |
+| Crack Graph (`G`) | Generic | item | CrackGraph from Frahan Crack Graph. |
+| Min Cell Volume (m^3) (`Mv`) | Number | item | Cells below this volume are dropped. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Block Graph (`Bg`) | Generic | item | BlockGraph object. |
+| Cells (`C`) | Mesh | list | One mesh per BlockCell. |
+| Count (`N`) | Integer | item | Number of cells. |
+| Total Volume (m^3) (`V`) | Number | item | Sum of cell volumes. |
+
+### BlockCutOpt AMRR Plan  (`RemovalPlan`)
+
+- GUID: `F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3`  |  icon: `QuarryCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
+- Algorithm: **AMRR in-block plane-sequence cutting** - Shao, Liu, Gao 2022, AMRR in-block plane-sequence cutting strategy, Processes (MDPI)
+- Plan a sequence of plane cuts (Shao 2022) that reduces the  starting block toward a target bounding sphere. Maximises  the average material removal rate. Implements AMRR in-block plane-sequence cutting (Shao 2022).
+
+| in | type | access | description |
+|---|---|---|---|
+| Blank Block (`B`) | Box | item | Starting block (m). |
+| Target Center (`C`) | Point | item | Target sphere centre. |
+| Target Radius (`R`) | Number | item | Target sphere radius (m). |
+| Sawblade Radius (mm) (`SBR`) | Number | item | Sawblade radius in mm. |
+| Feed Speed (mm/min) (`FS`) | Number | item | Feed speed in mm/min. |
+| Max Cuts (`MC`) | Integer | item | Iteration cap. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cut Planes (`P`) | Plane | list | Sequence of cutting planes. |
+| Removed Volume (m^3) (`V`) | Number | list | Removed volume per step. |
+| Cutting Time (min) (`T`) | Number | list | Cutting time per step. |
+| Material Removal % (`MRP`) | Number | item | Overall material removal percentage. |
+| AMRR (mm^3/min) (`AMRR`) | Number | item | Average material removal rate. |
+
+### BlockCutOpt Extract Grid  (`ExtractGrid`)
+
+- GUID: `F7A13001-0001-4F2D-A0B0-7E60CADA17C1`  |  icon: `BlockCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
+- Brute-force search + extract the winning OrientedBlock grid.  Outputs the non-intersected blocks as Rhino Boxes plus the  BlockCutOptResult headline numbers.
+
+| in | type | access | description |
+|---|---|---|---|
+| Tested Area (`A`) | Box | item | Bench bounding box (m). |
+| Fractures (`F`) | Mesh | item | Fracture mesh. |
+| Block X (`Lx`) | Number | item | Block length (m). |
+| Block Y (`Ly`) | Number | item | Block width (m). |
+| Block Z (`Lz`) | Number | item | Block height (m). |
+| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
+| Dx Step (`DxS`) | Number | item | Dx step (m). |
+| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
+| Dy Step (`DyS`) | Number | item | Dy step (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Boxes (`B`) | Box | list | Non-intersected blocks as Rhino Boxes. |
+| Count (`N`) | Integer | item | Number of non-intersected blocks. |
+| Recovery % (`R`) | Number | item | Recovery percentage. |
+| Best Psi (deg) (`Psi`) | Number | item | Optimum cutting direction. |
+| Best Dx (m) (`Dx`) | Number | item | Optimum dx. |
+| Best Dy (m) (`Dy`) | Number | item | Optimum dy. |
+| Elapsed (ms) (`T`) | Number | item | Wall-clock duration. |
+
+### BlockCutOpt Load Fractures  (`LoadFractures`)
+
+- GUID: `F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1`  |  icon: `DefectMap.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
+- Load fractures from disk (PLY, CSV, .lines, .txt). World  coordinates in metres. For 2D-trace formats, zMin / zMax  define the vertical extrusion range. Output is a Rhino  Mesh consumable by BlockCutOpt Solve.
+
+| in | type | access | description |
+|---|---|---|---|
+| Path (`P`) | Text | item | File path. .ply / .csv / .lines / .txt |
+| Z Min (`Zmin`) | Number | item | Bottom of vertical extrusion (m). Ignored for PLY. |
+| Z Max (`Zmax`) | Number | item | Top of vertical extrusion (m). Ignored for PLY. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fractures (`F`) | Mesh | item | Rhino Mesh of fracture triangles. |
+| Triangle Count (`N`) | Integer | item | Number of fracture triangles. |
+
+### BlockCutOpt Omni Solve  (`BlockCutMulti`)
+
+- GUID: `F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4`  |  icon: `BlockCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
+- Algorithm: **BlockCutOpt omni-solve (Pareto over recovery/revenue/risk/cut-area)** - Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761
+- Run the omni-solver: uniform (mx, my) sub-division per zone,  4-axis Pareto multi-objective (recovery, revenue, kerf-time,  BCSdbBV). Returns one row per zone. Implements BlockCutOpt omni-solve (Elkarmoty 2020; Jalalian 2023).
+
+| in | type | access | description |
+|---|---|---|---|
+| Tested Area (`A`) | Box | item | Bench bounding box (m). |
+| Fractures (`F`) | Mesh | item | Fracture mesh. |
+| Mx (`Mx`) | Integer | item | Sub-divisions in X. |
+| My (`My`) | Integer | item | Sub-divisions in Y. |
+| Block X (`Lx`) | Number | item | Block length (m). |
+| Block Y (`Ly`) | Number | item | Block width (m). |
+| Block Z (`Lz`) | Number | item | Block height (m). |
+| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Run (`R`) | Boolean | item | Execute the solve (the search is expensive; bound it before running) |
+
+| out | type | access | description |
+|---|---|---|---|
+| Zone Id (`Z`) | Text | list | Sub-zone identifier (i, j). |
+| Best Recovery Count (`N`) | Integer | list | Best recovery count per zone. |
+| Best Revenue (`Pi`) | Number | list | Best revenue per zone. |
+| Best BCSdbBV (`BCS`) | Number | list | Best BCSdbBV cost per zone. |
+| Best Psi (deg) (`Psi`) | Number | list | Recovery-optimal psi per zone. |
+| Aggregate Recovery (`R`) | Integer | item | Sum of recovery counts. |
+
+### BlockCutOpt Solve  (`BlockCutSolve`)
+
+- GUID: `F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2`  |  icon: `BlockCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
+- Algorithm: **BlockCutOpt brute-force search** - Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761
+- Brute-force search for the optimum cutting direction +  displacement that maximises the count of non-intersected  blocks. All units in metres. [Elkarmoty et al. 2020]
+
+| in | type | access | description |
+|---|---|---|---|
+| Tested Area (`A`) | Box | item | Bench bounding box (m). |
+| Fractures (`F`) | Mesh | item | Fracture mesh. |
+| Block X (`Lx`) | Number | item | Block length (m). |
+| Block Y (`Ly`) | Number | item | Block width (m). |
+| Block Z (`Lz`) | Number | item | Block height (m). |
+| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Dx Max (`Dx`) | Number | item | Half-range of dx search (m). |
+| Dx Step (`DxS`) | Number | item | Dx step (m). |
+| Dy Max (`Dy`) | Number | item | Half-range of dy search (m). |
+| Dy Step (`DyS`) | Number | item | Dy step (m). |
+| Run (`R`) | Boolean | item | Execute the solve (the search is expensive; bound it before running) |
+
+| out | type | access | description |
+|---|---|---|---|
+| Non-Intersected Count (`N`) | Integer | item | Best non-intersected block count. |
+| Recovery % (`R`) | Number | item | Recovery percentage. |
+| Best Psi (deg) (`Psi`) | Number | item | Optimum cutting direction. |
+| Best Dx (m) (`Dx`) | Number | item | Optimum dx. |
+| Best Dy (m) (`Dy`) | Number | item | Optimum dy. |
+| Evaluations (`E`) | Integer | item | Total (psi, dx, dy) samples evaluated. |
+| Elapsed (ms) (`T`) | Number | item | Wall-clock duration. |
+
+### Box To Mesh  (`Box2Mesh`)
+
+- GUID: `D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryBlock.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/BoxToMeshComponent.cs`
+- Convert a Box (e.g. a BlockCutOpt output) into a closed  Mesh (8 vertices, 12 triangles). Bridges the Box->Mesh  adapter gap between BlockCutOpt and SlabFromMesh /  SlabCutByFractures / AshlarPack.
+
+| in | type | access | description |
+|---|---|---|---|
+| Box (`B`) | Box | item | Input Box. Typically a single Box from BlockCutOpt's  Boxes output (graft, list-item, or as a single item). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Closed mesh of the box. 8 vertices, 12 triangles. |
+
+### Convex Hull Slab  (`HullSlab`)
+
+- GUID: `ECFDAEBF-CADB-4234-5678-9012345678AB`  |  icon: `ConvexHull2D.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/ConvexHullSlabComponent.cs`
+- Algorithm: **QuickHull convex hull** - Barber, Dobkin, Huhdanpaa 1996, The Quickhull algorithm for convex hulls, ACM TOMS 22(4):469-483
+- Builds the convex hull of a Rhino mesh's vertices and emits  the hull as a Slab. Loses concavity by definition; opt in  for fast Mesh -> Slab on roughly-convex inputs. Implements QuickHull (Barber-Dobkin-Huhdanpaa 1996).
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Rhino mesh whose vertices seed the hull. At least 4 non-coplanar vertices required. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slab (`S`) | Generic | item | Convex-hull Slab. |
+| Mesh (`M`) | Mesh | item | Convex hull as a Rhino Mesh (same geometry, fan-triangulated). |
+
+### Crack Graph (manual)  (`CrkGraph`)
+
+- GUID: `F7A15001-0001-4F2D-A0B0-7E60CADA17E1`  |  icon: `DefectMap.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
+- Algorithm: **Crack-graph DTO builder** - Frahan-original
+- Wrap a user-supplied list of FracturePlanes (and optional  confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Fracture Planes (`F`) | Generic | list | List<FracturePlane>. |
+| Confidences (`C`) | Number | list | Per-plane confidence 0..1 (optional). |
+| Ids (`I`) | Text | list | Per-plane ids (optional). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Crack Graph (`G`) | Generic | item | CrackGraph object. |
+| Count (`N`) | Integer | item | Number of cracks. |
+
+### Extraction Order Optimizer  (`ExtractionOrder`)
+
+- GUID: `F7A11003-0001-4F2D-A0B0-7E60CADA17A3`  |  icon: `QuarryCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
+- Algorithm: **Weighted-sum greedy extraction-order sort** - Frahan-original
+- Order BenchBlocks by score = w_yield*yield - w_risk*risk -  w_access*access. Blocks under min yield are skipped. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory. |
+| Estimates (`E`) | Generic | list | BlockYieldEstimate list. |
+| Yield Weight (`Wy`) | Number | item | Score weight on yield fraction. |
+| Risk Weight (`Wr`) | Number | item | Score weight on fracture risk. |
+| Access Weight (`Wa`) | Number | item | Score weight on access cost. |
+| Min Yield (`My`) | Number | item | Yield fraction 0..1 below which a block is skipped. |
+| Access Normaliser (`An`) | Number | item | Divisor for access cost. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Plan (`P`) | Generic | item | ExtractionPlan object. |
+| Order Ids (`I`) | Text | list | Block ids in extraction order. |
+| Scores (`S`) | Number | list | Score for each accepted block. |
+| Skipped Ids (`Sk`) | Text | list | Block ids skipped (low yield). |
+| Total Recoverable (m^3) (`Vr`) | Number | item | Sum of recoverable volumes. |
+| Total Waste (m^3) (`Vw`) | Number | item | Sum of waste volumes. |
+
+### Fracture Block Pack  (`FracBlockPack`)
+
+- GUID: `A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04`  |  icon: `BlockCutOpt.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureBlockPackComponent.cs`
+- Pack fixed-size dimension blocks into each fracture-bounded slab (bin): tree-pack  coarse subdivision of the AABB + irregular-boundary fit to the slab mesh. Reports  per-bin yield. Managed.
+
+| in | type | access | description |
+|---|---|---|---|
+| Container Meshes (`C`) | Mesh | list | Fracture-bounded slab meshes (closed). Each is one BIN. From the split mesh bench /  fracture surfaces. |
+| Block Length (`Lx`) | Number | item | Dimension-block length (m). |
+| Block Width (`Ly`) | Number | item | Dimension-block width (m). |
+| Block Height (`Lz`) | Number | item | Dimension-block height (m). |
+| Kerf (`K`) | Number | item | Saw-cut gap between blocks (m). |
+| Fracture Clearance (`Cl`) | Number | item | Extra inward margin (m) every block must keep from the fracture boundary. Set it to the  fracture position sigma (GPR Fracture Surfaces 3D) for uncertainty-safe blocks. Default 0. |
+| Run (`R`) | Boolean | item | Compute the packing. |
+| Uncertainty Safe (`US`) | Boolean | item | Toggle the deep-fracture safety allowance. FALSE = geometric yield (clearance ignored, the  optimistic number). TRUE = enforce the Fracture Clearance (wire it to the fracture sigma  from GPR Fracture Surfaces 3D) so no block sits within the measured GPR uncertainty of a  fracture -> uncertainty-safe yield. Default false. |
+| Packer (`Pk`) | Integer | item | Packing strategy. 0 = fixed axis grid. 1 = best-of (6 orientations x grid phase). 2 =  combined multi-size on a global grid. 3 = VOXEL-DLBF: per-block deepest-bottom-left-first  placement on a lattice (each block lands independently, conforming to the wavy boundary --  adopted after a head-to-head where a Mosch-style voxel greedy beat the global grid). 4 =  VOXEL-DLBF + multi-size (max-yield mesh-bench algorithm, DEFAULT): per-block placement plus  the 1.0/0.66/0.5 marketable fill ladder, strict 8-corner irregular fit + kerf. Tops the  head-to-head vs Kim forest and the Mosch-style greedy, but is NOT guaranteed saw-separable.  5 = GUILLOTINE multi-size (MANUFACTURABLE): recursive full-span 3D guillotine so every block  is separable by edge-to-edge saw cuts; reports cutting-surface-area + cut count (Jalalian  I11 / saw-path cost). Trades a little yield for full manufacturability. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | Placed dimension-block meshes (closed boxes). |
+| Bin Index (`Bi`) | Integer | list | Container/bin index of each placed block. |
+| Block Count (`N`) | Integer | list | Blocks placed per bin. |
+| Recovered Volume (`V`) | Number | list | Recovered block volume per bin (m^3). |
+| Yield (`Y`) | Number | list | Recovered / intact volume per bin (0..1). |
+| Report (`Rpt`) | Text | item | Per-bin yield summary. |
+| Saw passes (`SP`) | Line | tree | Ordered saw passes per bin (one branch per bin): the distinct vertical cut centre-lines  recovered from the placed block faces (face coord +- kerf/2), X rips ascending then Y  cross-cuts ascending, each spanning only the blocks it actually frees. Horizontal lifts  are the bin boundaries themselves. Feed DXF Cut Plan > Cut lines for a numbered  CUT_SEQUENCE sheet (one bin per sheet). |
+
+### Fracture Bounded Slabs  (`BedSlabs`)
+
+- GUID: `A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05`  |  icon: `Box2Mesh.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs`
+- Algorithm: **Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces** - ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)
+- Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`A`) | Box | item | Bench bounding box (m). XY footprint + the Z range to slab. |
+| Bed Surfaces (`F`) | Mesh | list | Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds. |
+| Grid Res (`G`) | Integer | item | Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26. |
+| Keep-out (`K`) | Number | item | Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Mesh | list | The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes. |
+| Thickness (`T`) | Number | list | Mean thickness (m) of each slab, aligned to Slabs. |
+| Report (`Rpt`) | Text | item | Per-slab summary. |
+
+Related:
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the kriged bed surfaces this slabs the bench by.
+- Frahan > Quarry > Fracture Block Pack - Pack each fracture-bounded slab with the staged guillotine (mode 5).
+- Frahan > Slab > Slab Cut By Tool Mesh (CGAL) - The CGAL boolean alternative for arbitrary (non-height-field) curved cutters.
+
+### Heterogeneous Quarry Extraction  (`HeteroExt`)
+
+- GUID: `F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9`  |  icon: `QuarryBlock.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs`
+- Algorithm: **Heterogeneous quarry extraction pipeline** - Frahan-original
+- Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-size pack  (monuments + dimension stones + slabs) avoiding fractured  regions, plus optional MonumentInventory placement on a  fracture-derived BlockGraph. One component, four outputs  per stage. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`B`) | Box | item | Bench bounding box (m). |
+| Fractures (`Fx`) | Mesh | item | Fracture mesh. |
+| Prime Block X (`Plx`) | Number | item | Prime (max) block length (m) for BCO stage 1. |
+| Prime Block Y (`Ply`) | Number | item | Prime block width (m). |
+| Prime Block Z (`Plz`) | Number | item | Prime block height (m). |
+| Kerf (`K`) | Number | item | Saw kerf (m). |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Catalogue Ids (`Cid`) | Text | list | DLBF catalogue ids. |
+| Catalogue Widths (m) (`Cw`) | Number | list | DLBF widths. |
+| Catalogue Depths (m) (`Cd`) | Number | list | DLBF depths. |
+| Catalogue Heights (m) (`Ch`) | Number | list | DLBF heights. |
+| Catalogue Revenues (`Cr`) | Number | list | DLBF revenues. |
+| Grid Cell (m) (`Gc`) | Number | item | DLBF discretisation cell; 0 = min(W,D,H)/4. |
+| Floor Only (`Fl`) | Boolean | item | True = pieces on bench floor (no stacking). |
+| Monument Inventory (`Mon`) | Generic | item | Optional MonumentInventory (from MonInv) for stage 4. |
+| Monument Grid (m) (`Mg`) | Number | item | Monument-placement grid stride. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Prime Boxes (`Pb`) | Box | list | Non-intersected cells at the prime block dim. |
+| Prime Count (`Pn`) | Integer | item | Count of fracture-clean prime cells. |
+| Prime Recovery % (`Pr`) | Number | item | BlockCutOpt recovery at the prime dim. |
+| Best Psi (deg) (`Psi`) | Number | item | Optimal cutting direction. |
+| Forbidden Boxes (`Fb`) | Box | list | Fracture-intersected cells (forbidden for DLBF). |
+| Mixed Boxes (`Mb`) | Box | list | DLBF-placed mixed-size piece boxes. |
+| Mixed Ids (`Mi`) | Text | list | Id of each DLBF piece. |
+| Mixed Revenue (`Mr`) | Number | item | DLBF total revenue. |
+| Mixed Volume (`Mv`) | Number | item | DLBF occupied volume (m^3). |
+| Monument Boxes (`Mo`) | Box | list | Monument-placement AABBs (empty if no inventory). |
+| Monument Ids (`Moi`) | Text | list | Monument ids in placement order. |
+| Monument Count (`Mon`) | Integer | item | Total monuments placed. |
+| Unplaced Monuments (`Mou`) | Text | list | Monuments that did not fit anywhere. |
+
+Related:
+- Frahan > Lab > Frahan Mixed-Size Block Pack - Standalone 2D DLBF mixed-size packer (F2D0BC17); the same engine this facade composes.
+- Frahan > Quarry > Frahan Mixed-Size Block Pack 3D - Standalone 3D DLBF mixed-size packer (F2D0BC18); the same engine this facade composes.
+- Frahan > Quarry > BlockCutOpt Solve - Standalone stage-1 solver: optimum cutting direction + displacement (Elkarmoty 2020).
+
+### Mesh Decompose (CoACD)  (`DecomposeCoacd`)
+
+- GUID: `F2D000B0-C0AC-4F2D-A0B0-7E60C0AC1DB0`  |  icon: `CoacdDecompose.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/CoacdTestComponents.cs`
+- Algorithm: **Collision-aware approximate convex decomposition** - Wei, J., Liu, M., Wang, J. et al. (2022). Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search. SIGGRAPH 2022
+- Approximate convex decomposition via the CoACD native shim.  Input must be 2-manifold for the lightweight build (no  manifold preprocess); pre-clean with Mesh Repair (CGAL) if  input is non-manifold and the OpenVDB-equipped build is not  loaded.  Wraps CoACD (Wei et al. 2022).
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Input mesh. Must be 2-manifold when running against the  lightweight (WITH_3RD_PARTY_LIBS=OFF) shim build. The full  build accepts non-manifold input via OpenVDB preprocessing. |
+| Threshold (`T`) | Number | item | Concavity threshold. Lower = more pieces, finer fit.  Default 0.05 (normalized [0..1]) or 0.05 metres if Real  Metric is true. |
+| Max Hulls (`N`) | Integer | item | Cap on output piece count. -1 = unlimited. |
+| Preprocess (`P`) | Integer | item | 0 = auto, 1 = on, 2 = off. Auto runs OpenVDB-based  manifold-isation only when input is non-manifold (requires  WITH_3RD_PARTY_LIBS=ON build). |
+| Real Metric (`RM`) | Boolean | item | When true, Threshold is interpreted as metres rather than  CoACD's normalized [0..1] units. Use for statue-scale input. |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+| MCTS Iters (`mi`) | Integer | item | MCTS iterations per cut (default 150). |
+| MCTS Depth (`md`) | Integer | item | MCTS tree depth (default 3). |
+| MCTS Nodes (`mn`) | Integer | item | MCTS nodes per cut (default 20). |
+| Seed (`S`) | Integer | item | RNG seed for reproducibility (default 0). |
+| PCA (`pca`) | Boolean | item | Align cuts to PCA frame (default false). World-axis cuts  are usually better for architectural input. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Convex Hulls (`H`) | Mesh | list | List of convex pieces approximating the input. |
+| Count (`N`) | Integer | item | Number of hulls produced. |
+| Runtime (`T`) | Number | item | Runtime in milliseconds. |
+| Backend (`B`) | Text | item | Reported version + build-flag status from the loaded shim.  Use this to confirm whether OpenVDB-based manifold  preprocessing is available. |
+| Available (`Av`) | Boolean | item | True iff the CoACD native shim is loadable. |
+| Report (`R`) | Text | item | Diagnostic report (input/output sizes, runtime, parameters). |
+
+Related:
+- Frahan > Masonry > Masonry Assembly - Convex decomposition feeds collision-detection for masonry block assembly.
+- Frahan > Masonry > Auto Interfaces - Convex parts simplify interface auto-detection between non-convex blocks.
+- Frahan > Mesh > Mesh Diagnostics - Diagnose mesh convexity before decomposing.
+
+### Mesh Shell Split  (`ShellSplit`)
+
+- GUID: `DBECFDAE-BFCA-4123-4567-89012345678A`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/MeshShellSplitComponent.cs`
+- Algorithm: **Connected-components labelling** - Frahan-original
+- Separates a multi-shell Rhino mesh into one Slab per  connected shell. Each output shell is assumed convex  (Slab's input requirement). Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Multi-shell Rhino mesh. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Generic | list | One Slab per connected shell. |
+| Mesh (`M`) | Mesh | list | One Rhino Mesh per shell (parallel to the Slabs list). |
+
+### Mixed-Size Block Pack 3D  (`BCOMixedPack3D`)
+
+- GUID: `F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8`  |  icon: `BinPack.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs`
+- Algorithm: **Deepest-Left-Bottom-Fill (3D)** - Chehrazad, Roose, Wauters 2025, Int. J. Production Research 63:6606-6629
+- 3D generalisation of DLBF (Chehrazad 2025). Each piece has  its own (Width, Depth, Height); pieces sort by revenue-per- volume. Floor-only mode (default) places every piece at  z = bench.MinZ, matching quarry extraction where blocks are  cut OUT of solid rock (no stacking). Disable Floor-Only for  monument storage / slab racking / container loading. Implements Deepest-Left-Bottom-Fill 3D (Chehrazad 2025).
+
+| in | type | access | description |
+|---|---|---|---|
+| Tested Area (`A`) | Box | item | Bench bounding box (m). |
+| Piece Ids (`Id`) | Text | list | One id per catalogue entry. |
+| Piece Widths (m) (`W`) | Number | list | Width per entry (X). |
+| Piece Depths (m) (`D`) | Number | list | Depth per entry (Y). |
+| Piece Heights (m) (`H`) | Number | list | Height per entry (Z). |
+| Piece Revenues (`Rev`) | Number | list | RMV per entry. |
+| Forbidden Boxes (`X`) | Box | list | Optional forbidden regions (e.g. fracture-intersected cells). |
+| Grid Cell (m) (`Gc`) | Number | item | Discretisation cell; 0 = min(W,D,H)/4. |
+| Floor Only (`Fl`) | Boolean | item | True = pieces sit on bench floor (no stacking). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed Boxes (`B`) | Box | list | One Box per placed piece. |
+| Placed Ids (`I`) | Text | list | Id of each placed piece (multiplicity preserved). |
+| Total Revenue (`Pi`) | Number | item | Sum of placed-piece revenues. |
+| Occupied Volume (m^3) (`Vol`) | Number | item | Sum of placed-piece volumes. |
+| Placed Count (`N`) | Integer | item | Number of placements. |
+
+### Photo Detect → PLY  (`Photo2Ply`)
+
+- GUID: `F2D0BC14-1234-4F2D-A0B0-7E60CADA15B4`  |  icon: `PlyReader.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
+- v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2  in world metres) and emits the vertical-extruded PLY consumable by  BlockCutOpt. The on-image fracture detector is not yet wired (the  Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer  to write the CSV from a GeoFractNet run, or hand-author the CSV from  QGIS / AutoCAD digitisation.
+
+| in | type | access | description |
+|---|---|---|---|
+| CSV Path (`Csv`) | Text | item | Trace CSV file (x1, y1, x2, y2 in metres). |
+| Origin X (m) (`Ox`) | Number | item | World X of pixel (0, 0). Unused by CSV backend. |
+| Origin Y (m) (`Oy`) | Number | item | World Y of pixel (0, 0). Unused by CSV backend. |
+| GSD (m/px) (`Gsd`) | Number | item | Ground sampling distance. Unused by CSV backend. |
+| Z Min (m) (`Zmin`) | Number | item | Bottom of vertical extrusion. |
+| Z Max (m) (`Zmax`) | Number | item | Top of vertical extrusion. |
+| Flip Y (`Fy`) | Boolean | item | Pixel Y points down. Unused by CSV backend. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fractures (`F`) | Mesh | item | Rhino Mesh of vertically-extruded fracture triangles. |
+| Trace Count (`Tc`) | Integer | item | Number of traces parsed. |
+| Triangle Count (`Tri`) | Integer | item | Number of triangles emitted. |
+| Backend (`Bk`) | Text | item | Detector backend used. |
+
+### Quarry Decompose  (`QuarryDc`)
+
+- GUID: `B9CADBEC-FDAE-4F01-2345-678901234567`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/QuarryDecomposeComponent.cs`
+- Algorithm: **Orthogonal-grid slab decomposition** - Frahan-original
+- Cuts a convex quarry Slab into a list of smaller convex Slabs  by an orthogonal grid of fracture planes. Output flows into  Ashlar Pack. Frahan-original method. Selection: convex pieces  -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell  partition -> By Voronoi.
+
+| in | type | access | description |
+|---|---|---|---|
+| Quarry (`Q`) | Generic | item | Convex quarry. Accepts a Frahan Slab DTO (from Slab From Mesh)  OR a Rhino Mesh (auto-converted). |
+| nX (`nX`) | Integer | item | Grid count along +X (>= 0). |
+| nY (`nY`) | Integer | item | Grid count along +Y (>= 0). |
+| nZ (`nZ`) | Integer | item | Grid count along +Z (>= 0). |
+| Eps (`eps`) | Number | item | Cutter floating-point tolerance. Must be >= 0. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Generic | list | Output Slab DTOs. Wire into Ashlar Pack. |
+| Parents (`Pi`) | Integer | list | Per-output index back into the input list (always 0 for a  single-quarry call). |
+| Mesh (`M`) | Mesh | list | Output Slabs as Rhino Meshes (parallel to the Slab list). |
+
+### Quarry Decompose By CoACD  (`QuarryDcCoacd`)
+
+- GUID: `F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
+- Algorithm: **Collision-Aware Approximate Convex Decomposition** - Wei, Liu, Wang et al. 2022, Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search, SIGGRAPH 2022
+- Decomposes a quarry mesh into nearly-convex blocks via  CoACD (Wei et al, SIGGRAPH 2022). Concavity-driven — block  count and shape come from the input geometry, not a user  grid. Use when the goal is approximate convex pieces for  downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
+
+| in | type | access | description |
+|---|---|---|---|
+| Quarry (`Q`) | Mesh | item | Quarry mesh. Must be 2-manifold for the lightweight CoACD  build (no OpenVDB preprocess); pre-clean with Mesh Repair  (CGAL) if needed. |
+| Threshold (`Th`) | Number | item | Concavity threshold. Lower = more pieces, tighter fit.  Default 0.05. |
+| Real Metric (`RM`) | Boolean | item | True = treat Threshold as metres rather than normalized  [0..1] units. Recommended for statue-scale input. |
+| Max Pieces (`Mx`) | Integer | item | Cap on output piece count. -1 = unlimited. |
+| Seed (`Sd`) | Integer | item | RNG seed for reproducibility. |
+| Run (`Run`) | Boolean | item | Set true to compute. Decomposition is heavy. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | One nearly-convex mesh per piece. |
+| Count (`N`) | Integer | item | Number of pieces. |
+| Available (`Av`) | Boolean | item | True iff frahan_coacd.dll is loadable. |
+| Report (`R`) | Text | item | Diagnostic report. |
+
+### Quarry Decompose By Mesh (CGAL)  (`QuarryDcCgal`)
+
+- GUID: `F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/CgalCutComponents.cs`
+- Algorithm: **CGAL Polygon Mesh Processing corefinement** - CGAL Polygon Mesh Processing (corefine_and_compute, EPECK/EPICK hybrid kernel)
+- Decomposes a (possibly non-convex) quarry mesh into blocks  by intersecting it against a 3D grid of box cells via CGAL.  Empty cells are dropped automatically. Use this when the  plane-based Quarry Decompose does not apply because the  quarry mesh is not convex. Implements CGAL PMP corefinement.  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
+
+| in | type | access | description |
+|---|---|---|---|
+| Quarry (`Q`) | Mesh | item | Quarry mesh. Must be closed and manifold (run Mesh Repair  (CGAL) upstream if in doubt). Need not be convex. |
+| Grid Box (`Gb`) | Box | item | Oriented box that defines the grid extent + orientation.  If empty (Box.Empty / Box.Unset), the world-aligned bounding  box of the Quarry mesh is used. |
+| nX (`nX`) | Integer | item | Grid divisions along the box's local +X axis (>= 1). |
+| nY (`nY`) | Integer | item | Grid divisions along the box's local +Y axis (>= 1). |
+| nZ (`nZ`) | Integer | item | Grid divisions along the box's local +Z axis (>= 1). |
+| Hybrid Kernel (`Hy`) | Boolean | item | True (default) = HYBRID kernel for robustness on every  cell intersection. False = EPICK only (fastest). |
+| Run (`Run`) | Boolean | item | Set true to compute. Cost scales with nX*nY*nZ CGAL calls. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | One mesh per non-empty grid cell intersection (Quarry ∩ cell). |
+| Cell Index (`Ci`) | Integer | list | Flat (i + j*nX + k*nX*nY) cell index for each output block,  parallel to the Blocks list. Lets the caller correlate  outputs with their originating cell. |
+| Backend (`B`) | Text | item | Which kernel ran on the most recent cell. |
+| Available (`Av`) | Boolean | item | True iff the CGAL native shim is loadable. |
+| Report (`R`) | Text | item | Diagnostic report (cells visited / kept / dropped, runtime). |
+
+### Quarry Decompose By Tet  (`QuarryDcTet`)
+
+- GUID: `F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
+- Algorithm: **Geogram tetrahedralisation** - Lévy, B. Geogram v1.9.9 (GEO::mesh_tetrahedralize), BSD-3
+- Decomposes a quarry mesh into tetrahedra via Geogram.  Fine-grained, fracture-pattern style. Requires the  Geogram shim to be built with GEOGRAM_WITH_TETGEN=ON  (off by default — TetGen is non-commercial-use). When  off, the component surfaces a clear error and produces no  blocks; use Quarry Decompose By CoACD instead. Implements Geogram tetrahedralisation (Lévy, Geogram v1.9.9).
+
+| in | type | access | description |
+|---|---|---|---|
+| Quarry (`Q`) | Mesh | item | Closed manifold quarry mesh. |
+| Preprocess (`Pp`) | Boolean | item | Run mesh preprocess (manifold-isation, hole fill) inside  Geogram before tetrahedralizing. |
+| Refine (`Rf`) | Boolean | item | Refine the tet mesh via Delaunay refinement after the  initial tetrahedralization. Increases tet count. |
+| Quality (`Qu`) | Number | item | Tet quality bound for refinement (radius-edge ratio).  Default 1.4. Lower is stricter / more tets. |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Tets (`T`) | Mesh | list | One closed tetrahedron mesh per output cell. |
+| Count (`N`) | Integer | item | Number of tets. |
+| Available (`Av`) | Boolean | item | True iff frahan_geogram.dll is loadable. |
+| Report (`R`) | Text | item | Diagnostic report. Reports the TetGen-disabled state when  applicable. |
+
+### Quarry Decompose By Voronoi  (`QuarryDcVoro`)
+
+- GUID: `F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0`  |  icon: `Voronoi.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
+- Algorithm: **Restricted Voronoi diagram** - Lévy, B. Geogram v1.9.9 restricted Voronoi, BSD-3
+- Decomposes a (possibly non-convex) quarry mesh into solid  Voronoi blocks. Seeds are sampled inside the quarry and  Lloyd-relaxed for a more uniform cell-area distribution.  Each cell is then CGAL-intersected against the quarry  for the final block geometry. Realistic stone-fracturing  look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
+
+| in | type | access | description |
+|---|---|---|---|
+| Quarry (`Q`) | Mesh | item | Closed manifold quarry mesh. |
+| Seed Count (`Ns`) | Integer | item | Number of Voronoi seeds = number of output blocks.  Default 30. Typical 20–200 for masonry-scale work. |
+| Lloyd Iters (`Li`) | Integer | item | Lloyd-relaxation iterations on the interior seeds. 0 =  raw rejection-sampled seeds; 5–10 = visibly more uniform. |
+| Seed (`Sd`) | Integer | item | RNG seed for reproducibility. Default 1. |
+| Hybrid Kernel (`Hy`) | Boolean | item | True (default) = CGAL HYBRID kernel for the cell ×  quarry intersection. False = EPICK only (faster, less robust). |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | One mesh per non-empty Voronoi cell ∩ quarry intersection. |
+| Seeds (`S`) | Point | list | The relaxed seed positions actually used (parallel to Blocks). |
+| Available (`Av`) | Boolean | item | True iff CGAL shim is loadable. |
+| Report (`R`) | Text | item | Diagnostic report. |
+
+### Quarry Inventory  (`QuarryInv`)
+
+- GUID: `F7A11001-0001-4F2D-A0B0-7E60CADA17A1`  |  icon: `StockpileManager.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
+- Aggregate a list of bench-block AABBs into a QuarryInventory.  All units in metres.
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench Id (`B`) | Text | item | Bench identifier. bench-1 |
+| Block Boxes (`X`) | Box | list | Axis-aligned bench-block footprints (m). |
+| Block Ids (`I`) | Text | list | Optional block ids. If empty, auto-generated. |
+| Geology Grade (`G`) | Number | list | Per-block geology grade 0..1 (default 1.0). |
+| Access Cost (`A`) | Number | list | Per-block access cost (default 0). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory object. |
+| Count (`N`) | Integer | item | Number of blocks. |
+| Total Volume (m^3) (`V`) | Number | item | Sum of gross volumes. |
+| Avg Grade (`G`) | Number | item | Volume-weighted average geology grade. |
+
+### Quarry Report  (`QuarryReport`)
+
+- GUID: `F7A11005-0001-4F2D-A0B0-7E60CADA17A5`  |  icon: `PackDiagnostics.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
+- Aggregate Inventory + ExtractionPlan + SawBedSchedule into  a Markdown summary plus headline numbers.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory. |
+| Plan (`P`) | Generic | item | ExtractionPlan. |
+| Schedule (`Sc`) | Generic | item | SawBedSchedule. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Report (`R`) | Generic | item | QuarryReport object. |
+| Markdown (`MD`) | Text | item | Report rendered as Markdown. |
+| Yield (m^3) (`Vy`) | Number | item | Total recoverable yield. |
+| Waste (m^3) (`Vw`) | Number | item | Total waste. |
+| Recovery % (`R%`) | Number | item | Overall recovery percent. |
+| Makespan (min) (`M`) | Number | item | Schedule makespan. |
+
+### Quarry Yield Estimator  (`QuarryYield`)
+
+- GUID: `F7A11002-0001-4F2D-A0B0-7E60CADA17A2`  |  icon: `YieldEstimator.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
+- Per-block yield estimate via BlockCutOpt as a sub-routine.  Returns one BlockYieldEstimate per BenchBlock.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | QuarryInventory from Frahan Quarry Inventory. |
+| Fractures (`F`) | Mesh | item | Fracture mesh (BlockCutOpt format). |
+| Product X (m) (`Lx`) | Number | item | Dimension-block target X. |
+| Product Y (m) (`Ly`) | Number | item | Dimension-block target Y. |
+| Product Z (m) (`Lz`) | Number | item | Dimension-block target Z. |
+| Kerf (m) (`K`) | Number | item | Saw kerf. |
+| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
+| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
+| Dx Step (`DxS`) | Number | item | Dx step (m). |
+| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
+| Dy Step (`DyS`) | Number | item | Dy step (m). |
+| Risk Normaliser (`Rn`) | Number | item | Fracture-triangle count divisor for risk 0..1. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Estimates (`E`) | Generic | list | BlockYieldEstimate per BenchBlock. |
+| Block Ids (`I`) | Text | list | Block ids matching the estimates list. |
+| Recovery % (`R`) | Number | list | Per-block recovery percent. |
+| Fracture Risk (`Rf`) | Number | list | Per-block fracture risk 0..1. |
+| Cutting Time (min) (`T`) | Number | list | Per-block estimated cutting time. |
+
+### Saw-Bed Schedule  (`SawBedSchedule`)
+
+- GUID: `F7A11004-0001-4F2D-A0B0-7E60CADA17A4`  |  icon: `CncRoughing.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
+- Algorithm: **Greedy LPT list scheduling** - Graham 1969, Bounds on multiprocessing timing anomalies, SIAM J. Appl. Math. 17(2):416-429
+- Greedy LPT schedule of accepted blocks onto N saw beds.  Returns per-bed timelines and the total makespan. Implements greedy LPT scheduling (Graham 1969).
+
+| in | type | access | description |
+|---|---|---|---|
+| Plan (`P`) | Generic | item | ExtractionPlan. |
+| Bed Count (`N`) | Integer | item | Number of saw beds (>= 1). |
+| Setup (min) (`S`) | Number | item | Fixed inter-block setup time per bed. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Schedule (`Sc`) | Generic | item | SawBedSchedule object. |
+| Bed Summary (`BS`) | Text | list | One line per bed. |
+| Makespan (min) (`M`) | Number | item | Schedule makespan. |
+| Slot Count (`K`) | Integer | item | Total scheduled slots. |
+
+### Scan to Block Inventory  (`ScanBlock`)
+
+- GUID: `F2D0BC20-1A2B-4F2D-A0B0-7E60CADA20A0`  |  icon: `QuarryBlock.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/ScanToBlockInventoryComponent.cs`
+- Convert a 3D-scanned raw block mesh into a typed QuarryBlock  (bounds + usable volume + frame + dimensions + label) the  downstream GeoCut / GeoPack / BlockPackTree chain can nest  project parts into. Orientation: 0 = mesh frame, 1 = PCA  (longest principal axis → X), 2 = world Z. Method: 0 = OBB,  1 = inscribed AABB after PCA align, 2 = ConvexHull.
+
+| in | type | access | description |
+|---|---|---|---|
+| Scan Mesh (`M`) | Mesh | item | Raw 3D-scanned block as a mesh (from a handheld scanner via  Scan Reconstruct, or a .3dm import). |
+| Orient (`O`) | Integer | item | Orientation policy. 0 = keep the mesh's existing frame.  1 = align by PCA (longest principal axis → X). 2 = align by  world Z (top face flat). |
+| Usable Inset (`I`) | Number | item | Inset (model units) used to compute the usable interior  volume — accounts for kerf + scan noise + edge defects.  Negative values are clamped to 0. |
+| Method (`Me`) | Integer | item | Block-extraction method. 0 = OBB (oriented bounding box,  fast, deterministic). 1 = inscribed AABB after PCA align.  2 = ConvexHull. |
+| Label (`L`) | Text | item | Per-block label / provenance string carried into the typed  QuarryBlock and downstream metadata. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Bounds (`Bb`) | Mesh | item | Oriented bounding-box mesh (visualisation + downstream  usable-volume input for the raw-Mesh wire path). |
+| Frame (`Fr`) | Plane | item | Block's oriented base frame (origin + X/Y/Z axes from PCA /  world align). |
+| Dimensions (`D`) | Vector | item | Block's principal dimensions (X = longest, Y = next,  Z = thinnest) in model units. |
+| Volume (`V`) | Number | item | Usable interior volume (model units cubed); accounts for  Usable Inset. |
+| Report (`R`) | Text | item | One-line summary: "Block <label> X x Y x Z units, volume V  units^3, method M". |
+
+### Slab Yield Optimizer  (`SlabYield`)
+
+- GUID: `F7A14001-0001-4F2D-A0B0-7E60CADA17D1`  |  icon: `YieldEstimator.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
+- Algorithm: **Per-block slab-plan yield maximisation** - Frahan-original spec 09 section 2 conflict-penalised yield score
+- Pick the best SlabPlan (axis + thickness) for one block.  Enumerates three axis-aligned candidates at the given  thickness; score = yield - conflictPenalty * crackConflicts.
+
+| in | type | access | description |
+|---|---|---|---|
+| Block (`B`) | Mesh | item | Convex block mesh. |
+| Fracture Planes (`F`) | Generic | list | Optional List<FracturePlane>. Wire from Frahan Mesh → Fracture Planes. |
+| Thickness (m) (`T`) | Number | item | Target slab thickness. |
+| Kerf (m) (`K`) | Number | item | Saw kerf. |
+| Conflict Penalty (`Cp`) | Number | item | Score penalty per aligned fracture inside the block. |
+| Alignment Tol (deg) (`At`) | Number | item | Normal-axis alignment tolerance for conflict detection. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Best Plan (`P`) | Generic | item | SlabPlan with the highest score. |
+| Axis (`A`) | Integer | item | 0=X, 1=Y, 2=Z. |
+| Slab Count (`N`) | Integer | item | Slabs the block produces under this plan. |
+| Yield Fraction (`Y`) | Number | item | slab_total_volume / block_volume. |
+| Conflicts (`C`) | Integer | item | Crack conflicts counted. |
+| Score (`S`) | Number | item | Yield − penalty × conflicts. |
+| Cut Planes (`Cp`) | Generic | list | FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures). |
+
+### Synthetic TN Granite  (`TnGran`)
+
+- GUID: `F2D0BC16-1234-4F2D-A0B0-7E60CADA15B6`  |  icon: `Stratigraphy.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
+- Algorithm: **Synthetic joint-set DFN generator** - ISRM Suggested Methods + Priest 1993 joint-set DFN
+- Generate a deterministic synthetic discrete fracture network  for Tamil Nadu granite (three joint sets: NE-SW, NW-SE,  sub-horizontal bedding). Outputs a CSV of 2D traces at  z=midheight + a PLY of 3D fracture polygons + the fracture  Mesh in-process. Lets you regression-test BlockCutOpt  without a field dataset. Implements synthetic joint-set DFN generation (ISRM/Priest 1993; Goodman & Shi 1985).
+
+| in | type | access | description |
+|---|---|---|---|
+| Bench (`B`) | Box | item | Bench bounding box (m). |
+| Seed (`S`) | Integer | item | Reproducibility seed. |
+| CSV Path (`Csv`) | Text | item | Output trace CSV path. |
+| PLY Path (`Ply`) | Text | item | Output fracture-polygon PLY path. |
+| Write Files (`W`) | Boolean | item | False = compute in memory only. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fractures (`F`) | Mesh | item | In-process fracture Mesh (consumable by BCO components). |
+| Plane Count (`Np`) | Integer | item | Number of fracture planes generated. |
+| Trace Count (`Nt`) | Integer | item | Number of 2D traces at z=midheight. |
+| Triangle Count (`Ntri`) | Integer | item | Number of triangles in the PLY. |
+| CSV Written (`Co`) | Text | item | CSV file path actually written (empty when W=false). |
+| PLY Written (`Po`) | Text | item | PLY file path actually written (empty when W=false). |
+
+### Voronoi Block Partition (Geogram)  (`RvdGeogram`)
+
+- GUID: `F2D000C6-6E06-4F2D-A0C6-7E60660C0AC1`  |  icon: `Voronoi.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/GeogramTestComponents.cs`
+- Algorithm: **Restricted Voronoi diagram partition** - Levy, B., INRIA/ALICE. Geogram v1.9.9. BSD-3. https://github.com/BrunoLevy/geogram
+- Partition a surface mesh into N Voronoi cells given seed  points (use CVT Seeds upstream for uniform-area cells).  Output is one Mesh per cell. Quarry-pipeline use:  Statue → Decimate → Repair → Remesh → CVT → this  → BlockGraph → GeoCut → QuarryCutOpt.  Wraps Geogram restricted Voronoi diagram.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Input surface. |
+| Seeds (`S`) | Point | list | Seed points (use CVT Seeds for optimized seeds). |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+| Smooth Pts (`SP`) | Integer | item | Pre-RVD uniform remesh target vertex count (0 = off,  5_000..50_000 typical). Smooths cell-boundary sawtooth. |
+| Closed (`Cl`) | Boolean | item | If true, return CLOSED Voronoi blocks (volumetric mode,  input must be a closed solid). If false, surface partition. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cells (`C`) | Mesh | list | One mesh per Voronoi cell. |
+| Cell Count (`N`) | Integer | item | Number of non-empty cells produced. |
+| Available (`Av`) | Boolean | item | True iff Geogram shim loaded. |
+| Report (`R`) | Text | item | Diagnostic report. |
+
+Related:
+- Frahan > Quarry > Quarry DFN - Production DFN partitioner; this Geogram Voronoi is the research-grade alternative.
+- Frahan > Quarry > Joint Set - Joint-set fracture statistics feed Voronoi partitioning.
+
+
 ## EdgeMatch
 
 ### Adaptive Block Match 3D  (`AdaptBlk3D`)
 
-- GUID: `D5F1000A-ED9E-4ED9-A00A-ED9EED9E000A`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/AdaptiveBlockMatch3DComponent.cs`
+- GUID: `D5F1000A-ED9E-4ED9-A00A-ED9EED9E000A`  |  icon: `EdgeMatchSolve.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/AdaptiveBlockMatch3DComponent.cs`
 - Algorithm: **Block Pair Match 3D** - See BlockPairMatch3DComponent for B3D pipeline references
 - 3D sibling of Component C. Given two scanned stone blocks where  one is oversized for its slot, find the best mating pose via  Block Pair Match 3D, then carve a minimum volume from the candidate  (CGAL/Geogram boolean diff) to make it fit. Mirrors the Clifford- McGee 2017 Cyclopean Cannibalism overlap-then-carve discipline and  the UCL Devadass 2025 minimum-machining principle.
 
@@ -823,7 +1642,7 @@ Related:
 
 ### Block Pair Match 3D  (`BlkMatch3D`)
 
-- GUID: `D5F10008-ED9E-4ED9-A008-ED9EED9E0008`  |  icon: `EdgeMatchSolve.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/BlockPairMatch3DComponent.cs`
+- GUID: `D5F10008-ED9E-4ED9-A008-ED9EED9E0008`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/BlockPairMatch3DComponent.cs`
 - Algorithm: **Phase correlator FFT (3D)** - Classical cross-correlation lag estimation
 - First-cut matcher: VSA segmentation + plane-to-plane mating scored by sampled  Hausdorff distance. The full exhaustive face-pair search is a planned refinement.  For a practically-tested matcher use Stone-Cell Match (Λ)  (ETH1100 Lambda=0.194, card 27_07).  Atomic 3D edge-matching primitive: given two scanned stone meshes,  find the rigid 3D pose where their planar face patches mate.  VsaSegmenter -> face filtering -> per-pair PhaseCorrelator +  ConstrainedIcp3D refinement -> top-N candidates ranked by  patch-pair Hausdorff residual + match-length. Foundational  primitive for the 3D EdgeMatch family (Block Chain, Adaptive  Block Match, Template Block Match, Cyclopean Recipe Coursing). [Cohen-Steiner et al. 2004]
 
@@ -872,6 +1691,24 @@ Related:
 | Stone Indices (`SI`) | Integer | list | Per-stone inventory-index used (parallels Placed Stones). |
 | Coverage (`Cv`) | Number | item | Fraction of Wall Envelope's projected area covered by placed stones (0-1). |
 | Remarks (`R`) | Text | list | Per-stone diagnostic notes + recipe-rule-violation flags +  stability-check results. |
+
+### Edge Gap (Fréchet)  (`EdgeGap`)
+
+- GUID: `E7C4A6F0-1D3B-4A2E-9F5C-8B7A6D5E4C3B`  |  icon: `EdgeMatchSolve.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/EdgeMatch3D/EdgeGapFrechetComponent.cs`
+- Algorithm: **Discrete Frechet distance (coupling measure)** - Eiter and Mannila, 'Computing discrete Frechet distance', TR CD-TR 94/64, TU Wien, 1994
+- Discrete Fréchet distance between two curves: the worst-case gap  along the best order-preserving (no-backtrack) traversal of both.  Unlike a mean/RMS residual it bounds the WORST local gap, and unlike  Hausdorff it respects traversal order and direction (a reversed or  folded match reads as far apart). Use it as the final check that two  matched rims mate within tolerance everywhere before emitting a cut.
+
+| in | type | access | description |
+|---|---|---|---|
+| Curve A (`A`) | Curve | item | First curve (e.g. a matched rim). |
+| Curve B (`B`) | Curve | item | Second curve (e.g. its mate, after alignment). |
+| Samples (`S`) | Integer | item | Arc-length resample count per curve for the discrete metric.  Higher = closer to the continuous Fréchet distance. Default 128. |
+| Max Gap (`Mg`) | Number | item | Optional tolerance (model units). <= 0 = report only (no gate);  when > 0, Within Tolerance is true iff the ordered gap <= this. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Ordered Gap (`Og`) | Number | item | Discrete Fréchet distance = worst-case order-respecting gap between  the two curves (model units). |
+| Within Tolerance (`Ok`) | Boolean | item | True when Max Gap <= 0 (no gate) or the ordered gap <= Max Gap. |
 
 ### EdgeMatch Options  (`EMOpts`)
 
@@ -1174,27 +2011,7 @@ Related:
 
 ## Fabricate
 
-### Fabrication Prep Report  (`FabPrep`)
-
-- GUID: `F2D07A04-1A2B-4C3D-9E4F-5A6B7C8D9E04`  |  icon: `StockpileManager.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/FabricationPrepReportComponent.cs`
-- Per-block weight (volume x density), centroid, and lift class  (hand <25 kg / two-person <50 / mechanical <2000 / crane) for the  crate + hoist plan. Assumes model units are metres. Default  density = 2700 kg/m3 (granite). Wire block meshes from Staggered  Block Decompose / Slab Cut.
-
-| in | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | Closed block meshes (e.g. from Staggered Block Decompose). |
-| Density (`D`) | Number | item | Stone density kg/m3 (default granite 2700). |
-| Ids (`Id`) | Text | list | Optional per-block ids (parallel to Blocks). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Weights (`W`) | Number | list | Per-block weight (kg). |
-| Volumes (`V`) | Number | list | Per-block volume (m^3). |
-| Centroids (`C`) | Point | list | Per-block centroid. |
-| Lift Class (`L`) | Text | list | Per-block lift class. |
-| Total Weight (`T`) | Number | item | Sum of block weights (kg). |
-| Report (`R`) | Text | item | Summary + per-class counts. |
-
-### Frahan Bench Monument Pack  (`MonPack`)
+### Bench Monument Pack  (`MonumentPack`)
 
 - GUID: `F7A16002-0001-4F2D-A0B0-7E60CADA17F2`  |  icon: `BinPack.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/MonumentPackingComponents.cs`
 - Algorithm: **24-orientation SO(3) sampling + greedy AABB packing** - Frahan-original
@@ -1216,42 +2033,206 @@ Related:
 | Unplaced Ids (`U`) | Text | list | Monuments that did not fit. |
 | Fill Ratio (`Fr`) | Number | item | TotalPlacedVolume / BenchAabbVolume. |
 
-### Frahan Monument Inventory  (`MonInv`)
+### Block Face Map  (`FaceMap`)
 
-- GUID: `F7A16001-0001-4F2D-A0B0-7E60CADA17F1`  |  icon: `StockpileManager.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/MonumentPackingComponents.cs`
-- Bundle Rhino meshes as a MonumentInventory consumable by  the Frahan Bench Monument Pack components. Each mesh becomes  one Monument; ids are optional and auto-generated when blank.
-
-| in | type | access | description |
-|---|---|---|---|
-| Meshes (`M`) | Mesh | list | One mesh per monument. |
-| Ids (`I`) | Text | list | Optional ids; auto-generated when blank. |
-| Density (kg/m^3) (`D`) | Number | item | Material density. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | MonumentInventory. |
-| Count (`N`) | Integer | item | Number of monuments. |
-| Total AABB Volume (m^3) (`V`) | Number | item | Sum of monument AABB volumes. |
-
-### Frahan Pack Monuments In Cell  (`MonInCell`)
-
-- GUID: `F7A16003-0001-4F2D-A0B0-7E60CADA17F3`  |  icon: `PackIntoBlock.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/MonumentPackingComponents.cs`
-- Algorithm: **24-orientation SO(3) sampling + greedy AABB packing** - Frahan-original
-- Pack a MonumentInventory inside ONE BlockCell. Useful when  you want to assign specific monuments to specific cells  rather than letting the bench-wide packer order them. Frahan-original method.
+- GUID: `D5F10056-ED9E-4ED9-A056-ED9EED9E0056`  |  icon: `DxfCutPlan.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/BlockFaceMapComponent.cs`
+- Algorithm: **Unfolded block face map** - Cross-unfold of the block faces; fracture traces via mesh-plane sections, saw passes mapped per face
+- Cross-unfold the six faces of a (world-aligned) block or bench box into one 2D shop-sheet  frame and map bed/flaw traces (mesh-plane sections) plus saw-pass positions onto every face.  Feed the outputs into DXF Cut Plan (Curves / Piece Ids / Fracture traces / Cut lines) for a  fabricator-readable layered DXF.
 
 | in | type | access | description |
 |---|---|---|---|
-| Block Graph (`Bg`) | Generic | item | BlockGraph (the cell is selected by index). |
-| Cell Index (`Ci`) | Integer | item | Index of the cell within Bg.Cells. |
-| Inventory (`Inv`) | Generic | item | MonumentInventory. |
-| Grid Stride (m) (`Gs`) | Number | item | Candidate-origin sweep step. |
+| Block (`B`) | Box | item | World-aligned block / bench box to unfold. |
+| Fractures (`F`) | Mesh | list | Bed / flaw / joint meshes to trace onto every face (mesh-plane section). |
+| Cut lines (`Cl`) | Line | list | Plan-view saw passes (vertical cuts), e.g. Fracture Block Pack > Saw passes. Mapped onto the  plan and onto each elevation they reach. |
+| Gap (`G`) | Number | item | Spacing between unfolded faces (model units). |
+| Bottom (`Bt`) | Boolean | item | Also emit the bottom face. |
+| Cut labels (`Cll`) | Text | list | Optional label per cut line, parallel to Cut lines (e.g. Q1../F1.. from Cut Stage Split).  Absent = sequential 1..N. |
 
 | out | type | access | description |
 |---|---|---|---|
-| Placed Boxes (`B`) | Box | list | Axis-aligned box per placement. |
-| Placed Ids (`I`) | Text | list | Monument ids placed. |
-| Orientation Index (`R`) | Integer | list | Rotation index per placement. |
-| Placed Count (`N`) | Integer | item | Total placements in this cell. |
+| Face outlines (`O`) | Curve | list | Closed rectangle outline per unfolded face. |
+| Face ids (`Id`) | Text | list | Face name per outline: PLAN, NORTH, SOUTH, EAST, WEST, BOTTOM. |
+| Fracture traces (`Ft`) | Curve | list | Fracture traces mapped into the unfolded sheet frame. |
+| Cut traces (`Ct`) | Line | list | Saw-pass traces: plan passes first (input order, so their sheet numbers match the saw  sequence), then the elevation views of each pass. |
+| Report (`Re`) | Text | item | Per-face summary. |
+| Trace labels (`Tl`) | Text | list | Label per cut trace, parallel to Cut traces. Plan traces carry their pass label; each  elevation view repeats the label of the pass it shows. |
+
+Related:
+- Frahan > Fabricate > DXF Cut Plan - Face outlines / ids / fracture traces / cut traces feed straight into the DXF export (FRACTURES + CUT_SEQUENCE layers).
+- Frahan > Block > Fracture Block Pack - Its Saw passes output is the Cut lines input here.
+- Frahan > Quarry > GPR Fracture Surfaces 3D - Its kriged bed meshes are the Fractures input.
+
+### Block Yield  (`BlockYield`)
+
+- GUID: `D5F10055-ED9E-4ED9-A055-ED9EED9E0055`  |  icon: `BlockYield.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/BlockYieldComponent.cs`
+- Algorithm: **Block-yield optimisation** - Waste-minimising rectangular cutting; size flexes within tolerance to tile the raw extent
+- Maximise usable-block yield sawing a raw quarry block into rectangular product blocks, and dodge internal  fractures. Feed the raw block, the cut frame (from Cut Orientation), a target product size, a size tolerance,  and optional fracture planes. Flexes the size + picks the axis assignment for least waste, then slides the  grid to fall between fractures. Outputs sound + flawed blocks and the sound yield.
+
+| in | type | access | description |
+|---|---|---|---|
+| Raw block (`B`) | Brep | item | The raw quarry block to saw. |
+| Cut frame (`F`) | Plane | item | Cut-grid orientation (from Cut Orientation). Default World XY. |
+| Target size (`S`) | Vector | item | Target product block size (x,y,z) in model units. |
+| Tolerance (`T`) | Number | item | Fractional size tolerance (+/-), e.g. 0.1 = +/-10%. |
+| Kerf (`K`) | Number | item | Saw kerf / cut width (model units). |
+| Fractures (`Fr`) | Plane | list | Optional fracture planes inside the block; blocks crossed by one are flawed. The grid dodges them. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`Bl`) | Brep | list | The sound (defect-free) cut blocks. |
+| Flawed (`Fl`) | Brep | list | Blocks straddled by a fracture (reject / down-grade). |
+| Count (`N`) | Integer | item | Number of sound blocks. |
+| Block size (`Sz`) | Vector | item | The optimised block size (x,y,z). |
+| Yield (`Y`) | Number | item | Geometric yield: usable volume / raw volume (0..1). |
+| Sound yield (`Sy`) | Number | item | Sound-block volume / raw volume (0..1); = Yield if no fractures. |
+| Report (`Re`) | Text | item | Per-axis cut plan + yield + fracture dodge. |
+
+Related:
+- Frahan > Fabricate > Cut Orientation - Supplies the fabric-aligned cut frame this fills with blocks.
+- Frahan > Quarry > In-Situ Block Size - Natural block-size distribution vs the sawn product size.
+- Frahan > Fabricate > DXF Cut Plan - Export the resulting sound-block cut profiles to CAM.
+
+### COMPAS Export  (`Compas`)
+
+- GUID: `D5F10054-ED9E-4ED9-A054-ED9EED9E0054`  |  icon: `CompasExport.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/CompasExportComponent.cs`
+- Algorithm: **COMPAS bridge** - Neutral JSON (blocks/frames/interfaces) + compas-side Python loader
+- Bridge a Frahan assembly to COMPAS (compas_assembly / compas_cra / compas_fab). Exports blocks (vertex/ face meshes) + placement/robot frames to a stable JSON plus a Python loader, so a user can run COMPAS's  own CRA solver or robot stack. Interop, not compete. Set Write = true to write the file.
+
+| in | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Geometry | list | Block geometry (mesh or brep) -- the voussoirs / stones. |
+| Ids (`Id`) | Text | list | Per-block id (parallel to Blocks). Auto block_001.. if absent. |
+| Frames (`F`) | Plane | list | Placement / robot frames (exported as compas Frames). |
+| Units (`U`) | Text | item | Units label (e.g. m, mm). m |
+| Loader (`L`) | Boolean | item | Also write the companion frahan_compas_loader.py next to the JSON. |
+| File Path (`Fp`) | Text | item | Output .json path. |
+| Write (`Wr`) | Boolean | item | Set true to write. False = dry run (counts + loader text only). |
+
+| out | type | access | description |
+|---|---|---|---|
+| File Path (`Fp`) | Text | item | Path written (empty on dry run / failure). |
+| Loader (`Py`) | Text | item | The COMPAS-side Python loader script. |
+| Blocks (`Nb`) | Integer | item | Blocks exported. |
+| Frames (`Nf`) | Integer | item | Frames exported. |
+| Report (`Re`) | Text | item | Export summary. |
+
+Related:
+- Frahan > Vault > Vault Shell CRA - Source of the blocks + stability model to hand to compas_cra.
+- Frahan > Fabricate > Planes To Robot Targets - Frames this exports as compas Frames for compas_fab.
+
+### Cut Orientation  (`CutOpt`)
+
+- GUID: `D5F10052-ED9E-4ED9-A052-ED9EED9E0052`  |  icon: `CutOrientation.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/CutOrientationOptimizerComponent.cs`
+- Algorithm: **Cut-orientation optimization** - Orthogonal saw grid vs joint fabric; maximise sum |cut.pole|
+- Optimise a rectangular saw-cut grid against the quarry joint fabric. Feed per-set Dip / Dip dir. Outputs  the three optimal cut planes (right-prism blocks by construction), which joint set each cut follows, and  the obliquity where the fabric is not orthogonal (the unavoidable oblique cut). Bench mode pins one cut to  the horizontal floor.
+
+| in | type | access | description |
+|---|---|---|---|
+| Dip (`D`) | Number | list | Per-set dip (deg). |
+| Dip dir (`Dd`) | Number | list | Per-set dip-direction (deg). |
+| Bench (`B`) | Boolean | item | Bench-constrained: one cut = horizontal floor, optimise the vertical grid azimuth. |
+| Center (`C`) | Point | item | Center for the preview cut rectangles. |
+| Extent (`E`) | Number | item | Half-size of the preview cut rectangles (model units). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cut planes (`P`) | Plane | list | The three optimal orthogonal cut planes. |
+| Cut dip (`Cd`) | Number | list | Per-cut dip (deg). |
+| Cut dip dir (`Cdd`) | Number | list | Per-cut dip-direction (deg). |
+| Follows set (`F`) | Integer | list | Joint set (1-based) each cut follows; 0 if none. |
+| Obliquity (`Ob`) | Number | list | Per-cut angle to the nearest joint (deg; 0 = along a joint). |
+| Max obliquity (`Mo`) | Number | item | The unavoidable oblique cut (deg). |
+| Fit (`Ft`) | Number | item | Fabric-fit score (0..1). |
+| Cut rectangles (`R`) | Curve | list | Preview rectangles in the three cut planes. |
+| Report (`Re`) | Text | item | Optimizer summary. |
+
+Related:
+- Frahan > Quarry > In-Situ Block Size - Right-prism fraction that this cut grid targets.
+- Frahan > Quarry > Discontinuity Sets (Cloud) - Upstream source of the joint-set Dip / Dip dir.
+- Frahan > Fabrication > Wire-Saw Feasibility - Check each optimised cut plane is wire-sawable.
+
+### Cut Stage Split  (`StageSplit`)
+
+- GUID: `D5F10057-ED9E-4ED9-A057-ED9EED9E0057`  |  icon: `DxfCutPlan.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/CutStageSplitComponent.cs`
+- Algorithm: **Two-stage cut allocation** - Hierarchical split of a guillotine pass grid into quarry (primary/gangsaw) and factory (secondary) passes
+- Split a bin's saw passes into QUARRY cuts (wide-spaced wire-saw passes that free transportable  gangsaw blocks) and FACTORY cuts (the gangsaw / block-cutter kerfs inside each primary block).  Every n-th grid pass is a quarry pass where n = floor(gangsaw dim / (product dim + kerf));  boundary passes are always quarry. Feed both stages + labels into DXF Cut Plan.
+
+| in | type | access | description |
+|---|---|---|---|
+| Cut lines (`Cl`) | Line | list | One bin's saw passes (e.g. Fracture Block Pack > Saw passes, one branch). X rips then Y  cross-cuts, as produced by the pack. |
+| Gangsaw block (`Gb`) | Vector | item | Max primary (gangsaw / transport) block L x W x H (m). |
+| Product size (`Pb`) | Vector | item | Final product block L x W x H (m) - the size the pass grid was built for. |
+| Kerf (`K`) | Number | item | Saw kerf (m), same value the pack used. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Quarry cuts (`Qc`) | Line | list | Wire-saw passes made at the quarry (free the primary blocks). |
+| Factory cuts (`Fc`) | Line | list | Gangsaw / block-cutter kerfs made at the factory. |
+| Quarry labels (`Ql`) | Text | list | Q1..Qn, parallel to Quarry cuts. |
+| Factory labels (`Fl`) | Text | list | F1..Fm, parallel to Factory cuts. |
+| Primary blocks (`N`) | Integer | item | Number of primary (gangsaw) modules the quarry passes define in plan. |
+| Report (`Re`) | Text | item | Per-axis module math + counts. |
+
+Related:
+- Frahan > Block > Fracture Block Pack - Its Saw passes output (one branch per bin) is the input here.
+- Frahan > Fabricate > DXF Cut Plan - Quarry + factory lines and Q/F labels feed its Cut lines / Cut labels inputs.
+- Frahan > Fabricate > Block Yield - Run it per primary block for the factory-stage yield of each gangsaw block.
+
+### DXF Cut Plan  (`DXFCut`)
+
+- GUID: `D5F10053-ED9E-4ED9-A053-ED9EED9E0053`  |  icon: `DxfCutPlan.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/DxfCutPlanExportComponent.cs`
+- Algorithm: **DXF cut-plan export** - Minimal AutoCAD R12 DXF (POLYLINE + LINE + TEXT + LAYER); the universal stone-CAM import
+- Export cut-profile curves to a CAM-readable DXF (one layer per piece + id label), the format every stone  CAM imports (Alphacam, DDX EasySTONE, Breton). Optionally flattens + shelf-nests into a 2D cut sheet and  adds a mason-readable cutting schedule (title + cut-list table + numbered saw passes). Set Write = true to write.
+
+| in | type | access | description |
+|---|---|---|---|
+| Curves (`C`) | Curve | list | Cut-profile / block-outline curves. |
+| Piece Ids (`Id`) | Text | list | Per-curve id (layer name). Auto piece_001.. if absent. |
+| Flatten nest (`Fn`) | Boolean | item | Project tilted profiles to their plane and shelf-nest into a 2D cut sheet. |
+| Gap (`G`) | Number | item | Gap between nested pieces (model units). |
+| Sheet width (`Sw`) | Number | item | Wrap the nest at this width (0 = single row). |
+| Text height (`Th`) | Number | item | Label height (0 = auto). |
+| File Path (`Fp`) | Text | item | Output .dxf path. |
+| Write (`Wr`) | Boolean | item | Set true to write the .dxf. False = dry run (layout + report only). |
+| Schedule (`Sc`) | Boolean | item | Add a mason cutting schedule (title + cut-list table + numbered saw passes). |
+| Cut lines (`Cl`) | Line | list | Ordered saw passes to draw + number on CUT_SEQUENCE (same frame as the profiles; best with Flatten nest = false). |
+| Sizes (`Sz`) | Vector | list | Per-piece L x W x H for the cut list (one for all, or one per piece). Absent = 2D size from the outline. |
+| Title (`Ti`) | Text | item | Sheet title for the schedule block. Stone cutting schedule |
+| Units (`U`) | Text | item | Units label for the schedule (m / mm). m |
+| Fracture traces (`Ft`) | Curve | list | Bed / flaw / joint traces to draw on a dedicated FRACTURES layer (orange), already in the sheet  frame - e.g. Block Face Map > Fracture traces. Best with Flatten nest = false. |
+| Cut labels (`Cll`) | Text | list | Optional label per cut line (e.g. Q1..Qn quarry / F1..Fm factory from Cut Stage Split).  Absent = sequential 1..N. |
+
+| out | type | access | description |
+|---|---|---|---|
+| File Path (`Fp`) | Text | item | Path written (empty on dry run / failure). |
+| Count (`N`) | Integer | item | Profiles written. |
+| Layout (`L`) | Curve | list | The laid-out (nested) profiles, for preview. |
+| Report (`Re`) | Text | item | Export summary. |
+
+Related:
+- Frahan > Fabricate > Cut Orientation - Its cut rectangles/profiles feed straight into this export.
+- Frahan > Fabricate > Block Yield - Its sound blocks + block size drive the cut list and saw passes.
+- Frahan > Masonry > Fabrication Schedule - Piece ids / CSV manifest to pair with the DXF.
+
+### Fabrication Prep Report  (`FabPrep`)
+
+- GUID: `F2D07A04-1A2B-4C3D-9E4F-5A6B7C8D9E04`  |  icon: `StockpileManager.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/FabricationPrepReportComponent.cs`
+- Per-block weight (volume x density), centroid, and lift class  (hand <25 kg / two-person <50 / mechanical <2000 / crane) for the  crate + hoist plan. Assumes model units are metres. Default  density = 2700 kg/m3 (granite). Wire block meshes from Staggered  Block Decompose / Slab Cut.
+
+| in | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | Closed block meshes (e.g. from Staggered Block Decompose). |
+| Density (`D`) | Number | item | Stone density kg/m3 (default granite 2700). |
+| Ids (`Id`) | Text | list | Optional per-block ids (parallel to Blocks). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Weights (`W`) | Number | list | Per-block weight (kg). |
+| Volumes (`V`) | Number | list | Per-block volume (m^3). |
+| Centroids (`C`) | Point | list | Per-block centroid. |
+| Lift Class (`L`) | Text | list | Per-block lift class. |
+| Total Weight (`T`) | Number | item | Sum of block weights (kg). |
+| Report (`R`) | Text | item | Summary + per-class counts. |
 
 ### G-code Parser  (`GCode`)
 
@@ -1292,6 +2273,43 @@ Related:
 | Spindle Speeds (`S`) | Number | list | Per-Plane spindle speed (RPM); parallels Planes list. |
 | Segment Indices (`Si`) | Integer | list | Per-Plane source segment index (so the user can trace each Plane  back to a CutPath.Segments entry). |
 | Remarks (`R`) | Text | list | Per-pipeline diagnostics: Plane count, arc-sample count, tool- axis quality flags. |
+
+### Monument Inventory  (`MonumentInv`)
+
+- GUID: `F7A16001-0001-4F2D-A0B0-7E60CADA17F1`  |  icon: `StockpileManager.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/MonumentPackingComponents.cs`
+- Bundle Rhino meshes as a MonumentInventory consumable by  the Frahan Bench Monument Pack components. Each mesh becomes  one Monument; ids are optional and auto-generated when blank.
+
+| in | type | access | description |
+|---|---|---|---|
+| Meshes (`M`) | Mesh | list | One mesh per monument. |
+| Ids (`I`) | Text | list | Optional ids; auto-generated when blank. |
+| Density (kg/m^3) (`D`) | Number | item | Material density. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Inventory (`Inv`) | Generic | item | MonumentInventory. |
+| Count (`N`) | Integer | item | Number of monuments. |
+| Total AABB Volume (m^3) (`V`) | Number | item | Sum of monument AABB volumes. |
+
+### Pack Monuments In Cell  (`PackInCell`)
+
+- GUID: `F7A16003-0001-4F2D-A0B0-7E60CADA17F3`  |  icon: `PackIntoBlock.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/MonumentPackingComponents.cs`
+- Algorithm: **24-orientation SO(3) sampling + greedy AABB packing** - Frahan-original
+- Pack a MonumentInventory inside ONE BlockCell. Useful when  you want to assign specific monuments to specific cells  rather than letting the bench-wide packer order them. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Block Graph (`Bg`) | Generic | item | BlockGraph (the cell is selected by index). |
+| Cell Index (`Ci`) | Integer | item | Index of the cell within Bg.Cells. |
+| Inventory (`Inv`) | Generic | item | MonumentInventory. |
+| Grid Stride (m) (`Gs`) | Number | item | Candidate-origin sweep step. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed Boxes (`B`) | Box | list | Axis-aligned box per placement. |
+| Placed Ids (`I`) | Text | list | Monument ids placed. |
+| Orientation Index (`R`) | Integer | list | Rotation index per placement. |
+| Placed Count (`N`) | Integer | item | Total placements in this cell. |
 
 ### Planes to KUKAprc Commands  (`Pl2KUKAprc`)
 
@@ -1382,6 +2400,38 @@ Related:
 | File Path (`Fp`) | Text | item | Path written (empty on dry run / failure). |
 | Piece Count (`N`) | Integer | item | Number of pieces exported. |
 | Report (`R`) | Text | item | Export summary. |
+
+### Wire-Saw Feasibility  (`WireSaw?`)
+
+- GUID: `D5F10051-ED9E-4ED9-A051-ED9EED9E0051`  |  icon: `WireSawFeasibility.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Fabrication/WireSawFeasibilityComponent.cs`
+- Algorithm: **Wire-saw feasibility** - Ruled/developable surface test + kerf offset (JCDE 2024 robotic diamond-wire cutting)
+- Pre-CAM check: is a target cut surface wire-sawable? A tensioned wire is straight, so the cut must be a  RULED surface; a DEVELOPABLE ruled surface is a clean single pass. Reports the verdict, the wire positions,  ruling twist, and the kerf-compensated toolpath surface (Delta=(D+delta)/2). Feed one surface / Brep face.
+
+| in | type | access | description |
+|---|---|---|---|
+| Surface (`S`) | Surface | item | Target cut surface (or a single Brep face). |
+| Wire dia (`D`) | Number | item | Wire diameter (model units). |
+| Vibration (`V`) | Number | item | Vibration / positioning error (model units). |
+| Tolerance (`T`) | Number | item | Ruling-straightness tolerance as a fraction of the surface diagonal. |
+| Samples (`N`) | Integer | item | Grid samples per direction. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Wire-sawable (`W`) | Boolean | item | Planar or ruled -> a straight wire can sweep it. |
+| Ruled (`R`) | Boolean | item | Surface is ruled (straight lines in one direction). |
+| Developable (`Dv`) | Boolean | item | Gaussian curvature ~ 0 (clean single pass). |
+| Planar (`Pl`) | Boolean | item | Surface is planar (trivial case). |
+| Max Gaussian (`K`) | Number | item | Max |Gaussian curvature| x diagonal^2 (0 = developable). |
+| Ruling dev (`Rd`) | Number | item | Max ruling deviation from straight (model units). |
+| Twist (`Tw`) | Number | item | Max twist between consecutive rulings (deg). |
+| Kerf (`Ko`) | Number | item | Kerf offset Delta = (D+V)/2 (model units). |
+| Rulings (`Ru`) | Line | list | Successive wire positions (rulings). |
+| Toolpath (`Os`) | Surface | item | Cut surface offset by the kerf (toolpath surface). |
+| Report (`Re`) | Text | item | Feasibility verdict + metrics. |
+
+Related:
+- Frahan > Fabrication > Wire Saw Toolpath - Feasibility gate upstream of toolpath generation.
+- Frahan > Masonry > Trim Shell by Curves - Check the trimmed shell's cut faces are wire-sawable.
 
 ### Wire-Saw Toolpath  (`WireSaw`)
 
@@ -1733,7 +2783,7 @@ Related:
 | Displaced Count (`Dc`) | Integer | item | Total cut-region vertices displaced (across all fragments). |
 | Report (`Rp`) | Text | item | Per-fragment displacement count. |
 
-### Frahan Fragment Shatter  (`Shatter`)
+### Fragment Shatter  (`Shatter`)
 
 - GUID: `F2D00502-2026-4522-B0B0-1ABE15A0CAFE`  |  icon: `SyntheticBlock.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Kintsugi/FragmentShatterComponent.cs`
 - Algorithm: **Voronoi shatter for fracture test-beds** - Frahan-original: deterministic seed -> pairwise bisector planes -> 
@@ -1755,7 +2805,7 @@ Related:
 | Drop Count (`Dc`) | Integer | item | Number of cells dropped under Min Fragment Volume. |
 | Report (`Rp`) | Text | item | Per-cell volume / face / vertex / naked-edge counts. |
 
-### Frahan Kintsugi  (`Kintsugi`)
+### Kintsugi  (`Kintsugi`)
 
 - GUID: `F2D00501-2026-4522-B0B0-1ABE15A0CAFE`  |  icon: `KintsugiAssemble.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/KintsugiAssemblyComponent.cs`
 - Algorithm: **Auto-agglomerative outer loop** - Clean-room translation of PuzzleFusion++ Section 3 outer schedule
@@ -1888,28 +2938,7 @@ Related:
 - Frahan > Quarry > Joint Set - Joint-set parameters drive CVT seed distribution.
 - Frahan > 2D > Pack 2D Trencadis Catalog - CVD-Lloyd seeds are also used for Trencadis catalog placement.
 
-### Download Frahan Data  (`GetData`)
-
-- GUID: `F2D05A08-1A2B-4C3D-9E4F-5A6B7C8D9E08`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/DownloadFrahanDataComponent.cs`
-- Algorithm: **On-demand data fetch + SHA-256 verify** - Frahan-original distribution helper
-- Download the optional large plugin data (Kintsugi Mode=Port weights +  torch/CUDA runtime, and/or examples) from a release manifest into the  folder beside the .gha, with SHA-256 verification. Runs on a background  thread; the canvas stays responsive. Files already present and verified  are skipped.
-
-| in | type | access | description |
-|---|---|---|---|
-| Manifest URL (`U`) | Text | item | URL of the data manifest (plain text; see component help). Usually a  manifest.txt attached to the GitHub Release. |
-| What (`W`) | Integer | item | 0 = Port (kintsugi.bin + torch/CUDA runtime), 1 = Examples, 2 = All. Default 0. |
-| Run (`R`) | Boolean | item | Set true to download. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Port Ready (`Ok`) | Boolean | item | True if kintsugi.bin is present beside the .gha (Mode=Port can run). |
-| Installed (`I`) | Text | list | Files installed / skipped this run. |
-| Report (`R`) | Text | item | Status summary. |
-
-Related:
-- Frahan > Kintsugi > Frahan Kintsugi - Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.
-
-### Frahan Density-Watershed Zones  (`BCOWatershed`)
+### Density-Watershed Zones  (`BCOWatershed`)
 
 - GUID: `F2D0BC12-1234-4F2D-A0B0-7E60CADA15B2`  |  icon: `Voronoi.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptInspectorComponents.cs`
 - Algorithm: **Density-watershed partition (BlockCutOpt I5)** - Frahan-original
@@ -1932,7 +2961,28 @@ Related:
 - Frahan > Quarry > BlockCutOpt Solve - Density-watershed sub-zones feed the production solver's I10 sub-division pass.
 - Frahan > Mesh > Bench From Mesh - Bench mesh source for the tested area whose density is partitioned here.
 
-### Frahan Fisher-Robust BCO  (`BCORobust`)
+### Download Frahan Data  (`GetData`)
+
+- GUID: `F2D05A08-1A2B-4C3D-9E4F-5A6B7C8D9E08`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/DownloadFrahanDataComponent.cs`
+- Algorithm: **On-demand data fetch + SHA-256 verify** - Frahan-original distribution helper
+- Download the optional large plugin data (Kintsugi Mode=Port weights +  torch/CUDA runtime, and/or examples) from a release manifest into the  folder beside the .gha, with SHA-256 verification. Runs on a background  thread; the canvas stays responsive. Files already present and verified  are skipped.
+
+| in | type | access | description |
+|---|---|---|---|
+| Manifest URL (`U`) | Text | item | URL of the data manifest (plain text; see component help). Usually a  manifest.txt attached to the GitHub Release. |
+| What (`W`) | Integer | item | 0 = Port (kintsugi.bin + torch/CUDA runtime), 1 = Examples, 2 = All. Default 0. |
+| Run (`R`) | Boolean | item | Set true to download. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Port Ready (`Ok`) | Boolean | item | True if kintsugi.bin is present beside the .gha (Mode=Port can run). |
+| Installed (`I`) | Text | list | Files installed / skipped this run. |
+| Report (`R`) | Text | item | Status summary. |
+
+Related:
+- Frahan > Kintsugi > Frahan Kintsugi - Mode=Port needs kintsugi.bin + the torch/CUDA runtime this fetches.
+
+### Fisher-Robust BCO  (`BCORobust`)
 
 - GUID: `F2D0BC11-1234-4F2D-A0B0-7E60CADA15B1`  |  icon: `BlockCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptInspectorComponents.cs`
 - Algorithm: **Fisher-distribution joint-scatter robustness sampling** - Azarafza et al. (2016) granite block-cut + Fisher-distribution joint scatter
@@ -1968,7 +3018,7 @@ Related:
 - Frahan > Quarry > BlockCutOpt Solve - Production single-best-fit solver; Fisher-robust extension reports stability of that optimum under fracture-orientation noise.
 - Frahan > Quarry > Joint Set - Source of fracture-orientation distribution used here.
 
-### Frahan Mixed-Size Block Pack  (`BCOMixedPack`)
+### Mixed-Size Block Pack  (`BCOMixedPack`)
 
 - GUID: `F2D0BC17-1234-4F2D-A0B0-7E60CADA15B7`  |  icon: `BinPack.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptInspectorComponents.cs`
 - Algorithm: **Deepest-left-bottom-fill (DLBF) mixed-size packing** - Chehrazad, R., Roose, D., Wauters, T. (2025). A fast and scalable deepest-left-bottom-fill algorithm. Int. J. Production Research 63:6606-6629
@@ -1998,7 +3048,7 @@ Related:
 - Frahan > Masonry > Best Fit Pack - Production rubble packer for varied-height inputs.
 - Frahan > Quarry > BlockCutOpt Solve - Upstream source of the block inventory this packer consumes.
 
-### Frahan Pareto Front Inspector  (`BCOPareto`)
+### Pareto Front Inspector  (`BCOPareto`)
 
 - GUID: `F2D0BC10-1234-4F2D-A0B0-7E60CADA15B0`  |  icon: `YieldEstimator.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptInspectorComponents.cs`
 - Algorithm: **Pareto multi-objective front (BCSdbBV cost axis)** - Jalalian (2023) BCSdbBV cost objective = cutting-surface area / block value
@@ -2038,7 +3088,7 @@ Related:
 - Frahan > Quarry > BlockCutOpt Solve - Production solver; this inspector visualises the Pareto front of a solver run.
 - Frahan > Quarry > BlockCutOpt Omni Solve - Multi-objective production solver.
 
-### Frahan VTU Export  (`VtuOut`)
+### VTU Export  (`VtuExport`)
 
 - GUID: `F2D0BC13-1234-4F2D-A0B0-7E60CADA15B3`  |  icon: `GcodeExport.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptInspectorComponents.cs`
 - Run BlockCutOpt then dump the optimal cutting grid to a  ParaView .vtu file. Two cell sets: cell_status=1 (non- intersected, ready-to-quarry), cell_status=0 (intersected,  discarded). Matches BlockCutOpt 2020 Figures 3 and 6.
@@ -2065,6 +3115,988 @@ Related:
 Related:
 - Frahan > Quarry > BlockCutOpt Solve - Source of the optimised cutting grid being exported to VTU for external visualisation.
 
+
+## Masonry
+
+### Ashlar Pack  (`AshlarPack`)
+
+- GUID: `F1A2B3C4-D5E6-4789-9ABC-DEF012345678`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AshlarPackComponent.cs`
+- Algorithm: **Ashlar coursed wall layout** - Frahan-original 3D grid stacking with running bond
+- Lays convex Slabs into a coursed-ashlar wall (running bond).  Emits a MasonryAssembly with bottom-row blocks fixed and an  AshlarPackResult carrying coverage / leftovers / notes.
+
+| in | type | access | description |
+|---|---|---|---|
+| Wall Width (`W`) | Number | item | Wall length along +X (units of the active Rhino document,  typically meters). Must be > 0. Recommended: wire a Wall  Frame instead and leave this at default. |
+| Wall Height (`H`) | Number | item | Wall height along +Z. Must be > 0. Default 1.0. |
+| Wall Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. Default 0.20 (typical  single-leaf masonry). |
+| Meshes (`M`) | Mesh | list | Block inventory as Rhino meshes (e.g. from Quarry DFN, Slab  Cut By Fractures, or hand-authored). Each mesh must be convex  with at least 4 vertices and 4 faces. The packer auto-converts  to its internal Slab DTO. |
+| Course Mode (`M`) | Integer | item | Layout strategy. 0 = CoursedAshlar (uniform course height;  one block size). 1 = CoursedRubble (multi-bin: each course  uses one block-height bin; mixes block sizes across courses). |
+| Target Course Height (`Ch`) | Number | item | Course height for CoursedAshlar. For CoursedRubble it seeds  the first bin height. Should match the Z-extent of your  blocks within Height Tolerance. Default 0.15. |
+| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses (units of the document).  >= 0. Default 0.001 (1 mm typical lime-mortar gap). |
+| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between adjacent blocks in a course.  >= 0. Default 0.001 (1 mm). |
+| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, as a fraction of the  average block width. In [0, 1]. Default 0.5 (half-bond). |
+| Density (`D`) | Number | item | Material density in kg/m³ (or any consistent mass-per-volume  unit). > 0. Default 2400 (typical limestone). Used by the  downstream stability solver to compute self-weight. |
+| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering. >= 0. Default  0.05 (5 cm — accommodates rough-cut quarry blocks). |
+| Wall Frame (`Wf`) | Generic | item | Optional WallFrame DTO from Wall Frame component. When wired,  this overrides the primitive Wall Width / Height / Thickness  inputs above. Recommended for clean canvas wiring. |
+| Options (`Op`) | Generic | item | Optional AshlarPackOptions DTO from Ashlar Pack Options  component. When wired, overrides Course Mode / Course Height  / joints / stagger / density / tolerance. Recommended for  clean canvas wiring. |
+| Start Plane (`Sp`) | Plane | item | Optional start plane. Engine stays in world XY (correct for  the stability solver, which assumes gravity = -Z). The  component emits a Display Transform that maps world XY into  this plane; wire it into AssemblyPreview / mesh Transform  to re-orient the wall visually. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly with bottom-course blocks fixed. Wire into  Masonry Stability (RBE). |
+| Result (`R`) | Generic | item | AshlarPackResult carrying coverage / leftovers / notes / placed  blocks. Wire into Pack Diagnostics (Stage 3). |
+| Display Transform (`T`) | Transform | item | World-XY → Start Plane transform. Identity when Start Plane  is not wired. Wire into mesh / preview transforms. |
+
+### Ashlar Pack Options  (`AshOpts`)
+
+- GUID: `B3C4D5E6-F7A8-49AB-CDEF-012345678901`  |  icon: `BondPattern.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/AshlarPackOptionsComponent.cs`
+- Bundles ashlar packer knobs (course mode, joints, stagger,  density, height tolerance) into an AshlarPackOptions DTO.  Wire into Ashlar Pack's optional Options input.
+
+| in | type | access | description |
+|---|---|---|---|
+| Course Mode (`M`) | Integer | item | Layout strategy. 0 = CoursedAshlar (single block-height bin,  uniform courses). 1 = CoursedRubble (multi-bin, mixes block  sizes across courses). Default 0. |
+| Course Height (`Ch`) | Number | item | Target course height in document units (typically meters).  Must match the Z-extent of your blocks within Height Tolerance.  Default 0.15. |
+| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses, in document units. >= 0.  Default 0.001 (1 mm typical). |
+| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between adjacent blocks, in document  units. >= 0. Default 0.001. |
+| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, as a fraction of the  average block width. In [0, 1]. Default 0.5 (half-bond,  the standard). |
+| Density (`D`) | Number | item | Material density in kg/m³ (or consistent mass-per-volume  unit). > 0. Default 2400 (typical limestone). Used by the  downstream stability solver. |
+| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering and rubble  binning, in document units. >= 0. Default 0.05 (5 cm —  accommodates rough-cut quarry blocks). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Options (`O`) | Generic | item | AshlarPackOptions DTO bundling all algorithmic knobs. Wire  into Ashlar Pack's Options input — when wired, it overrides  the equivalent primitive inputs on the packer. |
+
+### Assembly Preview  (`AsmPrev`)
+
+- GUID: `12345678-9ABC-DEF0-1234-56789ABCDEF0`  |  icon: `AssemblyState.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/AssemblyPreviewComponent.cs`
+- Visualizes a MasonryAssembly. Outputs one Mesh per block  (separated into free + fixed lists), the IDs of each, and  per-interface contact polylines + centroids + normals for  debugging.
+
+| in | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly DTO (from Masonry Assembly or Ashlar Pack). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Free Meshes (`Mf`) | Mesh | list | Block meshes for blocks that are NOT fixed by boundary conditions. |
+| Fixed Meshes (`Mfix`) | Mesh | list | Block meshes for blocks that ARE fixed (grounded). |
+| Free Block Ids (`If`) | Text | list | IDs of the free blocks (parallel to Free Meshes). |
+| Fixed Block Ids (`Ifix`) | Text | list | IDs of the fixed blocks (parallel to Fixed Meshes). |
+| Contact Polylines (`C`) | Curve | list | One closed polyline per MasonryInterface — the contact  polygon as drawn on the canvas. |
+| Contact Centroids (`Cc`) | Point | list | Centroid of each contact polygon. Use to anchor labels  or to draw normals. |
+| Contact Normals (`Cn`) | Vector | list | Surface normal at each contact, pointing from block A to  block B (Frahan convention). |
+| Contact Pairs (`Cp`) | Text | list | Per-interface 'aId -> bId' string for hover-debugging. |
+
+### Auto Interfaces  (`AutoIf`)
+
+- GUID: `CADBECFD-AEBF-4012-3456-789012345678`  |  icon: `ContactDetector.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AutoInterfacesComponent.cs`
+- Algorithm: **Interface auto-detector** - Frahan-original proximity-based pairwise contact detection
+- Detects face-face contacts between a list of placed Slabs  and emits the corresponding MasonryInterfaces. Wire output  into Masonry Assembly's Interfaces input. NOTE: generated  walls carry exact joints via the Assembly output — detection  is only needed for imported geometry; for scan-derived meshes  use Robust Auto Interfaces.
+
+| in | type | access | description |
+|---|---|---|---|
+| Meshes (`M`) | Mesh | list | Block meshes in their final placed positions. Standard Rhino  mesh wires; this component finds face-face contacts between them. |
+| Block Ids (`Ids`) | Text | list | One ID per slab in the same order. Must match the IDs used  to construct MasonryBlocks. |
+| Distance Tolerance (`Dtol`) | Number | item | Max distance between coplanar faces (>= 0). |
+| Angle Tolerance Deg (`Atol`) | Number | item | Max angle between antiparallel face normals, in degrees (>= 0, < 90). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Interfaces (`I`) | Generic | list | Detected MasonryInterfaces. Wire into Masonry Assembly. |
+
+Related:
+- Frahan > Masonry > Robust Auto Interfaces - Vertex-proximity detection for scan-derived meshes (slight gaps, non-planar contacts); use it when this polygon-based detector misses contacts.
+
+### Best Fit Pack  (`BestFit`)
+
+- GUID: `01234567-89AB-CDEF-0123-456789ABCDEF`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BestFitPackComponent.cs`
+- Algorithm: **Best-fit rubble inventory placement** - Gramazio Kohler Eichenhofer 2017 NCCR Digital Fabrication
+- Inventory-aware ashlar packing. For each placement slot,  scores every remaining stone by width / depth / height /  aspect-ratio fit and picks the highest-scoring candidate.  Companion to Ashlar Pack (which uses first-fit). Recommended  for heterogeneous quarry inventories where stone sizes vary. [Gramazio et al. 2017]
+
+| in | type | access | description |
+|---|---|---|---|
+| Wall Width (`W`) | Number | item | Wall length along +X. Must be > 0. Recommended: wire a  Wall Frame instead. |
+| Wall Height (`H`) | Number | item | Wall height along +Z. Must be > 0. |
+| Wall Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. |
+| Inventory (`I`) | Mesh | list | Block inventory as Rhino meshes. Each mesh becomes a  candidate stone for best-fit selection. |
+| Course Height (`Ch`) | Number | item | Target course height. Must match the Z-extent of your  blocks within Height Tolerance. Default 0.15. |
+| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses. Default 0.001. |
+| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between blocks. Default 0.001. |
+| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, fraction of average  block width. Default 0.5. |
+| Density (`D`) | Number | item | Material density (kg/m³). Default 2400. |
+| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering. Default 0.05. |
+| Wall Frame (`Wf`) | Generic | item | Optional WallFrame DTO. Overrides primitive Wall W/H/T. |
+| Options (`Op`) | Generic | item | Optional AshlarPackOptions DTO. Overrides primitive  algorithmic inputs. |
+| Start Plane (`Sp`) | Plane | item | Optional start plane. Engine stays in world XY (correct for  the stability solver). Component emits a Display Transform  that maps world XY into this plane for visual re-orientation. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly with bottom-course blocks fixed. |
+| Result (`R`) | Generic | item | AshlarPackResult — coverage / leftovers / notes / placed blocks. |
+| Display Transform (`T`) | Transform | item | World-XY → Start Plane transform. Identity when unset. |
+
+### Block Build Order  (`BuildOrd`)
+
+- GUID: `3456789A-BCDE-F012-3456-789ABCDEF012`  |  icon: `AssemblySolver.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockBuildOrderComponent.cs`
+- Algorithm: **Support-DAG topological install order** - Kim et al. 2024, ASME IDETC/CIE DETC2024-142563 Polygonal masonry install-order DAG
+- Computes a physically valid build order for a masonry  assembly. A block is placed only after every block it  rests on is already placed. Layer = course number  (longest support path from ground). [Kim et al. 2024]
+
+| in | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly DTO. |
+| Up Vector (`Up`) | Vector | item | Direction the courses stack along. Default world Z. |
+| Up Tolerance Deg (`Tol`) | Number | item | An interface counts as a bed joint when its normal is  within this many degrees of the up axis. Head joints /  vertical contacts beyond this tolerance contribute no  support constraint. Default 30°. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Ordered Block Ids (`Id`) | Text | list | Block ids in build order (lowest course first). |
+| Ordered Meshes (`M`) | Mesh | list | Block meshes in build order, parallel to Ordered Block Ids. |
+| Order Index (`i`) | Integer | list | 0-based placement index per block, parallel to Ordered  Block Ids. Equals the list index — exposed for downstream  components that rebuild the order. |
+| Layer (`L`) | Integer | list | Course number (longest support path). 0 = ground course.  Useful for colour-by-course visualisation. |
+
+### Block Graph Coloring  (`BlockColor`)
+
+- GUID: `F2D000B0-CADC-4F2D-A0B0-7E60CADA15A0`  |  icon: `BeamConfig.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockGraphColoringComponent.cs`
+- Algorithm: **Welsh-Powell graph coloring** - Welsh and Powell 1967, Computer Journal 10(1):85-86
+- 4-colours the contact graph of a MasonryAssembly: no two  blocks sharing an interface get the same colour. Output  is one integer per block (0-3 typically; up to 7 for  non-planar topologies). Wire into native colour-mapping  to drive visualization or material assignment. [Welsh & Powell 1967]
+
+| in | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly with blocks + interfaces. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Block Ids (`Id`) | Text | list | Block identifiers, in iteration order. |
+| Colour (`C`) | Integer | list | Per-block colour index (0-based). Same length and order as  the Block Ids output. |
+| Colours Used (`N`) | Integer | item | Total number of distinct colours used. Should be <= 4 for  planar contact graphs (4-Colour Theorem). |
+
+### Block Ground Transforms  (`BlkXform`)
+
+- GUID: `23456789-ABCD-EF01-2345-6789ABCDEF01`  |  icon: `RigidTransform.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockGroundTransformsComponent.cs`
+- Algorithm: **Closed-form absolute orientation (Horn QAO)** - Horn 1987, Closed-form solution of absolute orientation using unit quaternions, JOSA A 4(4):629-642
+- Recovers the rigid transform per placed block. Wire  Source Meshes (canonical) and Placed Meshes (post-  assembly) for vertex-paired Horn QAO recovery, OR wire  Existing Transforms for direct pass-through. Output  transforms are expressed in the Ground Plane's frame  (default: world XY). Implements Horn QAO (Horn 1987).
+
+| in | type | access | description |
+|---|---|---|---|
+| Placed Meshes (`P`) | Mesh | list | Meshes after assembly (one per block). The recovered  transform takes the matching Source Mesh to this pose. |
+| Source Meshes (`S`) | Mesh | list | Canonical / pre-placement meshes (one per block, parallel  to Placed). Required when Existing Transforms is empty.  Vertex count and order must match the placed mesh. |
+| Existing Transforms (`Tx`) | Transform | list | Optional pre-known transforms (parallel to Placed). When  supplied at index i, this transform is passed through  verbatim and Horn QAO is skipped for that block. |
+| Ground Plane (`G`) | Plane | item | Reference frame. Output transforms are re-expressed in  this plane's local basis. Default: world XY. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Transforms (`T`) | Transform | list | Per-block rigid transform (canonical → placed) in the  ground-plane frame. |
+| Origins (`O`) | Point | list | Where each block's local origin lands. Useful for  anchoring labels on the canvas. |
+| RMS (`E`) | Number | list | Per-block Horn QAO residual (root-mean-square of  vertex-pair distances after fit). 0.0 for pass-through. |
+| Status (`St`) | Text | list | 'passthrough' / 'kabsch (V=…)' / 'failed: …' per block. |
+
+### Block Pack (Tree)  (`BlockPackTree`)
+
+- GUID: `C2D3E4F5-3001-4F5E-A6B7-C8D9E0F12345`  |  icon: `TreePack.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Packing/BlockPackTreeComponent.cs`
+- Algorithm: **Tree-forest guillotine pack** - Kim 2025 Computation 13:211
+- Pack sculpture/element cuboids into stone-block containers  with axis-aligned guillotine cuts. Frahan port of Kim 2025  (Computation 13:211, CC BY 4.0). Picks the cheapest subset  of containers that fits all elements; falls back to highest  packed-value when full packing is infeasible. Three  extensions beyond the paper: deterministic seed, saw kerf  width, and Forbidden Boxes per container.
+
+| in | type | access | description |
+|---|---|---|---|
+| Elements (`E`) | Box | list | Element AABBs (sculpture / final-piece bounding boxes).  Only the box dimensions are used for the fit test; the  Box.Plane defines the element's source pose. |
+| Element Values (`Pe`) | Number | list | Per-element value (e.g. piece price). Must match the  element count. |
+| Containers (`C`) | Box | list | Container AABBs (stone-block bounding boxes). |
+| Container Prices (`Pc`) | Number | list | Per-container price (e.g. stone-block material cost).  Must match the container count. |
+| Rotation Mode (`Rot`) | Integer | item | 0 = None (identity only), 1 = OneAxis (vein-aligned),  2 = ThreeAxis (six 90° rotations). |
+| Forests (`F`) | Integer | item | Number of independent randomised forests to grow. Score  plateaus by f ≈ 50–1000 on small instances; large jobs  may need 10⁴–10⁶ forests (see paper §4). |
+| Seed (`S`) | Integer | item | Master seed (Frahan extension beyond Kim 2025). Forest k  uses (seed + k) internally; setting the same seed gives  the same result. Default 0 is deterministic. |
+| Kerf Width (`K`) | Number | item | Saw kerf width in model units (Frahan extension). Each  axis-aligned cut consumes this much material along its  direction. Real values: 5–10 mm for diamond wire saws,  1–3 mm for thin blades. Default 0. |
+| Forbidden Boxes (`X`) | Box | list | Optional flat list of forbidden Box regions inside any  container (Frahan extension; closes Kim §8.2 gap on  fracture-aware containers). Elements that overlap a  forbidden region in their target container are rejected.  A forbidden box outside all containers has no effect. |
+| Cut Surface Weight (`Cw`) | Number | item | K2 / Jalalian I11 (BCSdbBV) extension. Score subtracts  weight × Σ(internal-face area) across placements. Default 0  preserves the original Kim 2025 score. |
+| Max Parallelism (`Mp`) | Integer | item | K2 parallel-forest extension. 0 = auto (Environment. ProcessorCount). 1 forces serial. Parallel results are  bitwise identical to serial because each forest's RNG is  seeded independently. |
+| Memory Budget MB (`Mb`) | Number | item | K2 memory-cap extension. When > 0, Forests is  automatically reduced so f × ~1.4 KB × element-count ≤ budget.  0 = unlimited. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed Boxes (`Pb`) | Box | list | Placed element AABBs in world-frame coordinates. |
+| Transforms (`Xf`) | Transform | list | World-frame transform per placed element (apply to the  source element Box to recover the placed pose, including  any rotation). |
+| Placed Element Ids (`Ei`) | Integer | list | Index into the input element list for each placement, in  placement order. Compare against the input element count  to find unpacked elements. |
+| Placed Container Ids (`Ci`) | Integer | list | Index into the input container list for each placement. |
+| Used Containers (`Uc`) | Integer | list | Sorted unique indices of containers that hold at least one  placed element. |
+| Score (`Sc`) | Number | item | Score of the winning forest (Kim 2025 §2.4): sum of packed  element values, plus 1/(1+containerPrice) bonus when all  elements fit. |
+| All Packed (`All`) | Boolean | item | True iff every input element landed in a container. |
+| Best Forest (`Bf`) | Integer | item | Index of the winning forest (0 ≤ index < Forests). |
+| Report (`R`) | Text | item | Human-readable summary. |
+
+### Block Size Distribution  (`BlkSize`)
+
+- GUID: `EF012345-6789-ABCD-EF01-23456789ABCD`  |  icon: `YieldEstimator.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockSizeDistributionComponent.cs`
+- Algorithm: **Descriptive statistics + Tukey-fence outlier rule** - Tukey 1977, Exploratory Data Analysis, Addison-Wesley
+- Diagnostic stats over a list of slab volumes. Use to QA  quarry decomposition: high CV (> 1) signals the joint-set  parameters need retuning. Outlier fence per Tukey 1977 (EDA).
+
+| in | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Generic | list | Slab DTOs. |
+| Bins (`B`) | Integer | item | Histogram bin count. 0 = ceil(sqrt(N)). Default 0. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Count (`N`) | Integer | item | Total piece count. |
+| Total Volume (`V`) | Number | item | Sum of all volumes. |
+| Min (`Min`) | Number | item |  |
+| Max (`Max`) | Number | item |  |
+| Mean (`Mean`) | Number | item |  |
+| Median (`P50`) | Number | item |  |
+| StdDev (`SD`) | Number | item |  |
+| CV (`CV`) | Number | item | Coefficient of variation (StdDev/Mean). |
+| Percentiles (`P`) | Number | list | [P10, P25, P50, P75, P90]. |
+| Outlier Indices (`Out`) | Integer | list | Indices outside the Tukey fence (Q1−1.5·IQR, Q3+1.5·IQR). |
+| Bin Counts (`Hist`) | Integer | list | Histogram counts (length = Bins). |
+| Bin Width (`Bw`) | Number | item | Width of each histogram bin. |
+| Report (`R`) | Text | item | One-line summary. |
+
+### Build Sequence JSON  (`BuildJson`)
+
+- GUID: `6789ABCD-EF01-2345-6789-ABCDEF012345`  |  icon: `GcodeExport.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildSequenceJsonComponent.cs`
+- Encodes the masonry build sequence as a JSON string.  Wire Block Ids, Place Planes (or Place Transforms via  Pick Place Frames), and Layers in matching list order.  Output is plain text — pipe to a file-writing component  if you need disk persistence.
+
+| in | type | access | description |
+|---|---|---|---|
+| Block Ids (`Id`) | Text | list | Per-block identifier. Required. |
+| Place Planes (`Pl`) | Plane | list | Per-block placement plane (parallel to Block Ids).  Required. |
+| Layers (`L`) | Integer | list | Per-block course number. Optional; if absent, all  layers are reported as 0. |
+| Pretty (`P`) | Boolean | item | Indent the JSON for human reading. Default true. Set  false for compact single-line output. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Json (`J`) | Text | item | JSON text encoding the build sequence (schema 1.0). |
+
+### Build Step Preview  (`BuildStep`)
+
+- GUID: `56789ABC-DEF0-1234-5678-9ABCDEF01234`  |  icon: `AssemblyState.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildStepPreviewComponent.cs`
+- Slider-driven animation of a masonry build sequence. Wire  the ordered meshes from Block Build Order and a Step  integer slider. Returns Built (0..step), Pending  (step..N), and Current (mesh at step).
+
+| in | type | access | description |
+|---|---|---|---|
+| Ordered Meshes (`M`) | Mesh | list | Block meshes in build order. Pipe in the Ordered Meshes  output from Block Build Order. |
+| Step (`S`) | Integer | item | Current step. 0 = nothing built yet; N = everything  built. Values outside [0, N] are clamped. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Built (`Mb`) | Mesh | list | Meshes placed at or before Step (indices 0..step-1). |
+| Pending (`Mp`) | Mesh | list | Meshes still to place (indices step..N-1). |
+| Current (`Mc`) | Mesh | item | The mesh placed at this step (index step-1). Empty when  Step == 0 (nothing built yet). |
+| Total (`N`) | Integer | item | Total mesh count, for sizing the slider. |
+
+### Build-Order Stability Stream  (`StabStream`)
+
+- GUID: `F2D000B3-CADC-4F2D-A0B3-7E60CADA15A0`  |  icon: `EquilibriumRBE.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildOrderStabilityStreamComponent.cs`
+- Walks a masonry build order and runs the RBE convex-QP  stability check on each partial assembly. Reports the  first step at which the in-progress wall becomes unstable.
+
+| in | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | Full MasonryAssembly DTO. |
+| Ordered Block Ids (`Id`) | Text | list | Block ids in build order. Output of Block Build Order. |
+| Mu (`Mu`) | Number | item | Coulomb friction coefficient. Default 0.84 (~40°). |
+| Faces (`F`) | Integer | item | Pyramidal friction-cone face count. Default 4. |
+| Penalty (`P`) | Boolean | item | Penalty form (split f_n+/f_n-). Default false. |
+| Stop On First Infeasible (`Stop`) | Boolean | item | Stop streaming as soon as one step is infeasible. Default true. |
+| Max Steps (`Max`) | Integer | item | Cap on steps to evaluate. -1 = no cap (default). |
+| Run (`R`) | Boolean | item | Set true to run. |
+
+| out | type | access | description |
+|---|---|---|---|
+| First Unstable Step (`Step*`) | Integer | item | 0-based index of the first infeasible step. -1 if every  evaluated step was stable. |
+| First Unstable Block Id (`Id*`) | Text | item | Block id placed at the first unstable step. Empty when  all evaluated steps are stable. |
+| Verdict Per Step (`V`) | Text | list | Per-step verdict (parallel to Ordered Block Ids up to the  evaluated count). |
+| Objective Per Step (`Obj`) | Number | list | Per-step QP objective value. |
+| Report (`R`) | Text | item | Multi-line summary log. |
+
+### Cut Validation  (`CutVal`)
+
+- GUID: `DEF01234-5678-9ABC-DEF0-123456789ABC`  |  icon: `StereotomyJoint.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/CutValidationComponent.cs`
+- Validates a cut: sum(post-piece volumes) ≈ sum(pre-slab  volumes) within tolerance. Flags slivers and dropouts.
+
+| in | type | access | description |
+|---|---|---|---|
+| Pre Slabs (`Pre`) | Generic | list | Slab DTOs before the cut. |
+| Post Slabs (`Post`) | Generic | list | Slab DTOs after the cut. |
+| Relative Tolerance (`Tr`) | Number | item | Acceptable relative volume mismatch. Default 1e-6. |
+| Sliver Fraction (`Ts`) | Number | item | Pieces whose volume is below this fraction of the total  are flagged as slivers. Default 1e-4. |
+| Dropout Volume (`Td`) | Number | item | Pieces below this absolute volume are flagged as  dropouts (likely lost geometry). Default 1e-12. |
+| Drop Slivers (`DropS`) | Boolean | item | If true, also output a sliver-free subset of post slabs.  Default false. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Conserved (`OK`) | Boolean | item | True iff |postVol − preVol| / preVol ≤ Relative Tolerance. |
+| Pre Volume (`Vpre`) | Number | item | Sum |signed volume| of pre slabs. |
+| Post Volume (`Vpost`) | Number | item | Sum |signed volume| of post slabs. |
+| Absolute Error (`AbsErr`) | Number | item | |Vpre − Vpost|. |
+| Relative Error (`RelErr`) | Number | item | AbsErr / Vpre. |
+| Sliver Indices (`Sli`) | Integer | list | 0-based indices of post slabs flagged as slivers. |
+| Dropout Indices (`Dro`) | Integer | list | 0-based indices of post slabs with effectively zero volume. |
+| Cleaned Slabs (`Clean`) | Generic | list | Sliver-free subset of post slabs. Empty when Drop  Slivers is false. |
+| Report (`R`) | Text | item | One-line summary. |
+
+### Dry-Stone Wall (NBO)  (`NBOWall`)
+
+- GUID: `D5F10030-0BA0-4ED9-A030-0BA00BA00030`  |  icon: `DryStoneWallNbo.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/DryStoneWallNboComponent.cs`
+- Fill a dry-stone wall from a stone inventory with the Next-Best-Object planner  (hybrid orient -> drop-to-contact -> analytic stability gate -> lowest-cost pick).  Outputs the ordered, gated placement sequence. Optional target envelope, physical Seat  validation (settle each placement onto the fixed wall), and Bullet settle / CRA confirmation.  Ref: Furrer 2017 / Johns 2020.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`I`) | Mesh | list | Stone meshes to draw from. |
+| Wall Length (`L`) | Number | item | Wall length to fill along +X (m). Overridden by Envelope if supplied. |
+| Target Height (`H`) | Number | item | Fill until the wall top reaches this height (m). Overridden by Envelope. |
+| Course Offset (`O`) | Number | item | Running-bond offset applied on alternating courses (m). |
+| Gap (`G`) | Number | item | Minimum gap between stones along a course (m). |
+| Envelope (`E`) | Brep | item | Optional closed target envelope (Brep): bounds the wall and rejects stones whose CoM falls outside it. |
+| Spine (`Sp`) | Curve | item | Optional plan-rim spine curve: the wall follows it (front advances along arc length, long axis  into the wall along the local normal). A straight line reproduces the straight-X wall. |
+| Confirm (`C`) | Boolean | item | Run a Bullet physics settle confirmation of the produced wall. |
+| CRA (`Cra`) | Boolean | item | Run the compas-CRA rigid-block-equilibrium wall-gate (the strongest stability tier) on the produced wall. |
+| Run (`R`) | Boolean | item | Execute the fill. |
+| Seat (`Se`) | Boolean | item | Physically VALIDATE each placement: drop every candidate (in its top stable orientations) onto  the fixed as-built and keep only the one that beds firmly, committed at its settled pose. Builds  a wall that holds (fewer stones, no slips) -- the robot-ready mode. Needs the Bullet backend. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed (`Pl`) | Mesh | list | Placed stone meshes in placement order. |
+| Transforms (`X`) | Transform | list | Per-stone placement transform (matches Placed order). |
+| Course (`Cr`) | Integer | list | Per-stone course index. |
+| Stable (`St`) | Boolean | list | Per-stone analytic stability verdict. |
+| Cost (`Co`) | Number | list | Per-stone selection cost (lower is better). |
+| Report (`Rp`) | Text | item | Solve summary. |
+
+### Field-Aligned Remesh  (`FieldRemesh`)
+
+- GUID: `B7A11500-0006-4A11-B500-0000000000A6`  |  icon: `FieldAlignedRemesh.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/FieldAlignedRemeshComponent.cs`
+- Field-aligned quad remesh via Instant Meshes (Jakob et al. 2015, BSD-3), run out of  process. 4-RoSy orientation + 4-PoSy position field -> the quad edges follow the surface  flow (principal curvature ~= principal thrust on a funicular membrane). Outputs the quad  mesh and its edge 'flow' lines. Feed into Vault Quad Courses (CRA) with Edge Length 0 to  analyse courses along this flow. Falls back to Rhino QuadRemesh if the worker is missing.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Triangle (or mixed) surface mesh to remesh. |
+| Edge Length (`E`) | Number | item | Target quad edge length (m). 0 = use Face Count instead. |
+| Face Count (`F`) | Integer | item | Target quad count (used only when Edge Length = 0). |
+| Intrinsic (`I`) | Boolean | item | Intrinsic smoothing (curved surfaces). Off by default. |
+| Align Edges (`B`) | Boolean | item | Snap quads to open boundaries for clean free edges. TRADE-OFF: adds interior singularities + lowers CRA. Off by default (plain = 0 singularities, 100% CRA). |
+| Crease (`Cr`) | Number | item | Crease angle (deg) to snap to sharp features; 0 = off. |
+| Smoothing (`Sm`) | Integer | item | Extra field smoothing iterations; 0 = off. |
+| Run (`R`) | Boolean | item | Execute the remesh. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Quad Mesh (`Q`) | Mesh | item | Field-aligned quad-dominant mesh. |
+| Flow (`Fl`) | Line | list | Quad edge lines (the field-aligned flow). |
+| Report (`Rp`) | Text | item | Summary (engine used, face counts). |
+
+### Force-Seat (URScript)  (`FSeat`)
+
+- GUID: `D5F10032-0BA0-4ED9-A032-0BA00BA00032`  |  icon: `ForceSeatUrScript.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/ForceSeatUrScriptComponent.cs`
+- Emit UR URScript to place + force-seat a stone at each place TCP frame  (approach -> descend -> force_mode press -> retract). TEXT ONLY (code-gen, no  hardware send); validate in URSim. Force-seating is the irregular-stone enabler.
+
+| in | type | access | description |
+|---|---|---|---|
+| Place Frames (`F`) | Plane | list | Seat TCP frames (from Next-Best-Object Pose -> Robot Frame). Frame Z is the press direction. |
+| Robot Base (`B`) | Plane | item | Robot base frame in world coords; poses are emitted in it. |
+| Seat Force (`Fz`) | Number | item | Downward press force to seat the stone (N). |
+| Approach (`A`) | Number | item | Approach/retract clearance above the seat (m). |
+| Descend Speed (`V`) | Number | item | Compliant descent speed during seating (m/s). |
+
+| out | type | access | description |
+|---|---|---|---|
+| URScript (`U`) | Text | list | One place + force-seat URScript program per place frame (text; validate in URSim before any hardware). |
+
+### Fragment Merger  (`FragMerge`)
+
+- GUID: `F0123456-789A-BCDE-F012-3456789ABCDE`  |  icon: `KintsugiAssemble.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/FragmentMergerComponent.cs`
+- Algorithm: **Greedy smallest-first agglomeration over a contact-adjacency graph** - Frahan-original
+- Agglomerates small fragments into their largest adjacent  host using upstream contact adjacency. Returns a merge  mapping (HostOf per piece + per-host accumulated volume);  geometry is NOT remeshed at this stage. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Slabs (`S`) | Generic | list | Slab DTOs (the candidate pieces). |
+| Adjacency I (`Ai`) | Integer | list | First index of each adjacency pair. |
+| Adjacency J (`Aj`) | Integer | list | Second index of each adjacency pair (parallel to Ai). |
+| Threshold Fraction (`Th`) | Number | item | Fragments below threshold·meanVolume are merged. Default  1e-3 (0.1% of mean). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Host Of (`H`) | Integer | list | Per-input-piece, the index it ultimately merged into.  Self if it's a host. |
+| Merged Volume (`Vm`) | Number | list | Per-input-piece volume after merge (host accumulates;  non-host entries are 0). |
+| Host Indices (`Hi`) | Integer | list | Indices of pieces that remained hosts. |
+| Merged Count (`Mc`) | Integer | item | Number of fragments that got merged into a different host. |
+
+### IFC Export (Building)  (`IfcBuilding`)
+
+- GUID: `D5F10018-5C7B-4E2D-9A41-8B36F1D07C54`  |  icon: `IfcBuilding.png`  |  exposure: `septenary`  |  source: `src/Frahan.StonePack.GH/Masonry/IfcBuildingExportComponent.cs`
+- Write SEVERAL stone containers (walls, arches, vaults, columns) into one IFC4 building.  Stones come as a tree: one branch per container; Names and Containers list-match the branches.  Each stone becomes an IfcBuildingElementPart (or voussoir IfcMember) with a tessellated body.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | tree | Stone meshes, ONE BRANCH PER CONTAINER |
+| Names (`N`) | Text | list | Container names (one per branch) |
+| Containers (`C`) | Integer | list | Per branch: 0 Wall | 1 Cladding | 2 Arch | 3 Vault | 4 Column |
+| Path (`P`) | Text | item | Output .ifc path |
+| Project (`Pr`) | Text | item | IfcProject name Frahan Stone Building |
+| Run (`R`) | Boolean | item | Write the file |
+
+| out | type | access | description |
+|---|---|---|---|
+| Path (`P`) | Text | item | Written file |
+| Report (`R`) | Text | item | Export report |
+| OK (`OK`) | Boolean | item | True if the file was written |
+
+### IFC Export (Stone Assembly)  (`IfcStones`)
+
+- GUID: `D5F10017-3E5A-4B9C-8D26-1F70A4C85E93`  |  icon: `IfcExport.png`  |  exposure: `septenary`  |  source: `src/Frahan.StonePack.GH/Masonry/IfcExportComponent.cs`
+- Write the stone assembly as IFC4: container element (wall / cladding / arch / vault / column)  with one building-element part per stone (tessellated body + Frahan_Stone property set).  xBIM Essentials, SI metres.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | list | Closed stone meshes in their placed positions |
+| Name (`N`) | Text | item | Container element name StoneWall |
+| Path (`P`) | Text | item | Output .ifc path |
+| Container (`C`) | Integer | item | 0 Wall | 1 Cladding | 2 Arch | 3 Vault | 4 Column |
+| Carve (`Cr`) | Number | list | Per-stone carve ratio lambda (optional) |
+| Stability (`Sm`) | Number | item | Stability margin for the assembly (optional) |
+| InterlockJ (`J`) | Number | item | Interlock score J of the pattern (optional) |
+| Run (`R`) | Boolean | item | Write the file |
+
+| out | type | access | description |
+|---|---|---|---|
+| Path (`P`) | Text | item | Written file |
+| Report (`R`) | Text | item | Export report |
+| OK (`OK`) | Boolean | item | True if the file was written |
+
+### Masonry Assembly  (`MasAsm`)
+
+- GUID: `E5A9B2C3-3D4E-4F60-AB2C-4D5E6F7A8B9C`  |  icon: `Voussoir.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryAssemblyComponent.cs`
+- Composes MasonryBlocks, MasonryInterfaces, and fixed-block boundary  conditions into a MasonryAssembly DTO. Interfaces must be supplied  explicitly; auto-detection is a future task.
+
+| in | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Generic | list | MasonryBlock DTOs from Masonry Block. |
+| Interfaces (`I`) | Generic | list | MasonryInterface DTOs. May be empty; auto-detection is a future task. |
+| Fixed Block Ids (`F`) | Text | list | Identifiers of blocks that are grounded (boundary conditions).  Empty list means all blocks are free. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly DTO. Wire into Masonry Stability (RBE). |
+
+### Masonry Block  (`MasBlk`)
+
+- GUID: `D4F8A1B2-2C3D-4E5F-9A1B-3C4D5E6F7A8B`  |  icon: `MeshBvh.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryBlockComponent.cs`
+- Wraps a Rhino mesh into a MasonryBlock DTO. Quads are triangulated;  the mesh must have at least 3 vertices and at least one face.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Rhino mesh defining the block geometry. Quads are auto-triangulated. |
+| Id (`I`) | Text | item | Optional stable identifier. If blank, a fresh GUID is assigned. |
+| Density (`D`) | Number | item | Material density (kg/m^3 or any consistent unit). Must be > 0. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Block (`B`) | Generic | item | MasonryBlock DTO. Wire into Masonry Assembly. |
+| Id (`Id`) | Text | item | Block identifier (the value passed in, or the auto-generated  GUID if Id was blank). Wire into Auto Interfaces' Block Ids  input or Masonry Assembly's Fixed Block Ids input — keeps  block identity consistent across the canvas. |
+
+### Masonry Stability (RBE)  (`MasRBE`)
+
+- GUID: `F6BAC3D4-4E5F-4071-BC3D-5E6F7A8B9CAD`  |  icon: `EquilibriumRBE.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryStabilityRbeComponent.cs`
+- Algorithm: **Rigid-Block Equilibrium QP** - Kao et al. 2022, Computer-Aided Design 146:103216 Coupled Rigid-Block Analysis
+- Convex-QP rigid-block-equilibrium stability check for a MasonryAssembly.  NOTE: RBE is the permissive check; CRA (Kao 2022) rejects self-stressed  states RBE accepts (H-model). Certify via Masonry Stability Check + CRA.  Asynchronous: assembles the equilibrium + friction QP and solves on a  pool thread.
+
+| in | type | access | description |
+|---|---|---|---|
+| Assembly (`A`) | Generic | item | MasonryAssembly from Masonry Assembly. |
+| Mu (`Mu`) | Number | item | Coulomb friction coefficient (default 0.84, ~40 deg). |
+| Faces (`F`) | Integer | item | Number of pyramidal faces used to linearise the friction cone  (>= 3, default 4). |
+| Penalty (`P`) | Boolean | item | If true, use the penalty form (split normals f_n+/f_n-) for the  equilibrium matrix. |
+| Run (`R`) | Boolean | item | Set true to execute the solve. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Verdict (`V`) | Text | item | Short verdict: 'stable', 'infeasible', 'no solver registered', or an  error class. |
+| Objective (`O`) | Number | item | QP objective value at the returned x (NaN when not Optimal). |
+| ResidualNorm (`R`) | Number | item | L2 norm of the equilibrium residual ||Aeq x - beq||. |
+| SolverName (`S`) | Text | item | Identifier of the solver used (e.g. 'ManagedQpSolver'). |
+| Report (`Rpt`) | Text | item | Human-readable diagnostic. |
+
+Related:
+- Frahan > Masonry > Masonry Stability Check - Certification path: CRA (Kao 2022) rejects self-stressed states that RBE accepts (H-model); certify via Masonry Stability Check + CRA.
+
+### Masonry Stability Check  (`MasonStable`)
+
+- GUID: `D5F10015-2B43-4E8A-A1C7-9D0F4B6E2A91`  |  icon: `StabilityCheck.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryStabilityCheckComponent.cs`
+- Rigid-block equilibrium (RBE) stability check for a stone assembly: contacts are  auto-detected, the Kao 2021/2022 compression-only + Coulomb-friction QP is solved,  and the verdict + per-interface friction utilization are reported. Friction uses a  conservative INSCRIBED K-face pyramid (mu_eff = mu*cos(pi/K)).  Refs: Kao et al. 2021 (J Mech Des) / 2022 (CAD 146:103216, compas_cra).
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | list | Closed stone meshes in their placed positions (optional when an Assembly is supplied) |
+| Mu (`Mu`) | Number | item | Coulomb friction coefficient (0.84 ~ dry stone, 40 deg) |
+| Faces (`K`) | Integer | item | Friction pyramid face count (>= 3; 8 recommended) |
+| FixBelowZ (`Fz`) | Number | item | Blocks whose lowest vertex is within this of the global min Z are fixed (ground) |
+| Density (`Rho`) | Number | item | Stone density (kg/m^3) |
+| ContactTol (`Ct`) | Number | item | Contact detection distance tolerance (model units) |
+| AngleTol (`At`) | Number | item | Contact detection face-angle tolerance (degrees). Raise to ~12-20 for stones on CURVED surfaces, where adjacent stones extrude along different normals and joint faces tilt apart. |
+| Assembly (`A`) | Generic | item | OPTIONAL: a pre-built assembly (e.g. the Polygonal Wall Generator's Assembly output, with  exact generator-adjacency joints). When supplied, Stones/tolerances are ignored and the  check runs directly on it - much faster and tolerance-free. |
+| CRA (`Cr`) | Boolean | item | Use the COUPLED rigid-block analysis (Kao 2022 Eqs 8-14, alternating convex certificate)  instead of force-only RBE. CRA also checks that a kinematically consistent virtual motion  exists, rejecting self-stressed states RBE wrongly accepts (the H-model). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Stable (`OK`) | Boolean | item | True when an admissible compressive/friction-consistent force state exists (RBE-stable) |
+| Report (`R`) | Text | item | Verdict, counts, max compression, worst friction utilization, weakest interface |
+| Utilization (`U`) | Number | list | Per-interface max friction utilization (1.0 = cone saturated) |
+
+### Match Block Transform  (`MatchBlk`)
+
+- GUID: `89ABCDEF-0123-4567-89AB-CDEF01234567`  |  icon: `RigidTransform.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/MatchBlockTransformComponent.cs`
+- Algorithm: **Closed-form absolute orientation (Horn QAO)** - Horn 1987, Closed-form solution of absolute orientation using unit quaternions, JOSA A 4(4):629-642
+- Library-based auto-match: given a list of canonical  library meshes and a list of placed (target) meshes,  find which library entry each target was transformed  from and recover the placement transform via Horn QAO.  Strictly more accurate than 3-random-vertex matching  because the fit is least-squares over all N vertex pairs.  Implements Horn QAO (Horn 1987).
+
+| in | type | access | description |
+|---|---|---|---|
+| Library Meshes (`Lib`) | Mesh | list | Canonical mesh shapes (the 'pick' representations). |
+| Target Meshes (`T`) | Mesh | list | Placed meshes to match against the library. |
+| RMS Threshold (`Rms`) | Number | item | Maximum acceptable per-fit RMS for a high-confidence  match. Targets whose best library fit exceeds this  threshold are still emitted but tagged 'low confidence'.  Default 1e-3. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Transforms (`T`) | Transform | list | Per-target transform: library[matched] → target. |
+| Matched Library Index (`Idx`) | Integer | list | Per-target library index. -1 when no candidate had a  matching vertex count. |
+| RMS (`E`) | Number | list | Per-target Horn QAO residual at the chosen library entry. |
+| Status (`St`) | Text | list | 'matched (rms=…)' / 'low confidence (rms=…)' / 'no match'. |
+
+### Mesh Planar Polygon Extractor  (`MeshPlnPoly`)
+
+- GUID: `F2D000B2-CADC-4F2D-A0B2-7E60CADA15A0`  |  icon: `MortarJoint.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/MeshPlanarPolygonExtractorComponent.cs`
+- Algorithm: **Boundary-loop extraction + signed-area outer/hole classification** - Frahan-original
+- Extracts the outer + hole loops from a mesh's boundary  and projects them into a 2D plane. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Mesh whose boundary loops are extracted. |
+| Plane (`Pl`) | Plane | item | Projection plane (origin + axes). Default world XY. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Outer (`O`) | Curve | item | Closed CCW polyline curve for the outermost loop. |
+| Holes (`H`) | Curve | list | Closed CW polyline curves for each hole (parallel to  Hole Areas). |
+| Outer Area (`Ao`) | Number | item | Signed area of the outer loop in plane units². |
+| Hole Areas (`Ah`) | Number | list | Signed area of each hole. |
+
+### Mesh Quality Report  (`MeshQC`)
+
+- GUID: `9ABCDEF0-1234-5678-9ABC-DEF012345678`  |  icon: `PackDiagnostics.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/MeshQualityReportComponent.cs`
+- Algorithm: **Mesh-quality metrics** - Frey & Borouchaki 1999, Surface mesh quality evaluation, Int. J. Numer. Methods Eng. 45(1):101-118
+- Topology + geometry diagnostics for a Rhino mesh. Use as  a precondition for contact detection, packing, or cutting.  Metrics per Frey & Borouchaki 1999.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Mesh to analyse. |
+| Dedup Tolerance (`Td`) | Number | item | Vertex-merge tolerance for duplicate detection. Default 1e-9. |
+| Degenerate Area Tol (`Ta`) | Number | item | Triangle-area threshold below which a triangle counts as  degenerate. Default 1e-12. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Is Clean Solid (`OK`) | Boolean | item | True iff closed AND manifold AND consistent normals AND no  degenerate triangles AND no duplicate vertices. |
+| Manifold (`Mf`) | Boolean | item | Every edge is incident to 1 or 2 triangles. |
+| Closed (`Cl`) | Boolean | item | Every edge is incident to exactly 2 triangles. |
+| Consistent Normals (`Nm`) | Boolean | item | No two triangles share an edge in the same winding direction. |
+| Duplicate Vertices (`DupV`) | Integer | item | Vertices closer than the dedup tolerance to an earlier one. |
+| Degenerate Triangles (`DegT`) | Integer | item | Triangles below the area threshold. |
+| Boundary Edges (`Be`) | Integer | item | Edges incident to exactly one triangle (open boundaries). |
+| Non-manifold Edges (`Nme`) | Integer | item | Edges incident to three or more triangles. |
+| Median Edge Length (`MedE`) | Number | item | Median triangle-edge length. Useful as an adaptive-tolerance  scale factor. |
+| Surface Area (`A`) | Number | item | Sum of triangle areas. |
+| Signed Volume (`V`) | Number | item | Divergence-theorem volume. Negative means normals are  inward-facing on a closed mesh. |
+| Report (`R`) | Text | item | Single-line human-readable summary. |
+
+### Next-Best-Object Pose → Robot Frame  (`NBORobot`)
+
+- GUID: `D5F10031-0BA0-4ED9-A031-0BA00BA00031`  |  icon: `NboPoseRobotFrame.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/NboPoseToRobotFrameComponent.cs`
+- Turn NBO placements into robot TCP frames + UR poses via a top-pick grasp model.  Outputs pick / place / approach frames, the place pose as UR p[...] in the robot base,  and the grip width/length. The live robot stays downstream (Robots/visose,  UnderAutomation, compas_fab); this is the planner->robot handoff only.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Mesh | list | Source stone meshes (where they currently sit, for the pick frame). |
+| Placements (`X`) | Transform | list | NBO placement transforms, matching the Stones order. |
+| Robot Base (`B`) | Plane | item | Robot base frame in world coords; the place pose is expressed in it. |
+| Approach (`A`) | Number | item | Approach/retract clearance above each place frame (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Pick Frames (`Pk`) | Plane | list | TCP frame to grab each stone where it sits. |
+| Place Frames (`Pl`) | Plane | list | TCP frame to place each stone. |
+| Approach Frames (`Ap`) | Plane | list | Pre-place / retract waypoint above each place frame. |
+| Place Poses (`Ps`) | Text | list | Place TCP as a UR p[x,y,z,rx,ry,rz] (m, axis-angle) in the robot base. |
+| Grip Width (`Gw`) | Number | list | Stone extent across the jaw axis (gripper opening). |
+| Grip Length (`Gl`) | Number | list | Stone extent along the jaw-open axis. |
+
+### Pack Diagnostics  (`PackDiag`)
+
+- GUID: `C4D5E6F7-A8B9-4ABC-DEF0-123456789012`  |  icon: `PackDiagnostics.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/PackDiagnosticsComponent.cs`
+- Splits an AshlarPackResult into Coverage / Course Count /  Leftovers / Notes / Placed Blocks for inspection.
+
+| in | type | access | description |
+|---|---|---|---|
+| Result (`R`) | Generic | item | AshlarPackResult from Ashlar Pack. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Coverage (`Cov`) | Number | item | Wall area filled by placed blocks divided by total wall area, in [0, 1]. |
+| Course Count (`N`) | Integer | item | Number of courses laid. |
+| Leftovers (`L`) | Generic | list | Slabs from the input inventory that were not placed. |
+| Notes (`Notes`) | Text | list | Diagnostic messages emitted by the layout engine. |
+| Placed Blocks (`B`) | Generic | list | MasonryBlocks in the order they were laid. |
+
+### Pack Preview  (`PackPrev`)
+
+- GUID: `D5E6F7A8-B9CA-4BCD-EF01-234567890123`  |  icon: `AssemblyState.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/PackPreviewComponent.cs`
+- Builds one Rhino mesh per placed block in an AshlarPackResult  for visual preview on the canvas.
+
+| in | type | access | description |
+|---|---|---|---|
+| Result (`R`) | Generic | item | AshlarPackResult from Ashlar Pack. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Meshes (`M`) | Mesh | list | One Rhino mesh per placed MasonryBlock. |
+
+### Pick Place Frames  (`PickPlc`)
+
+- GUID: `456789AB-CDEF-0123-4567-89ABCDEF0123`  |  icon: `FrameBuilder.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/PickPlaceFramesComponent.cs`
+- Per-block pick-and-place planes for a robot consumer.  Wire Place Transforms from Block Ground Transforms; the  component returns pick + approach-pick (shared across  all blocks) and place / approach-place / retract-place  (one per block).
+
+| in | type | access | description |
+|---|---|---|---|
+| Place Transforms (`T`) | Transform | list | Per-block placement transform (typically the output of  Block Ground Transforms, ordered by Build Order). Each  transform takes the canonical pose at Pick Plane to  the placed pose. |
+| Pick Plane (`Pp`) | Plane | item | Where each canonical block is picked up. Default world XY. |
+| Approach Vector (`Av`) | Vector | item | World-frame direction the robot approaches FROM (i.e.,  moves opposite to when descending). Default world +Z so  the gripper hovers above pick / place poses. |
+| Approach Distance (`Ad`) | Number | item | Distance the gripper hovers above pick / place poses  before descending. Default 0.05 (5 cm in metres, or  5 mm in millimetres — match your unit system). |
+| Retract Distance (`Rd`) | Number | item | Distance the gripper retracts after release. Default 0.05. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Pick (`Pi`) | Plane | item | Shared pick pose (same as input Pick Plane). |
+| Approach Pick (`ApPi`) | Plane | item | Pick + approach offset. Hover here before descending to pick. |
+| Place (`Pl`) | Plane | list | Per-block place pose = Pick · transform[i]. |
+| Approach Place (`ApPl`) | Plane | list | Per-block approach-place = place + approach offset. |
+| Retract Place (`RtPl`) | Plane | list | Per-block retract-place = place + retract offset. |
+
+### Polygon Sanitize  (`PolySan`)
+
+- GUID: `F2D000B1-CADC-4F2D-A0B1-7E60CADA15A0`  |  icon: `PolygonSimplify.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/PolygonSanitizeComponent.cs`
+- Algorithm: **Polygon vertex cleanup (dedup + collinearity drop)** - Frahan-original
+- Drops duplicate / collinear vertices and sliver edges  from a closed polyline. Operates in 2D — points are  projected onto the supplied plane (default world XY).  Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Polyline (`P`) | Curve | item | Closed polyline curve. |
+| Plane (`Pl`) | Plane | item | 2D projection plane. Default world XY. |
+| Dedup Tolerance (`Td`) | Number | item | Adjacent-vertex dedup tolerance. Default 1e-6. |
+| Collinear Tolerance (`Tc`) | Number | item | Triangle area threshold for collinear-chain dropping.  Default 1e-6. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Sanitized (`S`) | Curve | item | Cleaned closed polyline. |
+| Verts Dropped (`Vd`) | Integer | item | Number of vertices removed. |
+| Area (`A`) | Number | item | Signed area of the sanitized polygon (in plane units²). |
+
+### Polygonal Masonry Sequence  (`PolyMasonrySeq`)
+
+- GUID: `B4E07A3C-7F4D-4E5B-9C71-0EAF21C9B6A1`  |  icon: `CourseGenerator.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalMasonrySequenceComponent.cs`
+- Algorithm: **Polygonal masonry install sequence** - Kim 2024 ASME DETC2024-142563 Finding Installation Sequence of Polygonal Masonry through Design and Depth Search of a DAG
+- Installation-order DAG for a polygonal-masonry wall  (Kim 2024). Inputs are 2D chains and a wall rectangle.  Each chain must be monotone in x or a vertical connector.  Output is one closed polyline per stone, parallel install  order, depth from Code 1, and DAG edge line segments.
+
+| in | type | access | description |
+|---|---|---|---|
+| Chains (`C`) | Curve | list | Polylines or curves defining the wall partition. Each must  be monotone in x or a purely vertical connector. Chains  may share endpoints at meetings; they must not cross. |
+| Wall (`W`) | Rectangle | item | Axis-aligned wall rectangle. Defines the bbox and the  wall boundary (paper sec. 5.3). |
+| Hole Probes (`H`) | Point | list | Optional. Each probe point marks the region containing it  as a hole; that region is removed before depth search  (paper sec. 5.4). |
+| Epsilon (`e`) | Number | item | Tolerance for vertex deduplication and predicates. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Curve | list | One closed polyline per stone region (finite, non-hole).  Includes the two infinite top/bottom bands. |
+| Install Order (`i`) | Integer | list | 1-based install index per stone, parallel to Stones.  1 = installed first (bottom), max = installed last. |
+| Depth (`d`) | Integer | list | Reversed-Kahn depth per stone. Higher = installed earlier.  Sinks (last-installed) have depth 0. |
+| DAG Edges (`E`) | Line | list | One line segment per DAG edge from lower-order centroid to  higher-order centroid. Visualises the install constraint  graph (paper Figs. 5, 13, 14). |
+| Region Count (`n`) | Integer | item | Number of finite stone regions (excludes the bbox  surroundings and any hole-marked regions). |
+
+### Polygonal Masonry Sequence 3D  (`PolyMasonrySeq3D`)
+
+- GUID: `C5F18B4D-8A6F-4E72-AC83-1FBD32D8C7B2`  |  icon: `StereotomyGenerate.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalMasonrySequence3DComponent.cs`
+- Algorithm: **3D polygonal masonry install sequence** - Kim 2024 DETC2024-142563 section 8 3D extension
+- Install-order DAG for a 3D polyhedral-stone wall. Each  input Mesh is one stone; adjacency is detected from  shared mesh faces. Returns 1-based install order,  reversed-Kahn depth, and DAG edges as line segments  between cell centroids (Kim 2024 sec. 8 extension).
+
+| in | type | access | description |
+|---|---|---|---|
+| Cells (`M`) | Mesh | list | Closed polyhedral meshes; one per stone. |
+| Hole Probes (`H`) | Point | list | Optional. Each probe point marks the cell whose centroid  is closest as a hole; that cell is removed before the  depth search (sec. 5.4 analogue). |
+| Face Tolerance (`Tf`) | Number | item | Two cells count as adjacent when at least one of their  mesh faces matches within this Euclidean tolerance. |
+| Z Threshold (`Tz`) | Number | item | Adjacent cells whose representative-Z difference is  below this value are treated as side neighbours  (no ordering constraint). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Mesh | list | Cells in install order, parallel to Order / Depth. |
+| Install Order (`i`) | Integer | list | 1-based install index per cell, parallel to Stones. |
+| Depth (`d`) | Integer | list | Reversed-Kahn depth per cell. |
+| DAG Edges (`E`) | Line | list | Line segments from lower-Z cell centroid to higher-Z  cell centroid for every DAG edge. |
+| Cell Count (`n`) | Integer | item | Number of stones included in the install plan  (excludes hole-marked cells). |
+
+### Polygonal Wall (Generator)  (`PolyWall`)
+
+- GUID: `D5F10014-7A11-4C0E-9B22-3F6A1E2C4D80`  |  icon: `CourseGenerator.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalWallGeneratorComponent.cs`
+- Tile a surface (flat / curved / double-curved) with interlocking polygonal masonry stones  (power-diagram cells + Lloyd relaxation + Coursing slider + sliver cull). Outputs closed,  manifold, unified-normal stone meshes and an interlock score J.  Pattern math: Frahan.Masonry.Sequencing.PolygonalWallGenerator (Rhino-free Core).  Refs: Kim 2024 (ASME DETC2024-142563) sequencing substrate; Clifford & McGee 2018  (ACADIA, Cyclopean Cannibalism) interlock reading; Lloyd 1982 relaxation.
+
+| in | type | access | description |
+|---|---|---|---|
+| Surface (`S`) | Surface | item | Surface to tile (flat / curved / double-curved). If empty, a flat W x H panel in the XZ plane is used. |
+| Width (`W`) | Number | item | Panel width (m) when no Surface is supplied |
+| Height (`H`) | Number | item | Panel height (m) when no Surface is supplied |
+| Coursing (`C`) | Number | item | 0 = irregular (Inca)  ->  1 = coursed rubble |
+| Courses (`Cr`) | Integer | item | Number of courses the coursing pulls toward |
+| GridX (`Gx`) | Integer | item | Seed columns (stones along width) |
+| GridY (`Gy`) | Integer | item | Seed rows (stones along height) |
+| Depth (`D`) | Number | item | Stone depth (m), extruded along the surface normal |
+| Mortar (`M`) | Number | item | Mortar joint fraction (cell shrink toward centroid, 0..0.45) |
+| Seed (`Sd`) | Integer | item | Random seed |
+| Lloyd (`L`) | Integer | item | Lloyd relaxation iterations (evens stone size/shape; 0 disables) |
+| SizeGrade (`Sg`) | Number | item | Size-grading strength 0..~0.6 (power-diagram weights) |
+
+| out | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | list | Closed, manifold, unified-outward-normal stone meshes |
+| Count (`N`) | Integer | item | Number of stones |
+| Interlock (`J`) | Number | item | Interlock score in [0,1]: 1 - runningJoints/headJoints - 0.5*crossVertices/cells. Higher = better staggering. |
+| Report (`R`) | Text | item | Pattern metrics (coverage, area CV, slivers culled, joints) |
+| Assembly (`A`) | Generic | item | The wall as a structural assembly with EXACT joint interfaces from the generator's own cell  adjacency (no contact re-detection; correct on any curvature). Feed straight into Masonry  Stability Check's Assembly input. Models the dry (mortarless), uniform-depth wall. |
+
+### Robust Auto Interfaces  (`RAutoIf`)
+
+- GUID: `F2D000B4-CADC-4F2D-A0B4-7E60CADA15A0`  |  icon: `ContactDetector.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/RobustAutoInterfacesComponent.cs`
+- Algorithm: **Auto interface detection** - Frahan-original
+- Detects block-to-block contacts via mesh-vertex proximity.  Robust to slight gaps, non-planar contact regions, and  irregular triangulation (scan-derived meshes). Use this  when 'Auto Interfaces' (polygon-based) misses contacts.  Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Meshes (`M`) | Mesh | list | Block meshes in their final placed positions. Standard Rhino  mesh wires; this component finds proximity-based contacts. |
+| Block Ids (`Ids`) | Text | list | One ID per mesh in the same order. Must match the IDs used  to construct MasonryBlocks. |
+| Distance Tolerance (`Dtol`) | Number | item | Max distance between two surfaces to count as contact  (document units). Default 0.001 (1 mm). Raise for noisy  scan data; lower for exact-coord meshes. |
+| Angle Tolerance Deg (`Atol`) | Number | item | Contact points are grouped when their surface normals agree  within this angle. Default 5° — accommodates mild surface  curvature; tighten to 1° for sharply-faceted blocks. |
+| Min Contact Points (`MinN`) | Integer | item | Minimum contact points required to emit a MasonryInterface.  Default 3 (= polygon triangle minimum). Raise to filter  out spurious single-vertex grazes. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Interfaces (`I`) | Generic | list | Detected MasonryInterfaces. Wire into Masonry Assembly. |
+| Count (`N`) | Integer | item | Number of detected interfaces. |
+
+### Rubble Wall Settle  (`RubbleSettle`)
+
+- GUID: `6514A1BB-FE82-4919-9419-141A07D2358A`  |  icon: `RubbleWallSettle.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/RubbleWallSettleComponent.cs`
+- Algorithm: **COM-over-support stability** - Heyman 1966 limit-state masonry (centre of thrust within the support)
+- NOTE: the settle v2 objective reaches +97% clearance, 23/24 stable  (see examples/27 cards); this component remains the validated v1.  Settles stone meshes into an upright Z-up rubble wall. Each  stone is PCA-oriented so its broad/flat face beds DOWN, then  dropped (gravity = -Z) into the per-(x,y)-cell dimples of the  course below, trying 4 orientation flips and a small X-slot  shift. Non-penetrating by construction. Reports a per-stone  COM-over-support stability flag and signed support clearance.  Apply each output mesh as-is; transforms are already baked in.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`S`) | Mesh | list | Stone inventory as Rhino meshes (e.g. ETH1100 dry-stone scans,  Quarry blocks, or hand-authored). Each is PCA-oriented for flat  bedding; the input meshes are not modified. Order is preserved  in the outputs. |
+| Width (`W`) | Number | item | Wall length along +X, in units of the mean stone X-extent.  > 0. Default 7.0 (the signed-off proportion). Larger spreads  stones into more, shorter courses; smaller piles them taller. |
+| Stability Aware (`St`) | Boolean | item | When true, each stone prefers the first seat whose COM projects  inside its contact support polygon (won't topple), then the  deepest. When false, always takes the deepest (densest) seat.  Default true. |
+| Margin (`M`) | Number | item | Required COM-over-support clearance (document units) for a seat  to count as stable. >= 0. Default 0.0 (COM merely inside the  support polygon). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Settled (`S`) | Mesh | list | Placed stones, upright in the Z-up wall, one per input mesh in  input order. The PCA flat-bed orientation, flip, and settle  offsets are already applied. |
+| Stable (`St`) | Boolean | list | Per-stone COM-over-support flag: true if the projected COM lies  inside the contact support polygon by at least Margin. |
+| Clearance (`C`) | Number | list | Per-stone signed support clearance. > 0 = COM inside the support  polygon (distance to the nearest edge); <= 0 = would topple;  -1 = degenerate support (< 3 non-collinear contacts). |
+
+Related:
+- Frahan > Masonry > Ashlar Pack - production coursed layout; this settle drops rough rubble into the dimples instead of a regular grid
+- Frahan > Masonry > Best Fit Pack - inventory-aware ashlar packer for the same stone inventory
+- Frahan > Masonry > Masonry Stability (RBE) - full rigid-block equilibrium; this component does only the per-stone COM-over-support gate
+
+### Stone Slot Match (LAPJV)  (`SlotMatch`)
+
+- GUID: `D5F10045-0BA0-4ED9-A045-0BA00BA00045`  |  icon: `DryStoneWallNbo.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Nbo/StoneSlotMatchComponent.cs`
+- Globally-optimal stone-to-slot pre-assignment using the Jonker-Volgenant  linear assignment algorithm (O(n^3)).  Returns stones in slot order so the  NBO planner executes the globally-optimised sequence.  Ref: Jonker & Volgenant 1987.
+
+| in | type | access | description |
+|---|---|---|---|
+| Inventory (`I`) | Mesh | list | Stone meshes to assign. |
+| Wall Length (`L`) | Number | item | Wall length (m). |
+| Target Height (`H`) | Number | item | Fill-to height (m). |
+| Gap (`G`) | Number | item | Minimum gap between stones along a course (m). |
+| Course Offset (`O`) | Number | item | Running-bond offset on alternating courses (m). |
+| Run (`R`) | Boolean | item | Set true to run. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Ordered Stones (`S`) | Mesh | list | Stones re-ordered by slot (slot 0 first). Feed into NBO wall fill. |
+| Slot Assignment (`A`) | Integer | list | A[j] = original inventory index assigned to slot j, or -1 if the slot is unfilled. |
+| Report (`Rp`) | Text | item | Assignment report. |
+
+### Wall Frame  (`WallFrame`)
+
+- GUID: `A2B3C4D5-E6F7-489A-BCDE-F01234567890`  |  icon: `CourseGenerator.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Masonry/WallFrameComponent.cs`
+- Bundles wall width / height / thickness into a WallFrame DTO.  Wire into the optional WallFrame input on Ashlar Pack so the  envelope can be reused across multiple packers.
+
+| in | type | access | description |
+|---|---|---|---|
+| Width (`W`) | Number | item | Wall length along +X (Rhino-document units, typically meters).  Must be > 0. Example: 1.5 for a 1.5 m long wall. |
+| Height (`H`) | Number | item | Wall height along +Z. Must be > 0. Example: 1.0 for 1 m tall. |
+| Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. Default 0.20 — typical  single-leaf masonry. Use 0.40 for double-leaf. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Wall Frame (`F`) | Generic | item | WallFrame DTO. Wire into Ashlar Pack's Wall Frame input to  reuse the same envelope across multiple packers. |
+
+
+## Mesh
+
+### Align by Control Points  (`MarkerReg`)
+
+- GUID: `B1C2D3A4-1111-4F5E-A6B7-C8D9E0F12345`  |  icon: `MarkerDetect.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Registration/MarkerRegistrationComponent.cs`
+- Algorithm: **Absolute orientation (Horn 1987)** - Horn, B.K.P. (1987). Closed-form solution of absolute orientation using unit quaternions. J. Opt. Soc. Am. A 4(4):629-642
+- Closed-form rigid alignment of N≥3 source/target point pairs  (Horn 1987 quaternion absolute orientation). Use for marker-  or reference-object-based scan-to-world registration.  Implements absolute orientation (Horn 1987).
+
+| in | type | access | description |
+|---|---|---|---|
+| Source Points (`S`) | Point | list | Source-frame (e.g. scan) marker positions.  Must have N≥3 points paired by INDEX with Target Points. |
+| Target Points (`T`) | Point | list | Target-frame (e.g. world) marker positions.  Same count as Source Points; pairing is by index. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Transform (`X`) | Transform | item | Rigid transform mapping source onto target (apply to scan). |
+| RMS Error (`RMS`) | Number | item | Root-mean-square per-pair residual after applying Transform  (model-unit distance). |
+| Per-Pair Residuals (`R`) | Number | list | Distance from R·sᵢ+t to tᵢ for each input pair. Long-tail  values indicate bad markers — drop or re-survey them. |
+| Pair Count (`N`) | Integer | item | Number of input pairs used. |
+
+### Align by Control Points (2)  (`GeorefPts`)
+
+- GUID: `F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/GeoreferenceComponent.cs`
+- Algorithm: **Absolute orientation (Horn 1987)** - Horn, 'Closed-form solution of absolute orientation using unit quaternions', JOSA A 4(4) 1987
+- Best-fit transform from 3+ corresponding control points (Horn's  absolute orientation). Aligns GPR / scan / quarry geometry into one  georeferenced frame: Source = control points in the frame you move,  Target = matching points in the reference frame. Rigid by default;  enable Scale for similarity. Feed the Transform into Cloud ICP's  Initial Guess for fine registration.  Sibling: GeorefPts is the local fit via Horn from matched points;  'GeorefCRS' (Georeference) handles WGS84/UTM/ENU datum conversion.
+
+| in | type | access | description |
+|---|---|---|---|
+| Geometry (`G`) | Geometry | list | Geometry to align (moved by the fitted transform). |
+| Source (`S`) | Point | list | Control points in the SOURCE frame (>= 3). |
+| Target (`T`) | Point | list | Matching control points in the TARGET / reference frame (>= 3, same order). |
+| Scale (`Sc`) | Boolean | item | Allow uniform scale (similarity transform). Default false = rigid. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Geometry (`G`) | Geometry | list | Geometry mapped into the target frame. |
+| Transform (`X`) | Transform | item | Fitted source -> target transform. |
+| Inverse (`Xi`) | Transform | item | Inverse transform (target -> source). |
+| RMS (`RMS`) | Number | item | Root-mean-square control-point residual after the fit (model units). |
+| Report (`R`) | Text | item | Fit summary. |
+
+Related:
+- Frahan > Mesh > Cloud ICP - Feed this Transform into Cloud ICP's Initial Guess for coarse-georef then fine-ICP.
+- Frahan > Quarry > GPR Fractures on Mesh - Georeference GPR picks into the scan/bench frame before overlaying.
+- Frahan > Mesh > Move to Origin - Move to Origin recenters; this aligns to another dataset via control points.
+
+### Bench From Mesh  (`BenchFromMesh`)
+
+- GUID: `D3E4F5A6-3002-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryBlock.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/BenchFromMeshComponent.cs`
+- Derive an axis-aligned Box bench + carry the original Mesh  for use with the existing 11 BCO components (which take Box  inputs) and with ClipBoxesByMesh (which filters their Box[]  outputs). Closes the §7.8 mesh-bench gap without editing any  existing BCO component. Designed for non-rectangular quarry  benches: trapezoidal, stepped, polygonal, surveyed from a  DXF + bench-height extrusion, or produced by a Phase H  scan reconstruction.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Bench mesh (any closed or open shape). The AABB is derived  from this for the Box output; the mesh itself is preserved  for downstream clipping. |
+| Bench Height (`H`) | Number | item | Optional override: if > 0, the Box output's Z height is  extended to this value (e.g. when the user wants the bench  AABB to span the full block height even though the mesh  only covers the working face). Default 0 = use mesh AABB Z  as-is. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Box (`B`) | Box | item | Axis-aligned bounding Box of the mesh (with optional  Bench Height override applied to Z). Wire to the existing  BCO components' `Tested Area` or `Bench` input. |
+| Mesh (`M`) | Mesh | item | Pass-through of the input mesh, for downstream clipping. |
+| Bench Boundary (`BB`) | Generic | item | Opaque BenchBoundary value (Box + Mesh combined). Future  BCO-v2 components consume this directly. |
+| Vertex Count (`V`) | Integer | item | Mesh vertex count (sanity check). |
+
+### Clip Boxes By Mesh  (`ClipBoxesByMesh`)
+
+- GUID: `D3E4F5A6-3003-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/ClipBoxesByMeshComponent.cs`
+- Algorithm: **Mesh-containment box filter** - Frahan-original
+- Filter a Box[] grid from BCO output by mesh-boundary  containment. Drops cells that lie outside the actual bench  (the cells the AABB algorithm wrongly claimed as winnable).  Use after BCOExtract / HeteroExt / BCOMixedPack to get the  true recovery on a non-rectangular bench.  Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Boxes (`B`) | Box | list | Box[] from a BCO output (Prime Boxes, Mixed Boxes, Zone  Boxes, etc.). |
+| Mesh Bench (`M`) | Mesh | item | Closed mesh of the actual bench geometry. Wire from  BenchFromMesh.Mesh. |
+| Inside Fraction Threshold (`Tf`) | Number | item | A box is kept when at least this fraction of its 8 corners  lie inside the mesh. 0 = keep all (back-compat); 0.5 =  majority must be inside; 1.0 = entire box must be inside. |
+| Tolerance (`T`) | Number | item | Inside/outside testing tolerance in model units. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Inside Boxes (`In`) | Box | list | Cells whose containment fraction meets or exceeds the  threshold. |
+| Outside Boxes (`Out`) | Box | list | Cells that fall below the threshold (the AABB algorithm  wrongly claimed these). |
+| Inside Count (`Ni`) | Integer | item | Number of cells inside the mesh. |
+| Outside Count (`No`) | Integer | item | Number of cells dropped. |
+| Corrected Recovery (`Rc`) | Number | item | Inside / total fraction in [0, 1]. Apply this multiplicatively  to recovery numbers reported by the BCO components when they  ran on the same AABB grid. |
+| Report (`R`) | Text | item | Human-readable summary. |
+
+### Close Holes  (`CloseHoles`)
+
+- GUID: `F2D05A02-1A2B-4C3D-9E4F-5A6B7C8D9E02`  |  icon: `PoissonReconstruct.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshSanitizeComponents.cs`
+- Algorithm: **Geogram hole filling** - GEO::fill_holes — triangulate open boundary loops up to an area / edge-count threshold
+- Fill open boundary loops to make a watertight mesh. Backend: Managed  (RhinoCommon Mesh.FillHoles, fast on clean meshes), Geogram  (GEO::fill_holes, robust on dirty / scan meshes), or Auto (managed  first, geogram fallback if still open). Max Hole Area / Edges apply  to the Geogram path. Runs on a background thread (Run gate) so the  canvas never freezes.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Mesh with holes (open boundary loops). |
+| Max Hole Area (`A`) | Number | item | Geogram path: largest hole AREA to fill (model units squared). 0 fills  nothing; a very large value (default 1e30) fills every hole. |
+| Max Hole Edges (`E`) | Integer | item | Geogram path: max boundary edges per hole. 0 = no limit (area governs). |
+| Repair After (`Rp`) | Boolean | item | Geogram path: run a repair pass after filling. Default true. |
+| Run (`R`) | Boolean | item | Set true to close holes (background thread). |
+| Backend (`Bk`) | Integer | item | 0 = Auto (managed first, geogram fallback); 1 = Managed (RhinoCommon,  fast); 2 = Geogram (robust on dirty meshes). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Hole-filled mesh. |
+| Closed (`Cl`) | Boolean | item | True if the output mesh is closed (watertight). |
+| Report (`R`) | Text | item | Before/after validity summary + backend used. |
+
+Related:
+- Frahan > Mesh > Sanitize Mesh - Sanitize first (weld/triangulate), then close holes.
+- Frahan > Mesh > Scan Reconstruct - Alpha-Shape output is open; close holes to get a watertight tool mesh.
+
+### Cloud ICP  (`CloudIcp`)
+
+- GUID: `E4F5A6B7-3201-4F5E-A6B7-C8D9E0F12345`  |  icon: `PointCloudIcp.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/CloudIcpComponent.cs`
+- Algorithm: **Trimmed ICP (coarse-to-fine)** - Besl & McKay 1992 (Iterative Closest Point); Chetverikov et al. 2002 (Trimmed ICP)
+- Register a source point cloud onto a target via coarse-to- fine trimmed ICP. Uses Geogram KD-tree + voxel downsample  (native shim, Phase I) when available; falls back to  managed brute-force / hash-grid otherwise. Scales to 10M+  points with the native shim. [Besl & McKay 1992]
+
+| in | type | access | description |
+|---|---|---|---|
+| Source Cloud (`S`) | Point | list | Source point cloud to register. |
+| Target Cloud (`T`) | Point | list | Target point cloud (registration goal). |
+| Initial Guess (`X0`) | Transform | item | Optional initial transform. Identity if not wired. |
+| Voxel Scales (`Vs`) | Number | list | Coarse-to-fine voxel sizes (model units). Default {0.5, 0.1,  0.02} → 50 cm → 10 cm → 2 cm for metre-scale benches. |
+| Max Iterations (`Mi`) | Integer | item | Max ICP iterations per voxel scale. |
+| Trim Fraction (`Tf`) | Number | item | Drop this fraction of worst-residual pairs each iteration.  0.2 = standard robust ICP. 0 keeps all. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Transform (`X`) | Transform | item | Cumulative source→target rigid transform. |
+| Final RMS (`RMS`) | Number | item | Final RMS distance between corresponding source-target pairs. |
+| Iterations (`It`) | Integer | item | Total iterations across all voxel scales. |
+| Converged (`Cv`) | Boolean | item | True when the last iteration met the tolerance. |
+| Correspondences (`Cn`) | Integer | item | Number of correspondences used in the final iteration  (after trim). |
+| Report (`R`) | Text | item | Summary line. |
+
+### Estimate Cloud Normals  (`EstNormals`)
+
+- GUID: `E4F5A6B7-3203-4F5E-A6B7-C8D9E0F12345`  |  icon: `NormalEstimation.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/EstimateCloudNormalsComponent.cs`
+- Algorithm: **PCA normal estimation + MST orientation** - Hoppe et al. 1992, surface reconstruction from unorganized points (PCA tangent planes + MST sign propagation)
+- PCA + MST-oriented normals on an unstructured point cloud.  Wire upstream of Poisson reconstruction (ScanReconstruct  Mode = 2) or point-to-plane Cloud ICP. Runs on a background  thread (Run gate). Requires the Phase H/I rebuild of  frahan_cgal.dll; falls back to a Warning bubble if the shim  isn't built. [Hoppe et al. 1992]
+
+| in | type | access | description |
+|---|---|---|---|
+| Points (`P`) | Point | list | Input cloud as a point list. Optional if Cloud is wired. |
+| K Neighbours (`K`) | Integer | item | k for PCA fit (CGAL recommends 18-24 for dense clouds).  0 uses 18. |
+| Cloud (`C`) | Geometry | item | Input as a single native PointCloud (lag-free; preferred over the  Points list for large scans). If wired, the Points list is ignored. |
+| Run (`R`) | Boolean | item | Set true to estimate normals (on a background thread).  False = idle; the canvas never freezes. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Normals (`N`) | Vector | list | Per-point oriented normals; same order as input. |
+| Report (`R`) | Text | item | Summary. |
+| Cloud (`C`) | Geometry | item | The input points as a single native PointCloud WITH the estimated  normals baked in. Wire into Scan Reconstruct (Cloud) for a lag-free  Poisson path - no million-point list crosses the canvas. |
+
 ### Geodesic Voronoi (CGAL)  (`GeodesicVoronoiCgal`)
 
 - GUID: `F2D000A8-CADC-4F2D-A0A8-7E60CADA15A0`  |  icon: `GeodesicPath.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/CgalTestComponents.cs`
@@ -2087,6 +4119,121 @@ Related:
 Related:
 - Frahan > Quarry > Quarry DFN - Production Voronoi-based DFN generator; this geodesic variant is the research path.
 - Frahan > Quarry > Joint Set - Joint-set seeds for DFN generation.
+
+### Georeference (Datum / CRS)  (`GeorefCRS`)
+
+- GUID: `B1C2D3A4-1112-4F5E-A6B7-C8D9E0F12345`  |  icon: `GeoreferenceMarker.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Registration/GeoreferenceComponent.cs`
+- Algorithm: **Absolute orientation + UTM/EPSG transform** - Horn, B.K.P. (1987). Closed-form solution of absolute orientation using unit quaternions. J. Opt. Soc. Am. A 4(4):629-642
+- Rigid scan→world transform from N≥3 control-point pairs in a  global coordinate system. Supports WGS84 LLH degrees, UTM,  and pre-converted ENU metres. World points are converted to  ENU about the first control point's origin before solving.  Implements absolute orientation (Horn 1987).  Sibling: GeorefCRS handles the WGS84/UTM/ENU datum;  'GeorefPts' (Georeference (Align by Points)) is the local fit  via Horn when both datasets share a frame.
+
+| in | type | access | description |
+|---|---|---|---|
+| World Control Points (`W`) | Point | list | World-frame control points in the chosen Coord System.  LLH-WGS84-degrees: pack as (X=lon°, Y=lat°, Z=height-m).  UTM: pack as (X=easting-m, Y=northing-m, Z=elevation-m).  Local-ENU: pack as (X=east-m, Y=north-m, Z=up-m). |
+| Scan-Frame Points (`S`) | Point | list | Scan-frame points paired by INDEX with World Control Points. |
+| Coord System (`C`) | Integer | item | 0 = LLH-WGS84-degrees, 1 = UTM, 2 = Local-ENU. |
+| UTM Zone (`Z`) | Integer | item | Optional UTM zone override (1..60). Ignored unless Coord  System = 1. Default 0 means auto-pick from origin. |
+| UTM Northern Hemisphere (`NH`) | Boolean | item | True = northern hemisphere, false = southern. Ignored  unless Coord System = 1. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Transform (`X`) | Transform | item | Rigid transform mapping scan-frame onto the ENU frame  centred at the first control point. Apply to your scan to  place it in world-relative coordinates. |
+| RMS Error (`RMS`) | Number | item | Root-mean-square per-pair residual after the transform  (ENU metres). |
+| ENU Origin (LLH) (`O`) | Point | item | The LLH origin used for ENU conversion (X=lon°, Y=lat°, Z=h-m).  Wire this into a Panel to record the projection origin alongside  the .gh file. |
+| Report (`R`) | Text | item | Human-readable summary of the solve. |
+| Per-Pair Residuals (`Res`) | Number | list | Per-pair residual distances after applying Transform (m). |
+
+### Load Cloud  (`LoadCloud`)
+
+- GUID: `E4F5A6B7-3210-4F5E-A6B7-C8D9E0F12345`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadCloudComponent.cs`
+- Algorithm: **Streaming cloud read + voxel-grid downsample** - Voxel-grid filter (one centroid per occupied cell)
+- Stream a point cloud from a file and voxel-downsample on the  fly. Supports PLY (binary_little_endian + ascii; points-only  and mesh-vertex clouds) and plain ASCII XYZ / PTS. Memory is  bounded by occupied voxels, not the input point count, so very  large clouds (28M+ points) load without materialising the full  set. Pure-managed; no native dependency. Runs on a background  thread (Run gate) so the canvas stays responsive. Use upstream of  Cloud ICP / Scale Calibrate.
+
+| in | type | access | description |
+|---|---|---|---|
+| File Path (`F`) | Text | item | Path to a .ply / .xyz / .pts / .asc / .txt point-cloud file. |
+| Voxel Size (`V`) | Number | item | Edge length of the cubic downsample voxel in model units.  Default 0.05. If <= 0, no downsample (warns for huge files). |
+| Run (`R`) | Boolean | item | Set true to read the file (on a background thread). False = idle;  nothing is read, the canvas never freezes. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Points (`P`) | Point | list | One centroid per occupied voxel (or all points when Voxel Size <= 0). |
+| Input Count (`Ni`) | Integer | item | Total points read from the file. |
+| Output Count (`No`) | Integer | item | Number of output points (occupied voxels). |
+| Bounding Box (`B`) | Box | item | Axis-aligned bounding box of the input cloud. |
+| Cloud (`C`) | Geometry | item | Downsampled cloud as a single native PointCloud - fast viewport  display and bake-ready (far cheaper than the Points list for big  clouds). Wire into a Point param to explode it back into points. |
+
+### Load E57 Cloud  (`LoadE57`)
+
+- GUID: `E4F5A6B7-3230-4F5E-A6B7-C8D9E0F12345`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadE57CloudComponent.cs`
+- Algorithm: **Out-of-process E57 read (Python worker) + voxel downsample, chunked into one PointCloud** - pye57 worker -> binary PLY -> chunked PointCloud assembly
+- Read a registered terrestrial-LiDAR .e57 via an out-of-process  Python worker (pye57), voxel-downsample, and ingest the result in  chunks as a single PointCloud. The heavy parse runs in a subprocess  so a crash never takes down Rhino. Coordinates are shifted to the  origin (add the Shift output to georeference back). Runs on a  background thread (Run gate); needs python + pye57 + numpy on PATH  and frahan_e57_worker.py deployed beside the .gha.
+
+| in | type | access | description |
+|---|---|---|---|
+| E57 File (`F`) | Text | item | Path to a .e57 registered point-cloud file. |
+| Voxel Size (`V`) | Number | item | Edge length of the cubic downsample voxel in model units (metres).  Default 0.05. If <= 0, no downsample (warns; can be very large). |
+| Python Exe (`Py`) | Text | item | Optional python interpreter (full path or bare name). Empty =  'python' on PATH. |
+| Run (`R`) | Boolean | item | Set true to run the worker + ingest (on a background thread).  False = idle; nothing runs, the canvas never freezes. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cloud (`C`) | Geometry | item | The downsampled scan as a single PointCloud (shifted to the origin).  Wire into a Point param to explode into points if needed. |
+| Input Count (`Ni`) | Integer | item | Total points in the E57 (all scans). |
+| Output Count (`No`) | Integer | item | Number of points after voxel downsample. |
+| Bounding Box (`B`) | Box | item | Axis-aligned box of the output cloud (shifted frame; bounds the Cloud). |
+| Shift (`S`) | Vector | item | Global offset subtracted from the original coordinates. Add it back  to the Cloud (e.g. via Move) to restore the georeferenced position. |
+| PLY Path (`Pf`) | Text | item | Path to the voxel-downsampled binary PLY the worker wrote (reusable). |
+
+### Load Metashape Dense Cloud  (`LoadOc3`)
+
+- GUID: `D5F10040-ED9E-4ED9-A040-ED9EED9E0040`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadMetashapeDenseCloudComponent.cs`
+- Algorithm: **File-extension recognition + conversion-guidance emission** - Frahan-original; stub pattern mirrors E57 / GSF bridge components
+- Recognise a Metashape .oc3 dense-cloud file and emit conversion  guidance. v1 does NOT parse the binary format; the user must  export the .oc3 to PLY in Metashape first, then load with the  Load Cloud component. v2 will add a Metashape Python worker  following the E57 out-of-process pattern.
+
+| in | type | access | description |
+|---|---|---|---|
+| Oc3 File (`F`) | Text | item | Path to an Agisoft Metashape .oc3 dense-cloud file. v1 recognises  the format and emits conversion guidance; no point data is  extracted. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Recognised (`R`) | Boolean | item | True when the file exists and has a .oc3 extension. |
+| File Size MB (`Sz`) | Number | item | Size of the .oc3 in megabytes (informational). |
+| Guidance (`G`) | Text | list | Conversion guidance: open the .psx in Metashape, File > Export >  Export Dense Cloud to PLY, then load with the Load Cloud component. |
+
+### Load Photo Set  (`LoadPhotoSet`)
+
+- GUID: `D5F10041-ED9E-4ED9-A041-ED9EED9E0041`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadPhotoSetComponent.cs`
+- Algorithm: **Folder enumeration + bucket classification + filesystem metadata aggregate** - Frahan-original; trimmed-scope v1 deliberately skips EXIF (ExifTool / CloudCompare covers that)
+- Inventory a folder of photogrammetry photos into a typed PhotoSet.  v1 SCOPE: filesystem listing + bucket classification (used /  skipped / raw) + aggregate summary. No EXIF parsing (use  ExifTool externally if needed). The typed PhotoSet is what  downstream Frahan components consume.
+
+| in | type | access | description |
+|---|---|---|---|
+| Photo Folder (`F`) | Text | item | Root folder containing photogrammetry photos. Subfolders named  'used', 'skipped', 'raw' (case-insensitive) bucket-classify the  entries. |
+| Recurse Subfolders (`R`) | Boolean | item | If true, recurse into subfolders. Default true (the MRAC convention). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Photo Set (`PS`) | Generic | item | Typed PhotoSet record (Frahan.Core.ScanIngest.PhotoSet). Wire  into downstream Frahan ingest components. |
+| Photo Count (`N`) | Integer | item | Total photo count. |
+| Total Size MB (`Sz`) | Number | item | Total size in megabytes. |
+| Remarks (`Rm`) | Text | list | Per-bucket counts + date range + extensions seen. |
+
+### Mesh AABB  (`AABB`)
+
+- GUID: `ABCDEF01-2345-6789-ABCD-EF0123456789`  |  icon: `MeshBvh.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Mesh/MeshAabbComponent.cs`
+- Axis-aligned bounding box of a mesh. Outputs the box, its  X/Y/Z extents, and the centre point. Useful for verifying  block dimensions match a wall's expected course height.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Input mesh. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Box (`B`) | Box | item | Axis-aligned bounding box. |
+| Width (`W`) | Number | item | Extent along +X (document units). |
+| Depth (`D`) | Number | item | Extent along +Y (document units). |
+| Height (`H`) | Number | item | Extent along +Z (document units). |
+| Centre (`C`) | Point | item | Centre of the bounding box. |
 
 ### Mesh CSG (CGAL)  (`MeshCsgCgal`)
 
@@ -2180,39 +4327,28 @@ Related:
 Related:
 - Frahan > Mesh > Mesh Repair - Mesh-quality production path; no production decimate component yet.
 
-### Mesh Decompose (CoACD)  (`DecomposeCoacd`)
+### Mesh Diagnostics  (`MeshDiag`)
 
-- GUID: `F2D000B0-C0AC-4F2D-A0B0-7E60C0AC1DB0`  |  icon: `CoacdDecompose.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/CoacdTestComponents.cs`
-- Algorithm: **Collision-aware approximate convex decomposition** - Wei, J., Liu, M., Wang, J. et al. (2022). Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search. SIGGRAPH 2022
-- Approximate convex decomposition via the CoACD native shim.  Input must be 2-manifold for the lightweight build (no  manifold preprocess); pre-clean with Mesh Repair (CGAL) if  input is non-manifold and the OpenVDB-equipped build is not  loaded.  Wraps CoACD (Wei et al. 2022).
+- GUID: `AB12C005-1A2B-4C3D-9E4F-5A6B7C8D9E05`  |  icon: `PackDiagnostics.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshDiagnosticsComponent.cs`
+- Algorithm: **Mesh quality diagnostics** - Frahan-original
+- Read a Rhino Mesh and report vertex/face/triangle/quad counts,  IsClosed, IsManifold, HasConsistentWinding, AverageEdgeLength,  BoundingBoxVolume.  Frahan-original method.
 
 | in | type | access | description |
 |---|---|---|---|
-| Mesh (`M`) | Mesh | item | Input mesh. Must be 2-manifold when running against the  lightweight (WITH_3RD_PARTY_LIBS=OFF) shim build. The full  build accepts non-manifold input via OpenVDB preprocessing. |
-| Threshold (`T`) | Number | item | Concavity threshold. Lower = more pieces, finer fit.  Default 0.05 (normalized [0..1]) or 0.05 metres if Real  Metric is true. |
-| Max Hulls (`N`) | Integer | item | Cap on output piece count. -1 = unlimited. |
-| Preprocess (`P`) | Integer | item | 0 = auto, 1 = on, 2 = off. Auto runs OpenVDB-based  manifold-isation only when input is non-manifold (requires  WITH_3RD_PARTY_LIBS=ON build). |
-| Real Metric (`RM`) | Boolean | item | When true, Threshold is interpreted as metres rather than  CoACD's normalized [0..1] units. Use for statue-scale input. |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-| MCTS Iters (`mi`) | Integer | item | MCTS iterations per cut (default 150). |
-| MCTS Depth (`md`) | Integer | item | MCTS tree depth (default 3). |
-| MCTS Nodes (`mn`) | Integer | item | MCTS nodes per cut (default 20). |
-| Seed (`S`) | Integer | item | RNG seed for reproducibility (default 0). |
-| PCA (`pca`) | Boolean | item | Align cuts to PCA frame (default false). World-axis cuts  are usually better for architectural input. |
+| Mesh (`M`) | Mesh | item | Mesh to diagnose. |
 
 | out | type | access | description |
 |---|---|---|---|
-| Convex Hulls (`H`) | Mesh | list | List of convex pieces approximating the input. |
-| Count (`N`) | Integer | item | Number of hulls produced. |
-| Runtime (`T`) | Number | item | Runtime in milliseconds. |
-| Backend (`B`) | Text | item | Reported version + build-flag status from the loaded shim.  Use this to confirm whether OpenVDB-based manifold  preprocessing is available. |
-| Available (`Av`) | Boolean | item | True iff the CoACD native shim is loadable. |
-| Report (`R`) | Text | item | Diagnostic report (input/output sizes, runtime, parameters). |
-
-Related:
-- Frahan > Masonry > Masonry Assembly - Convex decomposition feeds collision-detection for masonry block assembly.
-- Frahan > Masonry > Auto Interfaces - Convex parts simplify interface auto-detection between non-convex blocks.
-- Frahan > Mesh > Mesh Diagnostics - Diagnose mesh convexity before decomposing.
+| Vertex Count (`V`) | Integer | item | Number of vertices. |
+| Face Count (`F`) | Integer | item | Number of faces. |
+| Triangle Count (`T`) | Integer | item | Number of triangular faces. |
+| Quad Count (`Q`) | Integer | item | Number of quad faces. |
+| Is Closed (`Ic`) | Boolean | item | True if the mesh is closed (watertight). |
+| Is Manifold (`Im`) | Boolean | item | True if the mesh is manifold. |
+| Has Consistent Winding (`Cw`) | Boolean | item | True if face windings are consistent. |
+| Average Edge Length (`Ae`) | Number | item | Mean of all unique edge lengths. |
+| Bounding Box Volume (`Bv`) | Number | item | Volume of axis-aligned bounding box. |
+| Report (`R`) | Text | item | Single-line summary. |
 
 ### Mesh Fill Holes (Geogram)  (`FillHolesGeogram`)
 
@@ -2236,6 +4372,24 @@ Related:
 
 Related:
 - Frahan > Mesh > Mesh Repair - Production mesh-repair production path; hole-fill is a research sub-operation.
+
+### Mesh PCA  (`PCA`)
+
+- GUID: `BCDEF012-3456-789A-BCDE-F0123456789A`  |  icon: `FrameBuilder.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Mesh/MeshPcaComponent.cs`
+- Algorithm: **Principal component analysis (covariance eigendecomposition)** - Frahan-original
+- Principal-component analysis of a mesh's vertex cloud. Returns  a Plane aligned to the natural axes (PC1 = longest, PC2 =  second, PC3 = shortest = plane normal), plus the three extent  lengths along each axis. Use to align rough quarry blocks.  Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Input mesh. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Frame (`F`) | Plane | item | Plane at the centroid, X-axis = PC1 (longest), Y-axis = PC2,  Z-axis = PC3 (shortest, = plane normal). |
+| Length 1 (`L1`) | Number | item | Extent along PC1 (longest principal axis). |
+| Length 2 (`L2`) | Number | item | Extent along PC2. |
+| Length 3 (`L3`) | Number | item | Extent along PC3 (shortest, = thickness through the plane normal). |
+| Centroid (`C`) | Point | item | Centroid of the vertex cloud (unweighted average). |
 
 ### Mesh Remesh (Geogram)  (`RemeshGeogram`)
 
@@ -2261,6 +4415,25 @@ Related:
 Related:
 - Frahan > Mesh > Mesh Repair - Mesh-quality production path; remesh is the research variant for adaptive density.
 - Frahan > Mesh > Mesh Diagnostics - Pre-remesh diagnostic.
+
+### Mesh Repair  (`MeshFix`)
+
+- GUID: `AB12C00A-1A2B-4C3D-9E4F-5A6B7C8D9E0A`  |  icon: `PoissonReconstruct.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshRepairComponent.cs`
+- Algorithm: **Mesh-repair recipe** - Botsch, Kobbelt, Pauly, Alliez, Levy 2010 Polygon Mesh Processing (AK Peters / CRC Press), ISBN 978-1568814261
+- Run the Frahan mesh-repair pipeline (cull degenerate / weld / cull  unused / heal naked edges / unify normals / recompute normals) and  return the repaired mesh plus a per-step trace. [Botsch et al. 2010]
+
+| in | type | access | description |
+|---|---|---|---|
+| Meshes (`M`) | Mesh | list | Mesh(es) to repair. Originals are not mutated. |
+| Weld Angle (`Wa`) | Number | item | Weld vertices whose face normals fall within this angle (radians).  Default = pi/8 (~22.5 deg). |
+| Heal Distance (`Hd`) | Number | item | Maximum naked-edge gap to heal (model units). Default = 0.001. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Repaired (`R`) | Mesh | list | Repaired mesh per input. |
+| Trace (`T`) | Text | list | Per-mesh repair trace (one multi-line string per input mesh). |
+| Skipped (`Sk`) | Integer | item | Number of meshes skipped (null input or pipeline threw). |
+| Summary (`S`) | Text | item | One-line summary. |
 
 ### Mesh Repair (Auto)  (`RepairAuto`)
 
@@ -2377,6 +4550,28 @@ Related:
 - Frahan > Mesh > Mesh Quality Report - Production mesh analysis; angle-based segmentation is a research probe.
 - Frahan > Masonry > Mesh Planar Polygon Extractor - Planar-face extraction shares the angle-clustering primitive.
 
+### Move to Origin  (`ToOrigin`)
+
+- GUID: `F2D05A03-1A2B-4C3D-9E4F-5A6B7C8D9E03`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/UtilityComponents.cs`
+- Recenter geometry (mesh / cloud / curves / blocks) to the world  origin as a group. Fixes geometry built from UTM-coordinate scans  that lands far from the origin. Emits the applied Transform and its  inverse so you can map the result back into world space.
+
+| in | type | access | description |
+|---|---|---|---|
+| Geometry (`G`) | Geometry | list | Geometry to recenter (any type; recentered together as one group). |
+| Anchor (`A`) | Integer | item | Which point maps to the target: 0 = bounding-box center,  1 = base (center XY, min Z) [good for 'set on the ground'],  2 = bounding-box min corner. Default 1. |
+| Target (`T`) | Point | item | Where the anchor lands. Default world origin (0,0,0). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Geometry (`G`) | Geometry | list | Recentered geometry. |
+| Transform (`X`) | Transform | item | The translation applied (world -> origin). |
+| Inverse (`Xi`) | Transform | item | Inverse translation (origin -> world); maps results back. |
+| Anchor Point (`P`) | Point | item | The source anchor point (in world coords). |
+
+Related:
+- Frahan > Mesh > Bench From Mesh - Bench built from a UTM scan lands far from origin; recenter it here.
+- Frahan > Mesh > Read LAS Cloud - LAS/LAZ clouds are in real-world (UTM) coordinates.
+
 ### OBB (Auto)  (`ObbAuto`)
 
 - GUID: `F2D000D2-A070-4F2D-A0D2-7E60A07000D2`  |  icon: `MeshBvh.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/AutoMeshComponents.cs`
@@ -2444,1242 +4639,6 @@ Related:
 Related:
 - Frahan > Masonry > Slab Cut By Fracture Polygons - Production polygon-based slab cutting; uses partitioned polygons as input.
 - Frahan > Masonry > Polygon Sanitize - Pre-clean polygons before partitioning.
-
-### Straight Skeleton (CGAL)  (`SkeletonCgal`)
-
-- GUID: `F2D000A1-CADC-4F2D-A0A1-7E60CADA15A0`  |  icon: `PolygonSimplify.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/CgalTestComponents.cs`
-- Algorithm: **Straight skeleton** - CGAL Straight_skeleton_2 (Aichholzer-Aurenhammer straight skeleton)
-- Interior straight skeleton of a 2D polygon (with optional  holes) via CGAL Straight_skeleton_2. Outer ring CCW, holes  CW; the shim auto-reverses if winding is wrong.  Wraps CGAL Straight_skeleton_2.
-
-| in | type | access | description |
-|---|---|---|---|
-| Outer (`O`) | Curve | item | Closed planar polyline / curve. The outer ring of the polygon. |
-| Holes (`H`) | Curve | list | Optional closed planar curves treated as holes. |
-| Tolerance (`T`) | Number | item | Curve-to-polyline tolerance. |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Edges (`E`) | Line | list | Skeleton edges as 2D lines (Z = 0). |
-| Vertices (`V`) | Point | list | Skeleton + boundary vertex positions. |
-| Times (`Time`) | Number | list | Time-of-arrival per vertex (boundary = 0; interior > 0). |
-| Available (`Av`) | Boolean | item | True iff the CGAL native shim is loadable. |
-| Report (`R`) | Text | item | Diagnostic report. |
-
-Related:
-- Frahan > Masonry > Slab Cut By Fractures - Skeleton-based cutting paths feed into the production fracture-cutting pipeline.
-- Frahan > Masonry > Fracture Polygon From Curve - Polygon ingest sibling for fracture inputs.
-
-### Tetrahedralize (Geogram)  (`TetGeogram`)
-
-- GUID: `F2D000C4-6E06-4F2D-A0C4-7E60660C0AC1`  |  icon: `CoacdDecompose.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/GeogramTestComponents.cs`
-- Algorithm: **Constrained Delaunay tetrahedralisation** - Levy, B., INRIA/ALICE. Geogram v1.9.9. BSD-3. https://github.com/BrunoLevy/geogram
-- Volumetric tetrahedral mesh of a closed surface via  GEO::mesh_tetrahedralize. NOTE: requires the shim to be  built with GEOGRAM_WITH_TETGEN=ON. Default build has it  OFF for BSD-3 license cleanliness; in that mode this  component returns a clear error pointing at the rebuild.  Wraps Geogram mesh_tetrahedralize (TetGen).
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Closed input surface. |
-| Preprocess (`Pre`) | Boolean | item | Clean input first. |
-| Refine (`Re`) | Boolean | item | Insert Steiner points to improve quality. |
-| Quality (`Q`) | Number | item | Element quality target [1.0..2.0]; 1.0 = max. |
-| Keep Regions (`Kr`) | Boolean | item | Keep all internal regions (else outermost only). |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Tet Cells (`T`) | Mesh | list | One mesh per tet (4 boundary triangles each). |
-| Tet Count (`N`) | Integer | item | Number of tetrahedra. |
-| Available (`Av`) | Boolean | item | True iff Geogram shim loaded. |
-| Report (`R`) | Text | item | Diagnostic report. |
-
-Related:
-- Frahan > Mesh > Mesh Diagnostics - Tet-mesh quality reports feed mesh-diagnostics workflows.
-- Frahan > Masonry > Masonry Stability RBE - Tetrahedralisation can support FE-volume stability analysis downstream of the RBE solver.
-
-### Voronoi Block Partition (Geogram)  (`RvdGeogram`)
-
-- GUID: `F2D000C6-6E06-4F2D-A0C6-7E60660C0AC1`  |  icon: `Voronoi.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/GeogramTestComponents.cs`
-- Algorithm: **Restricted Voronoi diagram partition** - Levy, B., INRIA/ALICE. Geogram v1.9.9. BSD-3. https://github.com/BrunoLevy/geogram
-- Partition a surface mesh into N Voronoi cells given seed  points (use CVT Seeds upstream for uniform-area cells).  Output is one Mesh per cell. Quarry-pipeline use:  Statue → Decimate → Repair → Remesh → CVT → this  → BlockGraph → GeoCut → QuarryCutOpt.  Wraps Geogram restricted Voronoi diagram.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Input surface. |
-| Seeds (`S`) | Point | list | Seed points (use CVT Seeds for optimized seeds). |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-| Smooth Pts (`SP`) | Integer | item | Pre-RVD uniform remesh target vertex count (0 = off,  5_000..50_000 typical). Smooths cell-boundary sawtooth. |
-| Closed (`Cl`) | Boolean | item | If true, return CLOSED Voronoi blocks (volumetric mode,  input must be a closed solid). If false, surface partition. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Cells (`C`) | Mesh | list | One mesh per Voronoi cell. |
-| Cell Count (`N`) | Integer | item | Number of non-empty cells produced. |
-| Available (`Av`) | Boolean | item | True iff Geogram shim loaded. |
-| Report (`R`) | Text | item | Diagnostic report. |
-
-Related:
-- Frahan > Quarry > Quarry DFN - Production DFN partitioner; this Geogram Voronoi is the research-grade alternative.
-- Frahan > Quarry > Joint Set - Joint-set fracture statistics feed Voronoi partitioning.
-
-
-## Masonry
-
-### Ashlar Pack  (`AshlarPack`)
-
-- GUID: `F1A2B3C4-D5E6-4789-9ABC-DEF012345678`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AshlarPackComponent.cs`
-- Algorithm: **Ashlar coursed wall layout** - Frahan-original 3D grid stacking with running bond
-- Lays convex Slabs into a coursed-ashlar wall (running bond).  Emits a MasonryAssembly with bottom-row blocks fixed and an  AshlarPackResult carrying coverage / leftovers / notes.
-
-| in | type | access | description |
-|---|---|---|---|
-| Wall Width (`W`) | Number | item | Wall length along +X (units of the active Rhino document,  typically meters). Must be > 0. Recommended: wire a Wall  Frame instead and leave this at default. |
-| Wall Height (`H`) | Number | item | Wall height along +Z. Must be > 0. Default 1.0. |
-| Wall Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. Default 0.20 (typical  single-leaf masonry). |
-| Meshes (`M`) | Mesh | list | Block inventory as Rhino meshes (e.g. from Quarry DFN, Slab  Cut By Fractures, or hand-authored). Each mesh must be convex  with at least 4 vertices and 4 faces. The packer auto-converts  to its internal Slab DTO. |
-| Course Mode (`M`) | Integer | item | Layout strategy. 0 = CoursedAshlar (uniform course height;  one block size). 1 = CoursedRubble (multi-bin: each course  uses one block-height bin; mixes block sizes across courses). |
-| Target Course Height (`Ch`) | Number | item | Course height for CoursedAshlar. For CoursedRubble it seeds  the first bin height. Should match the Z-extent of your  blocks within Height Tolerance. Default 0.15. |
-| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses (units of the document).  >= 0. Default 0.001 (1 mm typical lime-mortar gap). |
-| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between adjacent blocks in a course.  >= 0. Default 0.001 (1 mm). |
-| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, as a fraction of the  average block width. In [0, 1]. Default 0.5 (half-bond). |
-| Density (`D`) | Number | item | Material density in kg/m³ (or any consistent mass-per-volume  unit). > 0. Default 2400 (typical limestone). Used by the  downstream stability solver to compute self-weight. |
-| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering. >= 0. Default  0.05 (5 cm — accommodates rough-cut quarry blocks). |
-| Wall Frame (`Wf`) | Generic | item | Optional WallFrame DTO from Wall Frame component. When wired,  this overrides the primitive Wall Width / Height / Thickness  inputs above. Recommended for clean canvas wiring. |
-| Options (`Op`) | Generic | item | Optional AshlarPackOptions DTO from Ashlar Pack Options  component. When wired, overrides Course Mode / Course Height  / joints / stagger / density / tolerance. Recommended for  clean canvas wiring. |
-| Start Plane (`Sp`) | Plane | item | Optional start plane. Engine stays in world XY (correct for  the stability solver, which assumes gravity = -Z). The  component emits a Display Transform that maps world XY into  this plane; wire it into AssemblyPreview / mesh Transform  to re-orient the wall visually. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly with bottom-course blocks fixed. Wire into  Masonry Stability (RBE). |
-| Result (`R`) | Generic | item | AshlarPackResult carrying coverage / leftovers / notes / placed  blocks. Wire into Pack Diagnostics (Stage 3). |
-| Display Transform (`T`) | Transform | item | World-XY → Start Plane transform. Identity when Start Plane  is not wired. Wire into mesh / preview transforms. |
-
-### Ashlar Pack Options  (`AshOpts`)
-
-- GUID: `B3C4D5E6-F7A8-49AB-CDEF-012345678901`  |  icon: `BondPattern.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AshlarPackOptionsComponent.cs`
-- Bundles ashlar packer knobs (course mode, joints, stagger,  density, height tolerance) into an AshlarPackOptions DTO.  Wire into Ashlar Pack's optional Options input.
-
-| in | type | access | description |
-|---|---|---|---|
-| Course Mode (`M`) | Integer | item | Layout strategy. 0 = CoursedAshlar (single block-height bin,  uniform courses). 1 = CoursedRubble (multi-bin, mixes block  sizes across courses). Default 0. |
-| Course Height (`Ch`) | Number | item | Target course height in document units (typically meters).  Must match the Z-extent of your blocks within Height Tolerance.  Default 0.15. |
-| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses, in document units. >= 0.  Default 0.001 (1 mm typical). |
-| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between adjacent blocks, in document  units. >= 0. Default 0.001. |
-| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, as a fraction of the  average block width. In [0, 1]. Default 0.5 (half-bond,  the standard). |
-| Density (`D`) | Number | item | Material density in kg/m³ (or consistent mass-per-volume  unit). > 0. Default 2400 (typical limestone). Used by the  downstream stability solver. |
-| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering and rubble  binning, in document units. >= 0. Default 0.05 (5 cm —  accommodates rough-cut quarry blocks). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Options (`O`) | Generic | item | AshlarPackOptions DTO bundling all algorithmic knobs. Wire  into Ashlar Pack's Options input — when wired, it overrides  the equivalent primitive inputs on the packer. |
-
-### Assembly Preview  (`AsmPrev`)
-
-- GUID: `12345678-9ABC-DEF0-1234-56789ABCDEF0`  |  icon: `AssemblyState.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AssemblyPreviewComponent.cs`
-- Visualizes a MasonryAssembly. Outputs one Mesh per block  (separated into free + fixed lists), the IDs of each, and  per-interface contact polylines + centroids + normals for  debugging.
-
-| in | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly DTO (from Masonry Assembly or Ashlar Pack). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Free Meshes (`Mf`) | Mesh | list | Block meshes for blocks that are NOT fixed by boundary conditions. |
-| Fixed Meshes (`Mfix`) | Mesh | list | Block meshes for blocks that ARE fixed (grounded). |
-| Free Block Ids (`If`) | Text | list | IDs of the free blocks (parallel to Free Meshes). |
-| Fixed Block Ids (`Ifix`) | Text | list | IDs of the fixed blocks (parallel to Fixed Meshes). |
-| Contact Polylines (`C`) | Curve | list | One closed polyline per MasonryInterface — the contact  polygon as drawn on the canvas. |
-| Contact Centroids (`Cc`) | Point | list | Centroid of each contact polygon. Use to anchor labels  or to draw normals. |
-| Contact Normals (`Cn`) | Vector | list | Surface normal at each contact, pointing from block A to  block B (Frahan convention). |
-| Contact Pairs (`Cp`) | Text | list | Per-interface 'aId -> bId' string for hover-debugging. |
-
-### Auto Interfaces  (`AutoIf`)
-
-- GUID: `CADBECFD-AEBF-4012-3456-789012345678`  |  icon: `ContactDetector.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/AutoInterfacesComponent.cs`
-- Algorithm: **Interface auto-detector** - Frahan-original proximity-based pairwise contact detection
-- Detects face-face contacts between a list of placed Slabs  and emits the corresponding MasonryInterfaces. Wire output  into Masonry Assembly's Interfaces input. NOTE: generated  walls carry exact joints via the Assembly output — detection  is only needed for imported geometry; for scan-derived meshes  use Robust Auto Interfaces.
-
-| in | type | access | description |
-|---|---|---|---|
-| Meshes (`M`) | Mesh | list | Block meshes in their final placed positions. Standard Rhino  mesh wires; this component finds face-face contacts between them. |
-| Block Ids (`Ids`) | Text | list | One ID per slab in the same order. Must match the IDs used  to construct MasonryBlocks. |
-| Distance Tolerance (`Dtol`) | Number | item | Max distance between coplanar faces (>= 0). |
-| Angle Tolerance Deg (`Atol`) | Number | item | Max angle between antiparallel face normals, in degrees (>= 0, < 90). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Interfaces (`I`) | Generic | list | Detected MasonryInterfaces. Wire into Masonry Assembly. |
-
-Related:
-- Frahan > Masonry > Robust Auto Interfaces - Vertex-proximity detection for scan-derived meshes (slight gaps, non-planar contacts); use it when this polygon-based detector misses contacts.
-
-### Best Fit Pack  (`BestFit`)
-
-- GUID: `01234567-89AB-CDEF-0123-456789ABCDEF`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BestFitPackComponent.cs`
-- Algorithm: **Best-fit rubble inventory placement** - Gramazio Kohler Eichenhofer 2017 NCCR Digital Fabrication
-- Inventory-aware ashlar packing. For each placement slot,  scores every remaining stone by width / depth / height /  aspect-ratio fit and picks the highest-scoring candidate.  Companion to Ashlar Pack (which uses first-fit). Recommended  for heterogeneous quarry inventories where stone sizes vary. [Gramazio et al. 2017]
-
-| in | type | access | description |
-|---|---|---|---|
-| Wall Width (`W`) | Number | item | Wall length along +X. Must be > 0. Recommended: wire a  Wall Frame instead. |
-| Wall Height (`H`) | Number | item | Wall height along +Z. Must be > 0. |
-| Wall Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. |
-| Inventory (`I`) | Mesh | list | Block inventory as Rhino meshes. Each mesh becomes a  candidate stone for best-fit selection. |
-| Course Height (`Ch`) | Number | item | Target course height. Must match the Z-extent of your  blocks within Height Tolerance. Default 0.15. |
-| Bed Joint (`Bj`) | Number | item | Vertical mortar gap between courses. Default 0.001. |
-| Head Joint (`Hj`) | Number | item | Horizontal mortar gap between blocks. Default 0.001. |
-| Stagger Offset (`So`) | Number | item | Running-bond shift on odd courses, fraction of average  block width. Default 0.5. |
-| Density (`D`) | Number | item | Material density (kg/m³). Default 2400. |
-| Height Tolerance (`Tol`) | Number | item | Block-height tolerance for inventory filtering. Default 0.05. |
-| Wall Frame (`Wf`) | Generic | item | Optional WallFrame DTO. Overrides primitive Wall W/H/T. |
-| Options (`Op`) | Generic | item | Optional AshlarPackOptions DTO. Overrides primitive  algorithmic inputs. |
-| Start Plane (`Sp`) | Plane | item | Optional start plane. Engine stays in world XY (correct for  the stability solver). Component emits a Display Transform  that maps world XY into this plane for visual re-orientation. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly with bottom-course blocks fixed. |
-| Result (`R`) | Generic | item | AshlarPackResult — coverage / leftovers / notes / placed blocks. |
-| Display Transform (`T`) | Transform | item | World-XY → Start Plane transform. Identity when unset. |
-
-### Block Build Order  (`BuildOrd`)
-
-- GUID: `3456789A-BCDE-F012-3456-789ABCDEF012`  |  icon: `AssemblySolver.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockBuildOrderComponent.cs`
-- Algorithm: **Support-DAG topological install order** - Kim et al. 2024, ASME IDETC/CIE DETC2024-142563 Polygonal masonry install-order DAG
-- Computes a physically valid build order for a masonry  assembly. A block is placed only after every block it  rests on is already placed. Layer = course number  (longest support path from ground). [Kim et al. 2024]
-
-| in | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly DTO. |
-| Up Vector (`Up`) | Vector | item | Direction the courses stack along. Default world Z. |
-| Up Tolerance Deg (`Tol`) | Number | item | An interface counts as a bed joint when its normal is  within this many degrees of the up axis. Head joints /  vertical contacts beyond this tolerance contribute no  support constraint. Default 30°. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Ordered Block Ids (`Id`) | Text | list | Block ids in build order (lowest course first). |
-| Ordered Meshes (`M`) | Mesh | list | Block meshes in build order, parallel to Ordered Block Ids. |
-| Order Index (`i`) | Integer | list | 0-based placement index per block, parallel to Ordered  Block Ids. Equals the list index — exposed for downstream  components that rebuild the order. |
-| Layer (`L`) | Integer | list | Course number (longest support path). 0 = ground course.  Useful for colour-by-course visualisation. |
-
-### Block Graph Coloring  (`BlockColor`)
-
-- GUID: `F2D000B0-CADC-4F2D-A0B0-7E60CADA15A0`  |  icon: `BeamConfig.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockGraphColoringComponent.cs`
-- Algorithm: **Welsh-Powell graph coloring** - Welsh and Powell 1967, Computer Journal 10(1):85-86
-- 4-colours the contact graph of a MasonryAssembly: no two  blocks sharing an interface get the same colour. Output  is one integer per block (0-3 typically; up to 7 for  non-planar topologies). Wire into native colour-mapping  to drive visualization or material assignment. [Welsh & Powell 1967]
-
-| in | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly with blocks + interfaces. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Block Ids (`Id`) | Text | list | Block identifiers, in iteration order. |
-| Colour (`C`) | Integer | list | Per-block colour index (0-based). Same length and order as  the Block Ids output. |
-| Colours Used (`N`) | Integer | item | Total number of distinct colours used. Should be <= 4 for  planar contact graphs (4-Colour Theorem). |
-
-### Block Ground Transforms  (`BlkXform`)
-
-- GUID: `23456789-ABCD-EF01-2345-6789ABCDEF01`  |  icon: `RigidTransform.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockGroundTransformsComponent.cs`
-- Algorithm: **Closed-form absolute orientation (Horn QAO)** - Horn 1987, Closed-form solution of absolute orientation using unit quaternions, JOSA A 4(4):629-642
-- Recovers the rigid transform per placed block. Wire  Source Meshes (canonical) and Placed Meshes (post-  assembly) for vertex-paired Horn QAO recovery, OR wire  Existing Transforms for direct pass-through. Output  transforms are expressed in the Ground Plane's frame  (default: world XY). Implements Horn QAO (Horn 1987).
-
-| in | type | access | description |
-|---|---|---|---|
-| Placed Meshes (`P`) | Mesh | list | Meshes after assembly (one per block). The recovered  transform takes the matching Source Mesh to this pose. |
-| Source Meshes (`S`) | Mesh | list | Canonical / pre-placement meshes (one per block, parallel  to Placed). Required when Existing Transforms is empty.  Vertex count and order must match the placed mesh. |
-| Existing Transforms (`Tx`) | Transform | list | Optional pre-known transforms (parallel to Placed). When  supplied at index i, this transform is passed through  verbatim and Horn QAO is skipped for that block. |
-| Ground Plane (`G`) | Plane | item | Reference frame. Output transforms are re-expressed in  this plane's local basis. Default: world XY. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Transforms (`T`) | Transform | list | Per-block rigid transform (canonical → placed) in the  ground-plane frame. |
-| Origins (`O`) | Point | list | Where each block's local origin lands. Useful for  anchoring labels on the canvas. |
-| RMS (`E`) | Number | list | Per-block Horn QAO residual (root-mean-square of  vertex-pair distances after fit). 0.0 for pass-through. |
-| Status (`St`) | Text | list | 'passthrough' / 'kabsch (V=…)' / 'failed: …' per block. |
-
-### Block Pack (Tree)  (`BlockPackTree`)
-
-- GUID: `C2D3E4F5-3001-4F5E-A6B7-C8D9E0F12345`  |  icon: `TreePack.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Packing/BlockPackTreeComponent.cs`
-- Algorithm: **Tree-forest guillotine pack** - Kim 2025 Computation 13:211
-- Pack sculpture/element cuboids into stone-block containers  with axis-aligned guillotine cuts. Frahan port of Kim 2025  (Computation 13:211, CC BY 4.0). Picks the cheapest subset  of containers that fits all elements; falls back to highest  packed-value when full packing is infeasible. Three  extensions beyond the paper: deterministic seed, saw kerf  width, and Forbidden Boxes per container.
-
-| in | type | access | description |
-|---|---|---|---|
-| Elements (`E`) | Box | list | Element AABBs (sculpture / final-piece bounding boxes).  Only the box dimensions are used for the fit test; the  Box.Plane defines the element's source pose. |
-| Element Values (`Pe`) | Number | list | Per-element value (e.g. piece price). Must match the  element count. |
-| Containers (`C`) | Box | list | Container AABBs (stone-block bounding boxes). |
-| Container Prices (`Pc`) | Number | list | Per-container price (e.g. stone-block material cost).  Must match the container count. |
-| Rotation Mode (`Rot`) | Integer | item | 0 = None (identity only), 1 = OneAxis (vein-aligned),  2 = ThreeAxis (six 90° rotations). |
-| Forests (`F`) | Integer | item | Number of independent randomised forests to grow. Score  plateaus by f ≈ 50–1000 on small instances; large jobs  may need 10⁴–10⁶ forests (see paper §4). |
-| Seed (`S`) | Integer | item | Master seed (Frahan extension beyond Kim 2025). Forest k  uses (seed + k) internally; setting the same seed gives  the same result. Default 0 is deterministic. |
-| Kerf Width (`K`) | Number | item | Saw kerf width in model units (Frahan extension). Each  axis-aligned cut consumes this much material along its  direction. Real values: 5–10 mm for diamond wire saws,  1–3 mm for thin blades. Default 0. |
-| Forbidden Boxes (`X`) | Box | list | Optional flat list of forbidden Box regions inside any  container (Frahan extension; closes Kim §8.2 gap on  fracture-aware containers). Elements that overlap a  forbidden region in their target container are rejected.  A forbidden box outside all containers has no effect. |
-| Cut Surface Weight (`Cw`) | Number | item | K2 / Jalalian I11 (BCSdbBV) extension. Score subtracts  weight × Σ(internal-face area) across placements. Default 0  preserves the original Kim 2025 score. |
-| Max Parallelism (`Mp`) | Integer | item | K2 parallel-forest extension. 0 = auto (Environment. ProcessorCount). 1 forces serial. Parallel results are  bitwise identical to serial because each forest's RNG is  seeded independently. |
-| Memory Budget MB (`Mb`) | Number | item | K2 memory-cap extension. When > 0, Forests is  automatically reduced so f × ~1.4 KB × element-count ≤ budget.  0 = unlimited. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Placed Boxes (`Pb`) | Box | list | Placed element AABBs in world-frame coordinates. |
-| Transforms (`Xf`) | Transform | list | World-frame transform per placed element (apply to the  source element Box to recover the placed pose, including  any rotation). |
-| Placed Element Ids (`Ei`) | Integer | list | Index into the input element list for each placement, in  placement order. Compare against the input element count  to find unpacked elements. |
-| Placed Container Ids (`Ci`) | Integer | list | Index into the input container list for each placement. |
-| Used Containers (`Uc`) | Integer | list | Sorted unique indices of containers that hold at least one  placed element. |
-| Score (`Sc`) | Number | item | Score of the winning forest (Kim 2025 §2.4): sum of packed  element values, plus 1/(1+containerPrice) bonus when all  elements fit. |
-| All Packed (`All`) | Boolean | item | True iff every input element landed in a container. |
-| Best Forest (`Bf`) | Integer | item | Index of the winning forest (0 ≤ index < Forests). |
-| Report (`R`) | Text | item | Human-readable summary. |
-
-### Block Size Distribution  (`BlkSize`)
-
-- GUID: `EF012345-6789-ABCD-EF01-23456789ABCD`  |  icon: `YieldEstimator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BlockSizeDistributionComponent.cs`
-- Algorithm: **Descriptive statistics + Tukey-fence outlier rule** - Tukey 1977, Exploratory Data Analysis, Addison-Wesley
-- Diagnostic stats over a list of slab volumes. Use to QA  quarry decomposition: high CV (> 1) signals the joint-set  parameters need retuning. Outlier fence per Tukey 1977 (EDA).
-
-| in | type | access | description |
-|---|---|---|---|
-| Slabs (`S`) | Generic | list | Slab DTOs. |
-| Bins (`B`) | Integer | item | Histogram bin count. 0 = ceil(sqrt(N)). Default 0. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Count (`N`) | Integer | item | Total piece count. |
-| Total Volume (`V`) | Number | item | Sum of all volumes. |
-| Min (`Min`) | Number | item |  |
-| Max (`Max`) | Number | item |  |
-| Mean (`Mean`) | Number | item |  |
-| Median (`P50`) | Number | item |  |
-| StdDev (`SD`) | Number | item |  |
-| CV (`CV`) | Number | item | Coefficient of variation (StdDev/Mean). |
-| Percentiles (`P`) | Number | list | [P10, P25, P50, P75, P90]. |
-| Outlier Indices (`Out`) | Integer | list | Indices outside the Tukey fence (Q1−1.5·IQR, Q3+1.5·IQR). |
-| Bin Counts (`Hist`) | Integer | list | Histogram counts (length = Bins). |
-| Bin Width (`Bw`) | Number | item | Width of each histogram bin. |
-| Report (`R`) | Text | item | One-line summary. |
-
-### Build Sequence JSON  (`BuildJson`)
-
-- GUID: `6789ABCD-EF01-2345-6789-ABCDEF012345`  |  icon: `GcodeExport.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildSequenceJsonComponent.cs`
-- Encodes the masonry build sequence as a JSON string.  Wire Block Ids, Place Planes (or Place Transforms via  Pick Place Frames), and Layers in matching list order.  Output is plain text — pipe to a file-writing component  if you need disk persistence.
-
-| in | type | access | description |
-|---|---|---|---|
-| Block Ids (`Id`) | Text | list | Per-block identifier. Required. |
-| Place Planes (`Pl`) | Plane | list | Per-block placement plane (parallel to Block Ids).  Required. |
-| Layers (`L`) | Integer | list | Per-block course number. Optional; if absent, all  layers are reported as 0. |
-| Pretty (`P`) | Boolean | item | Indent the JSON for human reading. Default true. Set  false for compact single-line output. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Json (`J`) | Text | item | JSON text encoding the build sequence (schema 1.0). |
-
-### Build Step Preview  (`BuildStep`)
-
-- GUID: `56789ABC-DEF0-1234-5678-9ABCDEF01234`  |  icon: `AssemblyState.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildStepPreviewComponent.cs`
-- Slider-driven animation of a masonry build sequence. Wire  the ordered meshes from Block Build Order and a Step  integer slider. Returns Built (0..step), Pending  (step..N), and Current (mesh at step).
-
-| in | type | access | description |
-|---|---|---|---|
-| Ordered Meshes (`M`) | Mesh | list | Block meshes in build order. Pipe in the Ordered Meshes  output from Block Build Order. |
-| Step (`S`) | Integer | item | Current step. 0 = nothing built yet; N = everything  built. Values outside [0, N] are clamped. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Built (`Mb`) | Mesh | list | Meshes placed at or before Step (indices 0..step-1). |
-| Pending (`Mp`) | Mesh | list | Meshes still to place (indices step..N-1). |
-| Current (`Mc`) | Mesh | item | The mesh placed at this step (index step-1). Empty when  Step == 0 (nothing built yet). |
-| Total (`N`) | Integer | item | Total mesh count, for sizing the slider. |
-
-### Build-Order Stability Stream  (`StabStream`)
-
-- GUID: `F2D000B3-CADC-4F2D-A0B3-7E60CADA15A0`  |  icon: `EquilibriumRBE.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/BuildOrderStabilityStreamComponent.cs`
-- Walks a masonry build order and runs the RBE convex-QP  stability check on each partial assembly. Reports the  first step at which the in-progress wall becomes unstable.
-
-| in | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | Full MasonryAssembly DTO. |
-| Ordered Block Ids (`Id`) | Text | list | Block ids in build order. Output of Block Build Order. |
-| Mu (`Mu`) | Number | item | Coulomb friction coefficient. Default 0.84 (~40°). |
-| Faces (`F`) | Integer | item | Pyramidal friction-cone face count. Default 4. |
-| Penalty (`P`) | Boolean | item | Penalty form (split f_n+/f_n-). Default false. |
-| Stop On First Infeasible (`Stop`) | Boolean | item | Stop streaming as soon as one step is infeasible. Default true. |
-| Max Steps (`Max`) | Integer | item | Cap on steps to evaluate. -1 = no cap (default). |
-| Run (`R`) | Boolean | item | Set true to run. |
-
-| out | type | access | description |
-|---|---|---|---|
-| First Unstable Step (`Step*`) | Integer | item | 0-based index of the first infeasible step. -1 if every  evaluated step was stable. |
-| First Unstable Block Id (`Id*`) | Text | item | Block id placed at the first unstable step. Empty when  all evaluated steps are stable. |
-| Verdict Per Step (`V`) | Text | list | Per-step verdict (parallel to Ordered Block Ids up to the  evaluated count). |
-| Objective Per Step (`Obj`) | Number | list | Per-step QP objective value. |
-| Report (`R`) | Text | item | Multi-line summary log. |
-
-### Cut Validation  (`CutVal`)
-
-- GUID: `DEF01234-5678-9ABC-DEF0-123456789ABC`  |  icon: `StereotomyJoint.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/CutValidationComponent.cs`
-- Validates a cut: sum(post-piece volumes) ≈ sum(pre-slab  volumes) within tolerance. Flags slivers and dropouts.
-
-| in | type | access | description |
-|---|---|---|---|
-| Pre Slabs (`Pre`) | Generic | list | Slab DTOs before the cut. |
-| Post Slabs (`Post`) | Generic | list | Slab DTOs after the cut. |
-| Relative Tolerance (`Tr`) | Number | item | Acceptable relative volume mismatch. Default 1e-6. |
-| Sliver Fraction (`Ts`) | Number | item | Pieces whose volume is below this fraction of the total  are flagged as slivers. Default 1e-4. |
-| Dropout Volume (`Td`) | Number | item | Pieces below this absolute volume are flagged as  dropouts (likely lost geometry). Default 1e-12. |
-| Drop Slivers (`DropS`) | Boolean | item | If true, also output a sliver-free subset of post slabs.  Default false. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Conserved (`OK`) | Boolean | item | True iff |postVol − preVol| / preVol ≤ Relative Tolerance. |
-| Pre Volume (`Vpre`) | Number | item | Sum |signed volume| of pre slabs. |
-| Post Volume (`Vpost`) | Number | item | Sum |signed volume| of post slabs. |
-| Absolute Error (`AbsErr`) | Number | item | |Vpre − Vpost|. |
-| Relative Error (`RelErr`) | Number | item | AbsErr / Vpre. |
-| Sliver Indices (`Sli`) | Integer | list | 0-based indices of post slabs flagged as slivers. |
-| Dropout Indices (`Dro`) | Integer | list | 0-based indices of post slabs with effectively zero volume. |
-| Cleaned Slabs (`Clean`) | Generic | list | Sliver-free subset of post slabs. Empty when Drop  Slivers is false. |
-| Report (`R`) | Text | item | One-line summary. |
-
-### Dry-Stone Wall (NBO)  (`NBOWall`)
-
-- GUID: `D5F10030-0BA0-4ED9-A030-0BA00BA00030`  |  icon: `DryStoneWallNbo.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/DryStoneWallNboComponent.cs`
-- Fill a dry-stone wall from a stone inventory with the Next-Best-Object planner  (hybrid orient -> drop-to-contact -> analytic stability gate -> lowest-cost pick).  Outputs the ordered, gated placement sequence. Optional target envelope, physical Seat  validation (settle each placement onto the fixed wall), and Bullet settle / CRA confirmation.  Ref: Furrer 2017 / Johns 2020.
-
-| in | type | access | description |
-|---|---|---|---|
-| Inventory (`I`) | Mesh | list | Stone meshes to draw from. |
-| Wall Length (`L`) | Number | item | Wall length to fill along +X (m). Overridden by Envelope if supplied. |
-| Target Height (`H`) | Number | item | Fill until the wall top reaches this height (m). Overridden by Envelope. |
-| Course Offset (`O`) | Number | item | Running-bond offset applied on alternating courses (m). |
-| Gap (`G`) | Number | item | Minimum gap between stones along a course (m). |
-| Envelope (`E`) | Brep | item | Optional closed target envelope (Brep): bounds the wall and rejects stones whose CoM falls outside it. |
-| Spine (`Sp`) | Curve | item | Optional plan-rim spine curve: the wall follows it (front advances along arc length, long axis  into the wall along the local normal). A straight line reproduces the straight-X wall. |
-| Confirm (`C`) | Boolean | item | Run a Bullet physics settle confirmation of the produced wall. |
-| CRA (`Cra`) | Boolean | item | Run the compas-CRA rigid-block-equilibrium wall-gate (the strongest stability tier) on the produced wall. |
-| Run (`R`) | Boolean | item | Execute the fill. |
-| Seat (`Se`) | Boolean | item | Physically VALIDATE each placement: drop every candidate (in its top stable orientations) onto  the fixed as-built and keep only the one that beds firmly, committed at its settled pose. Builds  a wall that holds (fewer stones, no slips) -- the robot-ready mode. Needs the Bullet backend. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Placed (`Pl`) | Mesh | list | Placed stone meshes in placement order. |
-| Transforms (`X`) | Transform | list | Per-stone placement transform (matches Placed order). |
-| Course (`Cr`) | Integer | list | Per-stone course index. |
-| Stable (`St`) | Boolean | list | Per-stone analytic stability verdict. |
-| Cost (`Co`) | Number | list | Per-stone selection cost (lower is better). |
-| Report (`Rp`) | Text | item | Solve summary. |
-
-### Force-Seat (URScript)  (`FSeat`)
-
-- GUID: `D5F10032-0BA0-4ED9-A032-0BA00BA00032`  |  icon: `ForceSeatUrScript.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/ForceSeatUrScriptComponent.cs`
-- Emit UR URScript to place + force-seat a stone at each place TCP frame  (approach -> descend -> force_mode press -> retract). TEXT ONLY (code-gen, no  hardware send); validate in URSim. Force-seating is the irregular-stone enabler.
-
-| in | type | access | description |
-|---|---|---|---|
-| Place Frames (`F`) | Plane | list | Seat TCP frames (from Next-Best-Object Pose -> Robot Frame). Frame Z is the press direction. |
-| Robot Base (`B`) | Plane | item | Robot base frame in world coords; poses are emitted in it. |
-| Seat Force (`Fz`) | Number | item | Downward press force to seat the stone (N). |
-| Approach (`A`) | Number | item | Approach/retract clearance above the seat (m). |
-| Descend Speed (`V`) | Number | item | Compliant descent speed during seating (m/s). |
-
-| out | type | access | description |
-|---|---|---|---|
-| URScript (`U`) | Text | list | One place + force-seat URScript program per place frame (text; validate in URSim before any hardware). |
-
-### Fragment Merger  (`FragMerge`)
-
-- GUID: `F0123456-789A-BCDE-F012-3456789ABCDE`  |  icon: `KintsugiAssemble.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/FragmentMergerComponent.cs`
-- Algorithm: **Greedy smallest-first agglomeration over a contact-adjacency graph** - Frahan-original
-- Agglomerates small fragments into their largest adjacent  host using upstream contact adjacency. Returns a merge  mapping (HostOf per piece + per-host accumulated volume);  geometry is NOT remeshed at this stage. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Slabs (`S`) | Generic | list | Slab DTOs (the candidate pieces). |
-| Adjacency I (`Ai`) | Integer | list | First index of each adjacency pair. |
-| Adjacency J (`Aj`) | Integer | list | Second index of each adjacency pair (parallel to Ai). |
-| Threshold Fraction (`Th`) | Number | item | Fragments below threshold·meanVolume are merged. Default  1e-3 (0.1% of mean). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Host Of (`H`) | Integer | list | Per-input-piece, the index it ultimately merged into.  Self if it's a host. |
-| Merged Volume (`Vm`) | Number | list | Per-input-piece volume after merge (host accumulates;  non-host entries are 0). |
-| Host Indices (`Hi`) | Integer | list | Indices of pieces that remained hosts. |
-| Merged Count (`Mc`) | Integer | item | Number of fragments that got merged into a different host. |
-
-### IFC Export (Building)  (`IfcBuilding`)
-
-- GUID: `D5F10018-5C7B-4E2D-9A41-8B36F1D07C54`  |  icon: `IfcBuilding.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/IfcBuildingExportComponent.cs`
-- Write SEVERAL stone containers (walls, arches, vaults, columns) into one IFC4 building.  Stones come as a tree: one branch per container; Names and Containers list-match the branches.  Each stone becomes an IfcBuildingElementPart (or voussoir IfcMember) with a tessellated body.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`St`) | Mesh | tree | Stone meshes, ONE BRANCH PER CONTAINER |
-| Names (`N`) | Text | list | Container names (one per branch) |
-| Containers (`C`) | Integer | list | Per branch: 0 Wall | 1 Cladding | 2 Arch | 3 Vault | 4 Column |
-| Path (`P`) | Text | item | Output .ifc path |
-| Project (`Pr`) | Text | item | IfcProject name Frahan Stone Building |
-| Run (`R`) | Boolean | item | Write the file |
-
-| out | type | access | description |
-|---|---|---|---|
-| Path (`P`) | Text | item | Written file |
-| Report (`R`) | Text | item | Export report |
-| OK (`OK`) | Boolean | item | True if the file was written |
-
-### IFC Export (Stone Assembly)  (`IfcStones`)
-
-- GUID: `D5F10017-3E5A-4B9C-8D26-1F70A4C85E93`  |  icon: `IfcExport.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/IfcExportComponent.cs`
-- Write the stone assembly as IFC4: container element (wall / cladding / arch / vault / column)  with one building-element part per stone (tessellated body + Frahan_Stone property set).  xBIM Essentials, SI metres.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`St`) | Mesh | list | Closed stone meshes in their placed positions |
-| Name (`N`) | Text | item | Container element name StoneWall |
-| Path (`P`) | Text | item | Output .ifc path |
-| Container (`C`) | Integer | item | 0 Wall | 1 Cladding | 2 Arch | 3 Vault | 4 Column |
-| Carve (`Cr`) | Number | list | Per-stone carve ratio lambda (optional) |
-| Stability (`Sm`) | Number | item | Stability margin for the assembly (optional) |
-| InterlockJ (`J`) | Number | item | Interlock score J of the pattern (optional) |
-| Run (`R`) | Boolean | item | Write the file |
-
-| out | type | access | description |
-|---|---|---|---|
-| Path (`P`) | Text | item | Written file |
-| Report (`R`) | Text | item | Export report |
-| OK (`OK`) | Boolean | item | True if the file was written |
-
-### Masonry Assembly  (`MasAsm`)
-
-- GUID: `E5A9B2C3-3D4E-4F60-AB2C-4D5E6F7A8B9C`  |  icon: `Voussoir.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryAssemblyComponent.cs`
-- Composes MasonryBlocks, MasonryInterfaces, and fixed-block boundary  conditions into a MasonryAssembly DTO. Interfaces must be supplied  explicitly; auto-detection is a future task.
-
-| in | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Generic | list | MasonryBlock DTOs from Masonry Block. |
-| Interfaces (`I`) | Generic | list | MasonryInterface DTOs. May be empty; auto-detection is a future task. |
-| Fixed Block Ids (`F`) | Text | list | Identifiers of blocks that are grounded (boundary conditions).  Empty list means all blocks are free. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly DTO. Wire into Masonry Stability (RBE). |
-
-### Masonry Block  (`MasBlk`)
-
-- GUID: `D4F8A1B2-2C3D-4E5F-9A1B-3C4D5E6F7A8B`  |  icon: `MeshBvh.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryBlockComponent.cs`
-- Wraps a Rhino mesh into a MasonryBlock DTO. Quads are triangulated;  the mesh must have at least 3 vertices and at least one face.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Rhino mesh defining the block geometry. Quads are auto-triangulated. |
-| Id (`I`) | Text | item | Optional stable identifier. If blank, a fresh GUID is assigned. |
-| Density (`D`) | Number | item | Material density (kg/m^3 or any consistent unit). Must be > 0. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Block (`B`) | Generic | item | MasonryBlock DTO. Wire into Masonry Assembly. |
-| Id (`Id`) | Text | item | Block identifier (the value passed in, or the auto-generated  GUID if Id was blank). Wire into Auto Interfaces' Block Ids  input or Masonry Assembly's Fixed Block Ids input — keeps  block identity consistent across the canvas. |
-
-### Masonry Stability (RBE)  (`MasRBE`)
-
-- GUID: `F6BAC3D4-4E5F-4071-BC3D-5E6F7A8B9CAD`  |  icon: `EquilibriumRBE.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryStabilityRbeComponent.cs`
-- Algorithm: **Rigid-Block Equilibrium QP** - Kao et al. 2022, Computer-Aided Design 146:103216 Coupled Rigid-Block Analysis
-- Convex-QP rigid-block-equilibrium stability check for a MasonryAssembly.  NOTE: RBE is the permissive check; CRA (Kao 2022) rejects self-stressed  states RBE accepts (H-model). Certify via Masonry Stability Check + CRA.  Asynchronous: assembles the equilibrium + friction QP and solves on a  pool thread.
-
-| in | type | access | description |
-|---|---|---|---|
-| Assembly (`A`) | Generic | item | MasonryAssembly from Masonry Assembly. |
-| Mu (`Mu`) | Number | item | Coulomb friction coefficient (default 0.84, ~40 deg). |
-| Faces (`F`) | Integer | item | Number of pyramidal faces used to linearise the friction cone  (>= 3, default 4). |
-| Penalty (`P`) | Boolean | item | If true, use the penalty form (split normals f_n+/f_n-) for the  equilibrium matrix. |
-| Run (`R`) | Boolean | item | Set true to execute the solve. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Verdict (`V`) | Text | item | Short verdict: 'stable', 'infeasible', 'no solver registered', or an  error class. |
-| Objective (`O`) | Number | item | QP objective value at the returned x (NaN when not Optimal). |
-| ResidualNorm (`R`) | Number | item | L2 norm of the equilibrium residual ||Aeq x - beq||. |
-| SolverName (`S`) | Text | item | Identifier of the solver used (e.g. 'ManagedQpSolver'). |
-| Report (`Rpt`) | Text | item | Human-readable diagnostic. |
-
-Related:
-- Frahan > Masonry > Masonry Stability Check - Certification path: CRA (Kao 2022) rejects self-stressed states that RBE accepts (H-model); certify via Masonry Stability Check + CRA.
-
-### Masonry Stability Check  (`MasonStable`)
-
-- GUID: `D5F10015-2B43-4E8A-A1C7-9D0F4B6E2A91`  |  icon: `StabilityCheck.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/MasonryStabilityCheckComponent.cs`
-- Rigid-block equilibrium (RBE) stability check for a stone assembly: contacts are  auto-detected, the Kao 2021/2022 compression-only + Coulomb-friction QP is solved,  and the verdict + per-interface friction utilization are reported. Friction uses a  conservative INSCRIBED K-face pyramid (mu_eff = mu*cos(pi/K)).  Refs: Kao et al. 2021 (J Mech Des) / 2022 (CAD 146:103216, compas_cra).
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`St`) | Mesh | list | Closed stone meshes in their placed positions (optional when an Assembly is supplied) |
-| Mu (`Mu`) | Number | item | Coulomb friction coefficient (0.84 ~ dry stone, 40 deg) |
-| Faces (`K`) | Integer | item | Friction pyramid face count (>= 3; 8 recommended) |
-| FixBelowZ (`Fz`) | Number | item | Blocks whose lowest vertex is within this of the global min Z are fixed (ground) |
-| Density (`Rho`) | Number | item | Stone density (kg/m^3) |
-| ContactTol (`Ct`) | Number | item | Contact detection distance tolerance (model units) |
-| AngleTol (`At`) | Number | item | Contact detection face-angle tolerance (degrees). Raise to ~12-20 for stones on CURVED surfaces, where adjacent stones extrude along different normals and joint faces tilt apart. |
-| Assembly (`A`) | Generic | item | OPTIONAL: a pre-built assembly (e.g. the Polygonal Wall Generator's Assembly output, with  exact generator-adjacency joints). When supplied, Stones/tolerances are ignored and the  check runs directly on it - much faster and tolerance-free. |
-| CRA (`Cr`) | Boolean | item | Use the COUPLED rigid-block analysis (Kao 2022 Eqs 8-14, alternating convex certificate)  instead of force-only RBE. CRA also checks that a kinematically consistent virtual motion  exists, rejecting self-stressed states RBE wrongly accepts (the H-model). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Stable (`OK`) | Boolean | item | True when an admissible compressive/friction-consistent force state exists (RBE-stable) |
-| Report (`R`) | Text | item | Verdict, counts, max compression, worst friction utilization, weakest interface |
-| Utilization (`U`) | Number | list | Per-interface max friction utilization (1.0 = cone saturated) |
-
-### Match Block Transform  (`MatchBlk`)
-
-- GUID: `89ABCDEF-0123-4567-89AB-CDEF01234567`  |  icon: `RigidTransform.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MatchBlockTransformComponent.cs`
-- Algorithm: **Closed-form absolute orientation (Horn QAO)** - Horn 1987, Closed-form solution of absolute orientation using unit quaternions, JOSA A 4(4):629-642
-- Library-based auto-match: given a list of canonical  library meshes and a list of placed (target) meshes,  find which library entry each target was transformed  from and recover the placement transform via Horn QAO.  Strictly more accurate than 3-random-vertex matching  because the fit is least-squares over all N vertex pairs.  Implements Horn QAO (Horn 1987).
-
-| in | type | access | description |
-|---|---|---|---|
-| Library Meshes (`Lib`) | Mesh | list | Canonical mesh shapes (the 'pick' representations). |
-| Target Meshes (`T`) | Mesh | list | Placed meshes to match against the library. |
-| RMS Threshold (`Rms`) | Number | item | Maximum acceptable per-fit RMS for a high-confidence  match. Targets whose best library fit exceeds this  threshold are still emitted but tagged 'low confidence'.  Default 1e-3. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Transforms (`T`) | Transform | list | Per-target transform: library[matched] → target. |
-| Matched Library Index (`Idx`) | Integer | list | Per-target library index. -1 when no candidate had a  matching vertex count. |
-| RMS (`E`) | Number | list | Per-target Horn QAO residual at the chosen library entry. |
-| Status (`St`) | Text | list | 'matched (rms=…)' / 'low confidence (rms=…)' / 'no match'. |
-
-### Mesh Planar Polygon Extractor  (`MeshPlnPoly`)
-
-- GUID: `F2D000B2-CADC-4F2D-A0B2-7E60CADA15A0`  |  icon: `MortarJoint.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MeshPlanarPolygonExtractorComponent.cs`
-- Algorithm: **Boundary-loop extraction + signed-area outer/hole classification** - Frahan-original
-- Extracts the outer + hole loops from a mesh's boundary  and projects them into a 2D plane. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Mesh whose boundary loops are extracted. |
-| Plane (`Pl`) | Plane | item | Projection plane (origin + axes). Default world XY. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Outer (`O`) | Curve | item | Closed CCW polyline curve for the outermost loop. |
-| Holes (`H`) | Curve | list | Closed CW polyline curves for each hole (parallel to  Hole Areas). |
-| Outer Area (`Ao`) | Number | item | Signed area of the outer loop in plane units². |
-| Hole Areas (`Ah`) | Number | list | Signed area of each hole. |
-
-### Mesh Quality Report  (`MQ`)
-
-- GUID: `9ABCDEF0-1234-5678-9ABC-DEF012345678`  |  icon: `PackDiagnostics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/MeshQualityReportComponent.cs`
-- Algorithm: **Mesh-quality metrics** - Frey & Borouchaki 1999, Surface mesh quality evaluation, Int. J. Numer. Methods Eng. 45(1):101-118
-- Topology + geometry diagnostics for a Rhino mesh. Use as  a precondition for contact detection, packing, or cutting.  Metrics per Frey & Borouchaki 1999.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Mesh to analyse. |
-| Dedup Tolerance (`Td`) | Number | item | Vertex-merge tolerance for duplicate detection. Default 1e-9. |
-| Degenerate Area Tol (`Ta`) | Number | item | Triangle-area threshold below which a triangle counts as  degenerate. Default 1e-12. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Is Clean Solid (`OK`) | Boolean | item | True iff closed AND manifold AND consistent normals AND no  degenerate triangles AND no duplicate vertices. |
-| Manifold (`Mf`) | Boolean | item | Every edge is incident to 1 or 2 triangles. |
-| Closed (`Cl`) | Boolean | item | Every edge is incident to exactly 2 triangles. |
-| Consistent Normals (`Nm`) | Boolean | item | No two triangles share an edge in the same winding direction. |
-| Duplicate Vertices (`DupV`) | Integer | item | Vertices closer than the dedup tolerance to an earlier one. |
-| Degenerate Triangles (`DegT`) | Integer | item | Triangles below the area threshold. |
-| Boundary Edges (`Be`) | Integer | item | Edges incident to exactly one triangle (open boundaries). |
-| Non-manifold Edges (`Nme`) | Integer | item | Edges incident to three or more triangles. |
-| Median Edge Length (`MedE`) | Number | item | Median triangle-edge length. Useful as an adaptive-tolerance  scale factor. |
-| Surface Area (`A`) | Number | item | Sum of triangle areas. |
-| Signed Volume (`V`) | Number | item | Divergence-theorem volume. Negative means normals are  inward-facing on a closed mesh. |
-| Report (`R`) | Text | item | Single-line human-readable summary. |
-
-### Next-Best-Object Pose → Robot Frame  (`NBORobot`)
-
-- GUID: `D5F10031-0BA0-4ED9-A031-0BA00BA00031`  |  icon: `NboPoseRobotFrame.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Nbo/NboPoseToRobotFrameComponent.cs`
-- Turn NBO placements into robot TCP frames + UR poses via a top-pick grasp model.  Outputs pick / place / approach frames, the place pose as UR p[...] in the robot base,  and the grip width/length. The live robot stays downstream (Robots/visose,  UnderAutomation, compas_fab); this is the planner->robot handoff only.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`S`) | Mesh | list | Source stone meshes (where they currently sit, for the pick frame). |
-| Placements (`X`) | Transform | list | NBO placement transforms, matching the Stones order. |
-| Robot Base (`B`) | Plane | item | Robot base frame in world coords; the place pose is expressed in it. |
-| Approach (`A`) | Number | item | Approach/retract clearance above each place frame (m). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Pick Frames (`Pk`) | Plane | list | TCP frame to grab each stone where it sits. |
-| Place Frames (`Pl`) | Plane | list | TCP frame to place each stone. |
-| Approach Frames (`Ap`) | Plane | list | Pre-place / retract waypoint above each place frame. |
-| Place Poses (`Ps`) | Text | list | Place TCP as a UR p[x,y,z,rx,ry,rz] (m, axis-angle) in the robot base. |
-| Grip Width (`Gw`) | Number | list | Stone extent across the jaw axis (gripper opening). |
-| Grip Length (`Gl`) | Number | list | Stone extent along the jaw-open axis. |
-
-### Pack Diagnostics  (`PackDiag`)
-
-- GUID: `C4D5E6F7-A8B9-4ABC-DEF0-123456789012`  |  icon: `PackDiagnostics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/PackDiagnosticsComponent.cs`
-- Splits an AshlarPackResult into Coverage / Course Count /  Leftovers / Notes / Placed Blocks for inspection.
-
-| in | type | access | description |
-|---|---|---|---|
-| Result (`R`) | Generic | item | AshlarPackResult from Ashlar Pack. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Coverage (`Cov`) | Number | item | Wall area filled by placed blocks divided by total wall area, in [0, 1]. |
-| Course Count (`N`) | Integer | item | Number of courses laid. |
-| Leftovers (`L`) | Generic | list | Slabs from the input inventory that were not placed. |
-| Notes (`Notes`) | Text | list | Diagnostic messages emitted by the layout engine. |
-| Placed Blocks (`B`) | Generic | list | MasonryBlocks in the order they were laid. |
-
-### Pack Preview  (`PackPrev`)
-
-- GUID: `D5E6F7A8-B9CA-4BCD-EF01-234567890123`  |  icon: `AssemblyState.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/PackPreviewComponent.cs`
-- Builds one Rhino mesh per placed block in an AshlarPackResult  for visual preview on the canvas.
-
-| in | type | access | description |
-|---|---|---|---|
-| Result (`R`) | Generic | item | AshlarPackResult from Ashlar Pack. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Meshes (`M`) | Mesh | list | One Rhino mesh per placed MasonryBlock. |
-
-### Pick Place Frames  (`PickPlc`)
-
-- GUID: `456789AB-CDEF-0123-4567-89ABCDEF0123`  |  icon: `FrameBuilder.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/PickPlaceFramesComponent.cs`
-- Per-block pick-and-place planes for a robot consumer.  Wire Place Transforms from Block Ground Transforms; the  component returns pick + approach-pick (shared across  all blocks) and place / approach-place / retract-place  (one per block).
-
-| in | type | access | description |
-|---|---|---|---|
-| Place Transforms (`T`) | Transform | list | Per-block placement transform (typically the output of  Block Ground Transforms, ordered by Build Order). Each  transform takes the canonical pose at Pick Plane to  the placed pose. |
-| Pick Plane (`Pp`) | Plane | item | Where each canonical block is picked up. Default world XY. |
-| Approach Vector (`Av`) | Vector | item | World-frame direction the robot approaches FROM (i.e.,  moves opposite to when descending). Default world +Z so  the gripper hovers above pick / place poses. |
-| Approach Distance (`Ad`) | Number | item | Distance the gripper hovers above pick / place poses  before descending. Default 0.05 (5 cm in metres, or  5 mm in millimetres — match your unit system). |
-| Retract Distance (`Rd`) | Number | item | Distance the gripper retracts after release. Default 0.05. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Pick (`Pi`) | Plane | item | Shared pick pose (same as input Pick Plane). |
-| Approach Pick (`ApPi`) | Plane | item | Pick + approach offset. Hover here before descending to pick. |
-| Place (`Pl`) | Plane | list | Per-block place pose = Pick · transform[i]. |
-| Approach Place (`ApPl`) | Plane | list | Per-block approach-place = place + approach offset. |
-| Retract Place (`RtPl`) | Plane | list | Per-block retract-place = place + retract offset. |
-
-### Polygon Sanitize  (`PolySan`)
-
-- GUID: `F2D000B1-CADC-4F2D-A0B1-7E60CADA15A0`  |  icon: `PolygonSimplify.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/PolygonSanitizeComponent.cs`
-- Algorithm: **Polygon vertex cleanup (dedup + collinearity drop)** - Frahan-original
-- Drops duplicate / collinear vertices and sliver edges  from a closed polyline. Operates in 2D — points are  projected onto the supplied plane (default world XY).  Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Polyline (`P`) | Curve | item | Closed polyline curve. |
-| Plane (`Pl`) | Plane | item | 2D projection plane. Default world XY. |
-| Dedup Tolerance (`Td`) | Number | item | Adjacent-vertex dedup tolerance. Default 1e-6. |
-| Collinear Tolerance (`Tc`) | Number | item | Triangle area threshold for collinear-chain dropping.  Default 1e-6. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Sanitized (`S`) | Curve | item | Cleaned closed polyline. |
-| Verts Dropped (`Vd`) | Integer | item | Number of vertices removed. |
-| Area (`A`) | Number | item | Signed area of the sanitized polygon (in plane units²). |
-
-### Polygonal Masonry Sequence  (`PolyMasonrySeq`)
-
-- GUID: `B4E07A3C-7F4D-4E5B-9C71-0EAF21C9B6A1`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalMasonrySequenceComponent.cs`
-- Algorithm: **Polygonal masonry install sequence** - Kim 2024 ASME DETC2024-142563 Finding Installation Sequence of Polygonal Masonry through Design and Depth Search of a DAG
-- Installation-order DAG for a polygonal-masonry wall  (Kim 2024). Inputs are 2D chains and a wall rectangle.  Each chain must be monotone in x or a vertical connector.  Output is one closed polyline per stone, parallel install  order, depth from Code 1, and DAG edge line segments.
-
-| in | type | access | description |
-|---|---|---|---|
-| Chains (`C`) | Curve | list | Polylines or curves defining the wall partition. Each must  be monotone in x or a purely vertical connector. Chains  may share endpoints at meetings; they must not cross. |
-| Wall (`W`) | Rectangle | item | Axis-aligned wall rectangle. Defines the bbox and the  wall boundary (paper sec. 5.3). |
-| Hole Probes (`H`) | Point | list | Optional. Each probe point marks the region containing it  as a hole; that region is removed before depth search  (paper sec. 5.4). |
-| Epsilon (`e`) | Number | item | Tolerance for vertex deduplication and predicates. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Stones (`S`) | Curve | list | One closed polyline per stone region (finite, non-hole).  Includes the two infinite top/bottom bands. |
-| Install Order (`i`) | Integer | list | 1-based install index per stone, parallel to Stones.  1 = installed first (bottom), max = installed last. |
-| Depth (`d`) | Integer | list | Reversed-Kahn depth per stone. Higher = installed earlier.  Sinks (last-installed) have depth 0. |
-| DAG Edges (`E`) | Line | list | One line segment per DAG edge from lower-order centroid to  higher-order centroid. Visualises the install constraint  graph (paper Figs. 5, 13, 14). |
-| Region Count (`n`) | Integer | item | Number of finite stone regions (excludes the bbox  surroundings and any hole-marked regions). |
-
-### Polygonal Masonry Sequence 3D  (`PolyMasonrySeq3D`)
-
-- GUID: `C5F18B4D-8A6F-4E72-AC83-1FBD32D8C7B2`  |  icon: `StereotomyGenerate.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalMasonrySequence3DComponent.cs`
-- Algorithm: **3D polygonal masonry install sequence** - Kim 2024 DETC2024-142563 section 8 3D extension
-- Install-order DAG for a 3D polyhedral-stone wall. Each  input Mesh is one stone; adjacency is detected from  shared mesh faces. Returns 1-based install order,  reversed-Kahn depth, and DAG edges as line segments  between cell centroids (Kim 2024 sec. 8 extension).
-
-| in | type | access | description |
-|---|---|---|---|
-| Cells (`M`) | Mesh | list | Closed polyhedral meshes; one per stone. |
-| Hole Probes (`H`) | Point | list | Optional. Each probe point marks the cell whose centroid  is closest as a hole; that cell is removed before the  depth search (sec. 5.4 analogue). |
-| Face Tolerance (`Tf`) | Number | item | Two cells count as adjacent when at least one of their  mesh faces matches within this Euclidean tolerance. |
-| Z Threshold (`Tz`) | Number | item | Adjacent cells whose representative-Z difference is  below this value are treated as side neighbours  (no ordering constraint). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Stones (`S`) | Mesh | list | Cells in install order, parallel to Order / Depth. |
-| Install Order (`i`) | Integer | list | 1-based install index per cell, parallel to Stones. |
-| Depth (`d`) | Integer | list | Reversed-Kahn depth per cell. |
-| DAG Edges (`E`) | Line | list | Line segments from lower-Z cell centroid to higher-Z  cell centroid for every DAG edge. |
-| Cell Count (`n`) | Integer | item | Number of stones included in the install plan  (excludes hole-marked cells). |
-
-### Polygonal Wall (Generator)  (`PolyWall`)
-
-- GUID: `D5F10014-7A11-4C0E-9B22-3F6A1E2C4D80`  |  icon: `CourseGenerator.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/Sequencing/PolygonalWallGeneratorComponent.cs`
-- Tile a surface (flat / curved / double-curved) with interlocking polygonal masonry stones  (power-diagram cells + Lloyd relaxation + Coursing slider + sliver cull). Outputs closed,  manifold, unified-normal stone meshes and an interlock score J.  Pattern math: Frahan.Masonry.Sequencing.PolygonalWallGenerator (Rhino-free Core).  Refs: Kim 2024 (ASME DETC2024-142563) sequencing substrate; Clifford & McGee 2018  (ACADIA, Cyclopean Cannibalism) interlock reading; Lloyd 1982 relaxation.
-
-| in | type | access | description |
-|---|---|---|---|
-| Surface (`S`) | Surface | item | Surface to tile (flat / curved / double-curved). If empty, a flat W x H panel in the XZ plane is used. |
-| Width (`W`) | Number | item | Panel width (m) when no Surface is supplied |
-| Height (`H`) | Number | item | Panel height (m) when no Surface is supplied |
-| Coursing (`C`) | Number | item | 0 = irregular (Inca)  ->  1 = coursed rubble |
-| Courses (`Cr`) | Integer | item | Number of courses the coursing pulls toward |
-| GridX (`Gx`) | Integer | item | Seed columns (stones along width) |
-| GridY (`Gy`) | Integer | item | Seed rows (stones along height) |
-| Depth (`D`) | Number | item | Stone depth (m), extruded along the surface normal |
-| Mortar (`M`) | Number | item | Mortar joint fraction (cell shrink toward centroid, 0..0.45) |
-| Seed (`Sd`) | Integer | item | Random seed |
-| Lloyd (`L`) | Integer | item | Lloyd relaxation iterations (evens stone size/shape; 0 disables) |
-| SizeGrade (`Sg`) | Number | item | Size-grading strength 0..~0.6 (power-diagram weights) |
-
-| out | type | access | description |
-|---|---|---|---|
-| Stones (`St`) | Mesh | list | Closed, manifold, unified-outward-normal stone meshes |
-| Count (`N`) | Integer | item | Number of stones |
-| Interlock (`J`) | Number | item | Interlock score in [0,1]: 1 - runningJoints/headJoints - 0.5*crossVertices/cells. Higher = better staggering. |
-| Report (`R`) | Text | item | Pattern metrics (coverage, area CV, slivers culled, joints) |
-| Assembly (`A`) | Generic | item | The wall as a structural assembly with EXACT joint interfaces from the generator's own cell  adjacency (no contact re-detection; correct on any curvature). Feed straight into Masonry  Stability Check's Assembly input. Models the dry (mortarless), uniform-depth wall. |
-
-### Robust Auto Interfaces  (`RAutoIf`)
-
-- GUID: `F2D000B4-CADC-4F2D-A0B4-7E60CADA15A0`  |  icon: `ContactDetector.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/RobustAutoInterfacesComponent.cs`
-- Algorithm: **Auto interface detection** - Frahan-original
-- Detects block-to-block contacts via mesh-vertex proximity.  Robust to slight gaps, non-planar contact regions, and  irregular triangulation (scan-derived meshes). Use this  when 'Auto Interfaces' (polygon-based) misses contacts.  Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Meshes (`M`) | Mesh | list | Block meshes in their final placed positions. Standard Rhino  mesh wires; this component finds proximity-based contacts. |
-| Block Ids (`Ids`) | Text | list | One ID per mesh in the same order. Must match the IDs used  to construct MasonryBlocks. |
-| Distance Tolerance (`Dtol`) | Number | item | Max distance between two surfaces to count as contact  (document units). Default 0.001 (1 mm). Raise for noisy  scan data; lower for exact-coord meshes. |
-| Angle Tolerance Deg (`Atol`) | Number | item | Contact points are grouped when their surface normals agree  within this angle. Default 5° — accommodates mild surface  curvature; tighten to 1° for sharply-faceted blocks. |
-| Min Contact Points (`MinN`) | Integer | item | Minimum contact points required to emit a MasonryInterface.  Default 3 (= polygon triangle minimum). Raise to filter  out spurious single-vertex grazes. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Interfaces (`I`) | Generic | list | Detected MasonryInterfaces. Wire into Masonry Assembly. |
-| Count (`N`) | Integer | item | Number of detected interfaces. |
-
-### Rubble Wall Settle  (`RubbleSettle`)
-
-- GUID: `6514A1BB-FE82-4919-9419-141A07D2358A`  |  icon: `RubbleWallSettle.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/RubbleWallSettleComponent.cs`
-- Algorithm: **COM-over-support stability** - Heyman 1966 limit-state masonry (centre of thrust within the support)
-- NOTE: the settle v2 objective reaches +97% clearance, 23/24 stable  (see examples/27 cards); this component remains the validated v1.  Settles stone meshes into an upright Z-up rubble wall. Each  stone is PCA-oriented so its broad/flat face beds DOWN, then  dropped (gravity = -Z) into the per-(x,y)-cell dimples of the  course below, trying 4 orientation flips and a small X-slot  shift. Non-penetrating by construction. Reports a per-stone  COM-over-support stability flag and signed support clearance.  Apply each output mesh as-is; transforms are already baked in.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`S`) | Mesh | list | Stone inventory as Rhino meshes (e.g. ETH1100 dry-stone scans,  Quarry blocks, or hand-authored). Each is PCA-oriented for flat  bedding; the input meshes are not modified. Order is preserved  in the outputs. |
-| Width (`W`) | Number | item | Wall length along +X, in units of the mean stone X-extent.  > 0. Default 7.0 (the signed-off proportion). Larger spreads  stones into more, shorter courses; smaller piles them taller. |
-| Stability Aware (`St`) | Boolean | item | When true, each stone prefers the first seat whose COM projects  inside its contact support polygon (won't topple), then the  deepest. When false, always takes the deepest (densest) seat.  Default true. |
-| Margin (`M`) | Number | item | Required COM-over-support clearance (document units) for a seat  to count as stable. >= 0. Default 0.0 (COM merely inside the  support polygon). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Settled (`S`) | Mesh | list | Placed stones, upright in the Z-up wall, one per input mesh in  input order. The PCA flat-bed orientation, flip, and settle  offsets are already applied. |
-| Stable (`St`) | Boolean | list | Per-stone COM-over-support flag: true if the projected COM lies  inside the contact support polygon by at least Margin. |
-| Clearance (`C`) | Number | list | Per-stone signed support clearance. > 0 = COM inside the support  polygon (distance to the nearest edge); <= 0 = would topple;  -1 = degenerate support (< 3 non-collinear contacts). |
-
-Related:
-- Frahan > Masonry > Ashlar Pack - production coursed layout; this settle drops rough rubble into the dimples instead of a regular grid
-- Frahan > Masonry > Best Fit Pack - inventory-aware ashlar packer for the same stone inventory
-- Frahan > Masonry > Masonry Stability (RBE) - full rigid-block equilibrium; this component does only the per-stone COM-over-support gate
-
-### Stone-Cell Match (Λ)  (`StoneMatchL`)
-
-- GUID: `D5F10016-6C2D-4F1B-B3E8-7A95D0C41F62`  |  icon: `MatchCandidate.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/StoneCellMatchComponent.cs`
-- Hungarian assignment of a stone inventory to target wall cells, minimising carved material.  Reports per-stone carve ratio λ, the workflow imposition index Λ (0 = as-found … 1 = pure  stock; Cyclopean Cannibalism datum ≈0.27) and gap ratios, and outputs the stones placed  into their cells. Refs: Clifford & McGee 2018 (ACADIA); Kuhn 1955 (Hungarian);  Frahan SLM+ROSES masonry review 2026-06-10.
-
-| in | type | access | description |
-|---|---|---|---|
-| Stones (`St`) | Mesh | list | Stone inventory (closed meshes, found/scanned) |
-| Cells (`Ce`) | Mesh | list | Target cells (closed meshes, e.g. the Polygonal Wall Generator's stones at Mortar = 0) |
-| TopK (`K`) | Integer | item | Prefilter candidates per cell that get the voxel cost |
-| CostRes (`Cr`) | Integer | item | Voxel resolution for the assignment cost |
-| RefineRes (`Rr`) | Integer | item | Voxel resolution for the final per-pair metrics |
-
-| out | type | access | description |
-|---|---|---|---|
-| Placed (`P`) | Mesh | list | Stones transformed into their assigned cells (cell order) |
-| Carve (`L`) | Number | list | Per-placement carve ratio lambda_i = carved/found volume (cell order) |
-| Gap (`G`) | Number | list | Per-placement gap ratio (cell volume the stone fails to fill) |
-| Lambda (`LL`) | Number | item | Workflow imposition index: volume-weighted carve fraction (0..1) |
-| StoneIndex (`Si`) | Integer | list | Assigned stone index per placement (cell order) |
-| Unused (`U`) | Integer | list | Inventory indices that were not used |
-| Report (`R`) | Text | item | Summary |
-
-### Wall Frame  (`WallFrame`)
-
-- GUID: `A2B3C4D5-E6F7-489A-BCDE-F01234567890`  |  icon: `CourseGenerator.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Masonry/WallFrameComponent.cs`
-- Bundles wall width / height / thickness into a WallFrame DTO.  Wire into the optional WallFrame input on Ashlar Pack so the  envelope can be reused across multiple packers.
-
-| in | type | access | description |
-|---|---|---|---|
-| Width (`W`) | Number | item | Wall length along +X (Rhino-document units, typically meters).  Must be > 0. Example: 1.5 for a 1.5 m long wall. |
-| Height (`H`) | Number | item | Wall height along +Z. Must be > 0. Example: 1.0 for 1 m tall. |
-| Thickness (`T`) | Number | item | Wall thickness along +Y. Must be > 0. Default 0.20 — typical  single-leaf masonry. Use 0.40 for double-leaf. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Wall Frame (`F`) | Generic | item | WallFrame DTO. Wire into Ashlar Pack's Wall Frame input to  reuse the same envelope across multiple packers. |
-
-
-## Mesh
-
-### Bench From Mesh  (`BenchFromMesh`)
-
-- GUID: `D3E4F5A6-3002-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryBlock.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/BenchFromMeshComponent.cs`
-- Derive an axis-aligned Box bench + carry the original Mesh  for use with the existing 11 BCO components (which take Box  inputs) and with ClipBoxesByMesh (which filters their Box[]  outputs). Closes the §7.8 mesh-bench gap without editing any  existing BCO component. Designed for non-rectangular quarry  benches: trapezoidal, stepped, polygonal, surveyed from a  DXF + bench-height extrusion, or produced by a Phase H  scan reconstruction.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Bench mesh (any closed or open shape). The AABB is derived  from this for the Box output; the mesh itself is preserved  for downstream clipping. |
-| Bench Height (`H`) | Number | item | Optional override: if > 0, the Box output's Z height is  extended to this value (e.g. when the user wants the bench  AABB to span the full block height even though the mesh  only covers the working face). Default 0 = use mesh AABB Z  as-is. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Box (`B`) | Box | item | Axis-aligned bounding Box of the mesh (with optional  Bench Height override applied to Z). Wire to the existing  BCO components' `Tested Area` or `Bench` input. |
-| Mesh (`M`) | Mesh | item | Pass-through of the input mesh, for downstream clipping. |
-| Bench Boundary (`BB`) | Generic | item | Opaque BenchBoundary value (Box + Mesh combined). Future  BCO-v2 components consume this directly. |
-| Vertex Count (`V`) | Integer | item | Mesh vertex count (sanity check). |
-
-### Clip Boxes By Mesh  (`ClipBoxesByMesh`)
-
-- GUID: `D3E4F5A6-3003-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/ClipBoxesByMeshComponent.cs`
-- Algorithm: **Mesh-containment box filter** - Frahan-original
-- Filter a Box[] grid from BCO output by mesh-boundary  containment. Drops cells that lie outside the actual bench  (the cells the AABB algorithm wrongly claimed as winnable).  Use after BCOExtract / HeteroExt / BCOMixedPack to get the  true recovery on a non-rectangular bench.  Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Boxes (`B`) | Box | list | Box[] from a BCO output (Prime Boxes, Mixed Boxes, Zone  Boxes, etc.). |
-| Mesh Bench (`M`) | Mesh | item | Closed mesh of the actual bench geometry. Wire from  BenchFromMesh.Mesh. |
-| Inside Fraction Threshold (`Tf`) | Number | item | A box is kept when at least this fraction of its 8 corners  lie inside the mesh. 0 = keep all (back-compat); 0.5 =  majority must be inside; 1.0 = entire box must be inside. |
-| Tolerance (`T`) | Number | item | Inside/outside testing tolerance in model units. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Inside Boxes (`In`) | Box | list | Cells whose containment fraction meets or exceeds the  threshold. |
-| Outside Boxes (`Out`) | Box | list | Cells that fall below the threshold (the AABB algorithm  wrongly claimed these). |
-| Inside Count (`Ni`) | Integer | item | Number of cells inside the mesh. |
-| Outside Count (`No`) | Integer | item | Number of cells dropped. |
-| Corrected Recovery (`Rc`) | Number | item | Inside / total fraction in [0, 1]. Apply this multiplicatively  to recovery numbers reported by the BCO components when they  ran on the same AABB grid. |
-| Report (`R`) | Text | item | Human-readable summary. |
-
-### Close Holes  (`CloseHoles`)
-
-- GUID: `F2D05A02-1A2B-4C3D-9E4F-5A6B7C8D9E02`  |  icon: `PoissonReconstruct.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshSanitizeComponents.cs`
-- Algorithm: **Geogram hole filling** - GEO::fill_holes — triangulate open boundary loops up to an area / edge-count threshold
-- Fill open boundary loops to make a watertight mesh. Backend: Managed  (RhinoCommon Mesh.FillHoles, fast on clean meshes), Geogram  (GEO::fill_holes, robust on dirty / scan meshes), or Auto (managed  first, geogram fallback if still open). Max Hole Area / Edges apply  to the Geogram path. Runs on a background thread (Run gate) so the  canvas never freezes.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Mesh with holes (open boundary loops). |
-| Max Hole Area (`A`) | Number | item | Geogram path: largest hole AREA to fill (model units squared). 0 fills  nothing; a very large value (default 1e30) fills every hole. |
-| Max Hole Edges (`E`) | Integer | item | Geogram path: max boundary edges per hole. 0 = no limit (area governs). |
-| Repair After (`Rp`) | Boolean | item | Geogram path: run a repair pass after filling. Default true. |
-| Run (`R`) | Boolean | item | Set true to close holes (background thread). |
-| Backend (`Bk`) | Integer | item | 0 = Auto (managed first, geogram fallback); 1 = Managed (RhinoCommon,  fast); 2 = Geogram (robust on dirty meshes). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Hole-filled mesh. |
-| Closed (`Cl`) | Boolean | item | True if the output mesh is closed (watertight). |
-| Report (`R`) | Text | item | Before/after validity summary + backend used. |
-
-Related:
-- Frahan > Mesh > Sanitize Mesh - Sanitize first (weld/triangulate), then close holes.
-- Frahan > Mesh > Scan Reconstruct - Alpha-Shape output is open; close holes to get a watertight tool mesh.
-
-### Cloud ICP  (`CloudIcp`)
-
-- GUID: `E4F5A6B7-3201-4F5E-A6B7-C8D9E0F12345`  |  icon: `PointCloudIcp.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/CloudIcpComponent.cs`
-- Algorithm: **Trimmed ICP (coarse-to-fine)** - Besl & McKay 1992 (Iterative Closest Point); Chetverikov et al. 2002 (Trimmed ICP)
-- Register a source point cloud onto a target via coarse-to- fine trimmed ICP. Uses Geogram KD-tree + voxel downsample  (native shim, Phase I) when available; falls back to  managed brute-force / hash-grid otherwise. Scales to 10M+  points with the native shim. [Besl & McKay 1992]
-
-| in | type | access | description |
-|---|---|---|---|
-| Source Cloud (`S`) | Point | list | Source point cloud to register. |
-| Target Cloud (`T`) | Point | list | Target point cloud (registration goal). |
-| Initial Guess (`X0`) | Transform | item | Optional initial transform. Identity if not wired. |
-| Voxel Scales (`Vs`) | Number | list | Coarse-to-fine voxel sizes (model units). Default {0.5, 0.1,  0.02} → 50 cm → 10 cm → 2 cm for metre-scale benches. |
-| Max Iterations (`Mi`) | Integer | item | Max ICP iterations per voxel scale. |
-| Trim Fraction (`Tf`) | Number | item | Drop this fraction of worst-residual pairs each iteration.  0.2 = standard robust ICP. 0 keeps all. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Transform (`X`) | Transform | item | Cumulative source→target rigid transform. |
-| Final RMS (`RMS`) | Number | item | Final RMS distance between corresponding source-target pairs. |
-| Iterations (`It`) | Integer | item | Total iterations across all voxel scales. |
-| Converged (`Cv`) | Boolean | item | True when the last iteration met the tolerance. |
-| Correspondences (`Cn`) | Integer | item | Number of correspondences used in the final iteration  (after trim). |
-| Report (`R`) | Text | item | Summary line. |
-
-### Estimate Cloud Normals  (`EstNormals`)
-
-- GUID: `E4F5A6B7-3203-4F5E-A6B7-C8D9E0F12345`  |  icon: `NormalEstimation.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/EstimateCloudNormalsComponent.cs`
-- Algorithm: **PCA normal estimation + MST orientation** - Hoppe et al. 1992, surface reconstruction from unorganized points (PCA tangent planes + MST sign propagation)
-- PCA + MST-oriented normals on an unstructured point cloud.  Wire upstream of Poisson reconstruction (ScanReconstruct  Mode = 2) or point-to-plane Cloud ICP. Runs on a background  thread (Run gate). Requires the Phase H/I rebuild of  frahan_cgal.dll; falls back to a Warning bubble if the shim  isn't built. [Hoppe et al. 1992]
-
-| in | type | access | description |
-|---|---|---|---|
-| Points (`P`) | Point | list | Input cloud as a point list. Optional if Cloud is wired. |
-| K Neighbours (`K`) | Integer | item | k for PCA fit (CGAL recommends 18-24 for dense clouds).  0 uses 18. |
-| Cloud (`C`) | Geometry | item | Input as a single native PointCloud (lag-free; preferred over the  Points list for large scans). If wired, the Points list is ignored. |
-| Run (`R`) | Boolean | item | Set true to estimate normals (on a background thread).  False = idle; the canvas never freezes. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Normals (`N`) | Vector | list | Per-point oriented normals; same order as input. |
-| Report (`R`) | Text | item | Summary. |
-| Cloud (`C`) | Geometry | item | The input points as a single native PointCloud WITH the estimated  normals baked in. Wire into Scan Reconstruct (Cloud) for a lag-free  Poisson path - no million-point list crosses the canvas. |
-
-### Frahan Mesh Diagnostics  (`MeshDiag`)
-
-- GUID: `AB12C005-1A2B-4C3D-9E4F-5A6B7C8D9E05`  |  icon: `PackDiagnostics.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshDiagnosticsComponent.cs`
-- Algorithm: **Mesh quality diagnostics** - Frahan-original
-- Read a Rhino Mesh and report vertex/face/triangle/quad counts,  IsClosed, IsManifold, HasConsistentWinding, AverageEdgeLength,  BoundingBoxVolume.  Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Mesh to diagnose. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Vertex Count (`V`) | Integer | item | Number of vertices. |
-| Face Count (`F`) | Integer | item | Number of faces. |
-| Triangle Count (`T`) | Integer | item | Number of triangular faces. |
-| Quad Count (`Q`) | Integer | item | Number of quad faces. |
-| Is Closed (`Ic`) | Boolean | item | True if the mesh is closed (watertight). |
-| Is Manifold (`Im`) | Boolean | item | True if the mesh is manifold. |
-| Has Consistent Winding (`Cw`) | Boolean | item | True if face windings are consistent. |
-| Average Edge Length (`Ae`) | Number | item | Mean of all unique edge lengths. |
-| Bounding Box Volume (`Bv`) | Number | item | Volume of axis-aligned bounding box. |
-| Report (`R`) | Text | item | Single-line summary. |
-
-### Frahan Mesh Repair  (`MeshFix`)
-
-- GUID: `AB12C00A-1A2B-4C3D-9E4F-5A6B7C8D9E0A`  |  icon: `PoissonReconstruct.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/MeshRepairComponent.cs`
-- Algorithm: **Mesh-repair recipe** - Botsch, Kobbelt, Pauly, Alliez, Levy 2010 Polygon Mesh Processing (AK Peters / CRC Press), ISBN 978-1568814261
-- Run the Frahan mesh-repair pipeline (cull degenerate / weld / cull  unused / heal naked edges / unify normals / recompute normals) and  return the repaired mesh plus a per-step trace. [Botsch et al. 2010]
-
-| in | type | access | description |
-|---|---|---|---|
-| Meshes (`M`) | Mesh | list | Mesh(es) to repair. Originals are not mutated. |
-| Weld Angle (`Wa`) | Number | item | Weld vertices whose face normals fall within this angle (radians).  Default = pi/8 (~22.5 deg). |
-| Heal Distance (`Hd`) | Number | item | Maximum naked-edge gap to heal (model units). Default = 0.001. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Repaired (`R`) | Mesh | list | Repaired mesh per input. |
-| Trace (`T`) | Text | list | Per-mesh repair trace (one multi-line string per input mesh). |
-| Skipped (`Sk`) | Integer | item | Number of meshes skipped (null input or pipeline threw). |
-| Summary (`S`) | Text | item | One-line summary. |
-
-### Georeference  (`GeorefCRS`)
-
-- GUID: `B1C2D3A4-1112-4F5E-A6B7-C8D9E0F12345`  |  icon: `GeoreferenceMarker.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Registration/GeoreferenceComponent.cs`
-- Algorithm: **Absolute orientation + UTM/EPSG transform** - Horn, B.K.P. (1987). Closed-form solution of absolute orientation using unit quaternions. J. Opt. Soc. Am. A 4(4):629-642
-- Rigid scan→world transform from N≥3 control-point pairs in a  global coordinate system. Supports WGS84 LLH degrees, UTM,  and pre-converted ENU metres. World points are converted to  ENU about the first control point's origin before solving.  Implements absolute orientation (Horn 1987).  Sibling: GeorefCRS handles the WGS84/UTM/ENU datum;  'GeorefPts' (Georeference (Align by Points)) is the local fit  via Horn when both datasets share a frame.
-
-| in | type | access | description |
-|---|---|---|---|
-| World Control Points (`W`) | Point | list | World-frame control points in the chosen Coord System.  LLH-WGS84-degrees: pack as (X=lon°, Y=lat°, Z=height-m).  UTM: pack as (X=easting-m, Y=northing-m, Z=elevation-m).  Local-ENU: pack as (X=east-m, Y=north-m, Z=up-m). |
-| Scan-Frame Points (`S`) | Point | list | Scan-frame points paired by INDEX with World Control Points. |
-| Coord System (`C`) | Integer | item | 0 = LLH-WGS84-degrees, 1 = UTM, 2 = Local-ENU. |
-| UTM Zone (`Z`) | Integer | item | Optional UTM zone override (1..60). Ignored unless Coord  System = 1. Default 0 means auto-pick from origin. |
-| UTM Northern Hemisphere (`NH`) | Boolean | item | True = northern hemisphere, false = southern. Ignored  unless Coord System = 1. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Transform (`X`) | Transform | item | Rigid transform mapping scan-frame onto the ENU frame  centred at the first control point. Apply to your scan to  place it in world-relative coordinates. |
-| RMS Error (`RMS`) | Number | item | Root-mean-square per-pair residual after the transform  (ENU metres). |
-| ENU Origin (LLH) (`O`) | Point | item | The LLH origin used for ENU conversion (X=lon°, Y=lat°, Z=h-m).  Wire this into a Panel to record the projection origin alongside  the .gh file. |
-| Report (`R`) | Text | item | Human-readable summary of the solve. |
-| Per-Pair Residuals (`Res`) | Number | list | Per-pair residual distances after applying Transform (m). |
-
-### Georeference (Align by Points)  (`GeorefPts`)
-
-- GUID: `F2D05A06-1A2B-4C3D-9E4F-5A6B7C8D9E06`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/GeoreferenceComponent.cs`
-- Algorithm: **Absolute orientation (Horn 1987)** - Horn, 'Closed-form solution of absolute orientation using unit quaternions', JOSA A 4(4) 1987
-- Best-fit transform from 3+ corresponding control points (Horn's  absolute orientation). Aligns GPR / scan / quarry geometry into one  georeferenced frame: Source = control points in the frame you move,  Target = matching points in the reference frame. Rigid by default;  enable Scale for similarity. Feed the Transform into Cloud ICP's  Initial Guess for fine registration.  Sibling: GeorefPts is the local fit via Horn from matched points;  'GeorefCRS' (Georeference) handles WGS84/UTM/ENU datum conversion.
-
-| in | type | access | description |
-|---|---|---|---|
-| Geometry (`G`) | Geometry | list | Geometry to align (moved by the fitted transform). |
-| Source (`S`) | Point | list | Control points in the SOURCE frame (>= 3). |
-| Target (`T`) | Point | list | Matching control points in the TARGET / reference frame (>= 3, same order). |
-| Scale (`Sc`) | Boolean | item | Allow uniform scale (similarity transform). Default false = rigid. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Geometry (`G`) | Geometry | list | Geometry mapped into the target frame. |
-| Transform (`X`) | Transform | item | Fitted source -> target transform. |
-| Inverse (`Xi`) | Transform | item | Inverse transform (target -> source). |
-| RMS (`RMS`) | Number | item | Root-mean-square control-point residual after the fit (model units). |
-| Report (`R`) | Text | item | Fit summary. |
-
-Related:
-- Frahan > Mesh > Cloud ICP - Feed this Transform into Cloud ICP's Initial Guess for coarse-georef then fine-ICP.
-- Frahan > Quarry > GPR Fractures on Mesh - Georeference GPR picks into the scan/bench frame before overlaying.
-- Frahan > Mesh > Move to Origin - Move to Origin recenters; this aligns to another dataset via control points.
-
-### Load Cloud  (`LoadCloud`)
-
-- GUID: `E4F5A6B7-3210-4F5E-A6B7-C8D9E0F12345`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadCloudComponent.cs`
-- Algorithm: **Streaming cloud read + voxel-grid downsample** - Voxel-grid filter (one centroid per occupied cell)
-- Stream a point cloud from a file and voxel-downsample on the  fly. Supports PLY (binary_little_endian + ascii; points-only  and mesh-vertex clouds) and plain ASCII XYZ / PTS. Memory is  bounded by occupied voxels, not the input point count, so very  large clouds (28M+ points) load without materialising the full  set. Pure-managed; no native dependency. Runs on a background  thread (Run gate) so the canvas stays responsive. Use upstream of  Cloud ICP / Scale Calibrate.
-
-| in | type | access | description |
-|---|---|---|---|
-| File Path (`F`) | Text | item | Path to a .ply / .xyz / .pts / .asc / .txt point-cloud file. |
-| Voxel Size (`V`) | Number | item | Edge length of the cubic downsample voxel in model units.  Default 0.05. If <= 0, no downsample (warns for huge files). |
-| Run (`R`) | Boolean | item | Set true to read the file (on a background thread). False = idle;  nothing is read, the canvas never freezes. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Points (`P`) | Point | list | One centroid per occupied voxel (or all points when Voxel Size <= 0). |
-| Input Count (`Ni`) | Integer | item | Total points read from the file. |
-| Output Count (`No`) | Integer | item | Number of output points (occupied voxels). |
-| Bounding Box (`B`) | Box | item | Axis-aligned bounding box of the input cloud. |
-| Cloud (`C`) | Geometry | item | Downsampled cloud as a single native PointCloud - fast viewport  display and bake-ready (far cheaper than the Points list for big  clouds). Wire into a Point param to explode it back into points. |
-
-### Load E57 Cloud  (`LoadE57`)
-
-- GUID: `E4F5A6B7-3230-4F5E-A6B7-C8D9E0F12345`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadE57CloudComponent.cs`
-- Algorithm: **Out-of-process E57 read (Python worker) + voxel downsample, chunked into one PointCloud** - pye57 worker -> binary PLY -> chunked PointCloud assembly
-- Read a registered terrestrial-LiDAR .e57 via an out-of-process  Python worker (pye57), voxel-downsample, and ingest the result in  chunks as a single PointCloud. The heavy parse runs in a subprocess  so a crash never takes down Rhino. Coordinates are shifted to the  origin (add the Shift output to georeference back). Runs on a  background thread (Run gate); needs python + pye57 + numpy on PATH  and frahan_e57_worker.py deployed beside the .gha.
-
-| in | type | access | description |
-|---|---|---|---|
-| E57 File (`F`) | Text | item | Path to a .e57 registered point-cloud file. |
-| Voxel Size (`V`) | Number | item | Edge length of the cubic downsample voxel in model units (metres).  Default 0.05. If <= 0, no downsample (warns; can be very large). |
-| Python Exe (`Py`) | Text | item | Optional python interpreter (full path or bare name). Empty =  'python' on PATH. |
-| Run (`R`) | Boolean | item | Set true to run the worker + ingest (on a background thread).  False = idle; nothing runs, the canvas never freezes. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Cloud (`C`) | Geometry | item | The downsampled scan as a single PointCloud (shifted to the origin).  Wire into a Point param to explode into points if needed. |
-| Input Count (`Ni`) | Integer | item | Total points in the E57 (all scans). |
-| Output Count (`No`) | Integer | item | Number of points after voxel downsample. |
-| Bounding Box (`B`) | Box | item | Axis-aligned box of the output cloud (shifted frame; bounds the Cloud). |
-| Shift (`S`) | Vector | item | Global offset subtracted from the original coordinates. Add it back  to the Cloud (e.g. via Move) to restore the georeferenced position. |
-| PLY Path (`Pf`) | Text | item | Path to the voxel-downsampled binary PLY the worker wrote (reusable). |
-
-### Load Metashape Dense Cloud  (`LoadOc3`)
-
-- GUID: `D5F10040-ED9E-4ED9-A040-ED9EED9E0040`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadMetashapeDenseCloudComponent.cs`
-- Algorithm: **File-extension recognition + conversion-guidance emission** - Frahan-original; stub pattern mirrors E57 / GSF bridge components
-- Recognise a Metashape .oc3 dense-cloud file and emit conversion  guidance. v1 does NOT parse the binary format; the user must  export the .oc3 to PLY in Metashape first, then load with the  Load Cloud component. v2 will add a Metashape Python worker  following the E57 out-of-process pattern.
-
-| in | type | access | description |
-|---|---|---|---|
-| Oc3 File (`F`) | Text | item | Path to an Agisoft Metashape .oc3 dense-cloud file. v1 recognises  the format and emits conversion guidance; no point data is  extracted. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Recognised (`R`) | Boolean | item | True when the file exists and has a .oc3 extension. |
-| File Size MB (`Sz`) | Number | item | Size of the .oc3 in megabytes (informational). |
-| Guidance (`G`) | Text | list | Conversion guidance: open the .psx in Metashape, File > Export >  Export Dense Cloud to PLY, then load with the Load Cloud component. |
-
-### Load Photo Set  (`LoadPhotoSet`)
-
-- GUID: `D5F10041-ED9E-4ED9-A041-ED9EED9E0041`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/LoadPhotoSetComponent.cs`
-- Algorithm: **Folder enumeration + bucket classification + filesystem metadata aggregate** - Frahan-original; trimmed-scope v1 deliberately skips EXIF (ExifTool / CloudCompare covers that)
-- Inventory a folder of photogrammetry photos into a typed PhotoSet.  v1 SCOPE: filesystem listing + bucket classification (used /  skipped / raw) + aggregate summary. No EXIF parsing (use  ExifTool externally if needed). The typed PhotoSet is what  downstream Frahan components consume.
-
-| in | type | access | description |
-|---|---|---|---|
-| Photo Folder (`F`) | Text | item | Root folder containing photogrammetry photos. Subfolders named  'used', 'skipped', 'raw' (case-insensitive) bucket-classify the  entries. |
-| Recurse Subfolders (`R`) | Boolean | item | If true, recurse into subfolders. Default true (the MRAC convention). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Photo Set (`PS`) | Generic | item | Typed PhotoSet record (Frahan.Core.ScanIngest.PhotoSet). Wire  into downstream Frahan ingest components. |
-| Photo Count (`N`) | Integer | item | Total photo count. |
-| Total Size MB (`Sz`) | Number | item | Total size in megabytes. |
-| Remarks (`Rm`) | Text | list | Per-bucket counts + date range + extensions seen. |
-
-### Marker Registration  (`MarkerReg`)
-
-- GUID: `B1C2D3A4-1111-4F5E-A6B7-C8D9E0F12345`  |  icon: `MarkerDetect.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/Registration/MarkerRegistrationComponent.cs`
-- Algorithm: **Absolute orientation (Horn 1987)** - Horn, B.K.P. (1987). Closed-form solution of absolute orientation using unit quaternions. J. Opt. Soc. Am. A 4(4):629-642
-- Closed-form rigid alignment of N≥3 source/target point pairs  (Horn 1987 quaternion absolute orientation). Use for marker-  or reference-object-based scan-to-world registration.  Implements absolute orientation (Horn 1987).
-
-| in | type | access | description |
-|---|---|---|---|
-| Source Points (`S`) | Point | list | Source-frame (e.g. scan) marker positions.  Must have N≥3 points paired by INDEX with Target Points. |
-| Target Points (`T`) | Point | list | Target-frame (e.g. world) marker positions.  Same count as Source Points; pairing is by index. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Transform (`X`) | Transform | item | Rigid transform mapping source onto target (apply to scan). |
-| RMS Error (`RMS`) | Number | item | Root-mean-square per-pair residual after applying Transform  (model-unit distance). |
-| Per-Pair Residuals (`R`) | Number | list | Distance from R·sᵢ+t to tᵢ for each input pair. Long-tail  values indicate bad markers — drop or re-survey them. |
-| Pair Count (`N`) | Integer | item | Number of input pairs used. |
-
-### Mesh AABB  (`AABB`)
-
-- GUID: `ABCDEF01-2345-6789-ABCD-EF0123456789`  |  icon: `MeshBvh.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Mesh/MeshAabbComponent.cs`
-- Axis-aligned bounding box of a mesh. Outputs the box, its  X/Y/Z extents, and the centre point. Useful for verifying  block dimensions match a wall's expected course height.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Input mesh. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Box (`B`) | Box | item | Axis-aligned bounding box. |
-| Width (`W`) | Number | item | Extent along +X (document units). |
-| Depth (`D`) | Number | item | Extent along +Y (document units). |
-| Height (`H`) | Number | item | Extent along +Z (document units). |
-| Centre (`C`) | Point | item | Centre of the bounding box. |
-
-### Mesh PCA  (`PCA`)
-
-- GUID: `BCDEF012-3456-789A-BCDE-F0123456789A`  |  icon: `FrameBuilder.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Mesh/MeshPcaComponent.cs`
-- Algorithm: **Principal component analysis (covariance eigendecomposition)** - Frahan-original
-- Principal-component analysis of a mesh's vertex cloud. Returns  a Plane aligned to the natural axes (PC1 = longest, PC2 =  second, PC3 = shortest = plane normal), plus the three extent  lengths along each axis. Use to align rough quarry blocks.  Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Input mesh. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Frame (`F`) | Plane | item | Plane at the centroid, X-axis = PC1 (longest), Y-axis = PC2,  Z-axis = PC3 (shortest, = plane normal). |
-| Length 1 (`L1`) | Number | item | Extent along PC1 (longest principal axis). |
-| Length 2 (`L2`) | Number | item | Extent along PC2. |
-| Length 3 (`L3`) | Number | item | Extent along PC3 (shortest, = thickness through the plane normal). |
-| Centroid (`C`) | Point | item | Centroid of the vertex cloud (unweighted average). |
-
-### Move to Origin  (`ToOrigin`)
-
-- GUID: `F2D05A03-1A2B-4C3D-9E4F-5A6B7C8D9E03`  |  icon: `Downsample.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/UtilityComponents.cs`
-- Recenter geometry (mesh / cloud / curves / blocks) to the world  origin as a group. Fixes geometry built from UTM-coordinate scans  that lands far from the origin. Emits the applied Transform and its  inverse so you can map the result back into world space.
-
-| in | type | access | description |
-|---|---|---|---|
-| Geometry (`G`) | Geometry | list | Geometry to recenter (any type; recentered together as one group). |
-| Anchor (`A`) | Integer | item | Which point maps to the target: 0 = bounding-box center,  1 = base (center XY, min Z) [good for 'set on the ground'],  2 = bounding-box min corner. Default 1. |
-| Target (`T`) | Point | item | Where the anchor lands. Default world origin (0,0,0). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Geometry (`G`) | Geometry | list | Recentered geometry. |
-| Transform (`X`) | Transform | item | The translation applied (world -> origin). |
-| Inverse (`Xi`) | Transform | item | Inverse translation (origin -> world); maps results back. |
-| Anchor Point (`P`) | Point | item | The source anchor point (in world coords). |
-
-Related:
-- Frahan > Mesh > Bench From Mesh - Bench built from a UTM scan lands far from origin; recenter it here.
-- Frahan > Mesh > Read LAS Cloud - LAS/LAZ clouds are in real-world (UTM) coordinates.
 
 ### Read LAS Cloud  (`ReadLAS`)
 
@@ -3779,8 +4738,8 @@ Related:
 |---|---|---|---|
 | Points (`P`) | Point | list | Input point cloud as a point list. Optional if Cloud is wired. |
 | Normals (`N`) | Vector | list | Optional per-point oriented normals (required for Poisson;  ignored by Alpha Shape and Advancing-Front). |
-| Mode (`M`) | Integer | item | 0 = Auto, 1 = AlphaShape, 2 = Poisson (Geogram), 3 = AdvancingFront,  4 = Poisson (CGAL). Auto picks AlphaShape with find_optimal_alpha(1)  and falls back to Advancing-Front. All run in an isolated worker  process, so a backend crash cannot take down Rhino. |
-| Alpha (`A`) | Number | item | Alpha value for AlphaShape mode. <= 0 uses CGAL's  find_optimal_alpha(1). |
+| Mode (`M`) | Integer | item | 0 = Auto, 1 = AlphaShape, 2 = Poisson (Geogram), 3 = AdvancingFront,  4 = Poisson (CGAL). Auto prefers Poisson when oriented normals are  present (a complete watertight surface) and AlphaShape otherwise  (density-adaptive; interpolates the data, no hallucinated fill);  either falls through the remaining backends if empty. All run in an  isolated worker process, so a backend crash cannot take down Rhino. |
+| Alpha (`A`) | Number | item | Alpha (squared radius) for AlphaShape mode. <= 0 auto-picks a  density-adaptive alpha = (2 * median point spacing)^2, which keeps  the surface at point density with far fewer sliver facets than  find_optimal_alpha (the fallback if the density alpha comes back empty). |
 | Poisson Depth (`D`) | Integer | item | Octree depth for Poisson mode. Typical 7-9. <= 0 uses 8. |
 | Samples Per Node (`Sn`) | Number | item | Poisson samples-per-leaf-node. <= 0 uses 1.5. |
 | Radius Ratio (`Rr`) | Number | item | Advancing-Front radius ratio. <= 0 uses CGAL default 5.0. |
@@ -3838,6 +4797,57 @@ Related:
 | Trace (`R`) | Text | list | Multi-line per-stone trace of every stage. |
 | Skipped (`Sk`) | Integer | item | Number of stones skipped (null mesh, builder threw, etc.). |
 
+### Straight Skeleton (CGAL)  (`SkeletonCgal`)
+
+- GUID: `F2D000A1-CADC-4F2D-A0A1-7E60CADA15A0`  |  icon: `PolygonSimplify.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/CgalTestComponents.cs`
+- Algorithm: **Straight skeleton** - CGAL Straight_skeleton_2 (Aichholzer-Aurenhammer straight skeleton)
+- Interior straight skeleton of a 2D polygon (with optional  holes) via CGAL Straight_skeleton_2. Outer ring CCW, holes  CW; the shim auto-reverses if winding is wrong.  Wraps CGAL Straight_skeleton_2.
+
+| in | type | access | description |
+|---|---|---|---|
+| Outer (`O`) | Curve | item | Closed planar polyline / curve. The outer ring of the polygon. |
+| Holes (`H`) | Curve | list | Optional closed planar curves treated as holes. |
+| Tolerance (`T`) | Number | item | Curve-to-polyline tolerance. |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Edges (`E`) | Line | list | Skeleton edges as 2D lines (Z = 0). |
+| Vertices (`V`) | Point | list | Skeleton + boundary vertex positions. |
+| Times (`Time`) | Number | list | Time-of-arrival per vertex (boundary = 0; interior > 0). |
+| Available (`Av`) | Boolean | item | True iff the CGAL native shim is loadable. |
+| Report (`R`) | Text | item | Diagnostic report. |
+
+Related:
+- Frahan > Masonry > Slab Cut By Fractures - Skeleton-based cutting paths feed into the production fracture-cutting pipeline.
+- Frahan > Masonry > Fracture Polygon From Curve - Polygon ingest sibling for fracture inputs.
+
+### Tetrahedralize (Geogram)  (`TetGeogram`)
+
+- GUID: `F2D000C4-6E06-4F2D-A0C4-7E60660C0AC1`  |  icon: `CoacdDecompose.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/GeogramTestComponents.cs`
+- Algorithm: **Constrained Delaunay tetrahedralisation** - Levy, B., INRIA/ALICE. Geogram v1.9.9. BSD-3. https://github.com/BrunoLevy/geogram
+- Volumetric tetrahedral mesh of a closed surface via  GEO::mesh_tetrahedralize. NOTE: requires the shim to be  built with GEOGRAM_WITH_TETGEN=ON. Default build has it  OFF for BSD-3 license cleanliness; in that mode this  component returns a clear error pointing at the rebuild.  Wraps Geogram mesh_tetrahedralize (TetGen).
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Closed input surface. |
+| Preprocess (`Pre`) | Boolean | item | Clean input first. |
+| Refine (`Re`) | Boolean | item | Insert Steiner points to improve quality. |
+| Quality (`Q`) | Number | item | Element quality target [1.0..2.0]; 1.0 = max. |
+| Keep Regions (`Kr`) | Boolean | item | Keep all internal regions (else outermost only). |
+| Run (`Run`) | Boolean | item | Set true to compute. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Tet Cells (`T`) | Mesh | list | One mesh per tet (4 boundary triangles each). |
+| Tet Count (`N`) | Integer | item | Number of tetrahedra. |
+| Available (`Av`) | Boolean | item | True iff Geogram shim loaded. |
+| Report (`R`) | Text | item | Diagnostic report. |
+
+Related:
+- Frahan > Mesh > Mesh Diagnostics - Tet-mesh quality reports feed mesh-diagnostics workflows.
+- Frahan > Masonry > Masonry Stability RBE - Tetrahedralisation can support FE-volume stability analysis downstream of the RBE solver.
+
 ### Voxel Downsample  (`VoxelDown`)
 
 - GUID: `E4F5A6B7-3202-4F5E-A6B7-C8D9E0F12345`  |  icon: `Downsample.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/ScanIngest/VoxelDownsampleComponent.cs`
@@ -3857,175 +4867,6 @@ Related:
 
 
 ## Quarry
-
-### Bed Block Layout  (`BedBlocks`)
-
-- GUID: `A7E0B0F5-0C0F-4A16-9E3D-0FACE0FACE06`  |  icon: `BlockPackTree.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/BedBlockLayoutComponent.cs`
-- Algorithm: **Cost/volume dimension-block catalogue layout, per bed-bounded layer, exact guillotine tiling** - Elkarmoty et al. 2020 (block recovery on bedded stone); guillotine cutting stock (Gilmore & Gomory 1965)
-- Lay marketable dimension blocks (catalogue) into the intact layers between fracture beds,  cut along the beds. Inputs the bench box + the kriged bed surfaces; builds one layer per  inter-bed gap (Oblique = full bed spacing / bed-following; off = flat dip-safe envelope) and  tiles each layer with the block catalogue under a cost-to-volume objective. Volume Weight W  sweeps the plan: 0 = max cost (fewer big high-value blocks), ~500 = balanced, large = max  volume (fill). Outputs the blocks + net value + recovered volume. Reproduces the example-08  Botticino marble study. Facade over Core CatalogueBlockLayout.
-
-| in | type | access | description |
-|---|---|---|---|
-| Bench (`A`) | Box | item | Bench bounding box (m). The XY footprint + Z range to lay blocks in. |
-| Bed Surfaces (`F`) | Mesh | list | Fracture bed surfaces (from GPR Fracture Surfaces 3D). One layer is built per gap between  consecutive beds (and bench top/bottom). |
-| Volume Weight (`W`) | Number | item | Cost-to-volume objective weight ($/m3 added to each block's price). 0 = max COST (fewer big  high-value blocks, lower volume, higher net); ~500 = balanced; large (e.g. 3000) = max VOLUME  (fill the layers). Default 0. |
-| Oblique (`Ob`) | Boolean | item | TRUE (default) = bed-following: each layer is as thick as the full bed spacing (recovers the  dip wedge; needs georeferenced sloped cuts to execute). FALSE = flat dip-safe envelope (top =  deepest point of the upper bed, bottom = shallowest of the lower bed; fabricable on any gangsaw  today, but the wedges are waste). |
-| Cut Cost (`Cut`) | Number | item | Diamond-saw cost (USD/m2 of sawn block face). Default 200. |
-| Keep-out (`K`) | Number | item | Inward margin (m) kept from each bed (the GPR position keep-out). Default 0.05. |
-| Catalogue (`Cat`) | Number | list | OPTIONAL block catalogue as flat triples [footLength, footWidth, pricePerM3, ...]. Omit for the  default A 3.0x1.5 $2200 / B 2.0x1.5 $1800 / C 1.5x1.0 $1400 / D 1.0x1.0 $1100. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | Placed dimension blocks. With Oblique on these are bed-bounded HEXAHEDRA: each block's top  face rides the upper bed and its bottom face rides the lower bed (sheared to the dip), so no  block crosses a fracture and the layout follows the real bed dip. Oblique off = flat boxes. |
-| Class (`C`) | Text | list | Catalogue class (A/B/C/D...) of each block, aligned to Blocks. |
-| Volume (`V`) | Number | item | Total recovered block volume (m3). |
-| Net Value (`Net`) | Number | item | Net value (USD) = block sale price - diamond-saw cut cost. |
-| Count (`N`) | Integer | item | Number of blocks placed. |
-| Report (`Rpt`) | Text | item | Mix + economics + per-layer summary. |
-
-Related:
-- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the bed surfaces this lays blocks between.
-- Frahan > Quarry > Fracture Block Pack - Uniform-block guillotine packer; this one is the priced multi-size CATALOGUE layout.
-
-### BlockCutOpt AMRR Plan  (`BCOAmrr`)
-
-- GUID: `F2D0BC03-1234-4F2D-A0B0-7E60CADA15A3`  |  icon: `QuarryCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
-- Algorithm: **AMRR in-block plane-sequence cutting** - Shao, Liu, Gao 2022, AMRR in-block plane-sequence cutting strategy, Processes (MDPI)
-- Plan a sequence of plane cuts (Shao 2022) that reduces the  starting block toward a target bounding sphere. Maximises  the average material removal rate. Implements AMRR in-block plane-sequence cutting (Shao 2022).
-
-| in | type | access | description |
-|---|---|---|---|
-| Blank Block (`B`) | Box | item | Starting block (m). |
-| Target Center (`C`) | Point | item | Target sphere centre. |
-| Target Radius (`R`) | Number | item | Target sphere radius (m). |
-| Sawblade Radius (mm) (`SBR`) | Number | item | Sawblade radius in mm. |
-| Feed Speed (mm/min) (`FS`) | Number | item | Feed speed in mm/min. |
-| Max Cuts (`MC`) | Integer | item | Iteration cap. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Cut Planes (`P`) | Plane | list | Sequence of cutting planes. |
-| Removed Volume (m^3) (`V`) | Number | list | Removed volume per step. |
-| Cutting Time (min) (`T`) | Number | list | Cutting time per step. |
-| Material Removal % (`MRP`) | Number | item | Overall material removal percentage. |
-| AMRR (mm^3/min) (`AMRR`) | Number | item | Average material removal rate. |
-
-### BlockCutOpt Extract Grid  (`BCOExtract`)
-
-- GUID: `F7A13001-0001-4F2D-A0B0-7E60CADA17C1`  |  icon: `BlockCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
-- Brute-force search + extract the winning OrientedBlock grid.  Outputs the non-intersected blocks as Rhino Boxes plus the  BlockCutOptResult headline numbers.
-
-| in | type | access | description |
-|---|---|---|---|
-| Tested Area (`A`) | Box | item | Bench bounding box (m). |
-| Fractures (`F`) | Mesh | item | Fracture mesh. |
-| Block X (`Lx`) | Number | item | Block length (m). |
-| Block Y (`Ly`) | Number | item | Block width (m). |
-| Block Z (`Lz`) | Number | item | Block height (m). |
-| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
-| Dx Step (`DxS`) | Number | item | Dx step (m). |
-| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
-| Dy Step (`DyS`) | Number | item | Dy step (m). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Boxes (`B`) | Box | list | Non-intersected blocks as Rhino Boxes. |
-| Count (`N`) | Integer | item | Number of non-intersected blocks. |
-| Recovery % (`R`) | Number | item | Recovery percentage. |
-| Best Psi (deg) (`Psi`) | Number | item | Optimum cutting direction. |
-| Best Dx (m) (`Dx`) | Number | item | Optimum dx. |
-| Best Dy (m) (`Dy`) | Number | item | Optimum dy. |
-| Elapsed (ms) (`T`) | Number | item | Wall-clock duration. |
-
-### BlockCutOpt Load Fractures  (`BCOLoadFx`)
-
-- GUID: `F2D0BC01-1234-4F2D-A0B0-7E60CADA15A1`  |  icon: `DefectMap.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
-- Load fractures from disk (PLY, CSV, .lines, .txt). World  coordinates in metres. For 2D-trace formats, zMin / zMax  define the vertical extrusion range. Output is a Rhino  Mesh consumable by BlockCutOpt Solve.
-
-| in | type | access | description |
-|---|---|---|---|
-| Path (`P`) | Text | item | File path. .ply / .csv / .lines / .txt |
-| Z Min (`Zmin`) | Number | item | Bottom of vertical extrusion (m). Ignored for PLY. |
-| Z Max (`Zmax`) | Number | item | Top of vertical extrusion (m). Ignored for PLY. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Fractures (`F`) | Mesh | item | Rhino Mesh of fracture triangles. |
-| Triangle Count (`N`) | Integer | item | Number of fracture triangles. |
-
-### BlockCutOpt Omni Solve  (`BCOOmni`)
-
-- GUID: `F2D0BC04-1234-4F2D-A0B0-7E60CADA15A4`  |  icon: `BlockCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
-- Algorithm: **BlockCutOpt omni-solve (Pareto over recovery/revenue/risk/cut-area)** - Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761
-- Run the omni-solver: uniform (mx, my) sub-division per zone,  4-axis Pareto multi-objective (recovery, revenue, kerf-time,  BCSdbBV). Returns one row per zone. Implements BlockCutOpt omni-solve (Elkarmoty 2020; Jalalian 2023).
-
-| in | type | access | description |
-|---|---|---|---|
-| Tested Area (`A`) | Box | item | Bench bounding box (m). |
-| Fractures (`F`) | Mesh | item | Fracture mesh. |
-| Mx (`Mx`) | Integer | item | Sub-divisions in X. |
-| My (`My`) | Integer | item | Sub-divisions in Y. |
-| Block X (`Lx`) | Number | item | Block length (m). |
-| Block Y (`Ly`) | Number | item | Block width (m). |
-| Block Z (`Lz`) | Number | item | Block height (m). |
-| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Run (`R`) | Boolean | item | Execute the solve (the search is expensive; bound it before running) |
-
-| out | type | access | description |
-|---|---|---|---|
-| Zone Id (`Z`) | Text | list | Sub-zone identifier (i, j). |
-| Best Recovery Count (`N`) | Integer | list | Best recovery count per zone. |
-| Best Revenue (`Pi`) | Number | list | Best revenue per zone. |
-| Best BCSdbBV (`BCS`) | Number | list | Best BCSdbBV cost per zone. |
-| Best Psi (deg) (`Psi`) | Number | list | Recovery-optimal psi per zone. |
-| Aggregate Recovery (`R`) | Integer | item | Sum of recovery counts. |
-
-### BlockCutOpt Solve  (`BCOSolve`)
-
-- GUID: `F2D0BC02-1234-4F2D-A0B0-7E60CADA15A2`  |  icon: `BlockCutOpt.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptComponents.cs`
-- Algorithm: **BlockCutOpt brute-force search** - Elkarmoty Bondua Bruno 2020, Resources Policy 68:101761
-- Brute-force search for the optimum cutting direction +  displacement that maximises the count of non-intersected  blocks. All units in metres. [Elkarmoty et al. 2020]
-
-| in | type | access | description |
-|---|---|---|---|
-| Tested Area (`A`) | Box | item | Bench bounding box (m). |
-| Fractures (`F`) | Mesh | item | Fracture mesh. |
-| Block X (`Lx`) | Number | item | Block length (m). |
-| Block Y (`Ly`) | Number | item | Block width (m). |
-| Block Z (`Lz`) | Number | item | Block height (m). |
-| Kerf (`K`) | Number | item | Material-lost-by-quarrying (m). |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Dx Max (`Dx`) | Number | item | Half-range of dx search (m). |
-| Dx Step (`DxS`) | Number | item | Dx step (m). |
-| Dy Max (`Dy`) | Number | item | Half-range of dy search (m). |
-| Dy Step (`DyS`) | Number | item | Dy step (m). |
-| Run (`R`) | Boolean | item | Execute the solve (the search is expensive; bound it before running) |
-
-| out | type | access | description |
-|---|---|---|---|
-| Non-Intersected Count (`N`) | Integer | item | Best non-intersected block count. |
-| Recovery % (`R`) | Number | item | Recovery percentage. |
-| Best Psi (deg) (`Psi`) | Number | item | Optimum cutting direction. |
-| Best Dx (m) (`Dx`) | Number | item | Optimum dx. |
-| Best Dy (m) (`Dy`) | Number | item | Optimum dy. |
-| Evaluations (`E`) | Integer | item | Total (psi, dx, dy) samples evaluated. |
-| Elapsed (ms) (`T`) | Number | item | Wall-clock duration. |
-
-### Box To Mesh  (`Box2Mesh`)
-
-- GUID: `D3E4F5A6-3004-4F5E-A6B7-C8D9E0F12345`  |  icon: `QuarryBlock.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/BoxToMeshComponent.cs`
-- Convert a Box (e.g. a BlockCutOpt output) into a closed  Mesh (8 vertices, 12 triangles). Bridges the Box->Mesh  adapter gap between BlockCutOpt and SlabFromMesh /  SlabCutByFractures / AshlarPack.
-
-| in | type | access | description |
-|---|---|---|---|
-| Box (`B`) | Box | item | Input Box. Typically a single Box from BlockCutOpt's  Boxes output (graft, list-item, or as a single item). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Closed mesh of the box. 8 vertices, 12 triangles. |
 
 ### Clean Scan Mesh  (`CleanTIN`)
 
@@ -4074,21 +4915,6 @@ Related:
 
 Related:
 - Frahan > Quarry > GPR Survey Grid - Wire the constructed preset into Custom Preset to ingest a stone the two built-in presets do not cover.
-
-### Convex Hull Slab  (`HullSlab`)
-
-- GUID: `ECFDAEBF-CADB-4234-5678-9012345678AB`  |  icon: `ConvexHull2D.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/ConvexHullSlabComponent.cs`
-- Algorithm: **QuickHull convex hull** - Barber, Dobkin, Huhdanpaa 1996, The Quickhull algorithm for convex hulls, ACM TOMS 22(4):469-483
-- Builds the convex hull of a Rhino mesh's vertices and emits  the hull as a Slab. Loses concavity by definition; opt in  for fast Mesh -> Slab on roughly-convex inputs. Implements QuickHull (Barber-Dobkin-Huhdanpaa 1996).
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Rhino mesh whose vertices seed the hull. At least 4 non-coplanar vertices required. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Slab (`S`) | Generic | item | Convex-hull Slab. |
-| Mesh (`M`) | Mesh | item | Convex hull as a Rhino Mesh (same geometry, fan-triangulated). |
 
 ### Discontinuity Ingest  (`DiscIn`)
 
@@ -4179,490 +5005,33 @@ Related:
 - Frahan > Quarry > BlockCutOpt Solve - Consumes the discontinuity model this produces.
 - Frahan > Ingest > Load E57 Cloud - Produces the point cloud this segments.
 
-### Fracture Block Pack  (`FracBlockPack`)
+### Fracture Intensity  (`Intensity`)
 
-- GUID: `A7E0B0F3-0C0F-4A16-9E3D-0FACE0FACE04`  |  icon: `BlockCutOpt.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureBlockPackComponent.cs`
-- Pack fixed-size dimension blocks into each fracture-bounded slab (bin): tree-pack  coarse subdivision of the AABB + irregular-boundary fit to the slab mesh. Reports  per-bin yield. Managed.
-
-| in | type | access | description |
-|---|---|---|---|
-| Container Meshes (`C`) | Mesh | list | Fracture-bounded slab meshes (closed). Each is one BIN. From the split mesh bench /  fracture surfaces. |
-| Block Length (`Lx`) | Number | item | Dimension-block length (m). |
-| Block Width (`Ly`) | Number | item | Dimension-block width (m). |
-| Block Height (`Lz`) | Number | item | Dimension-block height (m). |
-| Kerf (`K`) | Number | item | Saw-cut gap between blocks (m). |
-| Fracture Clearance (`Cl`) | Number | item | Extra inward margin (m) every block must keep from the fracture boundary. Set it to the  fracture position sigma (GPR Fracture Surfaces 3D) for uncertainty-safe blocks. Default 0. |
-| Run (`R`) | Boolean | item | Compute the packing. |
-| Uncertainty Safe (`US`) | Boolean | item | Toggle the deep-fracture safety allowance. FALSE = geometric yield (clearance ignored, the  optimistic number). TRUE = enforce the Fracture Clearance (wire it to the fracture sigma  from GPR Fracture Surfaces 3D) so no block sits within the measured GPR uncertainty of a  fracture -> uncertainty-safe yield. Default false. |
-| Packer (`Pk`) | Integer | item | Packing strategy. 0 = fixed axis grid. 1 = best-of (6 orientations x grid phase). 2 =  combined multi-size on a global grid. 3 = VOXEL-DLBF: per-block deepest-bottom-left-first  placement on a lattice (each block lands independently, conforming to the wavy boundary --  adopted after a head-to-head where a Mosch-style voxel greedy beat the global grid). 4 =  VOXEL-DLBF + multi-size (max-yield mesh-bench algorithm, DEFAULT): per-block placement plus  the 1.0/0.66/0.5 marketable fill ladder, strict 8-corner irregular fit + kerf. Tops the  head-to-head vs Kim forest and the Mosch-style greedy, but is NOT guaranteed saw-separable.  5 = GUILLOTINE multi-size (MANUFACTURABLE): recursive full-span 3D guillotine so every block  is separable by edge-to-edge saw cuts; reports cutting-surface-area + cut count (Jalalian  I11 / saw-path cost). Trades a little yield for full manufacturability. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | Placed dimension-block meshes (closed boxes). |
-| Bin Index (`Bi`) | Integer | list | Container/bin index of each placed block. |
-| Block Count (`N`) | Integer | list | Blocks placed per bin. |
-| Recovered Volume (`V`) | Number | list | Recovered block volume per bin (m^3). |
-| Yield (`Y`) | Number | list | Recovered / intact volume per bin (0..1). |
-| Report (`Rpt`) | Text | item | Per-bin yield summary. |
-
-### Fracture Bounded Slabs  (`BedSlabs`)
-
-- GUID: `A7E0B0F4-0C0F-4A16-9E3D-0FACE0FACE05`  |  icon: `Box2Mesh.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureBoundedSlabsComponent.cs`
-- Algorithm: **Fracture-bounded slabs by height-field stitch between single-valued kriged bed surfaces** - ordinary-kriging bed surfaces (Cressie 1993); guillotine bed-cut sequence (Gilmore and Gomory 1965)
-- Cut a bench box into the closed inter-bed SLABS that FOLLOW the kriged fracture surfaces.  The beds are single-valued depth surfaces, so each slab is built by stitching the sampled  height fields of two consecutive beds (height-field stitch, no CGAL boolean): one slab per  gap between consecutive beds and the bench top/bottom. Each slab follows the wavy beds, so a  block packed inside it never crosses a fracture. Feed the slabs into Fracture Block Pack  (packer 5, staged guillotine) -> the paper's manufacturable bed-following layout.
+- GUID: `D5F1004E-ED9E-4ED9-A04E-ED9EED9E004E`  |  icon: `FractureIntensity.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/FractureIntensityComponent.cs`
+- Algorithm: **Fracture intensity P_ij** - Dershowitz & Herda (1992); P32 = sum 1/spacing (persistent)
+- Dershowitz P_ij fracture intensity, centred on P32 (fracture area / rock volume, 1/m). Feed per-set  Dip / Dip dir / Spacing; optionally a scanline (expected P10) and a finite-fracture DFN (areas + volume)  for a directly-measured P32/P30 cross-check. P32 is the scale-independent measure to report for DFN work.
 
 | in | type | access | description |
 |---|---|---|---|
-| Bench (`A`) | Box | item | Bench bounding box (m). XY footprint + the Z range to slab. |
-| Bed Surfaces (`F`) | Mesh | list | Kriged fracture bed surfaces (from GPR Fracture Surfaces 3D). Single-valued depth surfaces;  one slab is built per gap between consecutive beds. |
-| Grid Res (`G`) | Integer | item | Stitch grid resolution along the longer footprint axis (the other axis scales to keep cells  near-square). Higher = finer wavy-bed fidelity. Default 26. |
-| Keep-out (`K`) | Number | item | Inward Z margin (m) kept from each bed (the GPR position keep-out). Default 0. |
+| Dip (`D`) | Number | list | Per-set dip (deg). |
+| Dip dir (`Dd`) | Number | list | Per-set dip-direction (deg). |
+| Spacing (`Sp`) | Number | list | Per-set mean normal spacing (cloud units). |
+| Unit scale (`U`) | Number | item | Multiplies spacing into metres (1 if already metres). |
+| Scanline (`L`) | Line | item | Optional scanline (its direction) for the expected P10. |
+| DFN areas (`Fa`) | Number | list | Optional finite-fracture areas (m^2) for a directly-measured P32. |
+| Volume (`V`) | Number | item | Optional rock-mass volume (m^3) for the DFN P32/P30. |
 
 | out | type | access | description |
 |---|---|---|---|
-| Slabs (`S`) | Mesh | list | The closed fracture-bounded slab meshes, one per inter-bed layer (shallow -> deep). Feed into  Fracture Block Pack > Container Meshes. |
-| Thickness (`T`) | Number | list | Mean thickness (m) of each slab, aligned to Slabs. |
-| Report (`Rpt`) | Text | item | Per-slab summary. |
+| P32 per set (`P32s`) | Number | list | Per-set volumetric intensity 1/spacing (1/m). |
+| P32 (`P32`) | Number | item | Total volumetric fracture intensity (area/volume, 1/m). |
+| P10 (`P10`) | Number | item | Expected scanline linear intensity (1/m); NaN if no scanline. |
+| P30 (`P30`) | Number | item | DFN volumetric fracture count (1/m^3); NaN if no DFN. |
+| Report (`Re`) | Text | item | Intensity summary. |
 
 Related:
-- Frahan > Quarry > GPR Fracture Surfaces 3D - Source of the kriged bed surfaces this slabs the bench by.
-- Frahan > Quarry > Fracture Block Pack - Pack each fracture-bounded slab with the staged guillotine (mode 5).
-- Frahan > Slab > Slab Cut By Tool Mesh (CGAL) - The CGAL boolean alternative for arbitrary (non-height-field) curved cutters.
-
-### Frahan Algebraic Convex Polyhedron  (`AlgConv`)
-
-- GUID: `F2D0BC15-1234-4F2D-A0B0-7E60CADA15B5`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
-- Algorithm: **Half-space intersection convex polyhedron** - Frahan-original
-- Build a convex polyhedron from N half-space inequalities  Nx*x + Ny*y + Nz*z <= b (Zhang 2024 parity, synthesis I14).  Each parallel-list row defines one face's outward normal  and offset. Returns a triangulated Rhino Mesh. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| B (`B`) | Number | list | Right-hand side b per inequality. |
-| Nx (`Nx`) | Number | list | Outward-normal X per inequality. |
-| Ny (`Ny`) | Number | list | Outward-normal Y per inequality. |
-| Nz (`Nz`) | Number | list | Outward-normal Z per inequality. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Polyhedron (`P`) | Mesh | item | Triangulated CPH as Rhino Mesh. |
-| Vertex Count (`V`) | Integer | item | Vertex count. |
-| Face Count (`F`) | Integer | item | Face count. |
-| Volume (m^3) (`Vol`) | Number | item | Polyhedron volume. |
-
-### Frahan BenchBlock Cut → Slabs  (`QCut`)
-
-- GUID: `F7A13002-0001-4F2D-A0B0-7E60CADA17C2`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
-- Run BlockCutOpt per BenchBlock in the ExtractionPlan order  and emit the winning cut-grid as Slabs (Mesh form).  Closes the Layer 7 → Layer 5 / 6 handoff.
-
-| in | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory. |
-| Plan (`P`) | Generic | item | ExtractionPlan (accepted blocks are cut in plan order). |
-| Fractures (`F`) | Mesh | item | Fracture mesh. |
-| Product X (m) (`Lx`) | Number | item | Dimension-block target X. |
-| Product Y (m) (`Ly`) | Number | item | Dimension-block target Y. |
-| Product Z (m) (`Lz`) | Number | item | Dimension-block target Z. |
-| Kerf (m) (`K`) | Number | item | Saw kerf. |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
-| Dx Step (`DxS`) | Number | item | Dx step (m). |
-| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
-| Dy Step (`DyS`) | Number | item | Dy step (m). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Slabs (`S`) | Mesh | list | Per-BenchBlock cut slabs concatenated in plan order. Wire into Ashlar Pack. |
-| Block Ids (`I`) | Text | list | BenchBlock id parallel to each slab. |
-| Counts (`N`) | Integer | list | Slab count per BenchBlock (parallel to ExtractionPlan.Accepted). |
-| Cut Results (`C`) | Generic | list | List of BenchBlockCutResult objects. |
-
-### Frahan Billet Cutter  (`Billets`)
-
-- GUID: `F7A14002-0001-4F2D-A0B0-7E60CADA17D2`  |  icon: `QuarryCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
-- Algorithm: **Axis-parallel kerf-aware slab sub-division** - Frahan-original
-- Sub-divide slabs into billets along an axis at a target  billet width. Kerf-aware. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Slabs (`S`) | Mesh | list | Slab inventory (one mesh per slab). |
-| Axis (`A`) | Integer | item | Billet axis: 0=X, 1=Y, 2=Z. |
-| Billet Width (m) (`W`) | Number | item | Target billet width. |
-| Kerf (m) (`K`) | Number | item | Saw kerf. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Billets (`B`) | Mesh | list | Billet meshes (one per cut piece). |
-| Count (`N`) | Integer | item | Total billet count. |
-
-### Frahan Block Candidate Generator  (`BCand`)
-
-- GUID: `F7A15003-0001-4F2D-A0B0-7E60CADA17E3`  |  icon: `BlockCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
-- Algorithm: **Per-cell AABB block-candidate generator** - Frahan-original
-- Emit one BlockCandidate per BlockCell using the cell's AABB  as the BenchBlock footprint. Also returns a QuarryInventory  ready for the Layer 7 Quarry Yield Estimator. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Block Graph (`Bg`) | Generic | item | BlockGraph from Frahan Block Graph. |
-| Bench Id (`B`) | Text | item | Bench identifier for the QuarryInventory. bench-1 |
-| Geology Grade (`G`) | Number | item | Per-cell geology grade 0..1. |
-| Uncertainty Buffer (m) (`U`) | Number | item | Buffer applied to each candidate. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory for the Layer 7 pipeline. |
-| Candidates (`C`) | Generic | list | List<BlockCandidate>. |
-| Candidate Boxes (`Bx`) | Box | list | Footprint of each candidate as a Rhino Box. |
-| Count (`N`) | Integer | item | Number of candidates. |
-
-### Frahan Block Graph  (`BlkGraph`)
-
-- GUID: `F7A15002-0001-4F2D-A0B0-7E60CADA17E2`  |  icon: `Voronoi.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
-- Algorithm: **CrackGraph to BlockGraph partition** - Frahan-original
-- Partition a bench (Box or Mesh) into BlockCells using a  CrackGraph. Each cell is a convex Slab; small cells are  dropped under Min Cell Volume. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Bench Mesh (`B`) | Mesh | item | Bench geometry (convex mesh). |
-| Crack Graph (`G`) | Generic | item | CrackGraph from Frahan Crack Graph. |
-| Min Cell Volume (m^3) (`Mv`) | Number | item | Cells below this volume are dropped. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Block Graph (`Bg`) | Generic | item | BlockGraph object. |
-| Cells (`C`) | Mesh | list | One mesh per BlockCell. |
-| Count (`N`) | Integer | item | Number of cells. |
-| Total Volume (m^3) (`V`) | Number | item | Sum of cell volumes. |
-
-### Frahan Crack Graph (manual)  (`CrkGraph`)
-
-- GUID: `F7A15001-0001-4F2D-A0B0-7E60CADA17E1`  |  icon: `DefectMap.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
-- Algorithm: **Crack-graph DTO builder** - Frahan-original
-- Wrap a user-supplied list of FracturePlanes (and optional  confidences) as a CrackGraph for spec-08 downstream consumers. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Fracture Planes (`F`) | Generic | list | List<FracturePlane>. |
-| Confidences (`C`) | Number | list | Per-plane confidence 0..1 (optional). |
-| Ids (`I`) | Text | list | Per-plane ids (optional). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Crack Graph (`G`) | Generic | item | CrackGraph object. |
-| Count (`N`) | Integer | item | Number of cracks. |
-
-### Frahan Extraction Order Optimizer  (`QOrder`)
-
-- GUID: `F7A11003-0001-4F2D-A0B0-7E60CADA17A3`  |  icon: `QuarryCutOpt.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
-- Algorithm: **Weighted-sum greedy extraction-order sort** - Frahan-original
-- Order BenchBlocks by score = w_yield*yield - w_risk*risk -  w_access*access. Blocks under min yield are skipped. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory. |
-| Estimates (`E`) | Generic | list | BlockYieldEstimate list. |
-| Yield Weight (`Wy`) | Number | item | Score weight on yield fraction. |
-| Risk Weight (`Wr`) | Number | item | Score weight on fracture risk. |
-| Access Weight (`Wa`) | Number | item | Score weight on access cost. |
-| Min Yield (`My`) | Number | item | Yield fraction 0..1 below which a block is skipped. |
-| Access Normaliser (`An`) | Number | item | Divisor for access cost. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Plan (`P`) | Generic | item | ExtractionPlan object. |
-| Order Ids (`I`) | Text | list | Block ids in extraction order. |
-| Scores (`S`) | Number | list | Score for each accepted block. |
-| Skipped Ids (`Sk`) | Text | list | Block ids skipped (low yield). |
-| Total Recoverable (m^3) (`Vr`) | Number | item | Sum of recoverable volumes. |
-| Total Waste (m^3) (`Vw`) | Number | item | Sum of waste volumes. |
-
-### Frahan GPR Radargram Reader  (`GprRead`)
-
-- GUID: `F7A12001-0001-4F2D-A0B0-7E60CADA17B1`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryIngestionComponents.cs`
-- SUPERSEDED BY: GPR File Loader + GPR Fracture Extract, which read  vendor formats natively and run the validated processing chain.  Kept loadable for old canvases.  Read a Frahan-format GPR radargram (traces CSV + optional  picks CSV). Coordinates in metres. SEG-Y / DZT / RD3 must  be converted externally (RGPR).
-
-| in | type | access | description |
-|---|---|---|---|
-| Id (`I`) | Text | item | Radargram identifier. scan-1 |
-| Traces CSV (`T`) | Text | item | Path to traces CSV (x,y,dz,a0,a1,...). |
-| Picks CSV (`P`) | Text | item | Path to picks CSV (x,y,depth,conf,label). Empty = none. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Radargram (`R`) | Generic | item | GprRadargram object. |
-| Trace XY (`TXY`) | Point | list | One point per trace at (x, y, 0). |
-| Pick Points (`Pk`) | Point | list | One point per pick at (x, y, -depth). |
-| Pick Confidence (`C`) | Number | list | Confidence per pick (0..1). |
-| Trace Count (`Nt`) | Integer | item | Number of traces. |
-| Pick Count (`Np`) | Integer | item | Number of picks. |
-
-Related:
-- Frahan > Ingest > GPR File Loader - SUPERSEDED BY: GPR File Loader — native multi-format ingest (CSV / SEG-Y / RD3 / DT1 / DZT / IDS .dt), no external conversion needed.
-- Frahan > Quarry > GPR Fracture Extract - SUPERSEDED BY: GPR Fracture Extract — full processing chain (f-k migration + Hilbert energy + continuity) with stone/frequency presets.
-
-### Frahan GeoFractNet Inference  (`GFNInfer`)
-
-- GUID: `F7A12002-0001-4F2D-A0B0-7E60CADA17B2`  |  icon: `DefectMap.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryIngestionComponents.cs`
-- Load pre-computed GeoFractNet fracture predictions from CSV  and emit a BlockCutOpt-ready fracture Mesh clipped to a bench  AABB. Inference itself runs externally (net48 cannot host  PyTorch).
-
-| in | type | access | description |
-|---|---|---|---|
-| CSV Path (`P`) | Text | item | Path to GeoFractNet predictions CSV. |
-| Bench AABB (`B`) | Box | item | Bounding box to clip fracture planes to. |
-| Min Confidence (`C`) | Number | item | Drop predictions below this confidence (0..1). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Fractures (`F`) | Mesh | item | Fracture mesh ready for BlockCutOpt. |
-| Planes (`Pl`) | Plane | list | One Rhino Plane per fracture. |
-| Confidence (`C`) | Number | list | Per-fracture confidence. |
-| Set Id (`S`) | Integer | list | Per-fracture set id. |
-| Triangle Count (`Nt`) | Integer | item | Triangles in the fracture mesh. |
-
-### Frahan Heterogeneous Quarry Extraction  (`HeteroExt`)
-
-- GUID: `F2D0BC19-1234-4F2D-A0B0-7E60CADA15B9`  |  icon: `QuarryBlock.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs`
-- Algorithm: **Heterogeneous quarry extraction pipeline** - Frahan-original
-- Composite 4-step extraction pipeline: BlockCutOpt to find  the fracture-clean regions, then 3D DLBF mixed-size pack  (monuments + dimension stones + slabs) avoiding fractured  regions, plus optional MonumentInventory placement on a  fracture-derived BlockGraph. One component, four outputs  per stage. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Bench (`B`) | Box | item | Bench bounding box (m). |
-| Fractures (`Fx`) | Mesh | item | Fracture mesh. |
-| Prime Block X (`Plx`) | Number | item | Prime (max) block length (m) for BCO stage 1. |
-| Prime Block Y (`Ply`) | Number | item | Prime block width (m). |
-| Prime Block Z (`Plz`) | Number | item | Prime block height (m). |
-| Kerf (`K`) | Number | item | Saw kerf (m). |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Catalogue Ids (`Cid`) | Text | list | DLBF catalogue ids. |
-| Catalogue Widths (m) (`Cw`) | Number | list | DLBF widths. |
-| Catalogue Depths (m) (`Cd`) | Number | list | DLBF depths. |
-| Catalogue Heights (m) (`Ch`) | Number | list | DLBF heights. |
-| Catalogue Revenues (`Cr`) | Number | list | DLBF revenues. |
-| Grid Cell (m) (`Gc`) | Number | item | DLBF discretisation cell; 0 = min(W,D,H)/4. |
-| Floor Only (`Fl`) | Boolean | item | True = pieces on bench floor (no stacking). |
-| Monument Inventory (`Mon`) | Generic | item | Optional MonumentInventory (from MonInv) for stage 4. |
-| Monument Grid (m) (`Mg`) | Number | item | Monument-placement grid stride. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Prime Boxes (`Pb`) | Box | list | Non-intersected cells at the prime block dim. |
-| Prime Count (`Pn`) | Integer | item | Count of fracture-clean prime cells. |
-| Prime Recovery % (`Pr`) | Number | item | BlockCutOpt recovery at the prime dim. |
-| Best Psi (deg) (`Psi`) | Number | item | Optimal cutting direction. |
-| Forbidden Boxes (`Fb`) | Box | list | Fracture-intersected cells (forbidden for DLBF). |
-| Mixed Boxes (`Mb`) | Box | list | DLBF-placed mixed-size piece boxes. |
-| Mixed Ids (`Mi`) | Text | list | Id of each DLBF piece. |
-| Mixed Revenue (`Mr`) | Number | item | DLBF total revenue. |
-| Mixed Volume (`Mv`) | Number | item | DLBF occupied volume (m^3). |
-| Monument Boxes (`Mo`) | Box | list | Monument-placement AABBs (empty if no inventory). |
-| Monument Ids (`Moi`) | Text | list | Monument ids in placement order. |
-| Monument Count (`Mon`) | Integer | item | Total monuments placed. |
-| Unplaced Monuments (`Mou`) | Text | list | Monuments that did not fit anywhere. |
-
-Related:
-- Frahan > Lab > Frahan Mixed-Size Block Pack - Standalone 2D DLBF mixed-size packer (F2D0BC17); the same engine this facade composes.
-- Frahan > Quarry > Frahan Mixed-Size Block Pack 3D - Standalone 3D DLBF mixed-size packer (F2D0BC18); the same engine this facade composes.
-- Frahan > Quarry > BlockCutOpt Solve - Standalone stage-1 solver: optimum cutting direction + displacement (Elkarmoty 2020).
-
-### Frahan Mesh → Fracture Planes  (`Mesh2FxPl`)
-
-- GUID: `F7A13003-0001-4F2D-A0B0-7E60CADA17C3`  |  icon: `DefectMap.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
-- Algorithm: **Mesh-face to fracture-plane conversion** - Frahan-original
-- Convert a hand-drawn Rhino Mesh into a List<FracturePlane>  consumable by Slab Cut By Fractures. One plane per face  (centroid + face normal). Lets you author fractures on the  Rhino canvas without going through a PLY file. Frahan-original method.
-
-| in | type | access | description |
-|---|---|---|---|
-| Mesh (`M`) | Mesh | item | Rhino mesh whose faces become fracture planes. |
-| Unitize Normals (`U`) | Boolean | item | Re-normalise face normals (recommended). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Fracture Planes (`F`) | Generic | list | List<FracturePlane> for Slab Cut By Fractures. |
-| Rhino Planes (`Pl`) | Plane | list | Same fractures as Rhino Planes for preview. |
-| Count (`N`) | Integer | item | Number of fracture planes. |
-
-### Frahan Mixed-Size Block Pack 3D  (`BCOMixedPack3D`)
-
-- GUID: `F2D0BC18-1234-4F2D-A0B0-7E60CADA15B8`  |  icon: `BinPack.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptHeterogeneousComponents.cs`
-- Algorithm: **Deepest-Left-Bottom-Fill (3D)** - Chehrazad, Roose, Wauters 2025, Int. J. Production Research 63:6606-6629
-- 3D generalisation of DLBF (Chehrazad 2025). Each piece has  its own (Width, Depth, Height); pieces sort by revenue-per- volume. Floor-only mode (default) places every piece at  z = bench.MinZ, matching quarry extraction where blocks are  cut OUT of solid rock (no stacking). Disable Floor-Only for  monument storage / slab racking / container loading. Implements Deepest-Left-Bottom-Fill 3D (Chehrazad 2025).
-
-| in | type | access | description |
-|---|---|---|---|
-| Tested Area (`A`) | Box | item | Bench bounding box (m). |
-| Piece Ids (`Id`) | Text | list | One id per catalogue entry. |
-| Piece Widths (m) (`W`) | Number | list | Width per entry (X). |
-| Piece Depths (m) (`D`) | Number | list | Depth per entry (Y). |
-| Piece Heights (m) (`H`) | Number | list | Height per entry (Z). |
-| Piece Revenues (`Rev`) | Number | list | RMV per entry. |
-| Forbidden Boxes (`X`) | Box | list | Optional forbidden regions (e.g. fracture-intersected cells). |
-| Grid Cell (m) (`Gc`) | Number | item | Discretisation cell; 0 = min(W,D,H)/4. |
-| Floor Only (`Fl`) | Boolean | item | True = pieces sit on bench floor (no stacking). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Placed Boxes (`B`) | Box | list | One Box per placed piece. |
-| Placed Ids (`I`) | Text | list | Id of each placed piece (multiplicity preserved). |
-| Total Revenue (`Pi`) | Number | item | Sum of placed-piece revenues. |
-| Occupied Volume (m^3) (`Vol`) | Number | item | Sum of placed-piece volumes. |
-| Placed Count (`N`) | Integer | item | Number of placements. |
-
-### Frahan Photo Detect → PLY  (`Photo2Ply`)
-
-- GUID: `F2D0BC14-1234-4F2D-A0B0-7E60CADA15B4`  |  icon: `PlyReader.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
-- v1 reads pre-detected fracture TRACES from a CSV (x1, y1, x2, y2  in world metres) and emits the vertical-extruded PLY consumable by  BlockCutOpt. The on-image fracture detector is not yet wired (the  Origin/GSD/Flip-Y inputs are placeholders for it). Pair with GFNInfer  to write the CSV from a GeoFractNet run, or hand-author the CSV from  QGIS / AutoCAD digitisation.
-
-| in | type | access | description |
-|---|---|---|---|
-| CSV Path (`Csv`) | Text | item | Trace CSV file (x1, y1, x2, y2 in metres). |
-| Origin X (m) (`Ox`) | Number | item | World X of pixel (0, 0). Unused by CSV backend. |
-| Origin Y (m) (`Oy`) | Number | item | World Y of pixel (0, 0). Unused by CSV backend. |
-| GSD (m/px) (`Gsd`) | Number | item | Ground sampling distance. Unused by CSV backend. |
-| Z Min (m) (`Zmin`) | Number | item | Bottom of vertical extrusion. |
-| Z Max (m) (`Zmax`) | Number | item | Top of vertical extrusion. |
-| Flip Y (`Fy`) | Boolean | item | Pixel Y points down. Unused by CSV backend. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Fractures (`F`) | Mesh | item | Rhino Mesh of vertically-extruded fracture triangles. |
-| Trace Count (`Tc`) | Integer | item | Number of traces parsed. |
-| Triangle Count (`Tri`) | Integer | item | Number of triangles emitted. |
-| Backend (`Bk`) | Text | item | Detector backend used. |
-
-### Frahan Quarry Inventory  (`QInv`)
-
-- GUID: `F7A11001-0001-4F2D-A0B0-7E60CADA17A1`  |  icon: `StockpileManager.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
-- Aggregate a list of bench-block AABBs into a QuarryInventory.  All units in metres.
-
-| in | type | access | description |
-|---|---|---|---|
-| Bench Id (`B`) | Text | item | Bench identifier. bench-1 |
-| Block Boxes (`X`) | Box | list | Axis-aligned bench-block footprints (m). |
-| Block Ids (`I`) | Text | list | Optional block ids. If empty, auto-generated. |
-| Geology Grade (`G`) | Number | list | Per-block geology grade 0..1 (default 1.0). |
-| Access Cost (`A`) | Number | list | Per-block access cost (default 0). |
-
-| out | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory object. |
-| Count (`N`) | Integer | item | Number of blocks. |
-| Total Volume (m^3) (`V`) | Number | item | Sum of gross volumes. |
-| Avg Grade (`G`) | Number | item | Volume-weighted average geology grade. |
-
-### Frahan Quarry Report  (`QRep`)
-
-- GUID: `F7A11005-0001-4F2D-A0B0-7E60CADA17A5`  |  icon: `PackDiagnostics.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
-- Aggregate Inventory + ExtractionPlan + SawBedSchedule into  a Markdown summary plus headline numbers.
-
-| in | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory. |
-| Plan (`P`) | Generic | item | ExtractionPlan. |
-| Schedule (`Sc`) | Generic | item | SawBedSchedule. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Report (`R`) | Generic | item | QuarryReport object. |
-| Markdown (`MD`) | Text | item | Report rendered as Markdown. |
-| Yield (m^3) (`Vy`) | Number | item | Total recoverable yield. |
-| Waste (m^3) (`Vw`) | Number | item | Total waste. |
-| Recovery % (`R%`) | Number | item | Overall recovery percent. |
-| Makespan (min) (`M`) | Number | item | Schedule makespan. |
-
-### Frahan Quarry Yield Estimator  (`QYield`)
-
-- GUID: `F7A11002-0001-4F2D-A0B0-7E60CADA17A2`  |  icon: `YieldEstimator.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
-- Per-block yield estimate via BlockCutOpt as a sub-routine.  Returns one BlockYieldEstimate per BenchBlock.
-
-| in | type | access | description |
-|---|---|---|---|
-| Inventory (`Inv`) | Generic | item | QuarryInventory from Frahan Quarry Inventory. |
-| Fractures (`F`) | Mesh | item | Fracture mesh (BlockCutOpt format). |
-| Product X (m) (`Lx`) | Number | item | Dimension-block target X. |
-| Product Y (m) (`Ly`) | Number | item | Dimension-block target Y. |
-| Product Z (m) (`Lz`) | Number | item | Dimension-block target Z. |
-| Kerf (m) (`K`) | Number | item | Saw kerf. |
-| Psi Step (deg) (`Pdeg`) | Number | item | Angular search step. |
-| Dx Max (`Dx`) | Number | item | Half-range of dx (m). |
-| Dx Step (`DxS`) | Number | item | Dx step (m). |
-| Dy Max (`Dy`) | Number | item | Half-range of dy (m). |
-| Dy Step (`DyS`) | Number | item | Dy step (m). |
-| Risk Normaliser (`Rn`) | Number | item | Fracture-triangle count divisor for risk 0..1. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Estimates (`E`) | Generic | list | BlockYieldEstimate per BenchBlock. |
-| Block Ids (`I`) | Text | list | Block ids matching the estimates list. |
-| Recovery % (`R`) | Number | list | Per-block recovery percent. |
-| Fracture Risk (`Rf`) | Number | list | Per-block fracture risk 0..1. |
-| Cutting Time (min) (`T`) | Number | list | Per-block estimated cutting time. |
-
-### Frahan Saw-Bed Schedule  (`QSched`)
-
-- GUID: `F7A11004-0001-4F2D-A0B0-7E60CADA17A4`  |  icon: `CncRoughing.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/QuarryCutOptComponents.cs`
-- Algorithm: **Greedy LPT list scheduling** - Graham 1969, Bounds on multiprocessing timing anomalies, SIAM J. Appl. Math. 17(2):416-429
-- Greedy LPT schedule of accepted blocks onto N saw beds.  Returns per-bed timelines and the total makespan. Implements greedy LPT scheduling (Graham 1969).
-
-| in | type | access | description |
-|---|---|---|---|
-| Plan (`P`) | Generic | item | ExtractionPlan. |
-| Bed Count (`N`) | Integer | item | Number of saw beds (>= 1). |
-| Setup (min) (`S`) | Number | item | Fixed inter-block setup time per bed. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Schedule (`Sc`) | Generic | item | SawBedSchedule object. |
-| Bed Summary (`BS`) | Text | list | One line per bed. |
-| Makespan (min) (`M`) | Number | item | Schedule makespan. |
-| Slot Count (`K`) | Integer | item | Total scheduled slots. |
-
-### Frahan Slab Yield Optimizer  (`SlabYield`)
-
-- GUID: `F7A14001-0001-4F2D-A0B0-7E60CADA17D1`  |  icon: `YieldEstimator.png`  |  exposure: `quarternary`  |  source: `src/Frahan.StonePack.GH/GeoCutAndGeoPackComponents.cs`
-- Algorithm: **Per-block slab-plan yield maximisation** - Frahan-original spec 09 section 2 conflict-penalised yield score
-- Pick the best SlabPlan (axis + thickness) for one block.  Enumerates three axis-aligned candidates at the given  thickness; score = yield - conflictPenalty * crackConflicts.
-
-| in | type | access | description |
-|---|---|---|---|
-| Block (`B`) | Mesh | item | Convex block mesh. |
-| Fracture Planes (`F`) | Generic | list | Optional List<FracturePlane>. Wire from Frahan Mesh → Fracture Planes. |
-| Thickness (m) (`T`) | Number | item | Target slab thickness. |
-| Kerf (m) (`K`) | Number | item | Saw kerf. |
-| Conflict Penalty (`Cp`) | Number | item | Score penalty per aligned fracture inside the block. |
-| Alignment Tol (deg) (`At`) | Number | item | Normal-axis alignment tolerance for conflict detection. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Best Plan (`P`) | Generic | item | SlabPlan with the highest score. |
-| Axis (`A`) | Integer | item | 0=X, 1=Y, 2=Z. |
-| Slab Count (`N`) | Integer | item | Slabs the block produces under this plan. |
-| Yield Fraction (`Y`) | Number | item | slab_total_volume / block_volume. |
-| Conflicts (`C`) | Integer | item | Crack conflicts counted. |
-| Score (`S`) | Number | item | Yield − penalty × conflicts. |
-| Cut Planes (`Cp`) | Generic | list | FracturePlanes that materialise the winning plan (feed Slab Cut By Fractures). |
-
-### Frahan Synthetic TN Granite  (`TnGran`)
-
-- GUID: `F2D0BC16-1234-4F2D-A0B0-7E60CADA15B6`  |  icon: `Stratigraphy.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/BlockCutOptIngestionComponents.cs`
-- Algorithm: **Synthetic joint-set DFN generator** - ISRM Suggested Methods + Priest 1993 joint-set DFN
-- Generate a deterministic synthetic discrete fracture network  for Tamil Nadu granite (three joint sets: NE-SW, NW-SE,  sub-horizontal bedding). Outputs a CSV of 2D traces at  z=midheight + a PLY of 3D fracture polygons + the fracture  Mesh in-process. Lets you regression-test BlockCutOpt  without a field dataset. Implements synthetic joint-set DFN generation (ISRM/Priest 1993; Goodman & Shi 1985).
-
-| in | type | access | description |
-|---|---|---|---|
-| Bench (`B`) | Box | item | Bench bounding box (m). |
-| Seed (`S`) | Integer | item | Reproducibility seed. |
-| CSV Path (`Csv`) | Text | item | Output trace CSV path. |
-| PLY Path (`Ply`) | Text | item | Output fracture-polygon PLY path. |
-| Write Files (`W`) | Boolean | item | False = compute in memory only. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Fractures (`F`) | Mesh | item | In-process fracture Mesh (consumable by BCO components). |
-| Plane Count (`Np`) | Integer | item | Number of fracture planes generated. |
-| Trace Count (`Nt`) | Integer | item | Number of 2D traces at z=midheight. |
-| Triangle Count (`Ntri`) | Integer | item | Number of triangles in the PLY. |
-| CSV Written (`Co`) | Text | item | CSV file path actually written (empty when W=false). |
-| PLY Written (`Po`) | Text | item | PLY file path actually written (empty when W=false). |
+- Frahan > Quarry > Discontinuity Sets (Cloud) - Upstream source of per-set Dip/Dip dir/Spacing.
+- Frahan > Quarry > Stereonet + Block Size - Jv equals total P32 for persistent joints.
 
 ### GPR Bedrock Surface  (`GprBedrock`)
 
@@ -4784,6 +5153,30 @@ Related:
 - Frahan > Quarry > BlockCutOpt Load Fractures - Fracture meshes are the BlockCutOpt fracture input.
 - Frahan > Mesh > Move to Origin - Bring GPR picks + the bench mesh into one coordinate frame first.
 
+### GPR Radargram Reader  (`GprRead`)
+
+- GUID: `F7A12001-0001-4F2D-A0B0-7E60CADA17B1`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryIngestionComponents.cs`
+- SUPERSEDED BY: GPR File Loader + GPR Fracture Extract, which read  vendor formats natively and run the validated processing chain.  Kept loadable for old canvases.  Read a Frahan-format GPR radargram (traces CSV + optional  picks CSV). Coordinates in metres. SEG-Y / DZT / RD3 must  be converted externally (RGPR).
+
+| in | type | access | description |
+|---|---|---|---|
+| Id (`I`) | Text | item | Radargram identifier. scan-1 |
+| Traces CSV (`T`) | Text | item | Path to traces CSV (x,y,dz,a0,a1,...). |
+| Picks CSV (`P`) | Text | item | Path to picks CSV (x,y,depth,conf,label). Empty = none. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Radargram (`R`) | Generic | item | GprRadargram object. |
+| Trace XY (`TXY`) | Point | list | One point per trace at (x, y, 0). |
+| Pick Points (`Pk`) | Point | list | One point per pick at (x, y, -depth). |
+| Pick Confidence (`C`) | Number | list | Confidence per pick (0..1). |
+| Trace Count (`Nt`) | Integer | item | Number of traces. |
+| Pick Count (`Np`) | Integer | item | Number of picks. |
+
+Related:
+- Frahan > Ingest > GPR File Loader - SUPERSEDED BY: GPR File Loader — native multi-format ingest (CSV / SEG-Y / RD3 / DT1 / DZT / IDS .dt), no external conversion needed.
+- Frahan > Quarry > GPR Fracture Extract - SUPERSEDED BY: GPR Fracture Extract — full processing chain (f-k migration + Hilbert energy + continuity) with stone/frequency presets.
+
 ### GPR Survey Grid  (`GprGrid`)
 
 - GUID: `A7E0B0F0-0C0F-4A16-9E3D-0FACE0FACE01`  |  icon: `GprIngest.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/GprSurveyGridComponent.cs`
@@ -4817,6 +5210,58 @@ Related:
 - Frahan > Quarry > GPR Fracture Surfaces 3D - Krige this multi-line pick cloud into 3D dipping bed surfaces.
 - Frahan > Quarry > GPR Fracture Extract - Single-section twin; this one batches a whole survey grid.
 
+### GeoFractNet Inference  (`GeoFractNet`)
+
+- GUID: `F7A12002-0001-4F2D-A0B0-7E60CADA17B2`  |  icon: `DefectMap.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryIngestionComponents.cs`
+- Load pre-computed GeoFractNet fracture predictions from CSV  and emit a BlockCutOpt-ready fracture Mesh clipped to a bench  AABB. Inference itself runs externally (net48 cannot host  PyTorch).
+
+| in | type | access | description |
+|---|---|---|---|
+| CSV Path (`P`) | Text | item | Path to GeoFractNet predictions CSV. |
+| Bench AABB (`B`) | Box | item | Bounding box to clip fracture planes to. |
+| Min Confidence (`C`) | Number | item | Drop predictions below this confidence (0..1). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fractures (`F`) | Mesh | item | Fracture mesh ready for BlockCutOpt. |
+| Planes (`Pl`) | Plane | list | One Rhino Plane per fracture. |
+| Confidence (`C`) | Number | list | Per-fracture confidence. |
+| Set Id (`S`) | Integer | list | Per-fracture set id. |
+| Triangle Count (`Nt`) | Integer | item | Triangles in the fracture mesh. |
+
+### In-Situ Block Size  (`BlockSize`)
+
+- GUID: `D5F10050-ED9E-4ED9-A050-ED9EED9E0050`  |  icon: `InSituBlockSize.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/InSituBlockSizeComponent.cs`
+- Algorithm: **Monte-Carlo IBSD** - Kalenchuk et al. (2006) / Palmstrom (2005); Vb = s1 s2 s3 / q, q = |det(n1,n2,n3)|
+- Monte-Carlo in-situ block-size distribution. Feed per-set Dip / Dip dir / Spacing (from Discontinuity  Sets); samples Fisher orientation scatter + a spacing PDF over N realizations. Outputs the block-volume  distribution (P10/P50/P90), shape mix, and the right-prism fraction (q>=0.95) -- how sawable-to-rectangular  the natural fabric is. Needs >= 3 sets.
+
+| in | type | access | description |
+|---|---|---|---|
+| Dip (`D`) | Number | list | Per-set dip (deg). |
+| Dip dir (`Dd`) | Number | list | Per-set dip-direction (deg). |
+| Spacing (`Sp`) | Number | list | Per-set mean normal spacing (cloud units). |
+| Scatter (`Sc`) | Number | list | Fisher orientation scatter (deg); one value for all sets or one per set. |
+| Exponential (`E`) | Boolean | item | Spacing law: true = negative-exponential (default), false = normal CV0.3. |
+| Realizations (`N`) | Integer | item | Monte-Carlo realizations. |
+| Seed (`Sd`) | Integer | item | Random seed (deterministic). |
+| Unit scale (`U`) | Number | item | Multiplies spacing into metres (1 if already metres). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Volumes (`V`) | Number | list | Per-realization block volume (m^3) -- the distribution. |
+| P10 (`P10`) | Number | item | 10th-percentile block volume (m^3). |
+| P50 (`P50`) | Number | item | Median block volume (m^3). |
+| P90 (`P90`) | Number | item | 90th-percentile block volume (m^3). |
+| Deq (`De`) | Number | item | Median equivalent block diameter (m). |
+| Right-prism (`Rp`) | Number | item | Fraction of blocks with q>=0.95 (sawable-to-rectangular). |
+| Shape mix (`Sh`) | Text | item | Block-shape class percentages. |
+| Report (`Re`) | Text | item | IBSD summary. |
+
+Related:
+- Frahan > Quarry > Discontinuity Sets (Cloud) - Upstream source of per-set Dip / Dip dir / Spacing.
+- Frahan > Quarry > Stereonet + Block Size - Deterministic single-value block size; this gives the distribution.
+- Frahan > Quarry > Fracture Intensity - Same fabric; intensity vs block-size views.
+
 ### Joint Set  (`Joint`)
 
 - GUID: `ECFDAEBF-CBDC-4345-6789-012345678BCD`  |  icon: `Stratigraphy.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Quarry/JointSetComponent.cs`
@@ -4833,7 +5278,7 @@ Related:
 |---|---|---|---|
 | Joint Set (`J`) | Generic | item | JointSet DTO. Wire into Quarry DFN. |
 
-### Joint Sets to DFN  (`Sets2DFN`)
+### Joint Sets to DFN  (`JointsToDFN`)
 
 - GUID: `D5F1004B-ED9E-4ED9-A04B-ED9EED9E004B`  |  icon: `DiscontinuitySets.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/JointSetsToDfnComponent.cs`
 - Algorithm: **Joint-set DFN** - Priest 1993 discrete fracture network from joint-set statistics
@@ -4864,20 +5309,53 @@ Related:
 - Frahan > Quarry > BlockCutOpt Omni Solve - Downstream (evolved): sub-division + coarse-to-fine + Pareto recovery on this DFN.
 - Frahan > Quarry > Fracture Block Pack - Downstream: wire-saw staged guillotine packing against this DFN.
 
-### Mesh Shell Split  (`ShellSplit`)
+### Kinematic Feasibility  (`Kinematic`)
 
-- GUID: `DBECFDAE-BFCA-4123-4567-89012345678A`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/MeshShellSplitComponent.cs`
-- Algorithm: **Connected-components labelling** - Frahan-original
-- Separates a multi-shell Rhino mesh into one Slab per  connected shell. Each output shell is assumed convex  (Slab's input requirement). Frahan-original method.
+- GUID: `D5F1004F-ED9E-4ED9-A04F-ED9EED9E004F`  |  icon: `KinematicFeasibility.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/KinematicFeasibilityComponent.cs`
+- Algorithm: **Kinematic feasibility** - Markland (1972) / Hoek & Bray (1981) / Goodman & Bray (1976)
+- Markland / Hoek-Bray kinematic screen for a rock cut. Feed per-set Dip / Dip dir + the cut face  (Slope dip / Slope dip dir) + joint Friction. Tests planar sliding & flexural toppling per set and wedge  sliding per pair; draws a pole stereonet with the friction circle, slope great circle, and set poles  coloured by feasibility. Re-opens cold as a finished figure.
 
 | in | type | access | description |
 |---|---|---|---|
-| Mesh (`M`) | Mesh | item | Multi-shell Rhino mesh. |
+| Dip (`D`) | Number | list | Per-set dip (deg). |
+| Dip dir (`Dd`) | Number | list | Per-set dip-direction (deg). |
+| Slope dip (`Sd`) | Number | item | Cut-face dip (deg). |
+| Slope dip dir (`Sdd`) | Number | item | Cut-face dip-direction (deg). |
+| Friction (`F`) | Number | item | Joint friction angle (deg). |
+| Lateral (`Ll`) | Number | item | Lateral limit for daylight / toppling (deg). |
+| Plane (`Pl`) | Plane | item | Base plane for the stereonet. |
+| Radius (`R`) | Number | item | Net radius (model units). |
 
 | out | type | access | description |
 |---|---|---|---|
-| Slabs (`S`) | Generic | list | One Slab per connected shell. |
-| Mesh (`M`) | Mesh | list | One Rhino Mesh per shell (parallel to the Slabs list). |
+| Planar (`Pl`) | Boolean | list | Per-set planar-sliding feasibility. |
+| Wedge (`We`) | Text | list | Feasible wedge pairs (SixSj: plunge/trend). |
+| Toppling (`To`) | Boolean | list | Per-set flexural-toppling feasibility. |
+| Feasible (`N`) | Integer | item | Total feasible failure modes. |
+| Set poles (`P`) | Point | list | Projected set poles (red = a feasible failure). |
+| Net (`Nt`) | Curve | list | Net circle + friction circle + slope great circle. |
+| Report (`Re`) | Text | item | Per-mode screen with governing angles. |
+
+Related:
+- Frahan > Quarry > Discontinuity Sets (Cloud) - Upstream source of per-set Dip / Dip dir.
+- Frahan > Quarry > Stereonet + Block Size - Same stereonet; this adds the failure screen.
+
+### Mesh → Fracture Planes  (`MeshToFracPlanes`)
+
+- GUID: `F7A13003-0001-4F2D-A0B0-7E60CADA17C3`  |  icon: `DefectMap.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/QuarryBridgeComponents.cs`
+- Algorithm: **Mesh-face to fracture-plane conversion** - Frahan-original
+- Convert a hand-drawn Rhino Mesh into a List<FracturePlane>  consumable by Slab Cut By Fractures. One plane per face  (centroid + face normal). Lets you author fractures on the  Rhino canvas without going through a PLY file. Frahan-original method.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Rhino mesh whose faces become fracture planes. |
+| Unitize Normals (`U`) | Boolean | item | Re-normalise face normals (recommended). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Fracture Planes (`F`) | Generic | list | List<FracturePlane> for Slab Cut By Fractures. |
+| Rhino Planes (`Pl`) | Plane | list | Same fractures as Rhino Planes for preview. |
+| Count (`N`) | Integer | item | Number of fracture planes. |
 
 ### Overburden To Rock Face  (`Overburden`)
 
@@ -4917,136 +5395,6 @@ Related:
 |---|---|---|---|
 | Blocks (`B`) | Mesh | list | Extracted block meshes. |
 | Slabs (`S`) | Generic | list | Same blocks as Slab DTOs (for downstream Frahan plumbing). |
-
-### Quarry Decompose  (`QuarryDc`)
-
-- GUID: `B9CADBEC-FDAE-4F01-2345-678901234567`  |  icon: `QuarryCutOpt.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Quarry/QuarryDecomposeComponent.cs`
-- Algorithm: **Orthogonal-grid slab decomposition** - Frahan-original
-- Cuts a convex quarry Slab into a list of smaller convex Slabs  by an orthogonal grid of fracture planes. Output flows into  Ashlar Pack. Frahan-original method. Selection: convex pieces  -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell  partition -> By Voronoi.
-
-| in | type | access | description |
-|---|---|---|---|
-| Quarry (`Q`) | Generic | item | Convex quarry. Accepts a Frahan Slab DTO (from Slab From Mesh)  OR a Rhino Mesh (auto-converted). |
-| nX (`nX`) | Integer | item | Grid count along +X (>= 0). |
-| nY (`nY`) | Integer | item | Grid count along +Y (>= 0). |
-| nZ (`nZ`) | Integer | item | Grid count along +Z (>= 0). |
-| Eps (`eps`) | Number | item | Cutter floating-point tolerance. Must be >= 0. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Slabs (`S`) | Generic | list | Output Slab DTOs. Wire into Ashlar Pack. |
-| Parents (`Pi`) | Integer | list | Per-output index back into the input list (always 0 for a  single-quarry call). |
-| Mesh (`M`) | Mesh | list | Output Slabs as Rhino Meshes (parallel to the Slab list). |
-
-### Quarry Decompose By CoACD  (`QuarryDcCoacd`)
-
-- GUID: `F2D000E0-CADC-4F2D-A0E0-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
-- Algorithm: **Collision-Aware Approximate Convex Decomposition** - Wei, Liu, Wang et al. 2022, Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search, SIGGRAPH 2022
-- Decomposes a quarry mesh into nearly-convex blocks via  CoACD (Wei et al, SIGGRAPH 2022). Concavity-driven — block  count and shape come from the input geometry, not a user  grid. Use when the goal is approximate convex pieces for  downstream packing or collision physics. Implements Collision-Aware Approximate Convex Decomposition (Wei 2022).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
-
-| in | type | access | description |
-|---|---|---|---|
-| Quarry (`Q`) | Mesh | item | Quarry mesh. Must be 2-manifold for the lightweight CoACD  build (no OpenVDB preprocess); pre-clean with Mesh Repair  (CGAL) if needed. |
-| Threshold (`Th`) | Number | item | Concavity threshold. Lower = more pieces, tighter fit.  Default 0.05. |
-| Real Metric (`RM`) | Boolean | item | True = treat Threshold as metres rather than normalized  [0..1] units. Recommended for statue-scale input. |
-| Max Pieces (`Mx`) | Integer | item | Cap on output piece count. -1 = unlimited. |
-| Seed (`Sd`) | Integer | item | RNG seed for reproducibility. |
-| Run (`Run`) | Boolean | item | Set true to compute. Decomposition is heavy. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | One nearly-convex mesh per piece. |
-| Count (`N`) | Integer | item | Number of pieces. |
-| Available (`Av`) | Boolean | item | True iff frahan_coacd.dll is loadable. |
-| Report (`R`) | Text | item | Diagnostic report. |
-
-### Quarry Decompose By Mesh (CGAL)  (`QuarryDcCgal`)
-
-- GUID: `F2D000C1-CADC-4F2D-A0C1-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/CgalCutComponents.cs`
-- Algorithm: **CGAL Polygon Mesh Processing corefinement** - CGAL Polygon Mesh Processing (corefine_and_compute, EPECK/EPICK hybrid kernel)
-- Decomposes a (possibly non-convex) quarry mesh into blocks  by intersecting it against a 3D grid of box cells via CGAL.  Empty cells are dropped automatically. Use this when the  plane-based Quarry Decompose does not apply because the  quarry mesh is not convex. Implements CGAL PMP corefinement.  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
-
-| in | type | access | description |
-|---|---|---|---|
-| Quarry (`Q`) | Mesh | item | Quarry mesh. Must be closed and manifold (run Mesh Repair  (CGAL) upstream if in doubt). Need not be convex. |
-| Grid Box (`Gb`) | Box | item | Oriented box that defines the grid extent + orientation.  If empty (Box.Empty / Box.Unset), the world-aligned bounding  box of the Quarry mesh is used. |
-| nX (`nX`) | Integer | item | Grid divisions along the box's local +X axis (>= 1). |
-| nY (`nY`) | Integer | item | Grid divisions along the box's local +Y axis (>= 1). |
-| nZ (`nZ`) | Integer | item | Grid divisions along the box's local +Z axis (>= 1). |
-| Hybrid Kernel (`Hy`) | Boolean | item | True (default) = HYBRID kernel for robustness on every  cell intersection. False = EPICK only (fastest). |
-| Run (`Run`) | Boolean | item | Set true to compute. Cost scales with nX*nY*nZ CGAL calls. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | One mesh per non-empty grid cell intersection (Quarry ∩ cell). |
-| Cell Index (`Ci`) | Integer | list | Flat (i + j*nX + k*nX*nY) cell index for each output block,  parallel to the Blocks list. Lets the caller correlate  outputs with their originating cell. |
-| Backend (`B`) | Text | item | Which kernel ran on the most recent cell. |
-| Available (`Av`) | Boolean | item | True iff the CGAL native shim is loadable. |
-| Report (`R`) | Text | item | Diagnostic report (cells visited / kept / dropped, runtime). |
-
-### Quarry Decompose By Tet  (`QuarryDcTet`)
-
-- GUID: `F2D000E1-CADC-4F2D-A0E1-7E60CADA15A0`  |  icon: `CoacdDecompose.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
-- Algorithm: **Geogram tetrahedralisation** - Lévy, B. Geogram v1.9.9 (GEO::mesh_tetrahedralize), BSD-3
-- Decomposes a quarry mesh into tetrahedra via Geogram.  Fine-grained, fracture-pattern style. Requires the  Geogram shim to be built with GEOGRAM_WITH_TETGEN=ON  (off by default — TetGen is non-commercial-use). When  off, the component surfaces a clear error and produces no  blocks; use Quarry Decompose By CoACD instead. Implements Geogram tetrahedralisation (Lévy, Geogram v1.9.9).
-
-| in | type | access | description |
-|---|---|---|---|
-| Quarry (`Q`) | Mesh | item | Closed manifold quarry mesh. |
-| Preprocess (`Pp`) | Boolean | item | Run mesh preprocess (manifold-isation, hole fill) inside  Geogram before tetrahedralizing. |
-| Refine (`Rf`) | Boolean | item | Refine the tet mesh via Delaunay refinement after the  initial tetrahedralization. Increases tet count. |
-| Quality (`Qu`) | Number | item | Tet quality bound for refinement (radius-edge ratio).  Default 1.4. Lower is stricter / more tets. |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Tets (`T`) | Mesh | list | One closed tetrahedron mesh per output cell. |
-| Count (`N`) | Integer | item | Number of tets. |
-| Available (`Av`) | Boolean | item | True iff frahan_geogram.dll is loadable. |
-| Report (`R`) | Text | item | Diagnostic report. Reports the TetGen-disabled state when  applicable. |
-
-### Quarry Decompose By Voronoi  (`QuarryDcVoro`)
-
-- GUID: `F2D000E2-CADC-4F2D-A0E2-7E60CADA15A0`  |  icon: `Voronoi.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/AdvancedQuarryDecomposeComponents.cs`
-- Algorithm: **Restricted Voronoi diagram** - Lévy, B. Geogram v1.9.9 restricted Voronoi, BSD-3
-- Decomposes a (possibly non-convex) quarry mesh into solid  Voronoi blocks. Seeds are sampled inside the quarry and  Lloyd-relaxed for a more uniform cell-area distribution.  Each cell is then CGAL-intersected against the quarry  for the final block geometry. Realistic stone-fracturing  look; seed count + relaxation iterations are user dials. Implements restricted Voronoi + Lloyd relaxation (Geogram; Lloyd 1982).  Selection: convex pieces -> By CoACD; plane-bounded cuts -> By Mesh (CGAL); cell partition -> By Voronoi.
-
-| in | type | access | description |
-|---|---|---|---|
-| Quarry (`Q`) | Mesh | item | Closed manifold quarry mesh. |
-| Seed Count (`Ns`) | Integer | item | Number of Voronoi seeds = number of output blocks.  Default 30. Typical 20–200 for masonry-scale work. |
-| Lloyd Iters (`Li`) | Integer | item | Lloyd-relaxation iterations on the interior seeds. 0 =  raw rejection-sampled seeds; 5–10 = visibly more uniform. |
-| Seed (`Sd`) | Integer | item | RNG seed for reproducibility. Default 1. |
-| Hybrid Kernel (`Hy`) | Boolean | item | True (default) = CGAL HYBRID kernel for the cell ×  quarry intersection. False = EPICK only (faster, less robust). |
-| Run (`Run`) | Boolean | item | Set true to compute. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Blocks (`B`) | Mesh | list | One mesh per non-empty Voronoi cell ∩ quarry intersection. |
-| Seeds (`S`) | Point | list | The relaxed seed positions actually used (parallel to Blocks). |
-| Available (`Av`) | Boolean | item | True iff CGAL shim is loadable. |
-| Report (`R`) | Text | item | Diagnostic report. |
-
-### Scan to Block Inventory  (`ScanBlock`)
-
-- GUID: `F2D0BC20-1A2B-4F2D-A0B0-7E60CADA20A0`  |  icon: `QuarryBlock.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/ScanToBlockInventoryComponent.cs`
-- Convert a 3D-scanned raw block mesh into a typed QuarryBlock  (bounds + usable volume + frame + dimensions + label) the  downstream GeoCut / GeoPack / BlockPackTree chain can nest  project parts into. Orientation: 0 = mesh frame, 1 = PCA  (longest principal axis → X), 2 = world Z. Method: 0 = OBB,  1 = inscribed AABB after PCA align, 2 = ConvexHull.
-
-| in | type | access | description |
-|---|---|---|---|
-| Scan Mesh (`M`) | Mesh | item | Raw 3D-scanned block as a mesh (from a handheld scanner via  Scan Reconstruct, or a .3dm import). |
-| Orient (`O`) | Integer | item | Orientation policy. 0 = keep the mesh's existing frame.  1 = align by PCA (longest principal axis → X). 2 = align by  world Z (top face flat). |
-| Usable Inset (`I`) | Number | item | Inset (model units) used to compute the usable interior  volume — accounts for kerf + scan noise + edge defects.  Negative values are clamped to 0. |
-| Method (`Me`) | Integer | item | Block-extraction method. 0 = OBB (oriented bounding box,  fast, deterministic). 1 = inscribed AABB after PCA align.  2 = ConvexHull. |
-| Label (`L`) | Text | item | Per-block label / provenance string carried into the typed  QuarryBlock and downstream metadata. |
-
-| out | type | access | description |
-|---|---|---|---|
-| Bounds (`Bb`) | Mesh | item | Oriented bounding-box mesh (visualisation + downstream  usable-volume input for the raw-Mesh wire path). |
-| Frame (`Fr`) | Plane | item | Block's oriented base frame (origin + X/Y/Z axes from PCA /  world align). |
-| Dimensions (`D`) | Vector | item | Block's principal dimensions (X = longest, Y = next,  Z = thinnest) in model units. |
-| Volume (`V`) | Number | item | Usable interior volume (model units cubed); accounts for  Usable Inset. |
-| Report (`R`) | Text | item | One-line summary: "Block <label> X x Y x Z units, volume V  units^3, method M". |
 
 ### Stereonet + Block Size  (`Stereonet`)
 
@@ -5111,10 +5459,40 @@ Related:
 - Frahan > Quarry > Joint Sets to DFN - The infinite-plane (deterministic) sibling; this is finite-persistence + stochastic.
 - Frahan > Quarry > BlockCutOpt Omni Solve - Downstream: block-cut yield per realisation (Monte-Carlo over seeds).
 
+### Terzaghi Correction  (`Terzaghi`)
+
+- GUID: `D5F1004D-ED9E-4ED9-A04D-ED9EED9E004D`  |  icon: `Terzaghi.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Quarry/TerzaghiCorrectionComponent.cs`
+- Algorithm: **Terzaghi bias correction** - Terzaghi (1965); w = 1/sin(delta) capped at the blind-zone angle
+- Correct a discontinuity survey for orientation sampling bias (Terzaghi 1965). Feed per-discontinuity  Dip / Dip dir + the scanline direction (or face normal in Window mode). Outputs per-discontinuity weights  (1/sin of the plane-to-sampler angle, capped by the blind-zone angle) and raw-vs-corrected set proportions.
+
+| in | type | access | description |
+|---|---|---|---|
+| Dip (`D`) | Number | list | Per-discontinuity dip (deg, [0,90]). |
+| Dip dir (`Dd`) | Number | list | Per-discontinuity dip-direction (deg, clockwise from North). |
+| Set id (`Si`) | Integer | list | Optional per-discontinuity set id (>=0; -1 unassigned) for raw-vs-corrected proportions. |
+| Sampling (`S`) | Vector | item | Scanline direction (Window=false) or sampling-face normal (Window=true). |
+| Window (`W`) | Boolean | item | False = scanline (line sampling); True = window / rock-face (areal sampling). |
+| Min angle (`Ma`) | Number | item | Blind-zone half-angle (deg): weight cap = 1/sin(Ma). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Weight (`W`) | Number | list | Per-discontinuity Terzaghi weight (>=1). |
+| Bias angle (`B`) | Number | list | Per-discontinuity plane-to-sampler angle delta (deg). |
+| Set ids (`Si`) | Integer | list | Distinct set ids (ascending). |
+| Raw frac (`Rf`) | Number | list | Raw per-set proportion (0..1). |
+| Corrected frac (`Cf`) | Number | list | Bias-corrected per-set proportion (0..1). |
+| Blind zone (`Bz`) | Number | item | Blind-zone half-angle used (deg). |
+| Report (`Re`) | Text | item | Correction summary. |
+
+Related:
+- Frahan > Quarry > Discontinuity Ingest - Upstream source of measured Dip / Dip dir / Set id.
+- Frahan > Quarry > Stereonet + Block Size - Plot the bias-corrected set proportions.
+- Frahan > Quarry > Fracture Intensity - Same orientation geometry drives P10 -> P32.
+
 
 ## Reports
 
-### Frahan Packing Plan Report  (`PackPlanRpt`)
+### Packing Plan Report  (`PackPlanRpt`)
 
 - GUID: `AB12C008-1A2B-4C3D-9E4F-5A6B7C8D9E08`  |  icon: `PackDiagnostics.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/PackingPlanReportComponent.cs`
 - Aggregate PackingMetricsReport + residual voids + edge-match scores  into one PackingPlanReport. All inputs come from upstream Frahan  components (Pack3D, Residual Voids, Fragment Edge Match).
@@ -5133,7 +5511,7 @@ Related:
 | Avg Best Edge Match Score (`Es`) | Number | item | Mean of best-match scores across all fragment edges. Zero if no edges supplied. |
 | Summary (`S`) | Text | item | One-line human-readable summary (PackingPlanReport.ToString()). |
 
-### Frahan Packing Report  (`PackRpt`)
+### Packing Report  (`PackRpt`)
 
 - GUID: `AB12C004-1A2B-4C3D-9E4F-5A6B7C8D9E04`  |  icon: `PackDiagnostics.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/PackingReportComponent.cs`
 - Compute summary metrics for a 3D PackResult: placements, failures,  fill ratio, average placement score, item-volume stats, per-reason  failure counts.
@@ -5156,7 +5534,7 @@ Related:
 | Failure Reasons (`Rs`) | Text | list | One '<reason>: <count>' line per distinct failure reason. |
 | Report (`R`) | Text | item | Single-line summary. |
 
-### Frahan Report / Export  (`Report`)
+### Report / Export  (`Report`)
 
 - GUID: `AB12C010-1A2B-4C3D-9E4F-5A6B7C8D9E10`  |  icon: `PackDiagnostics.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/AudienceReportComponent.cs`
 - Audience-tailored report terminal. Pick Audience (0 engineer, 1 artist,  2 geologist). Consumes Frahan report records + optional pipe-delimited  Sections; emits Markdown + CSV. Engineer release is refused without a  declared CRS/datum. With Run + File Path it writes the .md / .csv files.
@@ -5337,7 +5715,7 @@ Related:
 
 ## Surface Packing
 
-### Frahan Chart Flatness Report  (`ChartFlat`)
+### Chart Flatness Report  (`ChartFlat`)
 
 - GUID: `AB12C006-1A2B-4C3D-9E4F-5A6B7C8D9E06`  |  icon: `DistortionMap.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/ChartFlatnessReportComponent.cs`
 - Algorithm: **Per-face area-ratio distortion classification** - Frahan-original
@@ -5474,7 +5852,7 @@ Related:
 
 ## Trencadis
 
-### Frahan Trencadís Catalog Pack  (`TrencadisCat`)
+### Trencadís Catalog Pack  (`TrencadisCat`)
 
 - GUID: `F2D00007-CADC-4F2D-9007-7E60CADA15A0`  |  icon: `Trencadis.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Pack2DTrencadisCatalogComponent.cs`
 - Algorithm: **CVD-Lloyd interior seeding** - Lloyd 1982 centroidal Voronoi diagram relaxation
@@ -5500,7 +5878,7 @@ Related:
 | Cell Areas (`A`) | Number | list | Approximate area of each assigned cell. Useful to spot  outliers where the piece is much smaller / bigger than the  cell. |
 | Report (`R`) | Text | item | Catalog packing report. |
 
-### Frahan Trencadís Dynamic Settle  (`TrencadisDyn`)
+### Trencadís Dynamic Settle  (`TrencadisDyn`)
 
 - GUID: `F2D00008-CADC-4F2D-9008-7E60CADA15A0`  |  icon: `ContactSettle.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Pack2DTrencadisDynamicComponent.cs`
 - Algorithm: **Trencadis dynamic settle** - F-2D-002.F8 Frahan-original
@@ -5528,7 +5906,7 @@ Related:
 | Residual Overlap (`Res`) | Number | item | Sum of polygon-pair intersection areas after settle. This  is the dynamic tolerance — how much overlap remains in the  tolerance-based packing once Kangaroo has resolved as much  as it can. 0 = clean fit. |
 | Report (`R`) | Text | item | Settle report. |
 
-### Frahan Trencadís EdgeMatch  (`TrencEM`)
+### Trencadís EdgeMatch  (`TrencEM`)
 
 - GUID: `F2D0000A-CADC-4F2D-900A-7E60CADA15A0`  |  icon: `EdgeMatchSolve.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/TrencadisEdgeMatchComponent.cs`
 - Algorithm: **EdgeMatch-powered Trencadis pack** - Frahan-original alternative to Battiato 2013 CVD+GVF stack
@@ -5558,7 +5936,7 @@ Related:
 | Total Residual (`Tr`) | Number | item | Sum of all per-placement residuals across all sheets. |
 | Report (`Rp`) | Text | item | Human-readable per-sheet summary. |
 
-### Frahan Trencadís Pack  (`Trencadis`)
+### Trencadís Pack  (`Trencadis`)
 
 - GUID: `F2D00002-CADC-4F2D-9001-7E60CADA15A0`  |  icon: `Trencadis.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/Pack2DTrencadisComponent.cs`
 - Algorithm: **Trencadis greedy pack basic** - Gaudi Park Guell broken-tile mosaic technique
@@ -5597,7 +5975,7 @@ Related:
 | Sheet Preview (`B`) | Curve | list | Outer sheet and hole preview curves. |
 | Report (`R`) | Text | item | Trencadís packing report (counts, timings, trim events). |
 
-### Frahan Trencadís Pipeline  (`TrencadisPipe`)
+### Trencadís Pipeline  (`TrencadisPipe`)
 
 - GUID: `F2D00009-CADC-4F2D-9009-7E60CADA15A0`  |  icon: `Trencadis.png`  |  exposure: `tertiary`  |  source: `src/Frahan.StonePack.GH/Pack2DTrencadisPipelineComponent.cs`
 - Algorithm: **Trencadis greedy pack** - Gaudi Park Guell broken-tile mosaic technique
@@ -5625,6 +6003,466 @@ Related:
 | Pre-Trim Pieces (`Pt`) | Curve | list | Pre-trim placed curves directly out of the boundary  packer (TrencadisFill.PackedCurves). One curve per  placed source. Compare against Packed Pieces (Cp) to see  what was trimmed off near the sheet edge / hole edges. |
 | Transforms (`T`) | Transform | list | Per-placed-piece rigid transform from the source curve's  frame to its world placement. One Transform per piece,  parallel to Packed Pieces (Cp) and Source Indices (Src).  Apply to any source-frame geometry (drill points, hatch  patterns) to bring it into the placed frame. |
 | Trim Adjacency (`TA`) | Integer | tree | Per-piece tree where branch {i} holds the source-indices  of OTHER pieces that trimmed piece i during the deterministic  boundary pass. Empty branch = piece i was not trimmed  against any other piece. Useful for auditing chain-cut  relationships in trencadís layouts. |
+
+
+## Vault
+
+### Boundary Net  (`BNet`)
+
+- GUID: `B7A11500-000E-4A11-B500-0000000000AE`  |  icon: `BoundaryNet.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/FormFindingComponents.cs`
+- Flat triangulated form-finding NET from a closed planar boundary curve. Outputs the net  plus its naked-boundary anchor points (default supports for Catenary Relax). Keep the net  under ~1500 vertices (the relax uses a dense solve).
+
+| in | type | access | description |
+|---|---|---|---|
+| Boundary (`B`) | Curve | item | Closed planar boundary (plan of the vault footprint). |
+| Edge Length (`E`) | Number | item | Target net edge length (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Net (`N`) | Mesh | item | Flat triangulated network. |
+| Anchors (`A`) | Point | list | Naked-boundary vertices (default supports). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Catenary Curve  (`Catenary`)
+
+- GUID: `B7A11500-0011-4A11-B500-0000000000B1`  |  icon: `CatenaryCurve.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/FormFindingComponents.cs`
+- True catenary (hanging chain) through two points with arc length = Length Factor x chord.  The Gaudí form-finding primitive: invert it for a compression arch. Analytic cosh solve.
+
+| in | type | access | description |
+|---|---|---|---|
+| Point A (`A`) | Point | item | First support. |
+| Point B (`B`) | Point | item | Second support. |
+| Length Factor (`L`) | Number | item | Arc length as a multiple of the chord (> 1). 1.15 = gentle sag. |
+| Segments (`S`) | Integer | item | Polyline spans. |
+| Invert (`I`) | Boolean | item | Flip the sag upward (compression arch). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Curve (`C`) | Curve | item | Catenary polyline. |
+| Sag (`Sg`) | Number | item | Max vertical offset from the chord (m). |
+
+### Catenary Relax  (`Relax`)
+
+- GUID: `B7A11500-000F-4A11-B500-0000000000AF`  |  icon: `CatenaryRelax.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/FormFindingComponents.cs`
+- Force-density form-finding (Schek 1974, the validated TnaForceDensity3D solver): hang the  net from the anchors under a vertical load, then invert across the support plane  (Gaudí hanging chain) for the compression vault. Anchors empty = all naked-boundary  vertices fixed. Force Density vs Load sets the sag: lower q = deeper catenary.
+
+| in | type | access | description |
+|---|---|---|---|
+| Net (`N`) | Mesh | item | Form-finding network (e.g. from Boundary Net). |
+| Anchors (`A`) | Point | list | Support points (optional; empty = naked boundary). |
+| Force Density (`q`) | Number | item | Per-edge force density (> 0). Lower = deeper sag. |
+| Load (`Ld`) | Number | item | Per-node vertical load (negative = hang down). |
+| Invert (`I`) | Boolean | item | Invert the hang into the compression vault. |
+| Anchor Tol (`T`) | Number | item | Anchor matching tolerance (m). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Form (`F`) | Mesh | item | Form-found vault (or hanging net if Invert = false). |
+| Rise (`R`) | Number | item | Crown rise over the support datum (m). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Fabrication Schedule  (`FabSched`)
+
+- GUID: `B7A11500-0014-4A11-B500-0000000000B4`  |  icon: `FabricationSchedule.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/FabricationScheduleComponent.cs`
+- Shop paperwork for a voussoir/stone list: stable IDs (largest-first fabrication order),  tag points for labelling, a CSV schedule (bbox dims for saw envelopes, volume, weight at  the given density, centroid), and an optional flat inspection LAYOUT (blocks re-arranged  on a ground grid in ID order). Wire Blocks from Vault Shell CRA, Voussoirs from Vault  Quad Courses, or Rubble from Vault Stone Fit & Trim.
+
+| in | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | Voussoir / stone meshes to schedule. |
+| Density (`D`) | Number | item | Stone density (kg/m^3) for weights. |
+| Prefix (`P`) | Text | item | ID prefix (V001, V002, ...). V |
+| Layout Spacing (`S`) | Number | item | Gap (m) between blocks in the flat inspection layout; 0 = no layout. |
+
+| out | type | access | description |
+|---|---|---|---|
+| IDs (`Id`) | Text | list | Stable block IDs (fabrication order, largest first). |
+| Tag Points (`Tp`) | Point | list | Block centroids for text tags (align with IDs). |
+| CSV (`C`) | Text | item | Cutting/handling schedule (save as .csv). |
+| Layout (`L`) | Mesh | list | Flat inspection layout (empty when Layout Spacing = 0). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Quad Cells  (`QuadCells`)
+
+- GUID: `B7A11500-0012-4A11-B500-0000000000B2`  |  icon: `QuadCells.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/QuadCellsComponent.cs`
+- Convert a (thrust-aligned) quad mesh into masonry cells: one shrunk cell polyline + frame  per quad, with columnness from a z-band and an optional finer subdivision on column faces  (validated: columns split 2x, shrink 0.92). Feed Cells/Frames/Columnness into Vault  Voussoir Moulds then Vault Stone Fit & Trim for a coursed ETH-stone rubble skin that  follows the thrust grid. Zero remeshing happens here - the quad mesh drives everything.
+
+| in | type | access | description |
+|---|---|---|---|
+| Quad Mesh (`Q`) | Mesh | item | All-quad mesh (e.g. from Thrust Quad Remesh). |
+| Shrink (`S`) | Number | item | Joint gap: cell scale about its centre (v004: 0.92). |
+| Column Z Lo (`Zl`) | Number | item | Below this z the face is fully column (columnness 1). |
+| Column Z Hi (`Zh`) | Number | item | Above this z the face is fully vault (columnness 0). |
+| Column Split (`Cs`) | Integer | item | Subdivision on column faces (columnness > 0.5), applied ONLY around the tube so course height matches the vault. 2 = validated 'columns twice as fine'. 1 = off. |
+| Tube Angle (`Ta`) | Number | item | Column detector (deg): a low-z face counts as column only if its 1-ring normals spread beyond this angle (curved tube). Flat wall bases stay full-size footers. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cells (`C`) | Curve | list | Shrunk cell polylines (one per quad / sub-quad). |
+| Frames (`F`) | Plane | list | Cell frames (origin = cell centre, Z = face normal). |
+| Columnness (`Cc`) | Number | list | 0 = vault, 1 = column (drives mould depth dV -> dC). |
+| Report (`Rp`) | Text | item | Summary. |
+| Inner Limit (`Il`) | Number | list | Per-cell max INWARD mould offset (0 = unlimited). ~0.6 x local tube radius on columns: wire into Vault Voussoir Moulds' Inner Limit so opposite/adjacent column stones never interpenetrate. |
+
+### Stone Library  (`StoneLib`)
+
+- GUID: `B7A11500-000A-4A11-B500-0000000000AA`  |  icon: `StoneLibrary.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/StoneLibraryLoadComponent.cs`
+- Load a catalogue of real rubble stones (.obj scans, e.g. ETH1100) from a folder, tagged by  lithology (sub-folder name) + shape Category (Blocky / Platey / Elongated) + measured volume,  with a chunky aspect-ratio filter and optional category/lithology selection. The output stone  meshes feed Stone-Cell Match to place a SELECTED category onto a vault's cells (the polygonal  rubble vault). Deterministic for a given Seed.
+
+| in | type | access | description |
+|---|---|---|---|
+| Folder (`F`) | Text | item | Folder of stone .obj files (the library/catalogue). |
+| Seed (`S`) | Integer | item | Deterministic shuffle seed (repeatable subset). Default 18 = the validated Park Guell v004 recipe seed. |
+| Max Count (`N`) | Integer | item | Keep at most this many stones (0 = all). |
+| AR Max (`Ar`) | Number | item | Chunky filter: drop stones whose long/thin ratio exceeds this (0 = no filter). Default 2.2 = the validated poolAR. |
+| Recursive (`R`) | Boolean | item | Recurse into sub-folders (lithology = immediate sub-folder name). |
+| Lithology (`L`) | Text | item | Keep only this lithology (sub-folder name); empty = all. |
+| Category (`C`) | Text | item | Keep only this shape category: Blocky / Platey / Elongated; empty = all. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | list | The library stone meshes (centered), ready to feed Stone-Cell Match. |
+| Names (`Nm`) | Text | list | Source file name per stone (provenance). |
+| Lithology (`Li`) | Text | list | Lithology (sub-folder) per stone. |
+| Category (`Ca`) | Text | list | Shape category per stone (Blocky / Platey / Elongated). |
+| Volume (`V`) | Number | list | Volume (m^3) per stone. |
+| Report (`Rp`) | Text | item | Summary (counts by category/lithology). |
+
+### Stone-Cell Match (Λ)  (`StoneMatchL`)
+
+- GUID: `D5F10016-6C2D-4F1B-B3E8-7A95D0C41F62`  |  icon: `MatchCandidate.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/StoneCellMatchComponent.cs`
+- Hungarian assignment of a stone inventory to target wall cells, minimising carved material.  Reports per-stone carve ratio λ, the workflow imposition index Λ (0 = as-found … 1 = pure  stock; Cyclopean Cannibalism datum ≈0.27) and gap ratios, and outputs the stones placed  into their cells. Refs: Clifford & McGee 2018 (ACADIA); Kuhn 1955 (Hungarian);  Frahan SLM+ROSES masonry review 2026-06-10.
+
+| in | type | access | description |
+|---|---|---|---|
+| Stones (`St`) | Mesh | list | Stone inventory (closed meshes, found/scanned) |
+| Cells (`Ce`) | Mesh | list | Target cells (closed meshes, e.g. the Polygonal Wall Generator's stones at Mortar = 0) |
+| TopK (`K`) | Integer | item | Prefilter candidates per cell that get the voxel cost |
+| CostRes (`Cr`) | Integer | item | Voxel resolution for the assignment cost |
+| RefineRes (`Rr`) | Integer | item | Voxel resolution for the final per-pair metrics |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed (`P`) | Mesh | list | Stones transformed into their assigned cells (cell order) |
+| Carve (`L`) | Number | list | Per-placement carve ratio lambda_i = carved/found volume (cell order) |
+| Gap (`G`) | Number | list | Per-placement gap ratio (cell volume the stone fails to fill) |
+| Lambda (`LL`) | Number | item | Workflow imposition index: volume-weighted carve fraction (0..1) |
+| StoneIndex (`Si`) | Integer | list | Assigned stone index per placement (cell order) |
+| Unused (`U`) | Integer | list | Inventory indices that were not used |
+| Report (`R`) | Text | item | Summary |
+
+### SubD Vault  (`SubDV`)
+
+- GUID: `B7A11500-0010-4A11-B500-0000000000B0`  |  icon: `SubDVault.png`  |  exposure: `senary`  |  source: `src/Frahan.StonePack.GH/Masonry/FormFindingComponents.cs`
+- Smooth a control/form-found mesh through SubD subdivision (Catmull-Clark) and return the  subdivided mesh — the same route that produced the Güell portico surface from its control  cage. Density 2 is the validated setting.
+
+| in | type | access | description |
+|---|---|---|---|
+| Control (`M`) | Mesh | item | Control mesh (coarse form-found or modelled cage). |
+| Density (`D`) | Integer | item | Subdivision density 1-4 (2 = validated). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Smooth (`S`) | Mesh | item | Subdivided smooth mesh (triangulated). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### TNA Thrust Range  (`ThrustRange`)
+
+- GUID: `B7A11500-0007-4A11-B500-0000000000A7`  |  icon: `TnaThrustRange.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/TnaThrustRangeComponent.cs`
+- Min/max horizontal thrust for a masonry arch within its section (Heyman safe-theorem  limit analysis). Samples the arch axis, applies vertical loads (self-weight by tributary  length if none given), and returns the admissible thrust interval [Hmin, Hmax], the range  factor, and the two extreme thrust lines that touch the intrados/extrados. Exact for one  arch; feed a masonry course centerline.
+
+| in | type | access | description |
+|---|---|---|---|
+| Arch (`A`) | Curve | item | Arch axis curve (in a vertical plane). |
+| Segments (`N`) | Integer | item | Number of segments to sample the arch into. |
+| Thickness (`T`) | Number | item | Section depth (perpendicular to the axis), m. |
+| Loads (`W`) | Number | list | Vertical load per node (optional). Empty = self-weight by tributary length x Density. |
+| Density (`D`) | Number | item | Weight per unit length for the self-weight fallback. |
+| Run (`R`) | Boolean | item | Execute. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Feasible (`F`) | Boolean | item | True if an admissible thrust line fits the section. |
+| H min (`Hl`) | Number | item | Minimum admissible horizontal thrust. |
+| H max (`Hh`) | Number | item | Maximum admissible horizontal thrust. |
+| Range Factor (`Rf`) | Number | item | Hmax / Hmin (thrust safety margin in-section). |
+| Thrust Min (`Tl`) | Curve | item | Deepest admissible thrust line (touches intrados). |
+| Thrust Max (`Th`) | Curve | item | Flattest admissible thrust line (touches extrados). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### TNA Vault (Gaudí)  (`TNAVault`)
+
+- GUID: `D5F10044-0BA0-4ED9-A044-0BA00BA00044`  |  icon: `TnaVault.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/Masonry/TnaVaultComponent.cs`
+- Form-find a compression-only funicular vault surface using Thrust Network  Analysis (Block & Ochsendorf 2007). Generates a barrel-vault form diagram,  solves the force-density height system D_nn·z = p − D_nf·z_fixed via a  sparse Cholesky factorisation (Eigen SimplicialLDLT), and returns the  funicular mesh + branch forces. Left boundary = retaining wall; right  boundary = column tops. Asymmetric supports produce the Park Güell lean  automatically. Use as structural template for RubblePack + Stability Check.
+
+| in | type | access | description |
+|---|---|---|---|
+| Span (`W`) | Number | item | Vault width — arch direction (m). |
+| Length (`L`) | Number | item | Vault length — tunnel direction (m). |
+| Z Left (`Zl`) | Number | item | Retaining wall top height, left boundary (m). |
+| Z Right (`Zr`) | Number | item | Column top height, right boundary (m). |
+| Nodes Span (`Ny`) | Integer | item | Grid resolution across span (min 3). |
+| Nodes Len (`Nx`) | Integer | item | Grid resolution along length (min 2). |
+| Force Density (`Q`) | Number | item | Uniform force density q (kN/m). Higher = flatter arch, lower = more curvature.  Scale to match loads: typical 50–300 kN/m for granite rubble vaults.  Default 120 kN/m gives ~1.5m rise on a 4m span with 26 kN/m³ granite. |
+| Unit Weight (`Uw`) | Number | item | Stone unit weight (kN/m³). Granite ≈ 25–27. |
+| Thickness (`T`) | Number | item | Vault mean thickness (m). |
+| K_a × γ (`Ka`) | Number | item | Rankine K_a × soil unit weight (kN/m³) for left-wall earth pressure. 0 = omit. |
+| Run (`R`) | Boolean | item | Execute the TNA solve. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Vault (`V`) | Mesh | item | Funicular vault surface mesh. |
+| Branches (`B`) | Line | list | Form diagram edges coloured by horizontal thrust. |
+| Thrust (`H`) | Number | list | Horizontal thrust per branch (kN). |
+| Reactions (`Rx`) | Vector | list | Support reactions at boundary nodes (kN, XYZ). |
+| BoundPts (`Bp`) | Point | list | Boundary node positions (world XYZ). |
+| Report (`Rp`) | Text | item | Solve summary. |
+
+### Thrust Quad Remesh (QuadWild)  (`ThrustQuad`)
+
+- GUID: `B7A11500-000D-4A11-B500-0000000000AD`  |  icon: `ThrustQuadRemesh.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/ThrustQuadRemeshComponent.cs`
+- Watertight all-quad remesh aligned to the THRUST flow. Our thrust-potential cross-field  (load-path Poisson, confidence-weighted 4-RoSy smoothing) is traced by QuadWild and  quantized by Bi-MDF (Pietroni et al. 2021 'Reliable Feature-Line Driven Quad-Remeshing';  Campen group Bi-MDF/LEMON — no Gurobi; GPL-3.0 workers run out of process). Handles vaults  with openings where single-chart parametrization folds: holes are preserved and the output  is 100% quads. Thrust Field off = QuadWild's own curvature field. Async: canvas stays  responsive; toggle Run.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Vault surface mesh (tri or mixed; openings/holes are fine). |
+| Thrust Field (`T`) | Boolean | item | Align quads to the thrust-potential field (needs frahan_quadremesh.exe). Off = QuadWild curvature field. |
+| Support Band (`S`) | Number | item | Support detection: boundary vertices in the lowest fraction of the z-range act as supports for the potential solve. |
+| Smooth (`W`) | Integer | item | Field-smoothing sweeps (confidence-weighted 4-RoSy). Cleans noise singularities; 0 = raw field. |
+| Coarseness (`C`) | Number | item | CONTINUOUS quad-size control (flow scaleFact): 1 = fine skin (7283 quads on the portico), 1.5 -> 3297, 2 -> 1879, 2.5 -> 1208, 5 -> 544 (CRA regime). Any fractional value works. |
+| Run (`R`) | Boolean | item | Execute (async; the canvas stays responsive). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Quad Mesh (`Q`) | Mesh | item | Watertight all-quad mesh (thrust- or curvature-aligned). |
+| Report (`Rp`) | Text | item | Summary / status. |
+
+### Trim Shell by Curves  (`CurveTrim`)
+
+- GUID: `B7A11500-0013-4A11-B500-0000000000B3`  |  icon: `TrimShellByCurves.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/TrimShellByCurvesComponent.cs`
+- Trim a vault shell along user-drawn PLAN curves (top view): each curve is read as a  (y -> x) boundary and the shell faces beyond it are removed — the 'draw a curve, say  cut' workflow. Curves near the low-x end cut the low side, near the high-x end the  high side (auto-detected). Outputs the kept shell, the removed piece (bake to verify),  and a report. Feed the kept shell to Thrust Quad Remesh -> Vault Shell CRA to test  whether the trim improves stability.
+
+| in | type | access | description |
+|---|---|---|---|
+| Shell (`M`) | Mesh | item | Vault shell mesh to trim. |
+| Cut Curves (`C`) | Curve | list | Plan cut curves (e.g. drawn on a 'cut_curves' layer, viewed from Top). |
+| Samples (`S`) | Integer | item | Samples per curve for the plan boundary table. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Trimmed (`T`) | Mesh | item | The kept shell (feed to Thrust Quad Remesh / Shell CRA). |
+| Removed (`X`) | Mesh | item | What was cut away (bake red to verify the cut). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Interlock Check  (`Interlock`)
+
+- GUID: `B7A11500-0009-4A11-B500-0000000000A9`  |  icon: `VaultInterlock.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultInterlockComponent.cs`
+- Measure how interlocked a masonry tessellation is. Traces the joint network (the mesh's  topology edges) for the longest near-straight connected run -- a continuous joint is a  potential sliding plane. Reports the longest run and its fraction of the span: low =  interlocked (random rubble bond / staggered courses), high = sliding-plane risk. Verifies  the free stagger of a Voronoi rubble vault AND the imposed running-bond stagger of quad courses.
+
+| in | type | access | description |
+|---|---|---|---|
+| Tessellation (`M`) | Mesh | item | The tessellation mesh (quad-course mesh, or a meshed/joined Voronoi rubble tessellation). Its topology edges are the joints. |
+| Angle Tol (`A`) | Number | item | Max turn (deg) between consecutive joint edges to count as one straight run. |
+| Flag Fraction (`Ff`) | Number | item | Collect every joint run longer than this fraction of the span. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Longest Joint (`J`) | Curve | item | The longest continuous joint run (the worst sliding-plane candidate). |
+| Flagged Runs (`Fr`) | Curve | list | All joint runs over the flag fraction. |
+| Longest Run (`L`) | Number | item | Length of the longest joint run (m). |
+| Span Fraction (`%`) | Number | item | Longest run / bounding-box diagonal (0 = interlocked, ~1 = full-span sliding plane). |
+| Verdict (`V`) | Text | item | interlocked / moderate / sliding-plane risk. |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Quad Courses (CRA)  (`VaultQuadCRA`)
+
+- GUID: `B7A11500-0005-4A11-B500-0000000000A5`  |  icon: `VaultQuadCourses.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultQuadCourseComponent.cs`
+- Field-aligned masonry course analysis on a funicular vault shell. QuadRemesh to a  target edge length (the quad field follows the thrust flow), walk the quad face-strips  as voussoir courses (Striatus-style: depth along the surface normal), and CRA each  course (rigid-block equilibrium, native OSQP). Outputs the quad mesh, course centerlines,  per-course stability, and a coverage mesh coloured by how many of the <=2 courses through  each face are stable (green both-way / yellow one-way / red none).
+
+| in | type | access | description |
+|---|---|---|---|
+| Shell (`M`) | Mesh | item | Funicular vault shell mesh (e.g. from the TNA form-finder). |
+| Edge Length (`E`) | Number | item | Target quad edge length (m). 0 = analyse the input mesh as-is (no remesh). |
+| Thickness (`T`) | Number | item | Voussoir/section thickness through the shell (m). With Crown Thickness > 0 this is the thickness at the SUPPORTS/base. |
+| Course Width (`W`) | Number | item | Course (block) width (m). Default ~0.9 x edge length. |
+| Friction (`F`) | Number | item | Mohr-Coulomb friction coefficient (tan phi). |
+| Run (`R`) | Boolean | item | Execute the quad-course CRA. |
+| Crown Thickness (`Tc`) | Number | item | Load-driven thickness at the CROWN/midspan (m); section grades from Thickness at the base to this at the top (the Armadillo 12->5 cm). 0 = uniform. |
+| Stagger (`St`) | Boolean | item | Running-bond 1/2-voussoir offset on alternate courses (interlock vs sliding). Quad courses only; Voronoi rubble is staggered already. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Quad Mesh (`Q`) | Mesh | item | The field-aligned quad mesh (courses run along its strips). |
+| Coverage (`C`) | Mesh | item | Coverage mesh coloured by course stability (green both-way / yellow one-way / red none). |
+| Courses (`Cr`) | Curve | list | Per-course centerline polylines. |
+| Stable (`S`) | Boolean | list | Per-course stability flag (aligned with Courses). |
+| Stable % (`%`) | Number | item | Percentage of courses that are stable. |
+| Report (`Rp`) | Text | item | Summary. |
+| Voussoirs (`V`) | Mesh | list | The per-course voussoir blocks (running-bond staggered when Stagger = true). |
+
+### Vault Rubble CRA  (`RubbleCRA`)
+
+- GUID: `B7A11500-000C-4A11-B500-0000000000AC`  |  icon: `VaultRubbleCra.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultRubbleCraComponent.cs`
+- Whole-assembly CRA of the abutting rubble cells. Un-shrinks the cells so neighbours abut,  extrudes each into a voussoir mould, detects the shared contact faces (MeshContactDetector),  fixes the low-z springing as supports, and solves compression-only friction-bounded  equilibrium. ASYNC: contact detection + the QP run on a background task with the solve in  the out-of-process frahan_cra_worker (in-process fallback) — the canvas stays responsive.  The raw ETH-fitted rubble stays a skin; CRA runs on the idealized abutting cells.  Blue-noise/quad cells; for the thrust-aligned contact-by-construction model use Vault Shell CRA.
+
+| in | type | access | description |
+|---|---|---|---|
+| Cells (`Ce`) | Curve | list | Rubble cell polylines (Vault Surface Voronoi or Quad Cells; 0.92-shrunk). |
+| Frames (`Fr`) | Plane | list | Per-cell tangent frames (aligned with Cells). |
+| Columnness (`C`) | Number | list | Per-cell columnness [0..1] (aligned with Cells). |
+| d Vault (`dV`) | Number | item | Voussoir depth on the broad vault (m). |
+| d Column (`dC`) | Number | item | Voussoir depth on the legs (m). |
+| Friction (`F`) | Number | item | Mohr-Coulomb friction coefficient (tan phi). |
+| Density (`D`) | Number | item | Stone density (kg/m^3). |
+| Support Band (`Sb`) | Number | item | Fix cells whose centroid sits within this fraction of the height above the lowest point (the springing). |
+| Run (`R`) | Boolean | item | Build the abutting-cell assembly + run CRA (async). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | The abutting voussoir moulds (idealized cells). |
+| Coverage (`Cv`) | Mesh | item | Role/stability coverage (blue = support, green = stable / red = unstable). |
+| Stable (`S`) | Boolean | item | Whole-assembly CRA verdict. |
+| Report (`Rp`) | Text | item | Summary / status. |
+
+### Vault Shell CRA  (`ShellCRA`)
+
+- GUID: `B7A11500-000B-4A11-B500-0000000000AB`  |  icon: `VaultShellCra.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultShellCraComponent.cs`
+- Whole-shell rigid-block CRA of a funicular vault. QuadRemesh so the partition follows  the thrust (Edge Length 0 = use the input quads as-is, e.g. from Thrust Quad Remesh),  extrude each face into a voussoir from SHARED vertices (contact by construction), fix  the springing (lowest-z naked edges) as supports, and solve compression-only friction- bounded equilibrium (CRA; Kao 2022). ASYNC: runs on a background task with the QP in the  out-of-process frahan_cra_worker (in-process fallback), so the canvas stays responsive.  Outputs the contact-ready blocks, a coverage mesh (blue = support, green = stable / red  = no admissible state), the interface axes, and the stability verdict.
+
+| in | type | access | description |
+|---|---|---|---|
+| Shell (`M`) | Mesh | item | Funicular vault shell mesh (e.g. from the TNA form-finder or Thrust Quad Remesh). |
+| Edge Length (`E`) | Number | item | Target quad edge length (m) for the remesh. 0 = use the shell mesh as-is. |
+| Thickness (`T`) | Number | item | Shell thickness (m); blocks extrude +/- T/2 along the vertex normals. |
+| Friction (`F`) | Number | item | Mohr-Coulomb friction coefficient (tan phi). |
+| Density (`D`) | Number | item | Stone density (kg/m^3) for self-weight. |
+| Support Band (`Sb`) | Number | item | Fix blocks whose naked edge sits within this fraction of the height above the lowest point (the springing). |
+| Run (`R`) | Boolean | item | Build the assembly + run CRA (async; canvas stays responsive). |
+| Stagger (`St`) | Boolean | item | Running bond: alternate courses merge quad PAIRS with an offset of one, so head joints never align (contact-by-construction preserved). |
+| Min Block (`Mb`) | Number | item | Stagger only: minimum block size as a fraction of the largest standard block (courses keep merging until reached; 0.45 validated). |
+| Hub Mode (`Hm`) | Integer | item | Stagger only, hub singularity: 0 = off (granular rings), 1 = single keystone per cone, 2 = split into neighbour-sized wedges (keeps min thickness). |
+
+| out | type | access | description |
+|---|---|---|---|
+| Blocks (`B`) | Mesh | list | The contact-ready voussoir blocks (one per face). |
+| Coverage (`C`) | Mesh | item | Role/stability coverage mesh (blue = support, green = stable / red = unstable). |
+| Interfaces (`I`) | Line | list | Interface axes (contact-face centre -> outward normal). |
+| Stable (`S`) | Boolean | item | Whole-assembly CRA verdict: an admissible compression-only, friction-bounded force state exists. |
+| Report (`Rp`) | Text | item | Summary / status. |
+
+### Vault Steel Ties  (`VaultTies`)
+
+- GUID: `B7A11500-0008-4A11-B500-0000000000A8`  |  icon: `VaultSteelTies.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultSteelTiesComponent.cs`
+- Resolve a vault's OUTWARD horizontal support thrusts with a closed steel tension ring  (the Armadillo Vault's steel-tie logic). Inputs: support (springing) points and the outward  horizontal thrust vector at each (from the TNA reactions, or built with native GH vector tools).  Sorts the supports into a convex ring, solves tension-only node equilibrium for the tie forces,  and sizes a round steel bar per tie. For a regular N-gon with equal radial thrust H this gives  the classic ring force T = H / (2 sin(pi/N)).
+
+| in | type | access | description |
+|---|---|---|---|
+| Supports (`P`) | Point | list | Support (springing) points, one per support. |
+| Thrust (`H`) | Vector | list | Outward horizontal thrust vector at each support (parallel to Supports; z ignored). |
+| Allowable Stress (`s`) | Number | item | Allowable steel stress (Pa). Default S355 yield. |
+| Safety (`k`) | Number | item | Safety factor on tie tension for bar sizing. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Ties (`T`) | Line | list | Steel tie segments (the support tension ring). |
+| Tension (`Fn`) | Number | list | Tie tension per segment (N, >= 0). |
+| Diameter (`d`) | Number | list | Required round-bar diameter per tie (m). |
+| Max Tension (`Mx`) | Number | item | Largest tie tension (N). |
+| Steel Volume (`Vol`) | Number | item | Total tie steel volume (m^3). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Stone Fit & Trim  (`VaultStone`)
+
+- GUID: `B7A11500-0004-4A11-B500-0000000000A4`  |  icon: `VaultStoneFitTrim.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultStoneFitTrimComponent.cs`
+- Orient + scale a chunky ETH1100 stone into each voussoir mould (thin axis -> cell  normal, long axis -> tangent), inflate, and boolean-intersect stock with the mould  to leave a raw rubble face + flat joints. overfill = overfill0 + 0.34*columnness and  inflate grow column stones to seal the legs. Reads .obj stones from a folder.  Stage 4 of 4; output is the rubble vault.
+
+| in | type | access | description |
+|---|---|---|---|
+| Moulds (`Mo`) | Mesh | list | Voussoir mould meshes (from Vault Voussoir Moulds). |
+| Cells (`Ce`) | Curve | list | Cells aligned with Moulds. |
+| Frames (`Fr`) | Plane | list | Frames aligned with Moulds. |
+| Columnness (`C`) | Number | list | Columnness aligned with Moulds. |
+| d Vault (`dV`) | Number | item | Stone depth on the broad vault (m). |
+| d Column (`dC`) | Number | item | Stone depth on the legs (m). |
+| ETH Dir (`Dir`) | Text | item | Folder of closed ETH1100 .obj stone meshes. |
+| Seed (`S`) | Integer | item | Pool sampling seed. |
+| Overfill (`Ov`) | Number | item | Stock over-fill factor. |
+| Pool AR (`AR`) | Number | item | Max bbox aspect ratio of admitted stones. |
+| Run (`R`) | Boolean | item | Execute the fit + trim. |
+| Match (`Mt`) | Boolean | item | Pick each mould's stone by the Hungarian best-fit matcher (least carving) instead of the arbitrary modular index. Best for <= a few hundred cells (Hungarian is O(N^3)); falls back to modular on failure. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Rubble (`Ru`) | Mesh | list | Trimmed rubble stones. |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Surface Sampler  (`VaultSample`)
+
+- GUID: `B7A11500-0001-4A11-B500-0000000000A1`  |  icon: `VaultSurfaceSampler.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultSurfaceSamplerComponent.cs`
+- Variable-density Poisson-disk (blue-noise) sampling of a reference mesh for a  rubble vault. columnness c = (1-smoothstep(z,zLo,zHi))*smoothstep(y,yLo,yHi) drives  the disk radius from rVault (broad vault) down to rCol (slender legs). Outputs sample  points, surface normals, and the per-sample columnness field. Stage 1 of 4; feeds  Vault Surface Voronoi.
+
+| in | type | access | description |
+|---|---|---|---|
+| Mesh (`M`) | Mesh | item | Reference surface mesh (e.g. SubD->mesh of the vault). |
+| r Vault (`rV`) | Number | item | Stone radius on the broad vault (m). |
+| r Column (`rC`) | Number | item | Stone radius on the slender legs (m). |
+| z Lo (`zL`) | Number | item | columnness Z band low (m). |
+| z Hi (`zH`) | Number | item | columnness Z band high (m). |
+| y Lo (`yL`) | Number | item | columnness Y band low (m). |
+| y Hi (`yH`) | Number | item | columnness Y band high (m). |
+| Seed (`S`) | Integer | item | Random seed. |
+| Run (`R`) | Boolean | item | Execute the sampler. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Points (`P`) | Point | list | Sample points on the surface. |
+| Normals (`N`) | Vector | list | Surface normal per sample. |
+| Columnness (`C`) | Number | list | Per-sample columnness [0..1]. |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Surface Voronoi  (`VaultVoronoi`)
+
+- GUID: `B7A11500-0002-4A11-B500-0000000000A2`  |  icon: `VaultSurfaceVoronoi.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultSurfaceVoronoiComponent.cs`
+- Per-seed local tangent-plane Voronoi cells for a rubble vault. For each sample,  builds a tangent frame (u = world-X projected to tangent, v = n x u), projects  neighbours in, and clips a square by each perpendicular bisector. Seal gradient  shrink = 0.92 + 0.22*columnness (vault hairline -> column overlap). Outputs cell  polylines + frames + aligned columnness. Stage 2 of 4; feeds Vault Voussoir Moulds.
+
+| in | type | access | description |
+|---|---|---|---|
+| Points (`P`) | Point | list | Sample points (from Vault Surface Sampler). |
+| Normals (`N`) | Vector | list | Surface normals. |
+| Columnness (`C`) | Number | list | Per-sample columnness. |
+| r Vault (`rV`) | Number | item | Stone radius on the broad vault (m). |
+| r Column (`rC`) | Number | item | Stone radius on the slender legs (m). |
+| Run (`R`) | Boolean | item | Execute the Voronoi. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Cells (`Ce`) | Curve | list | Voronoi cell polylines (compacted, valid only). |
+| Frames (`Fr`) | Plane | list | Per-cell tangent frame. |
+| Columnness (`C`) | Number | list | Per-cell columnness (aligned with Cells). |
+| Report (`Rp`) | Text | item | Summary. |
+
+### Vault Voussoir Moulds  (`VaultMould`)
+
+- GUID: `B7A11500-0003-4A11-B500-0000000000A3`  |  icon: `VaultVoussoirMoulds.png`  |  exposure: `quinary`  |  source: `src/Frahan.StonePack.GH/Masonry/VaultVoussoirMouldsComponent.cs`
+- Lift each Voronoi cell to a closed capped voussoir mould by offsetting +/-(D/2 +  protrude) along the cell normal. depth D = dVault + (dCol - dVault)*columnness  (thinner on the legs). Outputs the closed mould meshes plus the aligned cells /  frames / columnness. Stage 3 of 4; feeds Vault Stone Fit & Trim.
+
+| in | type | access | description |
+|---|---|---|---|
+| Cells (`Ce`) | Curve | list | Voronoi cell polylines (from Vault Surface Voronoi). |
+| Frames (`Fr`) | Plane | list | Per-cell tangent frames. |
+| Columnness (`C`) | Number | list | Per-cell columnness. |
+| d Vault (`dV`) | Number | item | Stone depth on the broad vault (m). |
+| d Column (`dC`) | Number | item | Stone depth on the legs (m). |
+| Protrude (`Pr`) | Number | item | Mould overshoot past the shell (m). |
+| Run (`R`) | Boolean | item | Execute the capper. |
+| Inner Limit (`Il`) | Number | list | Optional per-cell max INWARD offset (m); 0 = unlimited (symmetric). Wire Quad Cells' Inner Limit here so column stones cannot interpenetrate through the tube axis. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Moulds (`Mo`) | Mesh | list | Closed voussoir mould meshes (compacted). |
+| Cells (`Ce`) | Curve | list | Cells aligned with Moulds. |
+| Frames (`Fr`) | Plane | list | Frames aligned with Moulds. |
+| Columnness (`C`) | Number | list | Columnness aligned with Moulds. |
+| Report (`Rp`) | Text | item | Summary. |
 
 
 ## Voussoir
