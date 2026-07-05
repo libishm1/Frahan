@@ -92,10 +92,12 @@ public sealed class PlanesToRobotTargetsComponent : FrahanComponentBase
             "wired, the wrapper distinguishes Rapid (Joint motion) from " +
             "Linear / Arc (Linear motion).",
             GH_ParamAccess.item);
+        p[4].Optional = true;   // named optional; was registered required -> component never solved without it
         p.AddIntegerParameter("Segment Indices (optional)", "Si",
             "Optional: per-plane source segment index (from GCodeToPlanes); " +
             "required when Cut Path is wired.",
             GH_ParamAccess.list);
+        p[5].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)

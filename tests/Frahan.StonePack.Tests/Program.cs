@@ -161,6 +161,8 @@ var tests = new List<(string Name, Action Body)>
     ("frechet single points is distance", FrechetDistanceTests.SinglePoints_IsDistance),
     ("frechet null/empty throws", FrechetDistanceTests.NullOrEmpty_Throws),
     ("Edge Gap (Frechet) component metadata", EdgeGapFrechetComponentTests.Metadata_IsExpectedValues),
+    ("Robot Targets optional inputs are optional", FabricationHandoffComponentTests.RobotTargets_OptionalInputs_AreOptional),
+    ("KUKAprc optional inputs are optional", FabricationHandoffComponentTests.KukaPrc_OptionalInputs_AreOptional),
     // BoundaryRailMatcher + EdgeMatch + MatchOptions (pure managed)
     ("matcher MatchEdge null index throws", BoundaryRailMatcherTests.MatchEdge_NullIndex_Throws),
     ("matcher MatchEdge null query throws", BoundaryRailMatcherTests.MatchEdge_NullQuery_Throws),
