@@ -510,4 +510,27 @@ public static class HoleNestShared
         }
         return 0.5 * a;
     }
+
+    /// <summary>
+    /// Fan-triangulate a raw XY loop (engine PlacedOuter) into a single-face-ring
+    /// mesh at elevation <paramref name="z"/> — the progressive live-preview fast
+    /// path shared by the nesting components.
+    /// </summary>
+    public static Mesh FanMeshFromLoop(IReadOnlyList<(double X, double Y)> loop, double z = 0.0)
+    {
+        if (loop == null) return null;
+        int n = loop.Count;
+        if (n > 1 && Math.Abs(loop[0].X - loop[n - 1].X) < 1e-12 && Math.Abs(loop[0].Y - loop[n - 1].Y) < 1e-12) n--;
+        if (n < 3) return null;
+        var mesh = new Mesh();
+        double cx = 0, cy = 0;
+        for (int i = 0; i < n; i++) { cx += loop[i].X; cy += loop[i].Y; }
+        cx /= n; cy /= n;
+        for (int i = 0; i < n; i++) mesh.Vertices.Add(loop[i].X, loop[i].Y, z);
+        int centerIdx = mesh.Vertices.Add(cx, cy, z);
+        for (int i = 0; i < n; i++) mesh.Faces.AddFace(i, (i + 1) % n, centerIdx);
+        mesh.Normals.ComputeNormals();
+        mesh.Compact();
+        return mesh;
+    }
 }
