@@ -1,6 +1,6 @@
 # Frahan StonePack - icon library
 
-Resources dir: `src/Frahan.StonePack.GH/Resources` (166 PNGs). 117 distinct icons referenced by 274 components.
+Resources dir: `src/Frahan.StonePack.GH/Resources` (166 PNGs). 117 distinct icons referenced by 275 components.
 
 ## Coverage
 
@@ -24,6 +24,7 @@ Resources dir: `src/Frahan.StonePack.GH/Resources` (166 PNGs). 117 distinct icon
 | NFP Test | 2D Packing | NoFitPolygon.png | yes |
 | Residual Voids | 2D Packing | PackMetrics.png | yes |
 | Sheet Nest (Hole-Aware) | 2D Packing | NoFitPolygon.png | yes |
+| Sheet Nest (Live) | 2D Packing | NoFitPolygon.png | yes |
 | Sheet Pack (Unified Async) | 2D Packing | IrregularSheet.png | yes |
 | Sheet Pack (Unified) | 2D Packing | IrregularSheet.png | yes |
 | CoM In-Container Check | 3D Packing | StabilityCheck.png | yes |

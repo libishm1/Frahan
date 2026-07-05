@@ -133,6 +133,17 @@ namespace Frahan.GH.Surface
                 "never reduces placements or validity.",
                 GH_ParamAccess.item, 4);
             p[12].Optional = true;
+            p.AddIntegerParameter("Boundary Mode", "BMode",
+                "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the " +
+                "sheet boundary are placed rim-first, scored by MEASURED contact at verified NFP poses and " +
+                "spread by arc-interval occupancy (evolved from the V506 Boundary Mode; rotation-invariant).",
+                GH_ParamAccess.item, 0);
+            p[13].Optional = true;
+            p.AddNumberParameter("Min Boundary Contact", "MBC",
+                "Boundary Mode 1 only: minimum rim-contact fraction of the part perimeter (0..1) to seat a " +
+                "part on the boundary; below it the part places bottom-left. Default 0.25.",
+                GH_ParamAccess.item, 0.25);
+            p[14].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -214,6 +225,8 @@ namespace Frahan.GH.Surface
             public List<double> PartZOf;
             public double Tolerance, EngineSpacing, MaxDev;
             public int BaseRotations, ContactRotations, MultiStart;
+            public int BoundaryMode;
+            public double MinBoundaryContact;
             public ulong Hash;
         }
 
@@ -371,7 +384,8 @@ namespace Frahan.GH.Surface
                 perSheet = ContactNfpHoleNester.PackSheets(
                     snap.Sheets, snap.SheetHoles, snap.Parts,
                     snap.EngineSpacing, snap.BaseRotations, snap.ContactRotations,
-                    onPlacement: onPlacement, multiStartOrders: snap.MultiStart);
+                    onPlacement: onPlacement, multiStartOrders: snap.MultiStart,
+                    boundaryMode: snap.BoundaryMode, minBoundaryContact: snap.MinBoundaryContact);
             }
             catch (Exception ex)
             {
@@ -463,6 +477,10 @@ namespace Frahan.GH.Surface
             da.GetData(10, ref contactRotations);
             da.GetData(11, ref resolution);
             da.GetData(12, ref multiStart);
+            int boundaryMode = 0;
+            da.GetData(13, ref boundaryMode);
+            double minBoundaryContact = 0.25;
+            da.GetData(14, ref minBoundaryContact);
 
             spacing = Math.Max(0.0, spacing);
             tolerance = Math.Max(1e-9, tolerance);
@@ -548,6 +566,7 @@ namespace Frahan.GH.Surface
                 HD(c.SpanCount);
             }
             HQ(spacing); HD(baseRotations); HD(contactRotations); HD(resolution); HD(multiStart); HQ(tolerance);
+            HD(boundaryMode); HQ(minBoundaryContact);
             HD(keptCharts.Count);
             foreach (var chart in keptCharts)
             {
@@ -564,6 +583,7 @@ namespace Frahan.GH.Surface
                 Parts = parts, Originals = originals, InputIndexOf = inputIndexOf, PartZOf = partZOf,
                 Tolerance = tolerance, EngineSpacing = engineSpacing, MaxDev = maxDev,
                 BaseRotations = baseRotations, ContactRotations = contactRotations, MultiStart = multiStart,
+                BoundaryMode = boundaryMode, MinBoundaryContact = minBoundaryContact,
                 Hash = h,
             };
         }

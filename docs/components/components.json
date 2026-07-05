@@ -1266,7 +1266,7 @@
     "category": "Frahan",
     "subcategory": "2D Packing",
     "description": "Packs closed planar parts into freeform sheets using an exact No-Fit-Polygon  Bottom-Left-Fill solver. The feasible region for each part is the inner-fit polygon  minus the union of no-fit polygons of placed parts and holes, so parts never overlap  by construction (a hard constraint, not a trim). Implements bottom-left-fill  (Burke et al. 2006) over Minkowski-sum NFP/IFP (Bennell & Oliveira 2009) on a Clipper2  back-end. Sibling of the V506 nester; V506 is unchanged.",
-    "exposure": "primary",
+    "exposure": "hidden",
     "algorithm": {
       "title": "Exact No-Fit-Polygon Bottom-Left-Fill (hard non-overlap by construction)",
       "citation": "Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2006). \"A New Bottom-Left-Fill Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem.\" Operations Research 54(3):587-601"
@@ -1719,6 +1719,158 @@
     "file": "src/Frahan.StonePack.GH/TwoD/HoleNestComponent.cs"
   },
   {
+    "guid": "2ACEE264-21AC-4095-9E93-10CD96776BB2",
+    "class": "SheetNestLiveComponent",
+    "name": "Sheet Nest (Live)",
+    "nickname": "NestLive",
+    "category": "Frahan",
+    "subcategory": "2D Packing",
+    "description": "Consolidated 2D nester: the same hole-aware exact-NFP bottom-left-fill solver as Sheet Nest  (Hole-Aware) (Frahan.Packing.TwoD.ContactNfpHoleNester), but running TRULY asynchronously on a  background Task behind an explicit Run gate so the canvas never blocks even on a large multi- sheet instance. Parts are placed by exact no-fit-polygon bottom-left-fill (Burke et al. 2006),  no-fit/inner-fit regions are built as Clipper2 Minkowski sums/erosions (Bennell & Oliveira 2009),  smaller parts nest into the holes of larger placed parts via the inner-fit region, and rotations  are contact-adaptive (edge-alignment angles against the sheet, the latest neighbour, and host  holes). Draws a LIVE colour-coded preview of the nested layout directly on the canvas (one colour  per sheet) so you can watch the layout land without wiring a Custom Preview. Consolidates the  three overlapping 2D nesters (Sheet Nest (Hole-Aware), Freeform Sheet Nest, Sheet Pack Unified)  into one primary-ribbon component for new work; the synchronous HoleNest sibling remains for  always-on auto-solve graphs where a Run gate is unwanted.",
+    "exposure": "primary",
+    "algorithm": {
+      "title": "Clipper2 polygon Minkowski sum + Boolean back-end",
+      "citation": "Johnson, A. Clipper2 (BSL-1.0); Minkowski sum + NonZero Boolean operations"
+    },
+    "inputs": [
+      {
+        "name": "Sheets",
+        "nick": "S",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Closed planar sheet boundary curve(s). Multiple sheets nest by greedy overflow: sheet 0  fills first, unplaced parts carry to sheet 1, and so on. Sheets stay at their drawn  positions."
+      },
+      {
+        "name": "Sheet Holes",
+        "nick": "SH",
+        "type": "Curve",
+        "access": "tree",
+        "desc": "Closed sheet defect/hole curves (flat list or tree). Each hole is routed to whichever sheet  geometrically CONTAINS it (tree path {s} is only the fallback) — no tree matching or  grafting required; sheets without holes need nothing."
+      },
+      {
+        "name": "Parts",
+        "nick": "P",
+        "type": "Curve",
+        "access": "list",
+        "desc": "Closed planar part outline curves to nest."
+      },
+      {
+        "name": "Part Holes",
+        "nick": "PH",
+        "type": "Curve",
+        "access": "tree",
+        "desc": "Part hole curves (flat list or tree). Each hole is routed to the SMALLEST part outline that  geometrically CONTAINS it (tree path {i} -> Parts[i] is only the fallback) — no tree  matching or grafting required; parts without holes need nothing. Parts with holes are  placed first as hosts, then smaller parts nest into their holes via the inner-fit region."
+      },
+      {
+        "name": "Spacing",
+        "nick": "Gap",
+        "type": "Number",
+        "access": "item",
+        "desc": "Clearance between parts and boundaries."
+      },
+      {
+        "name": "BaseRotations",
+        "nick": "BR",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Uniform base rotation count (4 = 0/90/180/270 degrees)."
+      },
+      {
+        "name": "ContactRotations",
+        "nick": "CR",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Longest-edge count per polygon used to build contact (edge-alignment) rotation angles."
+      },
+      {
+        "name": "Resolution",
+        "nick": "Res",
+        "type": "Integer",
+        "access": "item",
+        "desc": "SOLVER sampling resolution for smooth curves: uniform-by-length vertices per closed curve  (16..200, default 24). This ONLY sets the collision proxy — the Placed output is always the  exact ORIGINAL curve, transformed — so there is no output-quality reason to raise it."
+      },
+      {
+        "name": "MultiStart",
+        "nick": "MS",
+        "type": "Integer",
+        "access": "item",
+        "desc": "Number of deterministic part orders the general engine tries per sheet, keeping the densest  valid layout (1..4; default 4). Higher values raise irregular-outline density at a near-linear  wall-time cost and never reduce placements or validity."
+      },
+      {
+        "name": "Boundary Mode",
+        "nick": "BMode",
+        "type": "Integer",
+        "access": "item",
+        "desc": "0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact length at verified NFP poses  (rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. The  evolution of the legacy V506 Boundary Mode (which used orientation-locked descriptor buckets  and a golden-ratio stride). Parts that cannot reach the contact threshold fall back to  bottom-left, so interior packing stays tight. Runs the managed lane."
+      },
+      {
+        "name": "Min Boundary Contact",
+        "nick": "MBC",
+        "type": "Number",
+        "access": "item",
+        "desc": "Boundary Mode 1 only: minimum rim-contact fraction (of the part perimeter, 0..1) a candidate  must reach to be seated on the boundary; below it the part places bottom-left. Default 0.25."
+      },
+      {
+        "name": "Run",
+        "nick": "R",
+        "type": "Boolean",
+        "access": "item",
+        "desc": "Set true to nest (on a background thread). False = idle; nothing is computed, the canvas  never freezes. Set back to false to cancel an in-flight solve."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Placed",
+        "nick": "C",
+        "type": "Curve",
+        "access": "list",
+        "desc": "The ORIGINAL part curves at full resolution, moved to their placed positions (placement  order). The solver works on coarse collision proxies internally; output geometry stays  exact for fabrication."
+      },
+      {
+        "name": "Source",
+        "nick": "I",
+        "type": "Integer",
+        "access": "list",
+        "desc": "For each placed curve, the index of the source curve in the Parts input (labeling/etching map)."
+      },
+      {
+        "name": "Transform",
+        "nick": "X",
+        "type": "Transform",
+        "access": "list",
+        "desc": "For each placed curve, the rigid placement transform (rotation about the world Z origin,  then translation). Apply it to the original part curve, its holes, or any decoration."
+      },
+      {
+        "name": "Nested",
+        "nick": "N",
+        "type": "Boolean",
+        "access": "list",
+        "desc": "True where the corresponding placed part was nested into a host part's hole."
+      },
+      {
+        "name": "Sheet",
+        "nick": "Sh",
+        "type": "Integer",
+        "access": "list",
+        "desc": "For each placed curve, the index of the sheet it landed on (greedy overflow order); also the  live-preview colour key."
+      },
+      {
+        "name": "Report",
+        "nick": "R",
+        "type": "Text",
+        "access": "item",
+        "desc": "Placed count, part-holes filled, density, engine note, elapsed ms, valid flag."
+      }
+    ],
+    "related": [
+      {
+        "target": "Frahan > 2D Packing > Sheet Nest (Hole-Aware)",
+        "reason": "Synchronous sibling with the identical solver and inputs; this component adds a Run gate, background execution and a live colour preview. Consolidates HoleNest / Freeform Sheet Nest / Sheet Pack Unified."
+      }
+    ],
+    "icon": "NoFitPolygon.png",
+    "file": "src/Frahan.StonePack.GH/TwoD/SheetNestLiveComponent.cs"
+  },
+  {
     "guid": "AB12C00C-1A2B-4C3D-9E4F-5A6B7C8D9E0C",
     "class": "IrregularSheetFillComponentAsync",
     "name": "Sheet Pack (Unified Async)",
@@ -1894,7 +2046,7 @@
     "category": "Frahan",
     "subcategory": "2D Packing",
     "description": "Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]",
-    "exposure": "secondary",
+    "exposure": "hidden",
     "algorithm": {
       "title": "No-fit polygon construction",
       "citation": "Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem"
@@ -23476,6 +23628,20 @@
         "type": "Integer",
         "access": "item",
         "desc": "Deterministic part orders the engine tries per chart, keeping the densest valid layout  (1..4, default 4). 1 = single largest-first pass. Higher raises density at ~linear cost and  never reduces placements or validity."
+      },
+      {
+        "name": "Boundary Mode",
+        "nick": "BMode",
+        "type": "Integer",
+        "access": "item",
+        "desc": "0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact at verified NFP poses and  spread by arc-interval occupancy (evolved from the V506 Boundary Mode; rotation-invariant)."
+      },
+      {
+        "name": "Min Boundary Contact",
+        "nick": "MBC",
+        "type": "Number",
+        "access": "item",
+        "desc": "Boundary Mode 1 only: minimum rim-contact fraction of the part perimeter (0..1) to seat a  part on the boundary; below it the part places bottom-left. Default 0.25."
       }
     ],
     "outputs": [

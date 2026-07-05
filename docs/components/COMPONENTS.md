@@ -1,12 +1,12 @@
 # Frahan StonePack - component catalog (inputs / outputs)
 
-Auto-generated from source by `extract_components.py`. 274 components on the `Frahan` ribbon tab.
+Auto-generated from source by `extract_components.py`. 275 components on the `Frahan` ribbon tab.
 Each entry lists its GUID, algorithm citation, inputs, outputs, and related components.
 Source of truth = the component source; regenerate after any component change.
 
 ## Subcategories
 
-- [2D Packing](#2d-packing) (14)
+- [2D Packing](#2d-packing) (15)
 - [3D Packing](#3d-packing) (9)
 - [Analysis](#analysis) (3)
 - [Block](#block) (35)
@@ -297,7 +297,7 @@ Related:
 
 ### Freeform Sheet Nest (Exact NFP)  (`FreeNestX`)
 
-- GUID: `2D351646-2CB0-402A-BBD8-3950B5BB1FBC`  |  icon: `Pack2D.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillNfpBlfComponent.cs`
+- GUID: `2D351646-2CB0-402A-BBD8-3950B5BB1FBC`  |  icon: `Pack2D.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillNfpBlfComponent.cs`
 - Algorithm: **Exact No-Fit-Polygon Bottom-Left-Fill (hard non-overlap by construction)** - Burke, E.K., Hellier, R., Kendall, G., Whitwell, G. (2006). "A New Bottom-Left-Fill Heuristic Algorithm for the Two-Dimensional Irregular Packing Problem." Operations Research 54(3):587-601
 - Packs closed planar parts into freeform sheets using an exact No-Fit-Polygon  Bottom-Left-Fill solver. The feasible region for each part is the inner-fit polygon  minus the union of no-fit polygons of placed parts and holes, so parts never overlap  by construction (a hard constraint, not a trim). Implements bottom-left-fill  (Burke et al. 2006) over Minkowski-sum NFP/IFP (Bennell & Oliveira 2009) on a Clipper2  back-end. Sibling of the V506 nester; V506 is unchanged.
 
@@ -399,6 +399,39 @@ Related:
 Related:
 - Frahan > 2D Packing > Freeform Sheet Nest (Exact NFP) - Multi-sheet exact NFP-BLF production sibling without part-in-part-hole nesting; use it when parts have no usable holes.
 
+### Sheet Nest (Live)  (`NestLive`)
+
+- GUID: `2ACEE264-21AC-4095-9E93-10CD96776BB2`  |  icon: `NoFitPolygon.png`  |  exposure: `primary`  |  source: `src/Frahan.StonePack.GH/TwoD/SheetNestLiveComponent.cs`
+- Algorithm: **Clipper2 polygon Minkowski sum + Boolean back-end** - Johnson, A. Clipper2 (BSL-1.0); Minkowski sum + NonZero Boolean operations
+- Consolidated 2D nester: the same hole-aware exact-NFP bottom-left-fill solver as Sheet Nest  (Hole-Aware) (Frahan.Packing.TwoD.ContactNfpHoleNester), but running TRULY asynchronously on a  background Task behind an explicit Run gate so the canvas never blocks even on a large multi- sheet instance. Parts are placed by exact no-fit-polygon bottom-left-fill (Burke et al. 2006),  no-fit/inner-fit regions are built as Clipper2 Minkowski sums/erosions (Bennell & Oliveira 2009),  smaller parts nest into the holes of larger placed parts via the inner-fit region, and rotations  are contact-adaptive (edge-alignment angles against the sheet, the latest neighbour, and host  holes). Draws a LIVE colour-coded preview of the nested layout directly on the canvas (one colour  per sheet) so you can watch the layout land without wiring a Custom Preview. Consolidates the  three overlapping 2D nesters (Sheet Nest (Hole-Aware), Freeform Sheet Nest, Sheet Pack Unified)  into one primary-ribbon component for new work; the synchronous HoleNest sibling remains for  always-on auto-solve graphs where a Run gate is unwanted.
+
+| in | type | access | description |
+|---|---|---|---|
+| Sheets (`S`) | Curve | list | Closed planar sheet boundary curve(s). Multiple sheets nest by greedy overflow: sheet 0  fills first, unplaced parts carry to sheet 1, and so on. Sheets stay at their drawn  positions. |
+| Sheet Holes (`SH`) | Curve | tree | Closed sheet defect/hole curves (flat list or tree). Each hole is routed to whichever sheet  geometrically CONTAINS it (tree path {s} is only the fallback) — no tree matching or  grafting required; sheets without holes need nothing. |
+| Parts (`P`) | Curve | list | Closed planar part outline curves to nest. |
+| Part Holes (`PH`) | Curve | tree | Part hole curves (flat list or tree). Each hole is routed to the SMALLEST part outline that  geometrically CONTAINS it (tree path {i} -> Parts[i] is only the fallback) — no tree  matching or grafting required; parts without holes need nothing. Parts with holes are  placed first as hosts, then smaller parts nest into their holes via the inner-fit region. |
+| Spacing (`Gap`) | Number | item | Clearance between parts and boundaries. |
+| BaseRotations (`BR`) | Integer | item | Uniform base rotation count (4 = 0/90/180/270 degrees). |
+| ContactRotations (`CR`) | Integer | item | Longest-edge count per polygon used to build contact (edge-alignment) rotation angles. |
+| Resolution (`Res`) | Integer | item | SOLVER sampling resolution for smooth curves: uniform-by-length vertices per closed curve  (16..200, default 24). This ONLY sets the collision proxy — the Placed output is always the  exact ORIGINAL curve, transformed — so there is no output-quality reason to raise it. |
+| MultiStart (`MS`) | Integer | item | Number of deterministic part orders the general engine tries per sheet, keeping the densest  valid layout (1..4; default 4). Higher values raise irregular-outline density at a near-linear  wall-time cost and never reduce placements or validity. |
+| Boundary Mode (`BMode`) | Integer | item | 0 = off (pure bottom-left fill). 1 = boundary hug: parts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact length at verified NFP poses  (rotation-invariant, exact) and spread around the perimeter by arc-interval occupancy. The  evolution of the legacy V506 Boundary Mode (which used orientation-locked descriptor buckets  and a golden-ratio stride). Parts that cannot reach the contact threshold fall back to  bottom-left, so interior packing stays tight. Runs the managed lane. |
+| Min Boundary Contact (`MBC`) | Number | item | Boundary Mode 1 only: minimum rim-contact fraction (of the part perimeter, 0..1) a candidate  must reach to be seated on the boundary; below it the part places bottom-left. Default 0.25. |
+| Run (`R`) | Boolean | item | Set true to nest (on a background thread). False = idle; nothing is computed, the canvas  never freezes. Set back to false to cancel an in-flight solve. |
+
+| out | type | access | description |
+|---|---|---|---|
+| Placed (`C`) | Curve | list | The ORIGINAL part curves at full resolution, moved to their placed positions (placement  order). The solver works on coarse collision proxies internally; output geometry stays  exact for fabrication. |
+| Source (`I`) | Integer | list | For each placed curve, the index of the source curve in the Parts input (labeling/etching map). |
+| Transform (`X`) | Transform | list | For each placed curve, the rigid placement transform (rotation about the world Z origin,  then translation). Apply it to the original part curve, its holes, or any decoration. |
+| Nested (`N`) | Boolean | list | True where the corresponding placed part was nested into a host part's hole. |
+| Sheet (`Sh`) | Integer | list | For each placed curve, the index of the sheet it landed on (greedy overflow order); also the  live-preview colour key. |
+| Report (`R`) | Text | item | Placed count, part-holes filled, density, engine note, elapsed ms, valid flag. |
+
+Related:
+- Frahan > 2D Packing > Sheet Nest (Hole-Aware) - Synchronous sibling with the identical solver and inputs; this component adds a Run gate, background execution and a live colour preview. Consolidates HoleNest / Freeform Sheet Nest / Sheet Pack Unified.
+
 ### Sheet Pack (Unified Async)  (`FreeNestUA`)
 
 - GUID: `AB12C00C-1A2B-4C3D-9E4F-5A6B7C8D9E0C`  |  icon: `IrregularSheet.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponentAsync.cs`
@@ -434,7 +467,7 @@ Related:
 
 ### Sheet Pack (Unified)  (`FreeNestU`)
 
-- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `secondary`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
+- GUID: `AB12C00B-1A2B-4C3D-9E4F-5A6B7C8D9E0B`  |  icon: `IrregularSheet.png`  |  exposure: `hidden`  |  source: `src/Frahan.StonePack.GH/IrregularSheetFillComponent.cs`
 - Algorithm: **No-fit polygon construction** - Burke, Hellier, Kendall, Whitwell 2007, European Journal of Operational Research 179(1):27-49 Complete and robust no-fit polygon generation for the irregular stock cutting problem
 - Unified entry point for Frahan's four 2D irregular-sheet solver  variants (V1 / V2 / V3 / V506). Pick the variant with the Variant  input; default is V506. Synchronous solve only - for the async  variant, use 'Frahan Sheet Pack (Unified Async)' / FreeNestUA. [Burke et al. 2007]
 
@@ -5786,6 +5819,8 @@ Related:
 | ContactRotations (`CR`) | Integer | item | Longest-edge count per polygon used to build contact (edge-alignment) rotation angles so  parts seat flush. Default 6. |
 | Resolution (`Res`) | Integer | item | Solver sampling resolution for smooth part curves (16..200, default 24). This only sets the  collision proxy - packed output is always the exact original curve. Solve time grows  ~quadratically; raise only for tight concave notches. |
 | MultiStart (`MS`) | Integer | item | Deterministic part orders the engine tries per chart, keeping the densest valid layout  (1..4, default 4). 1 = single largest-first pass. Higher raises density at ~linear cost and  never reduces placements or validity. |
+| Boundary Mode (`BMode`) | Integer | item | 0 = off (bottom-left fill). 1 = boundary hug: charts whose outline can seat against the  sheet boundary are placed rim-first, scored by MEASURED contact at verified NFP poses and  spread by arc-interval occupancy (evolved from the V506 Boundary Mode; rotation-invariant). |
+| Min Boundary Contact (`MBC`) | Number | item | Boundary Mode 1 only: minimum rim-contact fraction of the part perimeter (0..1) to seat a  part on the boundary; below it the part places bottom-left. Default 0.25. |
 
 | out | type | access | description |
 |---|---|---|---|

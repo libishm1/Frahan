@@ -22,7 +22,7 @@ fresh `data/` link. Open them in Rhino 8 + Grasshopper with the Frahan `.gha` de
 | `04_scan_to_bench_engineer/` | scan cloud -> normals -> reconstruct -> bench (engineer block-plan) | scan-to-bench reconstruction | `data/granite_dells_tls/` or `data/tongjiang/` |
 | `05_artist_pointing_machine/` | scan mesh -> carving stages -> pointing-machine guide (artist) | the carving / pointing-machine spine | a scan mesh: `data/stanford_scans/` (or your own temple scan, DECIMATED per KB-1) |
 | `07_scan_ingest_full/` | full scan-ingest pipeline (load -> downsample -> normals -> ICP -> reconstruct) | the ingest front-end every spine shares | `data/granite_dells_tls/`, `data/tongjiang/`, `data/stanford_scans/` |
-| `10_pack2d/` | 2D slab nesting (exact NFP-BLF, FreeNestX) | cut parts from a slab, 0-overlap | synthetic cut-list (in the .gh); METERS, slab 3.2x2.0 m |
+| `10_pack2d/` | 2D slab nesting (exact NFP, hole-aware: HoleNest / Sheet Nest (Live)) | cut parts from a slab, 0-overlap | synthetic cut-list (in the .gh); METERS, slab 3.2x2.0 m |
 | `11_pack3d/` | 3D block packing (Block Pack Tree, Kim 2025 guillotine) | quarry block subdivision, saw-cuttable | synthetic elements (in the .gh); METERS, block 3.0x1.5x1.5 m |
 | `12_trencadis/` | Trencadis mosaic (Catalog Pack, CVD-Lloyd + Hungarian) | broken-tile cladding panel | synthetic shards (in the .gh); MILLIMETERS, panel ~1100 mm |
 | `13_surface_mapping/` | twisted block -> CGAL split-by-angle -> Trencadis cladding | surfaces from a solid + surface mosaic | synthetic twisted monument (in the .gh); MILLIMETERS, 1.2x1.2x3.5 m |
