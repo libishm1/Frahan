@@ -97,7 +97,7 @@ wiki/
 - `research/geopack_geocut_landscape.md` — Layer 8/9 landscape.
 - `research/boundary_aware_packing_consolidated.md` — packing notes.
 - `research/market_features_gap_analysis.md` — 2026-05-15 gap
-  analysis vs `D:\deep-research-report (1).md`; 15 gaps in 3 tiers,
+  analysis vs an external market study; 15 gaps in 3 tiers,
   3-quarter roadmap.
 - `research/porting_tradeoffs_2026-05-22.md` — Rhino+GH vs standalone
   trade-off analysis; recommend staying on the canvas 6-12 months.
