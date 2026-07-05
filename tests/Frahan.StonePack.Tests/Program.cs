@@ -670,6 +670,7 @@ var tests = new List<(string Name, Action Body)>
     ("CGAL union fallback matches BSP when DLL absent", CgalMeshBooleanTests.Union_FallbackMatchesBspWhenDllAbsent),
     ("CGAL intersection fallback correct volume", CgalMeshBooleanTests.Intersection_FallbackProducesCorrectVolume),
     ("CGAL difference fallback correct volume", CgalMeshBooleanTests.Difference_FallbackProducesCorrectVolume),
+    ("CGAL native trim of ETH stone is clean+manifold+unified", CgalMeshBooleanTests.CgalTrim_EthStone_ProducesCleanUnifiedMesh),
     ("CGAL null args throw", CgalMeshBooleanTests.NullArgs_Throw),
     ("masonry GH MasonryAssemblyComponent ComponentGuid is expected (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryAssemblyComponent_ComponentGuid_IsExpectedValue),
     ("masonry GH MasonryAssemblyComponent metadata is correct (Rhino)", Frahan.Tests.MasonryGhComponentTests.MasonryAssemblyComponent_Metadata_IsCorrect),

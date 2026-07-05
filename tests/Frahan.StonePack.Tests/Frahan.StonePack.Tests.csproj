@@ -82,4 +82,21 @@
        which decouples version selection from the Rhino install path. Tracked
        as B11 follow-up. -->
 
+  <!-- 2026-07-05: stage the native CGAL shim + its gmp/mpfr deps into the test
+       output so CgalMeshBoolean.IsAvailable engages the NATIVE path (not the
+       BSP fallback). This is what lets CgalTrim_EthStone_ProducesCleanUnifiedMesh
+       actually exercise CGAL — and would have caught the un-bundled mpfr-6.dll
+       that silently disabled CGAL. Non-fatal: if install/plugin is absent or the
+       LFS blobs are not pulled, the copy is skipped and the test SKIPs cleanly. -->
+  <ItemGroup>
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\frahan_cgal.dll" />
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\gmp-10.dll" />
+    <NativeCgalDep Include="$(MSBuildProjectDirectory)\..\..\install\plugin\mpfr-6.dll" />
+  </ItemGroup>
+  <Target Name="StageNativeCgalForTests" AfterTargets="Build">
+    <Copy SourceFiles="@(NativeCgalDep)" DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" ContinueOnError="true"
+          Condition="Exists('%(NativeCgalDep.Identity)')" />
+  </Target>
+
 </Project>
