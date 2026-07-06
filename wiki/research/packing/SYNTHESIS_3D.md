@@ -2,6 +2,10 @@
 
 ## Final math derivation
 
+> Typeset derivations: [EQUATIONS.md](EQUATIONS.md) (renders on GitHub and the docs site). Headline objective:
+>
+> $$\rho = \frac{\sum_i \operatorname{vol}(S_i)}{A\,H_{\mathrm{used}}},\qquad H_{\mathrm{used}}=\max_i\,\max_{v\in T_i S_i} v_z$$
+
 CONSOLIDATED 3D MATH (verified against source src). Three feature classes, ONE honest objective.
 
 OBJECTIVE (the single comparison basis; equations.tex eq:rho line 92-101). For placements T_i=(R_i,t_i) in SE(3) of closed meshes S_i in container Omega (box [0,W]x[0,D]x[0,H] = PackContainer, or IrregularMeshContainer interval set), honest density rho = (sum_i vol(S_i)) / (A * H_used), H_used = max over all placed vertices of v_z, counting only non-interpenetrating (phi_ij >= -eps) stones. vol(S_i) is TRUE mesh volume (divergence/signed-tetra). NOTE: Core MeshPackItem.VolumeEstimate is bbox volume (MeshPackingModels.cs line 41: Bounds.Size.Volume), so a real signed-tetra volume must be added to Core for the numerator and the volumetric COM (PRISMA risk 7). The harness --pack3d already computes true mesh volume via RhinoCommon VolumeMassProperties.Compute (Validator.cs line 1346,1376); the Core-side rho needs the managed signed-tetra equivalent.

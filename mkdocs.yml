@@ -57,6 +57,7 @@ nav:
       - Engineering log: wiki/log.md
       - Edge Matching (theory vs implementation): wiki/research/edge_matching_theory_vs_implementation.md
       - Tolerances & Dimensions: wiki/research/tolerances_dimensions_slm_roses.md
+      - Packing Mathematics (typeset): wiki/research/packing/EQUATIONS.md
       - 2D Packing Synthesis: wiki/research/packing/SYNTHESIS_2D.md
       - 3D Packing Synthesis: wiki/research/packing/SYNTHESIS_3D.md
   - More:

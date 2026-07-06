@@ -2,6 +2,10 @@
 
 ## Final math derivation
 
+> Typeset derivations: [EQUATIONS.md](EQUATIONS.md) (renders on GitHub and the docs site). Headline: exact feasible region and overlap-free utilization:
+>
+> $$F(B) = \widehat{\mathrm{IFP}}(S,B) \setminus \bigcup_{k,j} \mathrm{NFP}(A_k \cup H_j,\ B),\qquad U = \frac{\operatorname{area}(\bigcup_k A_k)}{\operatorname{area}(S)}$$
+
 SETUP AND GROUNDED NOTATION. Sheet outer S (polygon, may be concave/holed), holes H_j, placed parts A_k. Part B normalized: rotate by theta then translate bbox-min to origin (RotateNormalized in IrregularSheetFillNfpBlf.cs:427, RotatePoly in V506.cs:1261). Placement p=(ox,oy): B@p = {v+p}. Spacing sigma (V506 clamps max(0.1,in) at :132; NfpBlf clamps max(0,in) at :59).
 
 CORE GEOMETRY (already implemented, re-stated to anchor the plan). NFP(A,B)=A (+) (-B); (B@p) cap int(A) != empty  <=>  p in int NFP(A,B). In IrregularSheetFillNfpBlf this is Clipper2Adapter.MinkowskiSum(pp.AbsScaled, rot.Refl) at :184, with rot.Refl = (-x,-y) at :450 so the sum is exactly A (+) (-B). Clipper MinkowskiSum handles concave-concave inputs exactly (Clipper2Adapter.cs:154-165, self-union under NonZero). IFP (containment locus) = { p : B@p subset S } = intersect_{b in B} (S - b). The shipped ComputeIfp (IrregularSheetFillNfpBlf.cs:225-238) intersects over rot.HullScaled only.
