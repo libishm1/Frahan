@@ -9,11 +9,12 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
     <Nullable>disable</Nullable>
     <WasmMainJSPath>main.js</WasmMainJSPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks><!-- required by [JSExport] marshalling -->
     <!-- keep the payload lean for a Pages demo; no AOT (IL interpreter is fine) -->
     <RunAOTCompilation>false</RunAOTCompilation>
                 <InvariantGlobalization>true</InvariantGlobalization>
