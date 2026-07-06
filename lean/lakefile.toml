@@ -1,0 +1,10 @@
+name = "frahan_proofs"
+defaultTargets = ["FrahanProofs"]
+
+# Pure Lean 4 (no Mathlib) so `lake build` is fast for any contributor.
+# Theorems provable in core Lean 4 (Nat / Int / List / order combinatorics)
+# live here; the analysis/linear-algebra theorems that need Mathlib are marked
+# in the plan as a separate future library.
+
+[[lean_lib]]
+name = "FrahanProofs"
