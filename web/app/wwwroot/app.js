@@ -4,7 +4,6 @@
 
 'use strict';
 
-let engineReady = false;
 let lastResponse = null;
 let parts = [];       // each: flat [x0,y0,x1,y1,...] ring (local coords)
 let sheetHoles = [];  // defects in the sheet (sheet coords) the nester routes around
@@ -12,10 +11,13 @@ let sheetHoles = [];  // defects in the sheet (sheet coords) the nester routes a
 const $ = (id) => document.getElementById(id);
 const status = (m) => { $('status').textContent = m; };
 
-window.addEventListener('frahan-ready', () => {
-  engineReady = true;
+let sampleActive = false;
+
+// The loader module is ready (engine NOT yet downloaded — that happens lazily
+// on the first Nest, so the page and Load-sample stay instant on mobile).
+window.addEventListener('frahan-loader-ready', () => {
   $('nest').disabled = false;
-  status('engine ready (' + (globalThis.frahan.version?.() ?? 'wasm') + ')');
+  status('ready — engine loads on first Nest (~0.6 MB, once)');
 });
 
 // ---- import ---------------------------------------------------------------
@@ -26,9 +28,10 @@ $('file').addEventListener('change', async (e) => {
   const text = await f.text();
   const name = f.name.toLowerCase();
   try {
-    parts = name.endsWith('.svg') ? parseSvg(text) : parseDxf(text);
-    sheetHoles = []; // imported sheets have no declared defects
-    status(`${parts.length} parts imported from ${f.name}`);
+    const { parts: p, holes: h } = name.endsWith('.svg') ? parseSvg(text) : parseDxf(text);
+    parts = p; sheetHoles = h; sampleActive = false;
+    status(`imported ${parts.length} part${parts.length === 1 ? '' : 's'}` +
+           (h.length ? `, ${h.length} red shape${h.length === 1 ? '' : 's'} treated as defects` : ''));
     drawInput();
   } catch (err) {
     status('import failed: ' + err.message);
@@ -37,31 +40,48 @@ $('file').addEventListener('change', async (e) => {
 
 $('sample').addEventListener('click', () => {
   parts = sampleParts();
-  sheetHoles = sampleSheetHoles();
-  status(`${parts.length} sample parts, ${sheetHoles.length} sheet defects to avoid`);
+  sampleActive = true;
+  sheetHoles = $('withHoles').checked ? sampleSheetHoles() : [];
+  status(`${parts.length} sample parts` +
+         (sheetHoles.length ? `, ${sheetHoles.length} sheet defects to avoid` : ''));
   drawInput();
 });
+
+// toggle sample defects on/off without reloading
+$('withHoles').addEventListener('change', () => {
+  if (!sampleActive) return;
+  sheetHoles = $('withHoles').checked ? sampleSheetHoles() : [];
+  drawInput();
+});
+
+// Red shapes are suggested as sheet defects; everything else is a part. Lets a
+// user mark defects in their CAD by colour (red stroke/fill), shown distinctly.
+function isReddish(el) {
+  const s = ((el.getAttribute('stroke') || '') + ' ' + (el.getAttribute('fill') || '') + ' ' +
+             (el.getAttribute('style') || '')).toLowerCase();
+  if (/#f00\b|#ff0000|\bred\b|#e0(0|1|2)|#b3261e|#d0021b|#cc0000/.test(s)) return true;
+  const m = s.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (m) { const r = +m[1], g = +m[2], b = +m[3]; return r > 140 && g < 90 && b < 90; }
+  return false;
+}
 
 // SVG: <rect>, <polygon>, <polyline>, and <path> (M/L/H/V/Z, lines only; curves
 // are flattened coarsely). Coordinates are taken as-is (assume a flat drawing).
 function parseSvg(text) {
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
-  const out = [];
-  const push = (pts) => { if (pts.length >= 6) out.push(pts); };
+  const parts = [], holes = [];
+  const push = (el, pts) => { if (pts.length >= 6) (isReddish(el) ? holes : parts).push(pts); };
   doc.querySelectorAll('rect').forEach((r) => {
     const x = +r.getAttribute('x') || 0, y = +r.getAttribute('y') || 0;
     const w = +r.getAttribute('width') || 0, h = +r.getAttribute('height') || 0;
-    push([x, y, x + w, y, x + w, y + h, x, y + h]);
+    push(r, [x, y, x + w, y, x + w, y + h, x, y + h]);
   });
   doc.querySelectorAll('polygon, polyline').forEach((p) => {
     const nums = (p.getAttribute('points') || '').trim().split(/[\s,]+/).map(Number).filter((n) => !isNaN(n));
-    push(nums);
+    push(p, nums);
   });
-  doc.querySelectorAll('path').forEach((p) => {
-    const pts = flattenPath(p.getAttribute('d') || '');
-    push(pts);
-  });
-  return out;
+  doc.querySelectorAll('path').forEach((p) => push(p, flattenPath(p.getAttribute('d') || '')));
+  return { parts, holes };
 }
 
 // minimal path flattener: absolute M/L/H/V/Z; ignores curves' control points
@@ -96,19 +116,20 @@ function flattenPath(d) {
 }
 
 // DXF: LINE segments chained into loops, and LWPOLYLINE / POLYLINE vertices.
-// Entity-section group-code parser (10/20 = x/y). Coarse but covers most CAD
-// exports of closed profiles.
+// Entity-section group-code parser (10/20 = x/y, 62 = colour, 8 = layer). Red
+// colour (ACI 1) or a hole/defect/void layer marks a shape as a sheet defect.
 function parseDxf(text) {
   const lines = text.split(/\r?\n/);
-  const out = [];
+  const parts = [], holes = [];
+  const isDefect = (color, layer) => color === 1 || /hole|defect|void/i.test(layer || '');
+  const bucket = (color, layer) => (isDefect(color, layer) ? holes : parts);
   let i = 0;
-  // find ENTITIES
   while (i < lines.length && lines[i].trim() !== 'ENTITIES') i++;
   let curType = null, ring = [], segs = [], seg = {};
-  const flushPoly = () => { if (ring.length >= 6) out.push(ring); ring = []; };
+  let curColor = 0, curLayer = '', segsColor = 0, segsLayer = '';
+  const flushPoly = () => { if (ring.length >= 6) bucket(curColor, curLayer).push(ring); ring = []; };
   const flushLines = () => {
     if (segs.length === 0) return;
-    // chain LINE segments end-to-end into a ring (tolerant join)
     const used = new Array(segs.length).fill(false);
     let cur = segs[0]; used[0] = true;
     const pts = [cur.x1, cur.y1, cur.x2, cur.y2];
@@ -122,7 +143,7 @@ function parseDxf(text) {
         else if (near(s.x2, ex) && near(s.y2, ey)) { pts.push(s.x1, s.y1); ex = s.x1; ey = s.y1; used[k] = true; added = true; }
       }
     }
-    if (pts.length >= 6) out.push(pts);
+    if (pts.length >= 6) bucket(segsColor, segsLayer).push(pts);
     segs = [];
   };
   for (; i < lines.length - 1; i += 2) {
@@ -131,10 +152,10 @@ function parseDxf(text) {
     if (code === '0') {
       if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') flushPoly();
       if (val === 'ENDSEC') { flushLines(); break; }
-      // starting a new entity: flush accumulated LINEs when leaving LINE runs
-      curType = val;
-      seg = {};
-    } else if (curType === 'LINE') {
+      curType = val; seg = {}; curColor = 0; curLayer = '';
+    } else if (code === '62') { curColor = +val; if (curType === 'LINE') segsColor = +val; }
+    else if (code === '8') { curLayer = val; if (curType === 'LINE') segsLayer = val; }
+    else if (curType === 'LINE') {
       if (code === '10') seg.x1 = +val; else if (code === '20') seg.y1 = +val;
       else if (code === '11') seg.x2 = +val; else if (code === '21') { seg.y2 = +val; segs.push(seg); seg = {}; }
     } else if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') {
@@ -143,7 +164,7 @@ function parseDxf(text) {
   }
   if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') flushPoly();
   flushLines();
-  return out;
+  return { parts, holes };
 }
 const near = (a, b) => Math.abs(a - b) < 1e-6;
 
@@ -167,9 +188,16 @@ function sampleSheetHoles() {
 
 // ---- nest -----------------------------------------------------------------
 
-$('nest').addEventListener('click', () => {
-  if (!engineReady) { status('engine not ready'); return; }
+$('nest').addEventListener('click', async () => {
   if (parts.length === 0) { status('import or load parts first'); return; }
+  // lazy-download the engine on first use (keeps the page instant on mobile)
+  if (!globalThis.frahan) {
+    status('loading engine (~0.6 MB, one time)…');
+    $('nest').disabled = true;
+    try { await globalThis.frahanBoot(); }
+    catch (e) { status('engine load failed: ' + e.message); $('nest').disabled = false; return; }
+    $('nest').disabled = false;
+  }
   const W = +$('sheetW').value, H = +$('sheetH').value;
   const req = {
     Sheet: [0, 0, W, 0, W, H, 0, H],

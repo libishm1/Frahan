@@ -29,6 +29,10 @@ button { cursor: pointer; background: var(--accent); color: #fff; border: none; 
 button:disabled { opacity: 0.5; cursor: default; }
 #status { font-size: 0.82rem; color: var(--muted); }
 .report { font-size: 0.82rem; color: var(--muted); min-height: 1.2em; margin: 0.3rem 0 0; }
+.hint { font-size: 0.76rem; color: var(--muted); margin: 0 0 0.7rem; }
+.swatch { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: middle; }
+.swatch.part { background: var(--accent); opacity: 0.5; }
+.swatch.hole { background: transparent; border: 1.2px dashed var(--bad); }
 .stage { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
 #canvas { width: 100%; height: 68vh; display: block; }
 .sheet { fill: none; stroke: var(--muted); stroke-width: 1.5; }

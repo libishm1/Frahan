@@ -19,7 +19,10 @@
           <input type="file" id="file" accept=".dxf,.svg" />
         </label>
         <button id="sample">Load sample</button>
+        <label class="check"><input type="checkbox" id="withHoles" checked /> with defects</label>
       </div>
+      <p class="hint">Import tip: shapes drawn in <span class="swatch part"></span> any colour are parts;
+        shapes drawn in <span class="swatch hole"></span> red become sheet defects to route around.</p>
       <div class="row">
         <label>Sheet W <input type="number" id="sheetW" value="600" min="1" /></label>
         <label>Sheet H <input type="number" id="sheetH" value="400" min="1" /></label>

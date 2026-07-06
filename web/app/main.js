@@ -1,23 +1,32 @@
-// Boots the .NET WebAssembly runtime and wires the exported nester onto
-// globalThis.frahan, then hands control to app.js (the UI).
+// Lazy .NET WebAssembly loader. Importing this module is cheap (no runtime
+// download); the ~0.6 MB gzipped runtime is fetched only when frahanBoot() is
+// first called (on the first Nest), so the page - and "Load sample" - are
+// instant, which matters most on mobile.
 //
-// IMPORTANT: do NOT call dotnet.run() / runMainAndExit here. Main() is empty
-// and running it exits the runtime, after which the [JSExport] methods throw
-// ".NET runtime already exited". Creating the runtime and fetching the
-// assembly exports is enough to keep it resident for on-demand interop calls.
+// Do NOT call dotnet.run(): Main() is empty and running it exits the runtime,
+// after which [JSExport] methods throw. create() + getAssemblyExports leaves
+// the runtime resident for on-demand interop.
 import { dotnet } from './_framework/dotnet.js';
 
-const { getAssemblyExports, getConfig } = await dotnet
-  .withDiagnosticTracing(false)
-  .create();
+let bootPromise = null;
 
-const config = getConfig();
-const exports = await getAssemblyExports(config.mainAssemblyName);
-
-globalThis.frahan = {
-  nest: (requestJson) => exports.NestInterop.Nest(requestJson),
-  version: () => exports.NestInterop.Version(),
+globalThis.frahanBoot = () => {
+  if (!bootPromise) {
+    bootPromise = (async () => {
+      const { getAssemblyExports, getConfig } = await dotnet
+        .withDiagnosticTracing(false)
+        .create();
+      const config = getConfig();
+      const exports = await getAssemblyExports(config.mainAssemblyName);
+      globalThis.frahan = {
+        nest: (requestJson) => exports.NestInterop.Nest(requestJson),
+        version: () => exports.NestInterop.Version(),
+      };
+      return globalThis.frahan;
+    })();
+  }
+  return bootPromise;
 };
 
-// signal readiness to the UI (the runtime stays alive; no run() call)
-window.dispatchEvent(new CustomEvent('frahan-ready'));
+// tell the UI the loader is available (engine not yet downloaded)
+window.dispatchEvent(new CustomEvent('frahan-loader-ready'));
