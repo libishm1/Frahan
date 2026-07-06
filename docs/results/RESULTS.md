@@ -80,7 +80,17 @@ against the installed visose/Robots plugin: `Planes to Robot Targets` output ing
 
 ![3d volumetric](../../wiki/research/packing/figures/pack3d_volumetric.png)
 3D volumetric: Dlbf best-of-orientation 70.4% (vs 66.4% baseline); TreePackForest 37.2% (100% guillotine);
-masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable.
+masonry BestFit 65.2% / Ashlar 60.8%. Domains are not cross-comparable. Those are bbox-volume figures.
+
+2026-07-06, first HEADLESS C# honest-density measurement (no Rhino): the shipping
+`GreedyMeshHeightmapPacker` on the 16 real ETH1100 subset stones (`data/eth1100_subset`, loaded by
+the Rhino-free `ObjMeshReader`), scored with the new signed-tetra `MeshVolume`, places 16/16 and
+reports rho_honest = 0.073 vs rho_bbox = 0.195 - **a 2.68x bbox over-report**. The over-report
+factor is the container-independent finding (a property of the irregular stones), and it is the
+measured C# confirmation that bbox-based density figures over-state true fill. Test: `ETH C#
+honest 3D density headless bench (H1)`. This closes the measurement-infrastructure half of risk
+H1; a container-tuned per-packer comparison at verified-zero interpenetration is the remaining
+follow-up (issue #13).
 
 ![packbench](../../wiki/research/packing/figures/packbench_overview.png)
 ![masonry quarry](../../wiki/research/packing/figures/masonry_quarry_decision.png)

@@ -818,6 +818,7 @@ var tests = new List<(string Name, Action Body)>
     ("irregular mesh container supports separated vertical cavities", IrregularMeshContainerSupportsSeparatedVerticalCavities),
     ("mesh pack seed can explore alternatives", MeshPackSeedCanExploreAlternatives),
     ("mesh signed-tetra volume is honest vs bbox", MeshVolumeSignedTetraIsHonest),
+    ("ETH C# honest 3D density headless bench (H1)", EthHonestDensityHeadlessBench),
     // Ashlar packer Stage 1
     ("ashlar Stage1 coursed ashlar all uniform boxes full coverage", AshlarLayoutEngineTests.CoursedAshlar_AllUniformBoxes_FullCoverage),
     ("ashlar Stage1 boundary conditions bottom course fixed", AshlarLayoutEngineTests.BoundaryConditions_BottomCourseFixed),
@@ -1695,6 +1696,86 @@ static MeshPackItem CreateBoxMesh(string id, Vec3 min, Size3 size)
     var triangles = new List<MeshTriangle>();
     AddBox(vertices, triangles, min, size);
     return new MeshPackItem(id, vertices, triangles);
+}
+
+// First genuinely C#-measured 3D packing density on REAL ETH1100 stones,
+// fully headless (no Rhino): ObjMeshReader + GreedyMeshHeightmapPacker +
+// signed-tetra MeshVolume are all Rhino-free. Addresses risk-register H1 -
+// the shipping-packer density numbers were only ever Python/Rhino-live before.
+// Prints honest rho (signed-tetra) alongside the bbox rho to show the
+// over-report gap. Bench-style: measures + prints, asserts only sanity.
+static void EthHonestDensityHeadlessBench()
+{
+    var dir = FindEthSubsetDir();
+    if (dir == null) { Console.WriteLine("      [bench] ETH subset not present; skipping"); return; }
+
+    var files = System.IO.Directory.GetFiles(dir, "*.obj");
+    Array.Sort(files, StringComparer.Ordinal);
+    if (files.Length == 0) { Console.WriteLine("      [bench] no .obj in ETH subset; skipping"); return; }
+
+    var items = new List<MeshPackItem>(files.Length);
+    double sumBbox = 0;
+    foreach (var f in files)
+    {
+        var meshes = Frahan.Core.ScanIngest.ObjMeshReader.ReadFile(f);
+        if (meshes.Count == 0) continue;
+        var m = meshes[0];
+        var verts = new List<Vec3>(m.VertexCount);
+        for (int i = 0; i < m.VertexCount; i++)
+            verts.Add(new Vec3(m.VertexCoordsXyz[3 * i], m.VertexCoordsXyz[3 * i + 1], m.VertexCoordsXyz[3 * i + 2]));
+        var tris = new List<MeshTriangle>(m.TriangleCount);
+        for (int t = 0; t < m.TriangleCount; t++)
+            tris.Add(new MeshTriangle(m.TriangleIndices[3 * t], m.TriangleIndices[3 * t + 1], m.TriangleIndices[3 * t + 2]));
+        var item = new MeshPackItem(System.IO.Path.GetFileNameWithoutExtension(f), verts, tris);
+        items.Add(item);
+        sumBbox += item.VolumeEstimate;
+    }
+    Assert(items.Count > 0, "no ETH meshes loaded");
+
+    // container sized from total bbox volume with headroom; short-and-wide pile.
+    double target = sumBbox / 0.45;           // ~45% bbox-fill target
+    double side = Math.Pow(target, 1.0 / 3.0);
+    var container = new PackContainer(side * 1.6, side * 1.6, side * 0.9);
+    double minDim = double.MaxValue;
+    foreach (var it in items)
+    {
+        var sz = it.Bounds.Size;
+        minDim = Math.Min(minDim, Math.Min(sz.Width, Math.Min(sz.Depth, sz.Height)));
+    }
+    var settings = new MeshPackSettings
+    {
+        CellSize = Math.Max(0.02, minDim / 6.0),
+        AllowYaw90 = true,
+        SortByVolumeDescending = true
+    };
+
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    var result = new GreedyMeshHeightmapPacker().Pack(items, container, settings);
+    sw.Stop();
+
+    double rhoHonest = result.FillRatioMeshVolume;   // signed-tetra numerator
+    double rhoBbox = result.FillRatioEstimate;        // bbox numerator (over-reports)
+    double overReport = rhoBbox > 0 ? rhoBbox / Math.Max(1e-9, rhoHonest) : 0;
+    Console.WriteLine(
+        $"      [bench] ETH C# honest density (headless, no Rhino): placed {result.Placements.Count}/{items.Count}, " +
+        $"rho_honest(signed-tetra)={rhoHonest:0.000}, rho_bbox={rhoBbox:0.000}, bbox-over-report={overReport:0.00}x, " +
+        $"cell={settings.CellSize:0.000}, {sw.Elapsed.TotalMilliseconds:0} ms");
+
+    Assert(result.Placements.Count > 0, "expected at least one ETH stone to pack");
+    Assert(rhoHonest > 0 && rhoHonest < 1, $"honest rho out of (0,1): {rhoHonest}");
+    Assert(rhoHonest <= rhoBbox + 1e-9, "honest (signed-tetra) rho must not exceed bbox rho");
+}
+
+static string FindEthSubsetDir()
+{
+    var probe = System.IO.Directory.GetCurrentDirectory();
+    for (int up = 0; up < 8 && probe != null; up++)
+    {
+        var cand = System.IO.Path.Combine(probe, "data", "eth1100_subset");
+        if (System.IO.Directory.Exists(cand)) return cand;
+        probe = System.IO.Path.GetDirectoryName(probe);
+    }
+    return null;
 }
 
 // Honest signed-tetra volume (MeshVolume) vs the bbox over-estimate
