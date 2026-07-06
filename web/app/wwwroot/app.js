@@ -6,7 +6,8 @@
 
 let engineReady = false;
 let lastResponse = null;
-let parts = []; // each: flat [x0,y0,x1,y1,...] ring (local coords)
+let parts = [];       // each: flat [x0,y0,x1,y1,...] ring (local coords)
+let sheetHoles = [];  // defects in the sheet (sheet coords) the nester routes around
 
 const $ = (id) => document.getElementById(id);
 const status = (m) => { $('status').textContent = m; };
@@ -26,6 +27,7 @@ $('file').addEventListener('change', async (e) => {
   const name = f.name.toLowerCase();
   try {
     parts = name.endsWith('.svg') ? parseSvg(text) : parseDxf(text);
+    sheetHoles = []; // imported sheets have no declared defects
     status(`${parts.length} parts imported from ${f.name}`);
     drawInput();
   } catch (err) {
@@ -35,7 +37,8 @@ $('file').addEventListener('change', async (e) => {
 
 $('sample').addEventListener('click', () => {
   parts = sampleParts();
-  status(`${parts.length} sample parts`);
+  sheetHoles = sampleSheetHoles();
+  status(`${parts.length} sample parts, ${sheetHoles.length} sheet defects to avoid`);
   drawInput();
 });
 
@@ -148,7 +151,18 @@ function sampleParts() {
   const r = (w, h) => [0, 0, w, 0, w, h, 0, h];
   const tri = (s) => [0, 0, s, 0, s / 2, s];
   return [r(120, 70), r(120, 70), r(90, 90), r(140, 40), tri(90), tri(90),
-          r(60, 110), r(80, 80), [0, 0, 70, 0, 100, 50, 40, 80, -10, 40]];
+          r(60, 110), r(80, 80), r(70, 70), r(110, 45),
+          [0, 0, 70, 0, 100, 50, 40, 80, -10, 40]];
+}
+
+// Sheet defects (in sheet coords, default 600x400) the nester must route
+// around: a rectangular void mid-sheet and an angled corner defect. This is
+// the hole-aware capability that plain rectangle-strip nesters lack.
+function sampleSheetHoles() {
+  return [
+    [230, 150, 380, 150, 380, 250, 230, 250],   // central rectangular void
+    [470, 60, 560, 60, 560, 150],                // angled defect (top-right)
+  ];
 }
 
 // ---- nest -----------------------------------------------------------------
@@ -159,6 +173,7 @@ $('nest').addEventListener('click', () => {
   const W = +$('sheetW').value, H = +$('sheetH').value;
   const req = {
     Sheet: [0, 0, W, 0, W, H, 0, H],
+    SheetHoles: sheetHoles,
     Parts: parts,
     Spacing: +$('spacing').value,
     BaseRotations: +$('rot').value,
@@ -190,7 +205,7 @@ $('nest').addEventListener('click', () => {
 function drawInput() {
   const W = +$('sheetW').value, H = +$('sheetH').value;
   const svg = $('canvas'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = sheetRect(W, H);
+  svg.innerHTML = sheetRect(W, H) + holesSvg();
   // lay parts out in a preview strip along the top (not nested yet)
   let x = 4;
   for (const p of parts) {
@@ -202,7 +217,7 @@ function drawInput() {
 
 function drawResult(resp, W, H) {
   const svg = $('canvas'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = sheetRect(W, H);
+  svg.innerHTML = sheetRect(W, H) + holesSvg();
   for (const pl of resp.Placed) {
     const cls = resp.Valid ? 'part' : 'part invalid';
     svg.insertAdjacentHTML('beforeend', polyEl(pl.PlacedOuter, cls));
@@ -210,6 +225,7 @@ function drawResult(resp, W, H) {
 }
 
 const sheetRect = (W, H) => `<rect class="sheet" x="0" y="0" width="${W}" height="${H}"/>`;
+const holesSvg = () => sheetHoles.map((h) => polyEl(h, 'hole')).join('');
 function polyEl(flat, cls) {
   let d = '';
   for (let i = 0; i + 1 < flat.length; i += 2) d += `${flat[i]},${flat[i + 1]} `;
@@ -235,6 +251,11 @@ $('dl-svg').addEventListener('click', () => {
   if (!lastResponse) return;
   const W = +$('sheetW').value, H = +$('sheetH').value;
   let body = `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#888"/>`;
+  for (const h of sheetHoles) {
+    let hp = '';
+    for (let i = 0; i + 1 < h.length; i += 2) hp += `${h[i]},${h[i + 1]} `;
+    body += `<polygon points="${hp.trim()}" fill="none" stroke="#b3261e" stroke-dasharray="5 4"/>`;
+  }
   for (const pl of lastResponse.Placed) {
     let pts = '';
     for (let i = 0; i + 1 < pl.PlacedOuter.length; i += 2) pts += `${pl.PlacedOuter[i]},${pl.PlacedOuter[i + 1]} `;

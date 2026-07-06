@@ -34,6 +34,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 .sheet { fill: none; stroke: var(--muted); stroke-width: 1.5; }
 .part { fill: var(--accent); fill-opacity: 0.28; stroke: var(--accent); stroke-width: 1; }
 .part.invalid { fill: var(--bad); stroke: var(--bad); }
+.hole { fill: var(--bad); fill-opacity: 0.1; stroke: var(--bad); stroke-width: 1.2; stroke-dasharray: 5 4; }
 footer { padding: 0.8rem 1.5rem 1.4rem; color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--line); }
 footer a { color: var(--accent); }
 code { background: var(--panel); padding: 0.05em 0.3em; border-radius: 4px; }
