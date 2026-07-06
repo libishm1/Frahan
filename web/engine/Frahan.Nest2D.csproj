@@ -12,7 +12,10 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- net9 to match the WASM host so CI needs only the wasm-tools (net9)
+         workload; the source-linked Core files are net48-written managed code,
+         which net9 compiles as a superset. -->
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

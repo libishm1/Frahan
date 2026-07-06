@@ -98,7 +98,7 @@ jobs:
       - name: Build the WASM nest demo into _site/nest
         continue-on-error: true
         run: |
-          dotnet workload install wasm-tools
+          dotnet workload restore web/app/Frahan.Nest.Wasm.csproj
           dotnet publish web/app/Frahan.Nest.Wasm.csproj -c Release
           BUNDLE=$(find web/app/bin/Release -type d -name AppBundle | head -1)
           if [ -n "$BUNDLE" ]; then
