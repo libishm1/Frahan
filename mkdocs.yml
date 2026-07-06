@@ -52,12 +52,19 @@ nav:
   - Component Reference: docs/components/COMPONENTS.md
   - Results & Benchmarks: docs/results/RESULTS.md
   - Examples: examples/README.md
+  - Mathematics:
+      - Overview & verification ladder: wiki/research/math/INDEX.md
+      - Packing (2D + 3D): wiki/research/packing/EQUATIONS.md
+      - Masonry & Stability: wiki/research/math/MASONRY_STABILITY.md
+      - Edge Matching & Surfaces: wiki/research/math/EDGE_MATCHING_SURFACE.md
+      - Geology, GPR & Cutting: wiki/research/math/GEOLOGY_GPR_CUTTING.md
+      - Lean Formalization Plan: wiki/research/math/LEAN_PLAN.md
+      - Coverage Audit (249 algorithms): wiki/research/math/AUDIT_coverage.md
   - Research wiki:
       - Index: wiki/index.md
       - Engineering log: wiki/log.md
       - Edge Matching (theory vs implementation): wiki/research/edge_matching_theory_vs_implementation.md
       - Tolerances & Dimensions: wiki/research/tolerances_dimensions_slm_roses.md
-      - Packing Mathematics (typeset): wiki/research/packing/EQUATIONS.md
       - 2D Packing Synthesis: wiki/research/packing/SYNTHESIS_2D.md
       - 3D Packing Synthesis: wiki/research/packing/SYNTHESIS_3D.md
   - More:
