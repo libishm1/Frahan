@@ -1,6 +1,6 @@
 # Frahan StonePack
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21209690.svg)](https://doi.org/10.5281/zenodo.21209690)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21228269.svg)](https://doi.org/10.5281/zenodo.21228269)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-libishm1.github.io%2FFrahan-blue)](https://libishm1.github.io/Frahan/)
 
@@ -30,8 +30,8 @@ The plugin bundles `Frahan.Kintsugi.Port` + `kintsugi.bin`, a port of **PuzzleFu
 research use only (GPLv3 for research, **not for commercial use**) - so this distribution is for research /
 education, not commercial use. A commercial-capable GPL-3.0 subset is obtainable by excluding the Kintsugi
 module. Full attribution + per-component licenses: `NOTICE.md`, `THIRD_PARTY_NOTICES.md`, `data/ATTRIBUTION.md`.
-How to cite: the **software** - Murugesan, L. (2026). *Frahan StonePack (0.1.0-alpha)*. Zenodo.
-[https://doi.org/10.5281/zenodo.21209690](https://doi.org/10.5281/zenodo.21209690) (machine-readable:
+How to cite: the **software** - Murugesan, L. (2026). *Frahan StonePack (0.1.1-alpha)*. Zenodo.
+[https://doi.org/10.5281/zenodo.21228269](https://doi.org/10.5281/zenodo.21228269) (machine-readable:
 `CITATION.cff`); the **method** via the paper - Murugesan, L. (2026), *A managed, uncertainty-aware
 pipeline from ground-penetrating radar to dimension-stone block yield in fractured quarries*,
 **Research Square** preprint,
