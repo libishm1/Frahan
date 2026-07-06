@@ -425,7 +425,7 @@ dictionary. The remaining estimates hold.
 - Component decomposition plan — `wiki/specs/component_decomposition_plan.md`
 - Cathedral plan — `wiki/specs/cathedral_scale_stone_fitting_plan.md`
 - Philosophy doc — `wiki/specs/frahan_design_philosophy.md` §10
-- Tomczak 2023 paper PDF — `D:/code_ws/reference/Tomczak_2023_Environ._Res.__Infrastruct._Sustain._3_035005.pdf`
+- Tomczak 2023 paper PDF — `reference/Tomczak_2023_Environ._Res.__Infrastruct._Sustain._3_035005.pdf`
 
 ## §14. Last updated
 

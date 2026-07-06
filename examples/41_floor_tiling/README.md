@@ -112,4 +112,4 @@ granite texture — swap in your own scanned stone), `figure_floor_textured.png`
 `figure_floor_slipmatch.png` (slip-match), `figure_floor_bookmatch.png` (book-match), `figure_floor_grain.png`
 (the grain + cut/full diagram).
 
-Research + design: `d:/code_ws/outputs/2026-06-20/floor_tiling/FLOOR_TILING_DOSSIER.md`.
+Research + design: the 2026-06-20 floor-tiling dossier (internal run archive).

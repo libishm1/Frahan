@@ -32,7 +32,7 @@ above the lowest vertex, not an absolute plane). Diagnostics remain as battery c
 Environment: pip venv (no conda), Python 3.9.13 win64, compas 2.15.1, compas_assembly 0.7.1,
 compas_cra 0.4.0 with its pinned pyomo==6.4.2, official COIN-OR Ipopt 3.14.19 win64 binary on PATH
 (cyipopt has no win64 PyPI wheel, but compas_cra drives IPOPT through pyomo's executable interface,
-so cyipopt is not needed). Script: `D:/code_ws/outputs/2026-06-11/cra_timing/time_examples.py` —
+so cyipopt is not needed). Script: `outputs/2026-06-11/cra_timing/time_examples.py` —
 fixtures reproduce their docs/examples verbatim (cra_view removed), fresh assembly per run,
 `time.perf_counter` around the solve call, best of 3 after 1 warmup. "solve" is compas_cra's own
 `timer=True` phase (pyomo NL write + ipopt.exe + parse), which is what a compas_cra user pays per call.

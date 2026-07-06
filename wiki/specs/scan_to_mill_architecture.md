@@ -64,7 +64,7 @@ substrate), 5 partly (BlockCutOpt v2 + Stone-Aware Cut Export). Stages
 | Modality | Existing Frahan | Gap | Priority |
 |---|---|---|---|
 | LiDAR / E57 | `LoadE57CloudComponent` (D5F1xxxx) | LAS 1.4 (ASPRS), RD3 (Mala), DT1 (PulseEKKO), DZT (GSSI), .ply | LAS = HIGH (per ribbon plan); GPR formats = MED |
-| Photogrammetry (Metashape) | none | MRAC pipeline at `D:\Downloads\scan\0_orient_ply.py`+`1_clean_ply.py` uses Open3D + Python; needs Frahan-side wrapper or out-of-process worker | HIGH (per Libish 2026-05-31; MRAC Exercise dossier in flight) |
+| Photogrammetry (Metashape) | none | MRAC pipeline scripts (`0_orient_ply.py` + `1_clean_ply.py`, local archive) use Open3D + Python; needs Frahan-side wrapper or out-of-process worker | HIGH (per Libish 2026-05-31; MRAC Exercise dossier in flight) |
 | Structured light (Creaform) | none | UCL Devadass 2025 §2.2: handheld Creaform + turntable, 0.2 mm resolution | LOW (research lab-grade tool; rare in commercial flow) |
 | Sample meshes (.ply / .obj) | `ReadPlyMeshComponent` (existing) | None for v1; full coverage via existing | (covered) |
 
@@ -75,7 +75,7 @@ Proposed new components (v1.x):
 
 ### §1.2 Stage 2 — CLEANUP + ORIENT
 
-The MRAC pipeline (`D:\Downloads\scan\0_orient_ply.py`) gives the
+The MRAC pipeline script (`0_orient_ply.py`, local archive) gives the
 canonical recipe verbatim:
 
 1. RANSAC plane segmentation (downsample 0.05, distance 0.010).
@@ -323,7 +323,7 @@ per the discipline established in `wiki/research/hitl_cards/`.
 
 ## §7. References (real, verifiable per AGENTS.md §9)
 
-- MRAC IAAC Barcelona robotic-milling-of-non-standard-logs workshop, 2023 (the workshop archive at `D:\code_ws\reference\mrac_workshop_2023\`).
+- MRAC IAAC Barcelona robotic-milling-of-non-standard-logs workshop, 2023 (the workshop archive at `reference\mrac_workshop_2023\`).
 - Quarra MIT Out of Frame lecture 2025 (`wiki/research/quarra_stone/quarra_stone_presentation.md`).
 - UCL Devadass 2025 limestone arch preprint (DOI `10.21203/rs.3.rs-8019586/v1`).
 - Clifford-McGee 2017 Cyclopean Cannibalism ACADIA pp. 404-413.
@@ -331,7 +331,7 @@ per the discipline established in `wiki/research/hitl_cards/`.
 - Open3D 0.16 (the MRAC pipeline runtime); Kazhdan-Bolitho-Hoppe 2006 Poisson reconstruction (bundled inside Geogram).
 - KUKAprc plugin (Robots in Architecture; Brell-Cokcan + Braumann, Vienna; URL `robotsinarchitecture.org/kukaprc`).
 - Robots plugin (Vicente Soler; github.com/visose/Robots; MIT licence).
-- RhinoCAM (MecSoft); SprutCAM (commercial CAM); KUKA KR-150-2 KR-C4 (sample files include manuals at `D:\code_ws\reference\mrac_workshop_2023\sample_files\Sample Files\Documentation\`).
+- RhinoCAM (MecSoft); SprutCAM (commercial CAM); KUKA KR-150-2 KR-C4 (sample files include manuals at `reference\mrac_workshop_2023\sample_files\Sample Files\Documentation\`).
 - Three research dossiers in flight at `wiki/research/mrac_workshop_2023/`
   + `wiki/research/robot_ingest_pipeline/` per tasks #63, #64, #65 (2026-05-31).
 

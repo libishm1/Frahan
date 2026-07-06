@@ -128,7 +128,7 @@ From 2026-05-29 §3, still open (validate-and-fix targets, paired with each spri
   do NOT blind-merge (reuse_dont_duplicate_components memory — Trencadis physics + edge-match
   variants are real differences).
 - Add a build-time GUID-uniqueness reflection test (a collision was fixed 2026-05-29).
-- Two wiki roots (`D:/code_ws/wiki` vs `Template-General/wiki`); reconcile.
+- Two wiki roots existed historically (workspace vs Template-General); reconciled into this repo's `wiki/`.
 
 Cross-cutting correctness (V3 ROSES roadmap, top-10 review): the suite needs ONE shared
 numeric-hygiene layer (recenter-to-centroid + scale-relative epsilon + one tolerance budget)

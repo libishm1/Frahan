@@ -120,7 +120,7 @@ recentered coords.
   construction and is what example 10 now uses (verified 0.0 overlap, 16/16 placed, in the rebuilt .gha).
 - Source line numbers in older SLM cards drifted after the 2026-06-06 evolution edits; GeometryNumerics,
   Clipper2Adapter, component, and BlockCutOptTolerances line numbers are current.
-- Two parallel source trees exist (D:/frahan-stonepack/src and Template-General/.../frahan_stonepack/src),
+- Two parallel source trees exist (this repository's `src/` and the older Template-General mirror),
   identical constants, different namespaces.
 
 ## 9. Open questions for Libish (source-code policy, beyond the example-file fixes)

@@ -52,6 +52,29 @@ jobs:
                    CONTRIBUTING.md CONTRIBUTORS.md THIRD_PARTY_NOTICES.md; do
             [ -f "$f" ] && cp "$f" "_site_src/$f" || true
           done
+          # MathJax bootstrap for pymdownx.arithmatex (Material recipe):
+          # re-typesets on every page load, including instant navigation
+          mkdir -p _site_src/javascripts
+          cat > _site_src/javascripts/mathjax.js <<'JS'
+          window.MathJax = {
+            tex: {
+              inlineMath: [["\\(", "\\)"]],
+              displayMath: [["\\[", "\\]"]],
+              processEscapes: true,
+              processEnvironments: true
+            },
+            options: {
+              ignoreHtmlClass: ".*|",
+              processHtmlClass: "arithmatex"
+            }
+          };
+          document$.subscribe(() => {
+            MathJax.startup.output.clearCache();
+            MathJax.typesetClear();
+            MathJax.texReset();
+            MathJax.typesetPromise();
+          });
+          JS
           echo "site source files: $(find _site_src -type f | wc -l)"
 
       - uses: actions/setup-python@v5

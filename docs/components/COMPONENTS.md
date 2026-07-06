@@ -2883,7 +2883,7 @@ Related:
 
 | in | type | access | description |
 |---|---|---|---|
-| Sample File (`F`) | Text | item | Path to a FRKINTSU .bin produced by extract_breaking_bad_sample.py.  Defaults to the bb_sample_00697.bin generated during the parity work. D:\code_ws\Template-General\outputs\2026-05-22\reference\bb_sample_00697.bin |
+| Sample File (`F`) | Text | item | Path to a FRKINTSU .bin produced by extract_breaking_bad_sample.py.  Defaults to the bb_sample_00697.bin generated during the parity work. Template-General\outputs\2026-05-22\reference\bb_sample_00697.bin |
 | Mesh Style (`MS`) | Integer | item | How to convert the loaded point cloud into a Mesh for  downstream Frahan Kintsugi consumption:\n   0 = point-cloud vertices (DEFAULT, accuracy-preferred).  Builds a 12^3 bbox-subdivided mesh and pulls each vertex  to its nearest input point. Rhino may flag the mesh as  invalid (overlapping verts), but Kintsugi's surface sampler  lands closer to the ORIGINAL point cloud, giving the encoder  more accurate features (better verifier scores).\n   1 = convex hull (display-preferred). Clean manifold via  FPS-subsample + QuickHull; valid mesh but loses interior  fragment shape and fragments at curved fracture interfaces  will visibly interpenetrate when assembled.\n   2 = bbox cube. Always valid, simplest, but Kintsugi sees  a cube and the encoder produces ~unrelated features.\n   3 = high-resolution bbox-pulled (24^3). Use when style 0  still leaves visible interpenetration between assembled  fragments at curved fracture surfaces. ~3750 surface  vertices per fragment; slower to display but tracks the  actual cloud surface closely. |
 | Run (`R`) | Boolean | item | Load. |
 

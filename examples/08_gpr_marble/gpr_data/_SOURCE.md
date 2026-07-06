@@ -4,7 +4,7 @@ Date: 2026-05-27
 Source: Bondua, Tinti et al. 2024, "A Set of Ground Penetrating Radar Measures from
         Quarries", MDPI Data 9(3):42; Mendeley Data DOI 10.17632/w26n6nftxs.3 (v3),
         site Italy-Botticino (marble). Extracted from
-        D:\Ground Penetrating Radar measures from quarries.zip -> RadargramData.zip.
+        original archive 'Ground Penetrating Radar measures from quarries.zip' -> RadargramData.zip.
 Topic: real marble-quarry GPR for the Frahan GprIdsDtReader (.dt + .hdr_dt).
 License: CC BY 4.0 (per data/ATTRIBUTION.md; upstream Mendeley DOI 10.17632/w26n6nftxs.3, MDPI Data 10.3390/data9030042). An earlier CC-BY-NC-ND label was a mislabel.
 Status: raw

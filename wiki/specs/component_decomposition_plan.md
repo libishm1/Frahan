@@ -524,7 +524,7 @@ research."*
 - CGAL trim + NSGA-II dossier (in flight, subagent):
   `Template-General/outputs/2026-05-31/research/cgal_trim_nsga2/dossier.md`.
 - PolytopeSolutions `MatchMeshTransformation` (the simple-component
-  inspiration), DLL at `D:/code_ws/PolytopeSolutions_GrasshopperTools.dll`.
+  inspiration), DLL at `PolytopeSolutions_GrasshopperTools.dll`.
 - `wiki/specs/cathedral_scale_stone_fitting_plan.md` (the
   workflow-level companion).
 - `wiki/specs/frahan_design_philosophy.md` §10 (the architectural anchor).

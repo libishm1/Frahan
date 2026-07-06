@@ -118,6 +118,14 @@ visually validated forms.
 > 5, direct-port 3) with file-and-line evidence and a thirteen-flag licensing
 > register; the Roadmap consolidates every chapter's open items by severity; and
 > the Bibliography returns every cited work, citation-normalised.
+>
+> **Addendum (2026-07-05, v0.1.0-alpha release):** the chapters above are kept
+> as the historical record of the system at completion; the research that
+> shipped between completion and the public release (2D-nest consolidation,
+> the edge-matching theory audit, the quarry-geology feasibility set, vault
+> form-finding, and the verified robot handoff) is summarised in the
+> **Post-completion addendum** at the end of this document, with pointers to
+> the wiki studies and the shipped examples.
 
 ![Marble bench max-cost block yield from GPR-mapped beds](../examples/08_gpr_marble/08c_maxcost.png)
 
@@ -631,6 +639,11 @@ phase-out (`Pack2DIrregularSheetV506Component.cs:56-57`).
 > overlap-then-trim contract, with the 53.9% waste-cut measured delta
 > (`IrregularSheetFillNfpBlf.cs:18-27`, commit lineage at
 > `outputs/2026-06-03/pack2d_nfp_evolution`).
+>
+> **Supersession note (2026-07-05):** FreeNestX and the Unified dispatcher
+> were subsequently hidden in the packer consolidation; the shipping nesters
+> are `Sheet Nest (Hole-Aware)` and `Sheet Nest (Live)` on the single
+> `ContactNfpHoleNester` core. See the Post-completion addendum.
 
 ### 1.5 The Unified dispatcher
 
@@ -9412,3 +9425,88 @@ Normalisation notes for the binding pass.
 Several arXiv/DOI strings appear verbatim in `[Algorithm(..., Doi=...)]`
 attributes; where the attribute carried a partial venue, the full citation
 above was completed from the curated library and the paper bibliographies.
+
+---
+
+## Post-completion addendum (2026-07-05, v0.1.0-alpha)
+
+The thesis above records the system at chapter-completion (2026-06-13). Between
+completion and the public release — Murugesan, L. (2026), *Frahan StonePack
+(0.1.0-alpha)*, Zenodo, <https://doi.org/10.5281/zenodo.21209690> — five
+research threads shipped. Each follows the thesis discipline: published method,
+derivation in code, canvas-validated result.
+
+### A.1 2D-nest consolidation and the live nester
+
+The three overlapping 2D nesters (FreeNestX, the Unified dispatcher, HoleNest)
+were consolidated onto the single `ContactNfpHoleNester` core. The shipping
+pair is `Sheet Nest (Hole-Aware)` (synchronous, solve-on-open) and
+`Sheet Nest (Live)`: a genuinely asynchronous wrapper (Run gate, background
+task, `ScheduleSolution` delivery — `GH_TaskCapableComponent` parallelises data
+branches and is not an async substitute) that draws the partial layout in the
+viewport as parts place (~5 Hz), so a 500-part nest is watchable rather than
+opaque. Boundary mode was re-derived from V506's orientation-locked descriptor
+buckets into the core solver: candidate poses are scored by measured
+part-outline-to-sheet-boundary contact at verified NFP poses (rotation-
+invariant, exact) and spread by arc-interval occupancy, with a rim-full
+early-out and a >120-part multi-start clamp for large jobs. Field validation:
+240 parts into an irregular concave sheet with boundary mode in 7.3 s
+end-to-end. A re-match against OpenNest 2.89's native NFP engine (5 s GA
+budget, one shared hole-aware boolean validity checker applied to both
+engines, in-process) is recorded in `docs/results/RESULTS.md`: equal-or-better
+placements among valid layouts, +8 pp utilization on the tight instance, and
+6–5000x faster, at exact zero overlap. `Pack Surfaces` gained the same
+boundary inputs and progressive preview. Example: `examples/10_pack2d`,
+`examples/28_hole_nest`.
+
+### A.2 Edge matching: theory audit and the Fréchet gate
+
+The edge-matching stack was audited against the computational-geometry
+matching literature (`wiki/research/edge_matching_theory_vs_implementation.md`),
+yielding gaps R1–R6. R1/R2 shipped: a clean-room discrete Fréchet distance
+(Eiter–Mannila 1994 coupling dynamic programme,
+`Frahan.EdgeMatching.FrechetDistance`) and the `Edge Gap (Fréchet)` component
+— an ordered worst-case gap metric that catches reversed and folded matches
+that mean/Hausdorff residuals accept. Remaining gaps (accept-gate integration,
+geometric hashing, point-to-plane ICP, MILP stock assignment) are public
+blueprint issues (#7, #8).
+
+### A.3 Quarry geology feasibility set
+
+Terzaghi-corrected discontinuity intensity (P10→P32), in-situ block-size
+distribution (IBSD), kinematic feasibility, wire-saw feasibility, cut-
+orientation optimisation, and DXF cut-plan export — geology as a fabrication
+input rather than a geologist's tool. Canvas-validated on the Botticino GPR
+and Tongjiang scan datasets. Examples: `examples/49_extraction_order_plan`,
+the GPR series (03/08/33/34/40).
+
+### A.4 Vault form-finding and the thrust-following remesher
+
+Compression-only vault workflows: TNA-style form-finding, a thrust-following
+quad remesher, rubble tessellation over the found shell, and RBE/CRA
+stability certificates, applied to the Park Güell portico case (barrel shell
+sound; the leaning columns identified as the infeasibility source, matching
+the historical structure's behaviour). Examples: `examples/vault_generation`
+(form-find → quad-rubble → staggered CRA), `examples/50_castle_keep_ifc`
+(arch + pendentive vaults to IFC).
+
+### A.5 Fabrication handoff, verified end-to-end
+
+The robot wrappers were release-audited: a silent optional-input registration
+bug (inputs named "(optional)" registered required, so the components never
+solved plane-only) was found, fixed, and regression-pinned. The full chain —
+G-code file → `G-code Parser` → `G-code to Planes` → `Planes to Robot
+Targets` — was verified including ingestion by the installed visose/Robots
+plugin (`Create Target` producing native `GH_Target` objects with correct
+Joint/Linear motion mapping). Hardware remains dormant by design; the
+contract is poses, not control.
+
+### A.6 Release infrastructure
+
+The release itself is part of the applied contribution: a reproducible yak
+package (all native transitive dependencies bundled — the mpfr-6.dll incident
+is the cautionary tale: CGAL fell back silently for weeks on a missing
+transitive DLL), a documentation site auto-built from the repository, a
+contributor model patterned on formalised-mathematics blueprint projects
+(the test battery as the automated judge; CONTRIBUTING.md), and the frozen
+tag/DOI pair as the immutable citation target.

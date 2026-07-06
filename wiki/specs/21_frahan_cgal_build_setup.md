@@ -60,7 +60,7 @@ Compile time: ~5–10 minutes for GMP + MPFR alone (much faster than full CGAL v
 
 ## cmake-gui workflow
 
-Source dir: `D:\code_ws\Template-General\outputs\2026-05-01\frahan_stonepack\native\cgal_shim\`
+Source dir: `Template-General\outputs\2026-05-01\frahan_stonepack\native\cgal_shim\`
 Build dir: same path with `\build` appended.
 
 Generator: **Visual Studio 17 2022**, Platform **x64**, no toolchain file in initial Configure dialog.

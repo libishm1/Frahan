@@ -90,7 +90,7 @@ Thrust Quad Remesh coarseness: continuous (1 -> 7283 quads, 1.5 -> 3297, 2 ->
 
 ## Data
 
-Portico `D:\Downloads\guell-vaultarchive.3dm` (Unified_SubD 612 faces + 7 foot
+Portico `guell-vaultarchive.3dm` (local archive; Unified_SubD 612 faces + 7 foot
 markers). Three-prong `outputs/2026-06-29/three_prong/`. ETH stones bundled subset
 `data/eth1100_subset` (16 closed stones). Correct barrel cut
 `guell_barrel_shell_v002.3dm` (remove z<1.5 & y>3.8).

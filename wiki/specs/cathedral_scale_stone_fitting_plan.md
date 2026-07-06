@@ -443,7 +443,7 @@ Real, verifiable. AGENTS.md §9.
 - Kao et al. (2022) Coupled Rigid-Block Analysis, CAD 146:103216.
 - Elkarmoty, Bondua, Bruno (2020) Resources Policy 68:101761.
 - PolytopeSolutions `MatchMeshTransformation` (the simple-component
-  idiom inspiration). Reference: file `D:/code_ws/PolytopeSolutions_GrasshopperTools.dll`
+  idiom inspiration). Reference: file `PolytopeSolutions_GrasshopperTools.dll`
   supplied by user 2026-05-31.
 - Luczkowski, M. structuralCircle (NTNU Trondheim) — see
   `Template-General/outputs/2026-05-31/research/structural_circle/findings.md`

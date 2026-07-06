@@ -18,7 +18,7 @@ Scope note: two edge-matching stacks exist, and the survey conflates them.
   4-bucket `EdgeKey` hash, and a multiplicative affinity scorer. 2D (XY) only.
 
 All citations are the canonical tree (`github libishm1/Frahan`,
-`D:\frahan-stonepack`); the `Template-General` mirror is stale.
+this repository); the older `Template-General` mirror is stale.
 
 Last updated: 2026-07-05.
 

@@ -46,7 +46,7 @@ reproduce. The remaining work is documentation, not code.
 
 ## Should fix / polish (medium-low)
 
-- `CRA_COMPAS_PARITY.md` cites an absolute `D:/code_ws/...` timing harness; vendor or note unbundled.
+- `CRA_COMPAS_PARITY.md` cites an absolute `...` timing harness; vendor or note unbundled.
 - Component-count drift: 187 (components) vs 109 (families) vs 112/184/206 (old specs) never
   reconciled; add a one-line "components vs families" note, date-stamp the stale spec figures.
 - Stale per-card test counts (995, 968, "150 PASS / 16 SKIP") alongside the current 1034; fix the

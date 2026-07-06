@@ -39,13 +39,13 @@ layer that sits on top.
 
 | Dataset | Path on disk | Best for | Origin |
 |---|---|---|---|
-| **ETH1100** dry-stone | `D:/code_ws/reference/eth_drystone/` (3 GB, gitignored) | Bottom-up rubble + Trencadís 2D + 3D | Zenodo 10038881; ETH Gramazio Kohler |
-| **Granite Dells** | `D:/code_ws/reference/granite_dells/` (gitignored) | Quarry scan, top-down inventory | Open dataset, airborne + TLS |
-| **Tongjiang quarry scan** | `D:/code_ws/reference/tongjiang/` | Top-down quarry-to-block | China granite quarry |
-| **Bengaluru granite** | `D:/code_ws/reference/bengaluru_granite/` | TN charnockite analog, top-down | India granite |
+| **ETH1100** dry-stone | `reference/eth_drystone/` (3 GB, gitignored) | Bottom-up rubble + Trencadís 2D + 3D | Zenodo 10038881; ETH Gramazio Kohler |
+| **Granite Dells** | `reference/granite_dells/` (gitignored) | Quarry scan, top-down inventory | Open dataset, airborne + TLS |
+| **Tongjiang quarry scan** | `reference/tongjiang/` | Top-down quarry-to-block | China granite quarry |
+| **Bengaluru granite** | `reference/bengaluru_granite/` | TN charnockite analog, top-down | India granite |
 | **Loviisa rapakivi** | (Zenodo 3-record) | Fracture / DFN input | Chudasama 2022 |
 | **Grimsel granite borehole DFN** | (CC-BY 4.0) | Fracture-aware cutting | Krietsch 2018 |
-| **GeoCrack + GeoFractNet** | `D:\dataverse_files.zip` | Fracture digitisation | Panara 2024 |
+| **GeoCrack + GeoFractNet** | `dataverse_files.zip` (local download) | Fracture digitisation | Panara 2024 |
 | **HITL fixtures.3dm** | `Template-General/outputs/2026-05-24/hitl_cards/fixtures.3dm` | Quick synthetic primitives | Auto-generated |
 
 Full inventory: `wiki/index/data_assets_inventory.md` per
@@ -300,7 +300,7 @@ Full inventory: `wiki/index/data_assets_inventory.md` per
 |---|---|
 | **Design problem** | Raw 3D scan (E57 / LAS / PLY) is dirty: holes, non-manifold edges, flipped normals, duplicate vertices, oversize triangle soup. Sanitize for downstream use (any TD or BU workflow). Cite: standard mesh repair pipeline (Botsch et al. 2010 *Polygon Mesh Processing*); Quarra's "every piece scanned" discipline. |
 | **Tolerance** | Output mesh: closed (Euler χ correct), watertight, manifold; vertex count within 10 % of input; principal axes computed correctly per OBB. |
-| **Dataset** | Raw scans = E57 / LAS test files at `D:/code_ws/reference/` (gitignored); fallback to ETH1100 pre-cleaned meshes. |
+| **Dataset** | Raw scans = E57 / LAS test files at `reference/` (gitignored); fallback to ETH1100 pre-cleaned meshes. |
 | **Components** | `Mesh Sanitize` + `Load E57 Cloud` + `Scan Reconstruct` (all existing). |
 | **Card-set** | `wiki/research/hitl_cards/br_mesh_sanitize/` — three fixtures: clean (validation), hole-y, non-manifold + flipped normals. |
 | **Status** | Implemented; cards proposed. |

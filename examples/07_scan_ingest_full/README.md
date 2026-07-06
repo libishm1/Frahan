@@ -7,7 +7,7 @@ Style: short sentences, no em dashes.
 ## DATA - download from Google Drive first
 
 The scan datasets are too large for git. Download them from the shared Google Drive master folder,
-then place each under `D:/code_ws/Data/<name>/` (the path this `.gh` references). The same link and
+then place each under `Data/<name>/` (the path this `.gh` references). The same link and
 file names are written onto the canvas as a scribble.
 
 **MASTER FOLDER:** https://drive.google.com/drive/folders/1mDj1Z20BB70SrkjQKnU6O3kDbfuA-mcS?usp=sharing
@@ -16,9 +16,9 @@ Download the file for the modality you want, and drop it in the matching local f
 
 | Modality | Download this file from Drive | Put it here (local) |
 |---|---|---|
-| LiDAR / TLS point cloud | `granite_dells_tls/ot_GD_TLS_data_UTM.laz` | `D:/code_ws/Data/granite_dells_tls/` |
-| Photogrammetry point cloud | `tongjiang/detail_cloudAB.ply` | `D:/code_ws/Data/tongjiang/` |
-| GPR radargram (granite) | `gpr/grimsel/GPR_AU_N-to-S.rd3` | `D:/code_ws/Data/gpr/grimsel/` |
+| LiDAR / TLS point cloud | `granite_dells_tls/ot_GD_TLS_data_UTM.laz` | `Data/granite_dells_tls/` |
+| Photogrammetry point cloud | `tongjiang/detail_cloudAB.ply` | `Data/tongjiang/` |
+| GPR radargram (granite) | `gpr/grimsel/GPR_AU_N-to-S.rd3` | `Data/gpr/grimsel/` |
 
 The full dataset list + original public sources is in `../../data/DATA_ACCESS.md`. Upload of the
 datasets into the master folder completes within ~2 hours of 2026-06-06.

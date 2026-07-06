@@ -39,11 +39,11 @@ file in the wild references it.
 
 Inputs digested for this plan:
 
-- `D:\code_ws\reference\release_plan\frahan_v1_release_checklist.md` (7 gates)
-- `D:\code_ws\reference\release_plan\frahan_release_backlog.md` (v1.0 / v1.1 / v1.2 / v2)
-- `D:\code_ws\reference\release_plan\frahan_hitl_backlog.md` (V-series + H-series cards)
-- `D:\code_ws\reference\release_plan\frahan_quarra_lecture_implications.md` (sharpened deltas)
-- `D:\code_ws\reference\MASON_Digital_Craft_Architecture.md` (Oxford Brookes MA "Digital Craft in Architecture" dossier — RADD, MASON nested structural stone, 2-axis wire apparatus, 6-axis voussoir twist, +242 % expansion)
+- `reference\release_plan\frahan_v1_release_checklist.md` (7 gates)
+- `reference\release_plan\frahan_release_backlog.md` (v1.0 / v1.1 / v1.2 / v2)
+- `reference\release_plan\frahan_hitl_backlog.md` (V-series + H-series cards)
+- `reference\release_plan\frahan_quarra_lecture_implications.md` (sharpened deltas)
+- `reference\MASON_Digital_Craft_Architecture.md` (Oxford Brookes MA "Digital Craft in Architecture" dossier — RADD, MASON nested structural stone, 2-axis wire apparatus, 6-axis voussoir twist, +242 % expansion)
 - `wiki/research/borrowed_earth/` (commit `4b7bd23`)
 - `wiki/research/quarra_stone/` (commit `297c16f`)
 - Earlier session work: `REPO_ARCHITECTURE_FLOW.md`, `OVERLAP_AND_PHASEOUT_PLAN.md`,
@@ -545,9 +545,9 @@ Scope of audit:
 
 Inputs to the audit (the "references handoffs and links pasted in chats"):
 
-- `D:\code_ws\reference\release_plan\frahan_quarra_lecture_implications.md` §6 references (Quarra Cairn ACADIA 2017, Ariza FABRICATE 2017, Quarra public site).
-- `D:\code_ws\reference\MASON_Digital_Craft_Architecture.md` (Oxford Brookes MA dossier).
-- `D:\code_ws\wiki\papers\` (existing equations + diagrams folder per the project memory).
+- `reference\release_plan\frahan_quarra_lecture_implications.md` §6 references (Quarra Cairn ACADIA 2017, Ariza FABRICATE 2017, Quarra public site).
+- `reference\MASON_Digital_Craft_Architecture.md` (Oxford Brookes MA dossier).
+- `wiki\papers\` (existing equations + diagrams folder per the project memory).
 - Project memories: `project_compas_masonry`, `project_blockcutopt_synthesis`, `project_jalalian_bcsdbbv`, `project_open_source_block_cutters`, `project_geocrack_geofractnet`, `project_granite_open_datasets`, `project_kintsugi_port_pose_composition`, `reference_eth1100_dataset`, `reference_quarry_scan_datasets`.
 - Chat-pasted references: Borrowed Earth links (paharudothobjects.com, design icons), Quarra company site, the QLab mentions.
 

@@ -105,7 +105,7 @@ the earlier GPR examples:
 **GSF is now read natively** — `GprFileReader` dispatches `.gsf` to a new `GsfReader` (the Akula binary
 layout reverse-engineered from GPRSoft Viewer; runtime-verified: `Profile311.gsf` → 92 traces × 650 samples,
 dt 0.0985 ns, amplitudes matching the reference parse). So the GPR Survey Grid `Files` input can point
-straight at the 27 `.gsf` profiles in `d:/code_ws/Data/gpr/carpinis_travertine/`. The bundled `gpr_csv/`
+straight at the 27 raw `.gsf` profiles (local dataset, not in the repo). The bundled `gpr_csv/`
 (GSF → Frahan traces-CSV) is kept as a portable, reader-independent copy. Either way, with
 `Preset = travertine_390`, `Velocity = 0.083`, `Eps_r = 13.03`, `Packer = 5` (guillotine), one live solve
 (~2.2 s) produces: **898 fracture picks + 27 energy sections (the GPR reading) → 3 kriged beds → 4 benches →

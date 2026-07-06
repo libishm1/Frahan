@@ -33,7 +33,7 @@ Tags are unprefixed: `1.0.11` not `v1.0.11`. Override with `-DFRAHAN_COACD_TAG=<
 
 ```powershell
 $env:PATH = "C:\Program Files\CMake\bin;" + $env:PATH
-cd D:\code_ws\Template-General\outputs\2026-05-01\frahan_stonepack\native\coacd_shim
+cd Template-General\outputs\2026-05-01\frahan_stonepack\native\coacd_shim
 .\build_native.ps1 -WithoutThirdParty
 ```
 

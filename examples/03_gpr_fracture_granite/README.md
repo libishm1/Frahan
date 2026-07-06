@@ -5,7 +5,7 @@ migrates + extracts fracture reflectors, and reports the picks. This is the geol
 
 ## Data - download from Google Drive first
 Download the GPR radargram from the shared Drive master folder and place it under
-`D:/code_ws/Data/gpr/grimsel/`:
+`Data/gpr/grimsel/`:
 - MASTER FOLDER: https://drive.google.com/drive/folders/1mDj1Z20BB70SrkjQKnU6O3kDbfuA-mcS?usp=sharing
 - File to download: `gpr/grimsel/GPR_AU_N-to-S.rd3` (AU tunnel; `GPR_VE_S-to-N.rd3` is the VE tunnel).
 
