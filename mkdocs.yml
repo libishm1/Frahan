@@ -64,7 +64,6 @@ nav:
   - Research wiki:
       - Index: wiki/index.md
       - Risk Register: wiki/research/RISK_REGISTER.md
-      - Rhino Dependency Map (headless plan): wiki/research/RHINO_DEPENDENCY_MAP.md
       - Engineering log: wiki/log.md
       - Edge Matching (theory vs implementation): wiki/research/edge_matching_theory_vs_implementation.md
       - Tolerances & Dimensions: wiki/research/tolerances_dimensions_slm_roses.md
