@@ -195,7 +195,9 @@ namespace Frahan.EdgeMatching
         }
 
         // Top-T perturbation vectors over the 4 dims, ranked by squared boundary distance
-        // (the standard multi-probe score). Reaches +/-MaxProbeStep where the query straddles
+        // (query-directed multi-probe ranking, Lv/Josephson/Wang/Charikar/Li 2007
+        // "Multi-Probe LSH", VLDB: the score is their squared distance-to-boundary per
+        // perturbed dimension). Reaches +/-MaxProbeStep where the query straddles
         // a boundary, while keeping the probe count bounded.
         private List<int[]> RankedProbes(double[] coord, int[] home)
         {

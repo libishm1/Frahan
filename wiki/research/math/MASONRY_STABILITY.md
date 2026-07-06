@@ -433,11 +433,11 @@ Citation: Kao et al. 2022 Eqs. 8-14.
 `frahan_cra_worker.exe` via `CraWorkerClient` (binary blob I/O, timeout +
 kill). The worker executes `MasonryStabilityChecker.Check`, i.e. the penalty
 RBE gate of section 1.5; the label "CRA" on the worker path denotes the
-pipeline, not the coupled certificate of section 3.2. **UNVERIFIED:** whether
-any shipping GH path routes the worker through `CraStabilityChecker.Check`;
-in the code read here only the in-process `MasonryStabilityCheckComponent`
-with `CRA = true` invokes the coupled certificate. Code:
-`Frahan.Cra.Worker/Program.cs` line 45; `CraWorkerClient.TrySolve`.
+pipeline, not the coupled certificate of section 3.2. **Verified 2026-07-06:**
+no shipping path routes the coupled certificate out of process. The worker
+(`Frahan.Cra.Worker/Program.cs` lines 45/61/68) invokes only
+`MasonryStabilityChecker.Check`; `CraStabilityChecker.Check` has a single GH
+call site, the in-process `MasonryStabilityCheckComponent` with `CRA = true`.
 
 ---
 

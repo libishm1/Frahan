@@ -147,10 +147,11 @@ $$
 \qquad \delta_d \in [-\tfrac12,\tfrac12],
 $$
 
-and the top-$T$ probes are visited. This is the standard multi-probe LSH
-ranking (the code comment calls it "the standard multi-probe score";
-**UNVERIFIED:** no paper is cited in code; the construction matches Lv et
-al. 2007 multi-probe LSH).
+and the top-$T$ probes are visited. This is the query-directed multi-probe
+LSH ranking of Lv, Josephson, Wang, Charikar & Li 2007 (VLDB); **verified
+2026-07-06** against `RankedProbes` (the score is their squared
+distance-to-boundary per perturbed dimension) and the citation is now in the
+code comment.
 
 Code: `SegmentHashIndex.KeyOf`, `SegmentHashIndex.KeyOf3D`,
 `SegmentHashIndex.ComplementCoords`, `SegmentHashIndex.RankedProbes`.
@@ -903,9 +904,8 @@ compensation Frahan-original.
 8. `VsaSegmenter` is an explicitly-declared Phase-1 subset of Cohen-Steiner
    2004 / CGAL: random spread seeding, no hierarchical doubling, no
    teleport/merge/split operators (A.13).
-9. **UNVERIFIED:** the multi-probe ranking in `SegmentHashIndex.RankedProbes`
-   matches the multi-probe LSH construction (Lv et al. 2007) but no citation
-   exists in code; the comment only calls it "the standard multi-probe
-   score" (A.3).
+9. The multi-probe ranking in `SegmentHashIndex.RankedProbes` is the
+   query-directed construction of Lv et al. 2007 (verified against the score
+   loop 2026-07-06; citation added to the code comment) (A.3).
 10. No RANSAC stage exists in either stack (searched; the only hits are in
     the discontinuity point-cloud worker, out of scope).
