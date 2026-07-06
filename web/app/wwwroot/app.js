@@ -1,0 +1,248 @@
+// UI + import/export for the Frahan nest demo. The engine (globalThis.frahan)
+// is the C# nester on WebAssembly; this file only parses geometry, builds the
+// JSON request, calls it, and draws the result. Nothing is uploaded anywhere.
+
+'use strict';
+
+let engineReady = false;
+let lastResponse = null;
+let parts = []; // each: flat [x0,y0,x1,y1,...] ring (local coords)
+
+const $ = (id) => document.getElementById(id);
+const status = (m) => { $('status').textContent = m; };
+
+window.addEventListener('frahan-ready', () => {
+  engineReady = true;
+  $('nest').disabled = false;
+  status('engine ready (' + (globalThis.frahan.version?.() ?? 'wasm') + ')');
+});
+
+// ---- import ---------------------------------------------------------------
+
+$('file').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const text = await f.text();
+  const name = f.name.toLowerCase();
+  try {
+    parts = name.endsWith('.svg') ? parseSvg(text) : parseDxf(text);
+    status(`${parts.length} parts imported from ${f.name}`);
+    drawInput();
+  } catch (err) {
+    status('import failed: ' + err.message);
+  }
+});
+
+$('sample').addEventListener('click', () => {
+  parts = sampleParts();
+  status(`${parts.length} sample parts`);
+  drawInput();
+});
+
+// SVG: <rect>, <polygon>, <polyline>, and <path> (M/L/H/V/Z, lines only; curves
+// are flattened coarsely). Coordinates are taken as-is (assume a flat drawing).
+function parseSvg(text) {
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const out = [];
+  const push = (pts) => { if (pts.length >= 6) out.push(pts); };
+  doc.querySelectorAll('rect').forEach((r) => {
+    const x = +r.getAttribute('x') || 0, y = +r.getAttribute('y') || 0;
+    const w = +r.getAttribute('width') || 0, h = +r.getAttribute('height') || 0;
+    push([x, y, x + w, y, x + w, y + h, x, y + h]);
+  });
+  doc.querySelectorAll('polygon, polyline').forEach((p) => {
+    const nums = (p.getAttribute('points') || '').trim().split(/[\s,]+/).map(Number).filter((n) => !isNaN(n));
+    push(nums);
+  });
+  doc.querySelectorAll('path').forEach((p) => {
+    const pts = flattenPath(p.getAttribute('d') || '');
+    push(pts);
+  });
+  return out;
+}
+
+// minimal path flattener: absolute M/L/H/V/Z; ignores curves' control points
+// and lands on their endpoints (coarse but keeps a closed ring).
+function flattenPath(d) {
+  const toks = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e-?\d+)?/g) || [];
+  const pts = []; let i = 0, cx = 0, cy = 0, cmd = '';
+  const num = () => +toks[i++];
+  while (i < toks.length) {
+    const t = toks[i];
+    if (/[a-zA-Z]/.test(t)) { cmd = t; i++; } // command
+    switch (cmd) {
+      case 'M': case 'L': cx = num(); cy = num(); pts.push(cx, cy); break;
+      case 'm': case 'l': cx += num(); cy += num(); pts.push(cx, cy); break;
+      case 'H': cx = num(); pts.push(cx, cy); break;
+      case 'h': cx += num(); pts.push(cx, cy); break;
+      case 'V': cy = num(); pts.push(cx, cy); break;
+      case 'v': cy += num(); pts.push(cx, cy); break;
+      case 'C': case 'c': case 'S': case 's': case 'Q': case 'q': case 'T': case 't': case 'A': case 'a': {
+        // skip control params, keep the endpoint (coarse flatten)
+        const n = (cmd === 'C' || cmd === 'c') ? 6 : (cmd === 'S' || cmd === 's' || cmd === 'Q' || cmd === 'q') ? 4 : (cmd === 'A' || cmd === 'a') ? 7 : 2;
+        for (let k = 0; k < n - 2; k++) num();
+        const ex = num(), ey = num();
+        if (cmd === cmd.toLowerCase()) { cx += ex; cy += ey; } else { cx = ex; cy = ey; }
+        pts.push(cx, cy); break;
+      }
+      case 'Z': case 'z': i++; break;
+      default: i++; break;
+    }
+  }
+  return pts;
+}
+
+// DXF: LINE segments chained into loops, and LWPOLYLINE / POLYLINE vertices.
+// Entity-section group-code parser (10/20 = x/y). Coarse but covers most CAD
+// exports of closed profiles.
+function parseDxf(text) {
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let i = 0;
+  // find ENTITIES
+  while (i < lines.length && lines[i].trim() !== 'ENTITIES') i++;
+  let curType = null, ring = [], segs = [], seg = {};
+  const flushPoly = () => { if (ring.length >= 6) out.push(ring); ring = []; };
+  const flushLines = () => {
+    if (segs.length === 0) return;
+    // chain LINE segments end-to-end into a ring (tolerant join)
+    const used = new Array(segs.length).fill(false);
+    let cur = segs[0]; used[0] = true;
+    const pts = [cur.x1, cur.y1, cur.x2, cur.y2];
+    let ex = cur.x2, ey = cur.y2, added = true;
+    while (added) {
+      added = false;
+      for (let k = 0; k < segs.length; k++) {
+        if (used[k]) continue;
+        const s = segs[k];
+        if (near(s.x1, ex) && near(s.y1, ey)) { pts.push(s.x2, s.y2); ex = s.x2; ey = s.y2; used[k] = true; added = true; }
+        else if (near(s.x2, ex) && near(s.y2, ey)) { pts.push(s.x1, s.y1); ex = s.x1; ey = s.y1; used[k] = true; added = true; }
+      }
+    }
+    if (pts.length >= 6) out.push(pts);
+    segs = [];
+  };
+  for (; i < lines.length - 1; i += 2) {
+    const code = lines[i].trim();
+    const val = lines[i + 1].trim();
+    if (code === '0') {
+      if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') flushPoly();
+      if (val === 'ENDSEC') { flushLines(); break; }
+      // starting a new entity: flush accumulated LINEs when leaving LINE runs
+      curType = val;
+      seg = {};
+    } else if (curType === 'LINE') {
+      if (code === '10') seg.x1 = +val; else if (code === '20') seg.y1 = +val;
+      else if (code === '11') seg.x2 = +val; else if (code === '21') { seg.y2 = +val; segs.push(seg); seg = {}; }
+    } else if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') {
+      if (code === '10') seg.x = +val; else if (code === '20') { ring.push(seg.x, +val); seg = {}; }
+    }
+  }
+  if (curType === 'LWPOLYLINE' || curType === 'POLYLINE') flushPoly();
+  flushLines();
+  return out;
+}
+const near = (a, b) => Math.abs(a - b) < 1e-6;
+
+function sampleParts() {
+  const r = (w, h) => [0, 0, w, 0, w, h, 0, h];
+  const tri = (s) => [0, 0, s, 0, s / 2, s];
+  return [r(120, 70), r(120, 70), r(90, 90), r(140, 40), tri(90), tri(90),
+          r(60, 110), r(80, 80), [0, 0, 70, 0, 100, 50, 40, 80, -10, 40]];
+}
+
+// ---- nest -----------------------------------------------------------------
+
+$('nest').addEventListener('click', () => {
+  if (!engineReady) { status('engine not ready'); return; }
+  if (parts.length === 0) { status('import or load parts first'); return; }
+  const W = +$('sheetW').value, H = +$('sheetH').value;
+  const req = {
+    Sheet: [0, 0, W, 0, W, H, 0, H],
+    Parts: parts,
+    Spacing: +$('spacing').value,
+    BaseRotations: +$('rot').value,
+    MultiStart: +$('ms').value,
+    BoundaryMode: $('boundary').checked ? 1 : 0,
+    MinBoundaryContact: 0.2,
+  };
+  status('nesting…');
+  // let the status paint before the (synchronous) wasm call
+  setTimeout(() => {
+    const t0 = performance.now();
+    let respJson;
+    try { respJson = globalThis.frahan.nest(JSON.stringify(req)); }
+    catch (e) { status('nest error: ' + e.message); return; }
+    const resp = JSON.parse(respJson);
+    lastResponse = resp;
+    drawResult(resp, W, H);
+    const ms = (performance.now() - t0).toFixed(0);
+    $('report').textContent =
+      `Placed ${resp.PlacedCount}/${resp.PartCount} · density ${(resp.Density * 100).toFixed(1)}% · ` +
+      `${resp.Valid ? 'valid (0 overlap)' : 'INVALID'} · ${ms} ms · ${resp.Note}`;
+    status('done');
+    $('dl-svg').disabled = false;
+  }, 20);
+});
+
+// ---- render ---------------------------------------------------------------
+
+function drawInput() {
+  const W = +$('sheetW').value, H = +$('sheetH').value;
+  const svg = $('canvas'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = sheetRect(W, H);
+  // lay parts out in a preview strip along the top (not nested yet)
+  let x = 4;
+  for (const p of parts) {
+    const bb = bbox(p);
+    svg.insertAdjacentHTML('beforeend', polyEl(translate(p, x - bb.minx, 4 - bb.miny), 'part'));
+    x += (bb.maxx - bb.minx) + 6;
+  }
+}
+
+function drawResult(resp, W, H) {
+  const svg = $('canvas'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = sheetRect(W, H);
+  for (const pl of resp.Placed) {
+    const cls = resp.Valid ? 'part' : 'part invalid';
+    svg.insertAdjacentHTML('beforeend', polyEl(pl.PlacedOuter, cls));
+  }
+}
+
+const sheetRect = (W, H) => `<rect class="sheet" x="0" y="0" width="${W}" height="${H}"/>`;
+function polyEl(flat, cls) {
+  let d = '';
+  for (let i = 0; i + 1 < flat.length; i += 2) d += `${flat[i]},${flat[i + 1]} `;
+  return `<polygon class="${cls}" points="${d.trim()}"/>`;
+}
+function bbox(p) {
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  for (let i = 0; i + 1 < p.length; i += 2) {
+    minx = Math.min(minx, p[i]); maxx = Math.max(maxx, p[i]);
+    miny = Math.min(miny, p[i + 1]); maxy = Math.max(maxy, p[i + 1]);
+  }
+  return { minx, miny, maxx, maxy };
+}
+function translate(p, dx, dy) {
+  const q = new Array(p.length);
+  for (let i = 0; i + 1 < p.length; i += 2) { q[i] = p[i] + dx; q[i + 1] = p[i + 1] + dy; }
+  return q;
+}
+
+// ---- export ---------------------------------------------------------------
+
+$('dl-svg').addEventListener('click', () => {
+  if (!lastResponse) return;
+  const W = +$('sheetW').value, H = +$('sheetH').value;
+  let body = `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#888"/>`;
+  for (const pl of lastResponse.Placed) {
+    let pts = '';
+    for (let i = 0; i + 1 < pl.PlacedOuter.length; i += 2) pts += `${pl.PlacedOuter[i]},${pl.PlacedOuter[i + 1]} `;
+    body += `<polygon points="${pts.trim()}" fill="none" stroke="#3a6ea5"/>`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${body}</svg>`;
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'frahan-nested.svg'; a.click();
+  URL.revokeObjectURL(url);
+});

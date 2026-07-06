@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Plain .NET-on-WebAssembly host (no Blazor SPA): exposes the 2D nester to
+    JavaScript via [JSExport], so the HTML/canvas page in wwwroot drives it.
+    `dotnet publish -c Release` emits static files under
+    bin/Release/net8.0/publish/wwwroot that GitHub Pages serves as-is.
+    Requires the wasm-tools workload (dotnet workload install wasm-tools).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <Nullable>disable</Nullable>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <!-- keep the payload lean for a Pages demo; no AOT (IL interpreter is fine) -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+                <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\engine\Frahan.Nest2D.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="wwwroot\index.html" />
+    <WasmExtraFilesToDeploy Include="wwwroot\app.js" />
+    <WasmExtraFilesToDeploy Include="wwwroot\style.css" />
+  </ItemGroup>
+
+</Project>

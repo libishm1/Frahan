@@ -23,12 +23,13 @@ to the managed general-NFP path automatically (the one benchmarked in
 
 - [x] `engine/Frahan.Nest2D` — net8 extraction of the nester + `Clipper2Adapter`. Builds clean.
 - [x] `NestApi.Nest(requestJson) -> responseJson` — the JSON boundary the browser calls. Smoke-tested (6/6 placed, valid).
-- [ ] Blazor WebAssembly host exposing `Nest` via `[JSExport]` (needs `dotnet workload install wasm-tools`).
-- [ ] DXF import (parse LINE/LWPOLYLINE/POLYLINE/ARC to closed polygons).
-- [ ] SVG import (parse `<path>`/`<polygon>`/`<rect>` to polygons; flatten beziers/arcs).
-- [ ] Canvas UI (sheet size, spacing, rotations, boundary-mode toggle; live SVG render of placements).
-- [ ] DXF/SVG export of the packed layout.
-- [ ] Pages tab: build the WASM app in the docs workflow, copy output under the site, link from nav.
+- [x] `app/` — .NET-on-WASM host (`wasmbrowser` style): `[JSExport] Nest` in `Program.cs`, `main.js` boots the runtime onto `globalThis.frahan`.
+- [x] `app/wwwroot/app.js` — DXF (LINE-chaining + LWPOLYLINE/POLYLINE) and SVG (`rect`/`polygon`/`polyline`/`path`) import, request build, SVG render, SVG export, sample parts.
+- [x] `app/wwwroot/index.html` + `style.css` — theme-aware UI (sheet size, spacing, rotations, multi-start, boundary-hug toggle).
+- [ ] Verify the WASM publish + a browser smoke run (blocked on `dotnet workload install wasm-tools`).
+- [ ] Pages tab: build the WASM app in the docs workflow, copy `publish/wwwroot` under the site, add nav link.
+
+Run locally: `cd web/app && dotnet run` (serves the app; open the printed URL, click "Load sample", "Nest").
 
 ## Build plan (next session)
 

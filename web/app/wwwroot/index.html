@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frahan Nest — client-side stone/sheet nesting</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Frahan Nest</h1>
+    <p class="tag">Exact no-fit-polygon nesting, in your browser. Your file never leaves this page.</p>
+  </header>
+
+  <main>
+    <section class="controls">
+      <div class="row">
+        <label>Import parts
+          <input type="file" id="file" accept=".dxf,.svg" />
+        </label>
+        <button id="sample">Load sample</button>
+      </div>
+      <div class="row">
+        <label>Sheet W <input type="number" id="sheetW" value="600" min="1" /></label>
+        <label>Sheet H <input type="number" id="sheetH" value="400" min="1" /></label>
+        <label>Spacing <input type="number" id="spacing" value="2" min="0" step="0.5" /></label>
+      </div>
+      <div class="row">
+        <label>Rotations <input type="number" id="rot" value="4" min="1" max="24" /></label>
+        <label>Multi-start <input type="number" id="ms" value="4" min="1" max="8" /></label>
+        <label class="check"><input type="checkbox" id="boundary" /> Boundary hug</label>
+      </div>
+      <div class="row">
+        <button id="nest" disabled>Nest</button>
+        <button id="dl-svg" disabled>Download SVG</button>
+        <span id="status">loading engine…</span>
+      </div>
+      <p id="report" class="report"></p>
+    </section>
+
+    <section class="stage">
+      <svg id="canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet"></svg>
+    </section>
+  </main>
+
+  <footer>
+    <span>Powered by <code>ContactNfpHoleNester</code> compiled to WebAssembly.</span>
+    <a href="https://github.com/libishm1/Frahan">source</a> ·
+    <a href="https://libishm1.github.io/Frahan/">docs</a> ·
+    <a href="https://doi.org/10.5281/zenodo.21209690">DOI</a>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

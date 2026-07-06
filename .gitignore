@@ -51,3 +51,5 @@ _site_src/
 _site/
 web/engine/bin/
 web/engine/obj/
+web/app/bin/
+web/app/obj/
