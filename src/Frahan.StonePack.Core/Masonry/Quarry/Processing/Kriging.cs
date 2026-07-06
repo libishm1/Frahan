@@ -20,7 +20,12 @@ namespace Frahan.Masonry.Quarry.Processing;
 //   C(h) = sill * exp(-(h/range)^2),  nugget added to the diagonal (the GPR noise /
 //   denoising term). Predict:
 //     mean(x*) = mean + k*^T alpha,        alpha = K^-1 (z - mean)
-//     var(x*)  = (sill + nugget) - w^T w,  w = L^-1 k*   (K = L L^T, Cholesky)
+//     var(x*)  = sill - w^T w,             w = L^-1 k*   (K = L L^T, Cholesky)
+// NOTE: Predict returns the LATENT predictive variance C(0) - k*^T K^-1 k* =
+// sill - w^T w (no + nugget): the variance of the noise-free field, not of a
+// noisy new observation. To report observation variance add back the nugget
+// at the caller. (Earlier drafts of this header wrote "(sill + nugget)"; the
+// code at Predict is authoritative.)
 // Hyperparameters default from the data (range ~ 3x median nearest-neighbour
 // spacing; sill = var(z); nugget = noiseFrac * sill) but can be supplied.
 //

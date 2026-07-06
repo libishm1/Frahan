@@ -817,6 +817,7 @@ var tests = new List<(string Name, Action Body)>
     ("irregular mesh container uses triangular footprint", IrregularMeshContainerUsesTriangularFootprint),
     ("irregular mesh container supports separated vertical cavities", IrregularMeshContainerSupportsSeparatedVerticalCavities),
     ("mesh pack seed can explore alternatives", MeshPackSeedCanExploreAlternatives),
+    ("mesh signed-tetra volume is honest vs bbox", MeshVolumeSignedTetraIsHonest),
     // Ashlar packer Stage 1
     ("ashlar Stage1 coursed ashlar all uniform boxes full coverage", AshlarLayoutEngineTests.CoursedAshlar_AllUniformBoxes_FullCoverage),
     ("ashlar Stage1 boundary conditions bottom course fixed", AshlarLayoutEngineTests.BoundaryConditions_BottomCourseFixed),
@@ -1694,6 +1695,27 @@ static MeshPackItem CreateBoxMesh(string id, Vec3 min, Size3 size)
     var triangles = new List<MeshTriangle>();
     AddBox(vertices, triangles, min, size);
     return new MeshPackItem(id, vertices, triangles);
+}
+
+// Honest signed-tetra volume (MeshVolume) vs the bbox over-estimate
+// (VolumeEstimate). A box is exact; a right-triangular prism is exactly half.
+static void MeshVolumeSignedTetraIsHonest()
+{
+    var box = CreateBoxMesh("box", new Vec3(0, 0, 0), new Size3(2, 3, 4));
+    Assert(Math.Abs(box.MeshVolume - 24.0) < 1e-9,
+        $"box MeshVolume {box.MeshVolume} != 24");
+    Assert(Math.Abs(box.MeshVolume - box.VolumeEstimate) < 1e-9,
+        "box mesh-volume should equal its bbox volume");
+
+    // right-triangle base area = size^2/2, prism volume = size^2*height/2,
+    // exactly half the bbox size^2*height.
+    var prism = CreateTriangularPrism("prism", 6, 5);
+    Assert(Math.Abs(prism.MeshVolume - 90.0) < 1e-9,
+        $"prism MeshVolume {prism.MeshVolume} != 90");
+    Assert(Math.Abs(prism.VolumeEstimate - 180.0) < 1e-9,
+        $"prism bbox {prism.VolumeEstimate} != 180");
+    Assert(prism.MeshVolume < prism.VolumeEstimate - 1e-6,
+        "prism honest volume must be below its bbox over-estimate");
 }
 
 static MeshPackItem CreateTriangularPrism(string id, double size, double height)

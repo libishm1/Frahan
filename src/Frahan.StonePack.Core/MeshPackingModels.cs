@@ -38,7 +38,47 @@ public sealed class MeshPackItem
     public IReadOnlyList<MeshTriangle> Triangles { get; }
     public object? Source { get; }
     public Box3 Bounds { get; }
+
+    /// <summary>
+    /// Axis-aligned bounding-box volume. Fast, but an over-estimate for any
+    /// non-box mesh. Use <see cref="MeshVolume"/> for the honest packing
+    /// density numerator.
+    /// </summary>
     public double VolumeEstimate => Bounds.Size.Volume;
+
+    private double? _meshVolume;
+
+    /// <summary>
+    /// True closed-mesh volume by the signed-tetrahedron (divergence) sum
+    /// V = (1/6) sum_t (a_t . (b_t x c_t)) over triangles, each spanning the
+    /// tetra to the origin. Sign-robust (translation-invariant up to a
+    /// telescoping cancellation for closed meshes) and takes |.| so winding
+    /// does not flip the magnitude. Cached. This is the managed equivalent of
+    /// the harness RhinoCommon VolumeMassProperties path, so the Core honest
+    /// density rho = sum MeshVolume / (A * H_used) no longer needs Rhino.
+    /// </summary>
+    public double MeshVolume
+    {
+        get
+        {
+            if (_meshVolume.HasValue) return _meshVolume.Value;
+            double six = 0.0;
+            for (int t = 0; t < Triangles.Count; t++)
+            {
+                var tri = Triangles[t];
+                var a = Vertices[tri.A];
+                var b = Vertices[tri.B];
+                var c = Vertices[tri.C];
+                // a . (b x c)
+                double cx = b.Y * c.Z - b.Z * c.Y;
+                double cy = b.Z * c.X - b.X * c.Z;
+                double cz = b.X * c.Y - b.Y * c.X;
+                six += a.X * cx + a.Y * cy + a.Z * cz;
+            }
+            _meshVolume = Math.Abs(six) / 6.0;
+            return _meshVolume.Value;
+        }
+    }
 
     private static Box3 BoundsFrom(IReadOnlyList<Vec3> vertices)
     {
@@ -155,4 +195,14 @@ public sealed class MeshPackResult
 
     public double PackedVolumeEstimate => Placements.Sum(p => p.Item.VolumeEstimate);
     public double FillRatioEstimate => Container.Volume <= 0 ? 0 : PackedVolumeEstimate / Container.Volume;
+
+    /// <summary>Sum of true signed-tetra mesh volumes of the placed stones (honest rho numerator).</summary>
+    public double PackedMeshVolume => Placements.Sum(p => p.Item.MeshVolume);
+
+    /// <summary>
+    /// Honest packing density rho = sum(true mesh volume) / container volume,
+    /// the divergence-volume analogue of <see cref="FillRatioEstimate"/> (which
+    /// uses bbox volume and so over-reports for non-box stones).
+    /// </summary>
+    public double FillRatioMeshVolume => Container.Volume <= 0 ? 0 : PackedMeshVolume / Container.Volume;
 }

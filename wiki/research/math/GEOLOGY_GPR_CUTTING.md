@@ -588,11 +588,13 @@ $$
 **Code deviations:** (1) the variogram is not fitted experimentally; the model
 is fixed Gaussian and the range/nugget come from the marginal likelihood, which
 the header motivates as capturing cross-line correlation that a
-nearest-neighbour range heuristic under-estimates. (2) The file-header comment
-states $\operatorname{var}(x_*) = (\text{sill} + \text{nugget}) - \mathbf w^\top \mathbf w$,
-but `Predict` returns the LATENT variance $\text{sill} - \mathbf w^\top \mathbf w$
-(no nugget added back), matching sklearn's `GaussianProcessRegressor`
-latent-function std. The code, not the comment, is authoritative here.
+nearest-neighbour range heuristic under-estimates. (2) `Predict` returns the
+LATENT variance $\operatorname{var}(x_*) = \text{sill} - \mathbf w^\top \mathbf w$
+(no nugget added back), the variance of the noise-free field, matching
+sklearn's `GaussianProcessRegressor` latent-function std; add the nugget at the
+caller for observation variance. The file-header comment previously wrote
+`(sill + nugget)`; **corrected 2026-07-06** to match `Predict` (the code is
+authoritative).
 (3) Cholesky failures (near-duplicate points) bump the nugget by $\times 10$ up
 to 6 attempts. Code: `Kriging..ctor`, `Kriging.Predict`, `Kriging.Sigma`,
 `Kriging.FitMarginalLikelihood`

@@ -51,13 +51,16 @@ has passed.
    (3D), the RBE/CRA equilibrium certificates (masonry), residual gates
    (matching), and determinism pins. ~1,050 tests run per merge.
 3. **SMT instance proofs (Z3).** Decidable instances of the published
-   theorems are machine-proved in quantified linear real arithmetic by
-   encoding the negation and obtaining `unsat`. Currently proved: the NFP
-   unit-square instance and the IFP erosion instance
-   ([`verification/verify_instances.py`](verification/verify_instances.py),
-   reproducible with `pip install z3-solver`). This is the recommended
-   complement wherever full mechanization is pending: exact, fast, and it
-   covers real-arithmetic instances Lean would need Mathlib analysis for.
+   theorems are machine-proved by encoding the negation and obtaining
+   `unsat`. Currently proved (all four in
+   [`verification/verify_instances.py`](verification/verify_instances.py),
+   reproducible with `pip install z3-solver`): the NFP unit-square instance,
+   the IFP erosion instance, the **BLF lexicographic minimum attained at a box
+   vertex**, and the **inscribed friction pyramid being a subset of the
+   Coulomb cone** (K=4, the masonry conservativeness claim). This is the
+   recommended complement wherever full mechanization is pending: exact, fast,
+   and it covers real-arithmetic instances Lean would need Mathlib analysis
+   for.
 4. **Lean 4 + Mathlib mechanization (roadmap).** The full plan lives in
    [`LEAN_PLAN.md`](LEAN_PLAN.md): per-theorem Lean statement sketches, the
    Mathlib pieces they build on, three difficulty tiers, and the dependency
@@ -88,5 +91,9 @@ Rhino canvas).
   deliberately conservative vs the circumscribed K=4 reference
   implementation; documented in the masonry page.
 - `Kriging.Predict` returns the latent variance `sill - w^T w`, not
-  `(sill + nugget) - w^T w` as its own header comment claimed; the geology
-  page documents the code as authoritative.
+  `(sill + nugget) - w^T w` as its own header comment claimed; the header
+  comment was **corrected in code** 2026-07-06 to match `Predict`.
+- The honest density numerator is now computed in Core without Rhino:
+  `MeshPackItem.MeshVolume` (signed-tetra) + `MeshPackResult.FillRatioMeshVolume`
+  were added 2026-07-06 (test: `mesh signed-tetra volume is honest vs bbox`),
+  closing the "VolumeEstimate is bbox only" gap the packing page flagged.

@@ -8,7 +8,7 @@ NEGATION of the instance; `unsat` = the instance is proved.
 Run:  pip install z3-solver && python verify_instances.py
 Expected output: two lines ending in PROVED.
 """
-from z3 import Reals, And, Exists, ForAll, Implies, Not, Solver, unsat
+from z3 import Reals, And, Or, Exists, ForAll, Implies, Not, Solver, unsat
 
 
 def check(name, formula):
@@ -46,8 +46,39 @@ def ifp_erosion():
     return ForAll([px, py], containment == in_ifp)
 
 
+def inscribed_pyramid_in_cone():
+    """MASONRY_STABILITY: the shipping INNER friction pyramid is a subset of the
+    true Coulomb cone (so an RBE certificate on it is conservative).
+
+    For K=4, mu_eff = mu*cos(pi/4) gives c^2 = (mu^2/2) fn^2 per axis. Squaring
+    to stay in polynomial arithmetic (ft1s = ft1^2, ft2s = ft2^2 >= 0):
+    (|ft1|<=c and |ft2|<=c)  =>  ft1^2 + ft2^2 <= mu^2 fn^2.
+    """
+    ft1s, ft2s, fn, mu, c2 = Reals("ft1s ft2s fn mu c2")
+    hyp = And(fn >= 0, mu >= 0, ft1s >= 0, ft2s >= 0,
+              c2 == (mu * mu / 2) * fn * fn, ft1s <= c2, ft2s <= c2)
+    concl = ft1s + ft2s <= mu * mu * fn * fn
+    return ForAll([ft1s, ft2s, fn, mu, c2], Implies(hyp, concl))
+
+
+def blf_lexmin_at_vertex():
+    """EQUATIONS.md 1.5: the bottom-left lexicographic (y, x) minimum over a box
+    feasible region is attained at the corner vertex (x0, y0).
+
+    forall p in [x0,x1]x[y0,y1]:  y0 < p.y  OR  (y0 = p.y AND x0 <= p.x).
+    """
+    px, py, x0, x1, y0, y1 = Reals("px py x0 x1 y0 y1")
+    box = And(x0 <= x1, y0 <= y1)
+    in_f = And(x0 <= px, px <= x1, y0 <= py, py <= y1)
+    minimal = Or(y0 < py, And(y0 == py, x0 <= px))
+    return ForAll([px, py, x0, x1, y0, y1], Implies(And(box, in_f), minimal))
+
+
 if __name__ == "__main__":
     ok = True
     ok &= check("NFP unit-square instance (EQUATIONS.md 1.2)", nfp_unit_squares())
     ok &= check("IFP erosion instance (EQUATIONS.md 1.3)", ifp_erosion())
+    ok &= check("Inscribed friction pyramid subset-of-cone, K=4 (MASONRY_STABILITY)",
+                inscribed_pyramid_in_cone())
+    ok &= check("BLF lex-min at box vertex (EQUATIONS.md 1.5)", blf_lexmin_at_vertex())
     raise SystemExit(0 if ok else 1)

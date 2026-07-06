@@ -298,10 +298,14 @@ packed per floor-area times used-height, counting only non-interpenetrating
 ($\phi_{ij}\ge -\varepsilon$) settled stones. Measured: $\rho=0.358$ at
 $N{=}30$, $0.387$ at $N{=}60$ on ETH1100 (vs $0.338$ shipping skyline) at zero
 interpenetration; a literal $2\times$ ($0.66$) is above the irregular-stone
-physical ceiling and is not claimed. Note: the Core-side $\rho$ requires the
-managed signed-tetra volume (the harness already computes true volume via
-`VolumeMassProperties`); `MeshPackItem.VolumeEstimate` is bounding-box only —
-tracked as a known gap in [`SYNTHESIS_3D`](SYNTHESIS_3D.md).
+physical ceiling and is not claimed. The Core now computes the honest
+numerator without Rhino: `MeshPackItem.MeshVolume` is the signed-tetra sum
+$V=\tfrac16\lvert\sum_t a_t\cdot(b_t\times c_t)\rvert$ over triangles, and
+`MeshPackResult.FillRatioMeshVolume` divides it by container volume (the
+bbox-based `VolumeEstimate` / `FillRatioEstimate` remain for the fast,
+over-reporting path). Added 2026-07-06, test `mesh signed-tetra volume is
+honest vs bbox`; machine-verified value on a right-triangular prism (exactly
+half its bbox).
 
 ### 2.9 Complexity (evolution reference)
 
