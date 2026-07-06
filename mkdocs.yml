@@ -62,6 +62,7 @@ nav:
       - Coverage Audit (249 algorithms): wiki/research/math/AUDIT_coverage.md
   - Research wiki:
       - Index: wiki/index.md
+      - Risk Register: wiki/research/RISK_REGISTER.md
       - Engineering log: wiki/log.md
       - Edge Matching (theory vs implementation): wiki/research/edge_matching_theory_vs_implementation.md
       - Tolerances & Dimensions: wiki/research/tolerances_dimensions_slm_roses.md
