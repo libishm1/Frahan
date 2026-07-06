@@ -13,6 +13,7 @@ on:
       - ".github/workflows/pages.yml"
       - "docs/**"
       - "wiki/**"
+      - "web/**"
   workflow_dispatch:
 
 permissions:
@@ -86,6 +87,27 @@ jobs:
         run: |
           pip install --quiet mkdocs-material
           mkdocs build --site-dir _site
+
+      # Client-side nest demo (WebAssembly). Resilient: if the WASM build or
+      # workload install fails, the docs still deploy and /nest/ just 404s.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+        continue-on-error: true
+
+      - name: Build the WASM nest demo into _site/nest
+        continue-on-error: true
+        run: |
+          dotnet workload install wasm-tools
+          dotnet publish web/app/Frahan.Nest.Wasm.csproj -c Release
+          BUNDLE=$(find web/app/bin/Release -type d -name AppBundle | head -1)
+          if [ -n "$BUNDLE" ]; then
+            mkdir -p _site/nest
+            cp -r "$BUNDLE"/. _site/nest/
+            echo "nest demo staged: $(find _site/nest -type f | wc -l) files"
+          else
+            echo "WASM AppBundle not produced; /nest/ will be absent this deploy"
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -48,6 +48,7 @@ extra_javascript:
 
 nav:
   - Home: index.md
+  - Nest (live demo): https://libishm1.github.io/Frahan/nest/
   - Install: docs/INSTALL.md
   - Component Reference: docs/components/COMPONENTS.md
   - Results & Benchmarks: docs/results/RESULTS.md
