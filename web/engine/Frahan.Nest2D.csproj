@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    net8 extraction of the Rhino-free 2D nester (ContactNfpHoleNester) and its
+    only dependency (Clipper2Adapter). Proves the flagship packing path is
+    framework-portable and WebAssembly-ready: it source-links exactly the
+    dependency closure and references only Clipper2 (netstandard2.0). No Rhino,
+    no Bullet, no native P/Invoke at runtime (the native NFP lane degrades to
+    the managed path when nfp_kernel.dll is absent, e.g. in the browser).
+
+    This is the engine the client-side (Blazor WASM) nest demo compiles.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Frahan.Nest2D</AssemblyName>
+    <RootNamespace>Frahan.Nest2D</RootNamespace>
+    <!-- silence the InternalsVisibleTo to the (absent) test assembly -->
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Clipper2" Version="2.0.0" />
+  </ItemGroup>
+
+  <!-- source-link the exact closure from the main Core project -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Frahan.StonePack.Core\Packing\TwoD\ContactNfpHoleNester.cs" Link="TwoD\ContactNfpHoleNester.cs" />
+    <Compile Include="..\..\src\Frahan.StonePack.Core\Packing\TwoD\NativeNfpKernel.cs" Link="TwoD\NativeNfpKernel.cs" />
+    <Compile Include="..\..\src\Frahan.StonePack.Core\Masonry\Geometry\Clipper2Adapter.cs" Link="Geometry\Clipper2Adapter.cs" />
+  </ItemGroup>
+
+</Project>

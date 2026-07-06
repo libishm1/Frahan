@@ -49,3 +49,5 @@ install/yak_build/
 .mcp.json
 _site_src/
 _site/
+web/engine/bin/
+web/engine/obj/
