@@ -819,6 +819,9 @@ var tests = new List<(string Name, Action Body)>
     ("mesh pack seed can explore alternatives", MeshPackSeedCanExploreAlternatives),
     ("mesh signed-tetra volume is honest vs bbox", MeshVolumeSignedTetraIsHonest),
     ("ETH C# honest 3D density headless bench (H1)", EthHonestDensityHeadlessBench),
+    ("kinematic intersection symmetric planes horizontal", KinematicAnalysisTests.Intersection_SymmetricPlanes_IsHorizontalEastWest),
+    ("kinematic intersection identical planes degenerate", KinematicAnalysisTests.Intersection_IdenticalPlanes_IsDegenerate),
+    ("kinematic intersection outputs in valid ranges", KinematicAnalysisTests.Intersection_OutputsInValidRanges),
     // Ashlar packer Stage 1
     ("ashlar Stage1 coursed ashlar all uniform boxes full coverage", AshlarLayoutEngineTests.CoursedAshlar_AllUniformBoxes_FullCoverage),
     ("ashlar Stage1 boundary conditions bottom course fixed", AshlarLayoutEngineTests.BoundaryConditions_BottomCourseFixed),

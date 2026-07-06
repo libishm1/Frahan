@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Rhino.Geometry;
 
 namespace Frahan.Core.Discontinuity;
 
@@ -37,7 +36,7 @@ namespace Frahan.Core.Discontinuity;
 //   - Goodman, R. E. & Bray, J. W. (1976). Toppling of rock slopes.
 //   - Wyllie, D. C. & Mah, C. W. (2004). Rock Slope Engineering. 4th ed. Ch.7.
 //
-// Pure managed arithmetic (Rhino value types only), headless-unit-testable.
+// Pure managed arithmetic, Rhino-free (headless / service ready), unit-testable.
 // =============================================================================
 
 /// <summary>Kinematic failure modes screened by <see cref="KinematicAnalysis"/>.</summary>
@@ -96,15 +95,37 @@ public static class KinematicAnalysis
     /// <summary>Plunge/trend (deg) of the line of intersection of two planes given by dip/dip-direction.</summary>
     public static void Intersection(double dipA, double ddA, double dipB, double ddB, out double plunge, out double trend)
     {
-        var na = OrientationMath.NormalFromDipDipDir(dipA, ddA);
-        var nb = OrientationMath.NormalFromDipDipDir(dipB, ddB);
-        var L = Vector3d.CrossProduct(na, nb);
-        if (L.SquareLength < 1e-18) { plunge = 0; trend = 0; return; }
-        L.Unitize();
-        if (L.Z > 0) L = -L;                    // point the intersection line downward
-        double horiz = Math.Sqrt(L.X * L.X + L.Y * L.Y);
-        plunge = Math.Atan2(-L.Z, horiz) * R2D;  // -L.Z >= 0
-        trend = (Math.Atan2(L.X, L.Y) * R2D + 360.0) % 360.0;
+        var (ax, ay, az) = LowerHemisphereNormal(dipA, ddA);
+        var (bx, by, bz) = LowerHemisphereNormal(dipB, ddB);
+        // L = na x nb (intersection direction of the two planes)
+        double lx = ay * bz - az * by;
+        double ly = az * bx - ax * bz;
+        double lz = ax * by - ay * bx;
+        double sq = lx * lx + ly * ly + lz * lz;
+        if (sq < 1e-18) { plunge = 0; trend = 0; return; }
+        double len = Math.Sqrt(sq);
+        lx /= len; ly /= len; lz /= len;
+        if (lz > 0) { lx = -lx; ly = -ly; lz = -lz; }   // point the line downward
+        double horiz = Math.Sqrt(lx * lx + ly * ly);
+        plunge = Math.Atan2(-lz, horiz) * R2D;           // -lz >= 0
+        trend = (Math.Atan2(lx, ly) * R2D + 360.0) % 360.0;
+    }
+
+    // Rhino-free downward-pointing plane normal (dip / dip-direction), mirroring
+    // OrientationMath.NormalFromDipDipDir + LowerHemisphere so this geology
+    // component needs no RhinoCommon (headless / service ready).
+    private static (double X, double Y, double Z) LowerHemisphereNormal(double dipDeg, double dipDirDeg)
+    {
+        double dip = dipDeg * D2R, dd = dipDirDeg * D2R;
+        double s = Math.Sin(dip);
+        double x = s * Math.Sin(dd), y = s * Math.Cos(dd), z = -Math.Cos(dip);
+        double len = Math.Sqrt(x * x + y * y + z * z);
+        if (len > 0) { x /= len; y /= len; z /= len; }
+        if (z > 1e-12) { x = -x; y = -y; z = -z; }        // flip to lower hemisphere
+        else if (Math.Abs(z) <= 1e-12 &&
+                 (x < -1e-12 || (Math.Abs(x) <= 1e-12 && y < 0)))
+        { x = -x; y = -y; z = -z; }                        // equator tie-break (x then y)
+        return (x, y, z);
     }
 
     /// <summary>Screen every set (planar, toppling) and every pair (wedge) against one cut face.</summary>
