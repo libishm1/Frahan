@@ -419,7 +419,7 @@ else
   frahan_cgal.dll on 2026-05-08. Documents dependency install
   order, cmake-gui workflow, and the three code-level fixes
   (committed 07de6ea) needed during the build pass.
-- [`../algorithms/cgal_shim/validation_log.md`](../algorithms/cgal_shim/validation_log.md)
+- ``../algorithms/cgal_shim/validation_log.md`` (internal log, not published)
   — HitL passes against the build configuration in spec 21.
 
 ## Last updated

@@ -1,47 +1,34 @@
-# Frahan StonePack — website, wiki &amp; deck
+# Frahan StonePack — documentation folder
 
-The public site for **Frahan StonePack** — a Rhino 8 / Grasshopper plugin for stone-fabrication
-readiness. This folder is a self-contained static site, ready to deploy to **GitHub Pages**.
+Software repository: <https://github.com/libishm1/Frahan>
+Live documentation site: <https://libishm1.github.io/Frahan/>
 
-Software repository: https://github.com/libishm1/Frahan
+The site is built with MkDocs Material by `.github/workflows/pages.yml` on
+every push to `main` (config: `mkdocs.yml` at the repo root). It assembles the
+repo's markdown + images with the directory structure preserved, so relative
+links work both on GitHub and on the site.
 
-## Pages
+## What lives here
 
-| File | Page | What |
-|---|---|---|
-| `index.html` | **Overview** | Landing page: pipeline, benchmarks, the 18 subcategories, install |
-| `wiki.html` | **Component library** | All 187 components — full I/O ports, algorithm citations, source paths, upstream/downstream links. Hash-routed (`#/`, `#/s/<subcategory>`, `#/c/<component>`) |
-| `architecture.html` | **Architecture** | Pipeline spine, code modules, and the live 93-edge connection graph (pan / zoom / click) |
-| `research.html` | **Research** | Ten research areas, source-cited benchmarks, datasets, how to cite &amp; reproduce |
-| `deck.html` | **Intro deck** | 11-slide new-user walkthrough of the whole pipeline |
+| Path | What |
+|---|---|
+| `components/COMPONENTS.md` | The generated component reference — 270+ components with GUIDs, algorithm citations, inputs/outputs, related-component edges. Regenerate with `components/extract_components.py` after component changes (also refreshes `components.json`, the connection maps, and `ICON_LIBRARY.md`). |
+| `results/RESULTS.md` | Results & benchmarks at a glance — utilization/validity studies, the OpenNest head-to-head, masonry + 3D packing numbers, test health. Every number is measured; the protocol is described in place. |
+| `INSTALL.md` | Install (users: Package Manager; developers: build from source). |
+| `STONEPACK_THESIS.md` | The long-form applied thesis in support of the software. |
+| `SUPERSESSION_MAP.md` | Which legacy components were superseded by which current ones, with benchmarks. |
+| `PERSONA_MAP.md` | Component groups mapped to user personas (quarry engineer, mason, artist, …). |
+| `REVIEWER_SUMMARY.md` | Orientation guide for reviewers/collaborators. |
+| `DEEP_REVIEW_2026-06-15.md` | Dated point-in-time repo review (historical record). |
+| `benchmarks/` | Benchmark math + parity studies referenced by RESULTS.md. |
+| `validation/` | Validation cards and datasets referenced by the wiki. |
 
-All five pages share `styles.css` and the `← → top` navigation, and link to each other.
+The research record (studies, specs, engineering log) lives in [`../wiki/`](../wiki/index.md).
 
-## Data — single source of truth
+## Cite
 
-Everything is driven by **`data.js`**, generated from the plugin's own source bundle
-(`components.json` + `connections.json`):
-
-- `window.FRAHAN_COMPONENTS` — 187 components (guid, name, nickname, subcategory, description,
-  algorithm citation, inputs, outputs, related edges, icon, source file)
-- `window.FRAHAN_SUBCATS` — the 18 subcategories with pipeline-stage accent colours + counts
-- `window.FRAHAN_GRAPH` — the 93 upstream→downstream edges for the connection map
-- `window.FRAHAN_META` — version, counts, repo
-
-To regenerate after a component change: re-run the plugin's `extract_components.py`, drop the
-fresh `components.json` / `connections.json` in, and rebuild `data.js` (the transform lives in the
-project history). Icons live in `assets/icons/` (128 PNGs, filename = each component's `icon` field).
-
-## Deploy to GitHub Pages
-
-1. Commit this `docs/` folder to the repository.
-2. **Settings → Pages → Source: Deploy from a branch**, branch `main`, folder **`/docs`**.
-3. The site publishes at `https://<user>.github.io/<repo>/`. `index.html` is the entry point.
-
-`.nojekyll` is included so GitHub serves every file as-is (no Jekyll processing).
-
-All links are **relative**, so the site also works opened straight from disk (`file://`) and from
-any sub-path — no base-URL configuration required.
+Murugesan, L. (2026). *Frahan StonePack (0.1.0-alpha)*. Zenodo.
+<https://doi.org/10.5281/zenodo.21209690>
 
 ---
 Frahan StonePack · v0.1.0-alpha · GPL-3.0 · Libish Murugesan

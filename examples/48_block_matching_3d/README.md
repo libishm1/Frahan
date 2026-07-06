@@ -40,7 +40,7 @@ All meshes are in metres, in world coordinates (the solver is fully 3-D).
 
 ## Try it live
 
-Open [`block_matching_3d.gh`](block_matching_3d.gh). It internalizes the two
+Open [`block_matching_3d.gh`](https://github.com/libishm1/Frahan/blob/main/examples/48_block_matching_3d/block_matching_3d.gh). It internalizes the two
 fragments, feeds them to `Soft ICP 3D` (anchor index 0, `Tau0 Factor` 3.5,
 `Tau Anneal` 0.85, `Max Iterations` 120, `Sample Spacing` 0.03 m), grabs the
 solved branch, and previews it beside the input — so it reassembles on load.

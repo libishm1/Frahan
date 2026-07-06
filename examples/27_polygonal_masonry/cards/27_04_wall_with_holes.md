@@ -30,7 +30,7 @@ bbox = (0.0, 0.0, 12.0, 6.0)
 
 ## Reference (Python pipeline)
 
-![reference](./04_wall_with_holes.png)
+![reference](../27_04_wall_with_holes.png)
 
 
 ## Pass / fail

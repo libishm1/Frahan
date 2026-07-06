@@ -33,10 +33,10 @@ Two layers, both coloured by course (red = a gate-rejected stone):
 
 1. **Shipped component (after deploy).** Deploy the plugin first (`pwsh -File install\deploy.ps1`
    with **Rhino closed** — the NBO components are new), then open
-   [`nbo_dry_stone_wall.gh`](nbo_dry_stone_wall.gh). It wires an internalized stone **Inventory** into
+   [`nbo_dry_stone_wall.gh`](https://github.com/libishm1/Frahan/blob/main/examples/43_nbo_dry_stone_wall/nbo_dry_stone_wall.gh). It wires an internalized stone **Inventory** into
    `Dry-Stone Wall (NBO)`. Toggle **Run** to fill. Add a **Custom Preview** on the **Placed** output
    to colour the wall.
-2. **No-deploy GhPython demo (works now).** Paste [`nbo_wall_demo.py`](nbo_wall_demo.py) into a
+2. **No-deploy GhPython demo (works now).** Paste [`nbo_wall_demo.py`](https://github.com/libishm1/Frahan/blob/main/examples/43_nbo_dry_stone_wall/nbo_wall_demo.py) into a
    GhPython / Python Script component. Set `CORE_DIR` to your `Frahan.StonePack.Core` build folder and
    `INVENTORY_DIR` to a folder of stone OBJs. Wire `a` → **Custom Preview** (Geometry) and `b` →
    **Custom Preview** (Material) for the coloured wall. Add an optional `spine` Curve input for the

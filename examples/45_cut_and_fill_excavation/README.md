@@ -28,11 +28,11 @@ Two layers:
 
 ## Try it live
 
-1. **Shipped component.** Open [`cut_and_fill.gh`](cut_and_fill.gh): an internalized **Ground** and
+1. **Shipped component.** Open [`cut_and_fill.gh`](https://github.com/libishm1/Frahan/blob/main/examples/45_cut_and_fill_excavation/cut_and_fill.gh): an internalized **Ground** and
    **Bedrock** mesh feed `Overburden To Rock Face` (Swell = 0.25). It solves on load. Outputs are the
    cut / loose / fill / net volumes, the plan area, a depth-coloured **Depth Mesh**, and a report.
    Wire the Depth Mesh -> **Custom Preview**.
-2. **No-plugin GhPython demo.** Paste [`cut_and_fill_demo.py`](cut_and_fill_demo.py) into a GhPython
+2. **No-plugin GhPython demo.** Paste [`cut_and_fill_demo.py`](https://github.com/libishm1/Frahan/blob/main/examples/45_cut_and_fill_excavation/cut_and_fill_demo.py) into a GhPython
    component (set `CORE_DIR`). It builds the synthetic site, calls the Core `OverburdenVolume.Compute`,
    and outputs `ground` (depth-coloured), `bedrock`, and the `cut / fill / net / area / loose` numbers.
 

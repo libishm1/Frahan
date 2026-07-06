@@ -31,7 +31,7 @@ internalised and the 3D component is pre-wired. Hit recompute.
 
 ## Reference (Python pipeline)
 
-![reference](./07_voronoi_3d.png)
+![reference](../27_07_voronoi_3d.png)
 
 
 ## Pass / fail

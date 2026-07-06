@@ -199,9 +199,9 @@ None.
 
 ## Related wiki pages
 
-- [`trencadis_pipeline.md`](../algorithms/packing_2D/trencadis_pipeline.md)
-- [`known_failures.md`](../algorithms/packing_2D/known_failures.md)
-- [`validation_log.md`](../algorithms/packing_2D/validation_log.md)
+- ``trencadis_pipeline.md`` (internal log, not published)
+- ``known_failures.md`` (internal log, not published)
+- ``validation_log.md`` (internal log, not published)
 
 ## Last updated
 

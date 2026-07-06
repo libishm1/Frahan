@@ -28,7 +28,7 @@ bbox = (0.0, 0.0, 12.0, 6.0)
 
 ## Reference (Python pipeline)
 
-![reference](./03_chains_wall.png)
+![reference](../27_03_chains_wall.png)
 
 
 ## Pass / fail

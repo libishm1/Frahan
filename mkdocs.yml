@@ -42,11 +42,22 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Install: docs/INSTALL.md
   - Component Reference: docs/components/COMPONENTS.md
   - Results & Benchmarks: docs/results/RESULTS.md
   - Examples: examples/README.md
-  - Wiki:
+  - Research wiki:
       - Index: wiki/index.md
+      - Engineering log: wiki/log.md
       - Edge Matching (theory vs implementation): wiki/research/edge_matching_theory_vs_implementation.md
       - Tolerances & Dimensions: wiki/research/tolerances_dimensions_slm_roses.md
-  - Install: docs/INSTALL.md
+      - 2D Packing Synthesis: wiki/research/packing/SYNTHESIS_2D.md
+      - 3D Packing Synthesis: wiki/research/packing/SYNTHESIS_3D.md
+  - More:
+      - Thesis: docs/STONEPACK_THESIS.md
+      - Supersession Map: docs/SUPERSESSION_MAP.md
+      - Persona Map: docs/PERSONA_MAP.md
+      - Reviewer Summary: docs/REVIEWER_SUMMARY.md
+      - Contributing: CONTRIBUTING.md
+      - Contributors: CONTRIBUTORS.md
+      - Release Notes: RELEASE_NOTES_v0.1.0-alpha.md

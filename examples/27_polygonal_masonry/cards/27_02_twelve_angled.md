@@ -28,7 +28,7 @@ bbox = (0.0, 0.0, 10.0, 8.0)
 
 ## Reference (Python pipeline)
 
-![reference](./02_twelve_angled.png)
+![reference](../27_02_twelve_angled.png)
 
 
 ## Pass / fail

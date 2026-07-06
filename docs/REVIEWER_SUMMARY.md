@@ -7,7 +7,7 @@ sentences, no em dashes.
 A Rhino 8 / Grasshopper plugin for stone-fabrication readiness: the pre-CAM bridge from
 design intent to machine-ready geometry for dimension stone, monuments, and dry-stone masonry.
 Pipeline: GPR / scan -> discontinuity / fracture -> reconstruction -> DFN -> block packing +
-cutting -> masonry equilibrium -> fabrication export. 187 Grasshopper components, Rhino-free
+cutting -> masonry equilibrium -> fabrication export. 270+ Grasshopper components, Rhino-free
 algorithm Core, research-grade benchmarks.
 
 Status: experimental research prototype, v0.1.0-alpha. Independent open-source, not a
@@ -15,9 +15,8 @@ university or company product. Author: Libish Murugesan (ORCID 0009-0004-3238-42
 
 ## 60-second orientation (where to look)
 - `README.md` - what it is, quick start, license.
-- `docs/` static site (the design-system bundle): `index.html` (overview), `wiki.html` (all
-  187 components with I/O), `architecture.html` (pipeline + connection graph), `research.html`
-  (benchmarks). Open `docs/index.html` locally, or it deploys as GitHub Pages from `/docs`.
+- Documentation site: <https://libishm1.github.io/Frahan/> (MkDocs Material, auto-deployed
+  from `main`; landing + component reference + results + wiki).
 - `docs/components/` - the machine-readable contract: `ARCHITECTURE.md`, `RESEARCH.md`
   (every benchmark number is source-cited), `COMPONENTS.md` + `components.json` (per-component
   I/O), `DATA_STRUCTURE_AUDIT.md` (the port type contract).

@@ -147,7 +147,7 @@ Three source bugs surfaced during the first compile pass — all fixed by Claude
 
 - [`wiki/specs/20_frahan_cgal_audit.md`](20_frahan_cgal_audit.md) — the C ABI surface, exception-safety, GPL footprint, code-level fixes applied.
 - [`wiki/specs/19_frahan_source_relocation_plan.md`](19_frahan_source_relocation_plan.md) — when active source moves out of `outputs/2026-05-01/`, the `native/cgal_shim/` tree moves with it; this build doc's paths will need updating in the same commit.
-- [`wiki/algorithms/cgal_shim/validation_log.md`](../algorithms/cgal_shim/validation_log.md) — HitL passes against this build configuration.
+- ``wiki/algorithms/cgal_shim/validation_log.md`` (internal log, not published) — HitL passes against this build configuration.
 
 ## Last updated
 

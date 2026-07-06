@@ -48,7 +48,8 @@ jobs:
                 done
           done
           # top-level docs the README links to
-          for f in LICENSE NOTICE.md CITATION.cff RELEASE_NOTES_v0.1.0-alpha.md; do
+          for f in LICENSE NOTICE.md CITATION.cff RELEASE_NOTES_v0.1.0-alpha.md \
+                   CONTRIBUTING.md CONTRIBUTORS.md THIRD_PARTY_NOTICES.md; do
             [ -f "$f" ] && cp "$f" "_site_src/$f" || true
           done
           echo "site source files: $(find _site_src -type f | wc -l)"

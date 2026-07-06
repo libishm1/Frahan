@@ -28,7 +28,7 @@ bbox = (0.0, 0.0, 16.0, 10.0)
 
 ## Reference (Python pipeline)
 
-![reference](./05_wavy_perlin.png)
+![reference](../27_05_wavy_perlin.png)
 
 
 ## Pass / fail

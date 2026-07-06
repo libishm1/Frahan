@@ -31,14 +31,14 @@ orange approach vectors + the magenta robot-base marker.
 ## Try it live
 
 1. **Shipped components (after deploy).** Deploy first (`pwsh -File install\deploy.ps1`, Rhino closed),
-   then open [`nbo_to_robot.gh`](nbo_to_robot.gh): an internalized **Inventory** → `Dry-Stone Wall
+   then open [`nbo_to_robot.gh`](https://github.com/libishm1/Frahan/blob/main/examples/44_nbo_to_robot/nbo_to_robot.gh): an internalized **Inventory** → `Dry-Stone Wall
    (NBO)` → `Next-Best-Object Pose → Robot Frame` (Stones = inventory, Placements = the wall
    Transforms). Toggle the wall's **Run**. Add `Force-Seat (URScript)` on the **Place Frames** to get
    the per-stone seat programs.
-2. **No-deploy GhPython demo (works now).** Paste [`nbo_robot_demo.py`](nbo_robot_demo.py) into a
+2. **No-deploy GhPython demo (works now).** Paste [`nbo_robot_demo.py`](https://github.com/libishm1/Frahan/blob/main/examples/44_nbo_to_robot/nbo_robot_demo.py) into a
    GhPython component (set `CORE_DIR`, `INVENTORY_DIR`). Outputs `place_planes`, `pick_planes`,
    `approach_planes`, `ur_poses`, `wall`.
-3. **COMPAS FK/IK simulation (the test).** Paste [`nbo_to_compas_robots.py`](nbo_to_compas_robots.py)
+3. **COMPAS FK/IK simulation (the test).** Paste [`nbo_to_compas_robots.py`](https://github.com/libishm1/Frahan/blob/main/examples/44_nbo_to_robot/nbo_to_compas_robots.py)
    into a **Rhino-8 Python-3** component (`#! python3` + `# r: compas_fab==1.1.0`); feed it
    `place_planes` + a UR10e URDF. It converts each Plane → COMPAS Frame, runs **compas_fab** analytic
    UR IK, confirms with **compas_robots** FK, and draws the arm. Outputs `reachable`, `configs`,
