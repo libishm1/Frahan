@@ -13,12 +13,17 @@ const status = (m) => { $('status').textContent = m; };
 
 let sampleActive = false;
 
-// The loader module is ready (engine NOT yet downloaded — that happens lazily
-// on the first Nest, so the page and Load-sample stay instant on mobile).
-window.addEventListener('frahan-loader-ready', () => {
+// Enable Nest once the engine is resident. Race-proof: if main.js already
+// finished (event missed), globalThis.frahan is set, so enable immediately;
+// otherwise wait for the frahan-ready event.
+function onEngineReady() {
   $('nest').disabled = false;
-  status('ready — engine loads on first Nest (~0.6 MB, once)');
-});
+  status('engine ready');
+}
+if (globalThis.frahan) onEngineReady();
+else window.addEventListener('frahan-ready', onEngineReady, { once: true });
+window.addEventListener('frahan-error', (e) =>
+  status('engine failed to load: ' + (e.detail || 'unknown') + ' — try a hard refresh'));
 
 // ---- import ---------------------------------------------------------------
 
@@ -188,16 +193,9 @@ function sampleSheetHoles() {
 
 // ---- nest -----------------------------------------------------------------
 
-$('nest').addEventListener('click', async () => {
+$('nest').addEventListener('click', () => {
+  if (!globalThis.frahan) { status('engine still loading, one moment…'); return; }
   if (parts.length === 0) { status('import or load parts first'); return; }
-  // lazy-download the engine on first use (keeps the page instant on mobile)
-  if (!globalThis.frahan) {
-    status('loading engine (~0.6 MB, one time)…');
-    $('nest').disabled = true;
-    try { await globalThis.frahanBoot(); }
-    catch (e) { status('engine load failed: ' + e.message); $('nest').disabled = false; return; }
-    $('nest').disabled = false;
-  }
   const W = +$('sheetW').value, H = +$('sheetH').value;
   const req = {
     Sheet: [0, 0, W, 0, W, H, 0, H],
