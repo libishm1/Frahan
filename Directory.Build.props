@@ -6,8 +6,21 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Company>Frahan</Company>
     <Product>Frahan StonePack</Product>
-    <Version>0.5.5</Version>
-    <AssemblyVersion>0.5.5.0</AssemblyVersion>
-    <FileVersion>0.5.5.0</FileVersion>
+    <!-- Public / Zenodo release version = 0.1.0 (everything aligned). Development
+         tracking uses the lower decimals going forward (0.1.x patch, 0.1.0.N build). -->
+    <Version>0.1.1</Version>
+    <AssemblyVersion>0.1.1.0</AssemblyVersion>
+    <FileVersion>0.1.1.0</FileVersion>
+  </PropertyGroup>
+  <!-- Debug symbols: portable PDB always; embed in Debug for VS Code attach debugging -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 </Project>
