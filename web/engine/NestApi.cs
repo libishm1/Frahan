@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Frahan.Packing.TwoD;
 
 namespace Frahan.Nest2D
@@ -49,18 +50,26 @@ namespace Frahan.Nest2D
         public List<PlacedPart> Placed { get; set; } = new List<PlacedPart>();
     }
 
+    // Source-generated (JsonSerializerContext) so serialization works under
+    // WebAssembly trimming, where reflection-based System.Text.Json is disabled
+    // (the JsonSerializerIsReflectionDisabled error). Case-insensitive so the
+    // JS-side property casing is tolerated.
+    [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
+    [JsonSerializable(typeof(NestRequest))]
+    [JsonSerializable(typeof(NestResponse))]
+    internal partial class NestJsonContext : JsonSerializerContext
+    {
+    }
+
     public static class NestApi
     {
-        private static readonly JsonSerializerOptions Opts =
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
         /// <summary>Parse a request, nest, and return the response, all as JSON.</summary>
         public static string Nest(string requestJson)
         {
             NestRequest req;
             try
             {
-                req = JsonSerializer.Deserialize<NestRequest>(requestJson, Opts);
+                req = JsonSerializer.Deserialize(requestJson, NestJsonContext.Default.NestRequest);
             }
             catch (Exception ex)
             {
@@ -68,10 +77,12 @@ namespace Frahan.Nest2D
                 {
                     Valid = false,
                     Note = "bad request json: " + ex.Message
-                });
+                }, NestJsonContext.Default.NestResponse);
             }
             if (req == null || req.Sheet == null || req.Parts == null || req.Parts.Length == 0)
-                return JsonSerializer.Serialize(new NestResponse { Valid = false, Note = "empty request" });
+                return JsonSerializer.Serialize(
+                    new NestResponse { Valid = false, Note = "empty request" },
+                    NestJsonContext.Default.NestResponse);
 
             var sheet = ToLoop(req.Sheet);
             var sheetHoles = (req.SheetHoles ?? Array.Empty<double[]>())
@@ -105,7 +116,7 @@ namespace Frahan.Nest2D
                     Valid = false,
                     PartCount = parts.Count,
                     Note = "pack failed: " + ex.GetType().Name + ": " + ex.Message
-                });
+                }, NestJsonContext.Default.NestResponse);
             }
 
             var resp = new NestResponse
@@ -130,7 +141,7 @@ namespace Frahan.Nest2D
                     PlacedOuter = Flatten(p.PlacedOuter)
                 });
             }
-            return JsonSerializer.Serialize(resp, Opts);
+            return JsonSerializer.Serialize(resp, NestJsonContext.Default.NestResponse);
         }
 
         private static List<(double X, double Y)> ToLoop(double[] flat)
