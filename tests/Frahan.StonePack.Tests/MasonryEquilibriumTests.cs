@@ -68,6 +68,27 @@ static class MasonryEquilibriumTests
         Assert(Math.Abs(cz - 0.5) < Tol, $"cz expected 0.5, got {cz}");
     }
 
+    public static void BlockCenterOfMass_FarFromOrigin_IsTranslationInvariant()
+    {
+        // Risk M1 (recentering): the signed-tetra integral spans tets to the
+        // origin, so raw 1e6-magnitude coordinates used to lose ~10 digits on
+        // a unit-volume block. With first-vertex recentering, volume and COM
+        // must match the near-origin result to tight tolerance.
+        const double D = 1.0e6;
+        var near = MakeUnitCubeAt("near", 0, 0, 0);
+        var far = MakeUnitCubeAt("far", D, D, D);
+
+        var (nx, ny, nz) = BlockCenterOfMass.VolumeWeighted(near, out double vNear);
+        var (fx, fy, fz) = BlockCenterOfMass.VolumeWeighted(far, out double vFar);
+
+        Assert(Math.Abs(vFar - vNear) < 1e-9,
+            $"far-from-origin volume drifted: near {vNear}, far {vFar}");
+        Assert(Math.Abs((fx - D) - nx) < 1e-6 &&
+               Math.Abs((fy - D) - ny) < 1e-6 &&
+               Math.Abs((fz - D) - nz) < 1e-6,
+            $"far-from-origin centroid drifted: near ({nx},{ny},{nz}), far-D ({fx - D},{fy - D},{fz - D})");
+    }
+
     public static void BlockCenterOfMass_UnitCube_VertexMean_IsCenter()
     {
         var cube = MakeUnitCubeAt("cube", 0, 0, 0);

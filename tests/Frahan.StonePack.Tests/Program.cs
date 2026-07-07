@@ -293,6 +293,7 @@ var tests = new List<(string Name, Action Body)>
     ("masonry sparse COO Add zero does not increment nnz", MasonryEquilibriumTests.SparseMatrixCoo_AddZero_DoesNotIncrementNnz),
     ("masonry sparse COO out-of-bounds row throws", MasonryEquilibriumTests.SparseMatrixCoo_OutOfBoundsRow_Throws),
     ("masonry block COM unit cube volume-weighted is center", MasonryEquilibriumTests.BlockCenterOfMass_UnitCube_VolumeWeighted_IsCenter),
+    ("masonry block COM far-from-origin translation invariant", MasonryEquilibriumTests.BlockCenterOfMass_FarFromOrigin_IsTranslationInvariant),
     ("masonry block COM unit cube vertex-mean is center", MasonryEquilibriumTests.BlockCenterOfMass_UnitCube_VertexMean_IsCenter),
     ("masonry block COM degenerate falls back to vertex mean", MasonryEquilibriumTests.BlockCenterOfMass_DegenerateBlock_FallsBackToVertexMean),
     ("masonry equilibrium one free block on ground Aeq shape", MasonryEquilibriumTests.EquilibriumBuilder_OneFreeBlockOnGround_AeqShape_IsCorrect),
@@ -320,6 +321,8 @@ var tests = new List<(string Name, Action Body)>
     ("masonry RBE QP no friction inequality is null", MasonryRbeFormulationTests.RbeQpFormulation_NoFriction_InequalityIsNull),
     ("masonry residual audit catches violated solution", MasonryRbeFormulationTests.ResidualAudit_ViolatedSolution_IsCaught),
     ("masonry residual audit keeps good verdict stable", MasonryRbeFormulationTests.ResidualAudit_FullCheckStillStable),
+    ("masonry seam bullet-basis packing round-trips", MasonrySeamTests.BulletBasisPacking_RoundTripsAKnownRotation),
+    ("masonry seam MeshSnapshot round-trips arrays", MasonrySeamTests.MeshSnapshot_RoundTripsVerticesAndTriangles),
     // ManagedQpSolver — Dykstra alternating projections (Phase B implementation)
     ("masonry QP solver equality only two vars finds midpoint", ManagedQpSolverTests.Solve_EqualityOnly_TwoVars_FindsMidpoint),
     ("masonry QP solver bounds only one active gives active corner", ManagedQpSolverTests.Solve_BoundsOnly_OneActive_GivesActiveCorner),

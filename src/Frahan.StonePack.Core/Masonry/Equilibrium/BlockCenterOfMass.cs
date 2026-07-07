@@ -57,15 +57,25 @@ public static class BlockCenterOfMass
         double V = 0.0;
         double cx = 0.0, cy = 0.0, cz = 0.0;
 
+        // Recentering (risk M1): the decomposition spans tets to the ORIGIN,
+        // so raw world coordinates make the partial sums ~|coord|^3 while the
+        // closed-mesh result stays ~size^3 — catastrophic digit loss far from
+        // the origin (a site model at 1e6 loses ~10 significant digits).
+        // Volume and centroid are translation-invariant, so integrate relative
+        // to the first vertex and shift the centroid back at the end.
+        double ox = v.Count > 0 ? v[0] : 0.0;
+        double oy = v.Count > 1 ? v[1] : 0.0;
+        double oz = v.Count > 2 ? v[2] : 0.0;
+
         for (int f = 0; f < triCount; f++)
         {
             int i0 = t[3 * f];
             int i1 = t[3 * f + 1];
             int i2 = t[3 * f + 2];
 
-            double ax = v[3 * i0], ay = v[3 * i0 + 1], az = v[3 * i0 + 2];
-            double bx = v[3 * i1], by = v[3 * i1 + 1], bz = v[3 * i1 + 2];
-            double cxv = v[3 * i2], cyv = v[3 * i2 + 1], czv = v[3 * i2 + 2];
+            double ax = v[3 * i0] - ox, ay = v[3 * i0 + 1] - oy, az = v[3 * i0 + 2] - oz;
+            double bx = v[3 * i1] - ox, by = v[3 * i1 + 1] - oy, bz = v[3 * i1 + 2] - oz;
+            double cxv = v[3 * i2] - ox, cyv = v[3 * i2 + 1] - oy, czv = v[3 * i2 + 2] - oz;
 
             // Signed volume of tet (origin, a, b, c) = (a . (b x c)) / 6
             double crossx = by * czv - bz * cyv;
@@ -89,9 +99,10 @@ public static class BlockCenterOfMass
 
         // V was 6V_total above, so the (V_tet * centroid_tet * 4) accumulator
         // needs division by (V_total * 4 * 6) to get the weighted average.
-        // Equivalently: cx accumulator / (V_total * 24).
+        // Equivalently: cx accumulator / (V_total * 24). Shift back from the
+        // first-vertex frame to world coordinates.
         double inv = 1.0 / (signedVolume * 24.0);
-        return (cx * inv, cy * inv, cz * inv);
+        return (cx * inv + ox, cy * inv + oy, cz * inv + oz);
     }
 
     /// <summary>
