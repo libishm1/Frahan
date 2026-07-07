@@ -42,15 +42,32 @@ work:
 7. Confirm the README matches the shipped component names/GUIDs (post-rename)
    and the data it references.
 
-## Batch order (~5-8 per session; Rhino MCP is stateful + slow)
+## Working style — ONE at a time, human-in-the-loop (not autonomous batches)
 
-- **Batch A — gaps first**: 01, 02, 03_quarry_to_slabs, 28, 05, 46, 47
-  (build the 4 missing READMEs, validate, capture the 7 missing images).
-- **Batch B — flagships (must work)**: 10_pack2d, 28_hole_nest, 11_pack3d,
+This is a review loop, not a batch job. Per example:
+
+1. Agent validates the `.gh` on the v0.1.1 `.gha` (deploy if needed) and
+   captures the image.
+2. Agent **presents it to Libish**: `Read` the JPG so it renders, plus the
+   solve result (solves? errors? unresolved components?).
+3. **Libish checks** the example and the image (is it correct, representative,
+   the right view?).
+4. Only on Libish's OK: record the status in the tracking table, keep/rename
+   the image, then move to the NEXT example. Do not run ahead.
+
+Libish sets the pace and reviews every example + image. Restart-safe: the
+tracking table below is the resume point — start at the first row not marked
+done.
+
+## Review order (one by one)
+
+- **First — gaps**: 01, 02, 03_quarry_to_slabs, 28, 05, 46, 47 (build the 4
+  missing READMEs, validate, capture the 7 missing images).
+- **Then — flagships (must work)**: 10_pack2d, 28_hole_nest, 11_pack3d,
   13_surface_mapping, 27_polygonal_masonry, 35_gpr_quarry_full_workflow,
   49_extraction_order_plan, 50_castle_keep_ifc.
-- **Batch C+**: the remaining `.gh` examples by number.
-- **Static pass**: 21-25 — confirm images + READMEs current (no solve).
+- **Then**: the remaining `.gh` examples by number, one at a time.
+- **Static (no `.gh`)**: 21-25 — Libish confirms images + READMEs current.
 
 ## Acceptance per example
 
