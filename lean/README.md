@@ -26,11 +26,12 @@ lake env lean -Dweak.linter.all=false <<< 'import FrahanProofs
 #print axioms FrahanProofs.nfp_interval'
 ```
 
-## Verified theorems (6)
+## Verified theorems (7)
 
 | Theorem | Statement | Derivation formalized |
 |---|---|---|
 | `Nesting.nfp_interval` | `[a₁,a₂]+p` overlaps `[b₁,b₂]` iff `p ∈ [b₁-a₂, b₂-a₁]` | NFP = A ⊕ (−B), the 1D no-fit interval (2D NFP = per-axis conjunction) |
+| `Nesting.first_verified_is_lexmin` | on a lex-sorted candidate list, the FIRST verification-gate survivor is the lex-minimum of ALL survivors | **the shipping selection rule**: `OrderedVertices` (y,x)-sort + first `TryVerifiedCandidate` survivor in `ContactNfpHoleNester` loses nothing |
 | `Nesting.blf_argmin_mem` | a nonempty candidate list has a lexicographic `(y,x)` minimum that is a member and ≤ all | bottom-left placement rule (linear objective attains min at a vertex) |
 | `Nesting.clip_subset` | `filter p xs ⊆ xs` | Sutherland–Hodgman: a greedy convex trim only shrinks the blank |
 | `Packing.cascade_ge_mem` | `max`-cascade ≥ every element | RecoveryCascade multi-scale monotonicity |

@@ -42,4 +42,36 @@ theorem blf_argmin_mem :
         · omega
         · exact hmin q hq'
 
+/-- Lexicographic (y, x) order on candidates, as the nester compares them. -/
+def lexLe (a b : Nat × Nat) : Prop := a.1 < b.1 ∨ (a.1 = b.1 ∧ a.2 ≤ b.2)
+
+theorem lexLe_refl (a : Nat × Nat) : lexLe a a := Or.inr ⟨rfl, Nat.le_refl _⟩
+
+/-- **The shipping BLF selection rule is optimal.** `ContactNfpHoleNester`
+    sorts candidates by `(y, x)` (`OrderedVertices`) and accepts the FIRST one
+    that passes the verification gate (`find?`). This proves that strategy
+    correct: on a lex-sorted list, the first gate-survivor is the lexicographic
+    minimum of ALL survivors — scanning in order loses nothing. -/
+theorem first_verified_is_lexmin (p : Nat × Nat → Bool) :
+    ∀ (xs : List (Nat × Nat)), List.Pairwise lexLe xs →
+      ∀ m, xs.find? p = some m → ∀ q ∈ xs, p q → lexLe m q := by
+  intro xs
+  induction xs with
+  | nil => intro _ m hm; simp [List.find?] at hm
+  | cons x xs ih =>
+    intro hpw m hm q hq hpq
+    have hpw' := List.pairwise_cons.mp hpw
+    cases hpx : p x with
+    | true =>
+      simp only [List.find?_cons, hpx] at hm
+      cases hm
+      rcases List.mem_cons.mp hq with rfl | hq'
+      · exact lexLe_refl q
+      · exact hpw'.1 q hq'
+    | false =>
+      simp only [List.find?_cons, hpx] at hm
+      rcases List.mem_cons.mp hq with rfl | hq'
+      · rw [hpx] at hpq; cases hpq
+      · exact ih hpw'.2 m hm q hq' hpq
+
 end FrahanProofs
