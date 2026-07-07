@@ -213,6 +213,38 @@ threshold flips the verdict (shows the checker computes). README explicitly
 states mortar is not modelled (conservative).
 
 
+## Image-quality audit (2026-07-07) — recapture priorities
+
+Spot-checked the example images. No blank / 0-byte / low-res files (all >=720px;
+small byte sizes are just efficient PNG compression of flat 2D diagrams). BUT the
+**Rhino viewport captures are systematically badly framed** while the matplotlib-
+generated figures are clean (e.g. 36 is good: titled, axis units, before/after).
+Recapture these during the HITL pass, in priority order:
+
+- **07_scan_to_mesh.png — STALE, misleading (highest priority).** Shows spurious
+  long triangle slivers / spikes across a noisy zoomed-in mesh. This is the
+  PRE-CLEANUP alpha-shape/advancing-front output. The pipeline is already fixed:
+  native regularized/REGULAR-only facets + the managed `ReconstructionCleanup`
+  safety net (drop degenerate/duplicate tris, keep largest connected component),
+  wired in at `ScanReconstructComponent.cs:315`. Re-running example 07 today
+  produces a clean mesh — the image just predates the fix. Recapture, zoom-extents.
+- **10_pack2d_result.png — FLAGSHIP undersells.** Left half nests tightly but the
+  pentagon + two triangles float on the right with large gray gaps. Reads as loose
+  placement, contradicting the tight-NFP-BLF-beats-OpenNest claim. Cause is likely
+  an over-wide sheet (BLF packs bottom-left, leaves the right empty), not a packer
+  bug. Re-run with a right-sized sheet / tighter part set and reframe.
+- **04_lidar_las_cloud.png** — edge-on sliver of points in ~90% empty gray; camera
+  angle hides all structure. Recapture from a 3/4 view, zoom-extents, colour by height.
+- **32_scan_to_blocks.png** — segmented cloud jammed into the bottom-left corner
+  (cut off) with a disconnected stereonet floating top-right across a dead gray
+  centre. Recompose so cloud + stereonet read as one scene, nothing cut off.
+
+Capture standard for the recaptures: zoom-extents (subject fills frame, nothing
+cut off), a 3/4 (not edge-on) view for 3D, colour-by-metric per the house rule,
+and no large dead grid areas. Backend note: the reconstruction native stack itself
+is HEALTHY (DLLs bundled, all entry points exported, cleanup wired) — only the
+images are stale/mis-framed.
+
 ## After validation
 
 1. Build an examples gallery page (thumbnails → per-example) for the docs site.
