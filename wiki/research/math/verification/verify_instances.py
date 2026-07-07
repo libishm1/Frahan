@@ -74,11 +74,37 @@ def blf_lexmin_at_vertex():
     return ForAll([px, py, x0, x1, y0, y1], Implies(And(box, in_f), minimal))
 
 
+def inscribed_pyramid_in_cone_k8_shipping():
+    """MASONRY_STABILITY: the SHIPPING configuration — the K=8 inscribed
+    pyramid emitted by FrictionConeBuilder (MasonryStabilityChecker default)
+    is a subset of the true Coulomb cone, so the RBE verdict is conservative.
+
+    Facet normals at theta_k = 2*pi*k/8 use cos/sin in {0, +-1, +-c4} with
+    2*c4^2 = 1 (cos pi/4); mu_eff = mu*c8 with 2*c8^2 = 1 + c4 (the half-angle
+    identity for cos pi/8). Quantifier-free QF_NRA: hypotheses AND negated
+    conclusion, unsat = the implication holds for all values.
+    """
+    from z3 import Reals as R
+    ft1, ft2, fn, mu, c4, c8, e = R("ft1 ft2 fn mu c4 c8 e")
+    hyp = And(
+        c4 > 0, 2 * c4 * c4 == 1,
+        c8 > 0, 2 * c8 * c8 == 1 + c4,
+        fn >= 0, mu >= 0, e == mu * c8 * fn,
+        ft1 <= e, c4 * (ft1 + ft2) <= e, ft2 <= e, c4 * (-ft1 + ft2) <= e,
+        -ft1 <= e, c4 * (-ft1 - ft2) <= e, -ft2 <= e, c4 * (ft1 - ft2) <= e,
+    )
+    # returned as a closed implication for the shared negation-unsat checker
+    concl = ft1 * ft1 + ft2 * ft2 <= mu * mu * fn * fn
+    return ForAll([ft1, ft2, fn, mu, c4, c8, e], Implies(hyp, concl))
+
+
 if __name__ == "__main__":
     ok = True
     ok &= check("NFP unit-square instance (EQUATIONS.md 1.2)", nfp_unit_squares())
     ok &= check("IFP erosion instance (EQUATIONS.md 1.3)", ifp_erosion())
     ok &= check("Inscribed friction pyramid subset-of-cone, K=4 (MASONRY_STABILITY)",
                 inscribed_pyramid_in_cone())
+    ok &= check("Inscribed friction pyramid subset-of-cone, K=8 SHIPPING config",
+                inscribed_pyramid_in_cone_k8_shipping())
     ok &= check("BLF lex-min at box vertex (EQUATIONS.md 1.5)", blf_lexmin_at_vertex())
     raise SystemExit(0 if ok else 1)

@@ -52,12 +52,16 @@ has passed.
    (matching), and determinism pins. ~1,050 tests run per merge.
 3. **SMT instance proofs (Z3).** Decidable instances of the published
    theorems are machine-proved by encoding the negation and obtaining
-   `unsat`. Currently proved (all four in
+   `unsat`. Currently proved (all five in
    [`verification/verify_instances.py`](verification/verify_instances.py),
    reproducible with `pip install z3-solver`): the NFP unit-square instance,
    the IFP erosion instance, the **BLF lexicographic minimum attained at a box
    vertex**, and the **inscribed friction pyramid being a subset of the
-   Coulomb cone** (K=4, the masonry conservativeness claim). This is the
+   Coulomb cone** at K=4 AND at **K=8 — the shipping `MasonryStabilityChecker`
+   configuration** — the latter in nonlinear real arithmetic with the
+   algebraic half-angle constants (2c₄² = 1, 2c₈² = 1 + c₄), so the masonry
+   conservativeness claim is machine-verified for the code path that actually
+   ships. This is the
    recommended complement wherever full mechanization is pending: exact, fast,
    and it covers real-arithmetic instances Lean would need Mathlib analysis
    for.
