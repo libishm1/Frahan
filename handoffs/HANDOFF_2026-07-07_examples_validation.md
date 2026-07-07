@@ -94,6 +94,11 @@ done.
 
 ## Tracking
 
+**Image recapture flags (2026-07-07 full sweep — see Image-quality audit below):**
+examples with ≥1 BAD image needing recapture during their HITL turn: **04, 07, 09,
+10 (flagship), 13, 15, 17, 21, 27, 30, 32, 34, 42, 43, 44, 48, 49 (flagship),
+vault**. Cleanest (leave alone): 25, 40, 41, 23, 35-figures, 08-packs.
+
 | # | example | .gh | img | README | status |
 |---|---|---|---|---|---|
 | 01 | quarry_to_wall | 1 | 0 | no | needs README+img+validate |
@@ -213,37 +218,95 @@ threshold flips the verdict (shows the checker computes). README explicitly
 states mortar is not modelled (conservative).
 
 
-## Image-quality audit (2026-07-07) — recapture priorities
+## Image-quality audit (2026-07-07) — FULL SWEEP, recapture register
 
-Spot-checked the example images. No blank / 0-byte / low-res files (all >=720px;
-small byte sizes are just efficient PNG compression of flat 2D diagrams). BUT the
-**Rhino viewport captures are systematically badly framed** while the matplotlib-
-generated figures are clean (e.g. 36 is good: titled, axis units, before/after).
-Recapture these during the HITL pass, in priority order:
+Swept ALL 125 example images (8 parallel subagents against a fixed rubric +
+main-loop verification of a cross-tag sample of 8 BADs — every agent verdict
+held). No blank / 0-byte / low-res files (all >=720px). The problem is framing,
+not code. **Totals: 65 GOOD, 31 BAD, 29 BORDERLINE.** Recapture the 31 BAD (and,
+budget permitting, the 29 BORDERLINE) during the HITL pass. Backend note: the
+reconstruction native stack is HEALTHY (DLLs bundled, all Phase H/I entry points
+exported, `ReconstructionCleanup` wired at `ScanReconstructComponent.cs:315`) —
+the bad reconstruction images are STALE captures, not broken output.
 
-- **07_scan_to_mesh.png — STALE, misleading (highest priority).** Shows spurious
-  long triangle slivers / spikes across a noisy zoomed-in mesh. This is the
-  PRE-CLEANUP alpha-shape/advancing-front output. The pipeline is already fixed:
-  native regularized/REGULAR-only facets + the managed `ReconstructionCleanup`
-  safety net (drop degenerate/duplicate tris, keep largest connected component),
-  wired in at `ScanReconstructComponent.cs:315`. Re-running example 07 today
-  produces a clean mesh — the image just predates the fix. Recapture, zoom-extents.
-- **10_pack2d_result.png — FLAGSHIP undersells.** Left half nests tightly but the
-  pentagon + two triangles float on the right with large gray gaps. Reads as loose
-  placement, contradicting the tight-NFP-BLF-beats-OpenNest claim. Cause is likely
-  an over-wide sheet (BLF packs bottom-left, leaves the right empty), not a packer
-  bug. Re-run with a right-sized sheet / tighter part set and reframe.
-- **04_lidar_las_cloud.png** — edge-on sliver of points in ~90% empty gray; camera
-  angle hides all structure. Recapture from a 3/4 view, zoom-extents, colour by height.
-- **32_scan_to_blocks.png** — segmented cloud jammed into the bottom-left corner
-  (cut off) with a disconnected stereonet floating top-right across a dead gray
-  centre. Recompose so cloud + stereonet read as one scene, nothing cut off.
+### Systemic root causes (fix once, applies broadly)
+1. **Edge-on / low camera** hiding 3D structure — 04, 17, 34, 49, guell barrel.
+2. **Deadspace**: tiny subject in a huge gray/white void — 42, 48, 30/32 clouds,
+   15 detail, 27_06/09.
+3. **Wireframe instead of shaded** (README says "shaded"), noisy fan-triangulation
+   slivers — 16, 18, 21_arch, 22, 15_exploded.
+4. **Thin diagonal-band demonstrator layout** — 15A/B/C, 19, 20.
+5. **Loose/gappy result** underselling the feature — 10 (flagship), 43, 27_10,
+   27_06_canvas.
+6. **Pillowy/inflated block material** — 27_10_portal, 27_10_castle_keep.
+Capture standard for every recapture: zoom-extents (subject fills frame, nothing
+clipped), 3/4 (not edge-on) view, SHADED not wireframe, colour-by-metric, no
+large dead areas.
 
-Capture standard for the recaptures: zoom-extents (subject fills frame, nothing
-cut off), a 3/4 (not edge-on) view for 3D, colour-by-metric per the house rule,
-and no large dead grid areas. Backend note: the reconstruction native stack itself
-is HEALTHY (DLLs bundled, all entry points exported, cleanup wired) — only the
-images are stale/mis-framed.
+### Special-handling flags (not just a reframe)
+- **STALE (code already fixed):** `07_scan_to_mesh.png` — pre-cleanup slivers;
+  re-run produces a clean mesh.
+- **DEPRECATED viz:** `15B_rubble_match_scaled.png` — old AABB proxy with red
+  spikes; drop it or re-render the current matcher.
+- **CONTRADICTS README (fix image or text):** `09_uncertainty_3d` (README says
+  "rendered 3D result", is a wireframe tangle) · `12_trencadis_result` (~90 shards
+  vs README 28/28) · `27_07_voronoi_3d_pyref` (title 100-stone vs 50 cells) ·
+  `39_concave_nest_hero` (5 vs README 6/6; input panel shows 3) · `44_nbo_to_robot`
+  (README promises TCP triads + approach vectors + magenta base; image shows a bare
+  pile).
+- **ORPHANED (not referenced by any README — prune or wire in):** the six 27_06 /
+  27_07_lambda / 27_09 / 27_10 experimental cards · `32_scan_to_blocks.png`
+  (folder namesake, README uses 32_dfn_bench) · `guell_barrel_452_stable.jpg`
+  (vault, README uses whole_shell_cra_barrel) · `03_gpr_radargram_AU.png`.
+
+### BAD (31) — recapture required
+| example | image | issue | fix |
+|---|---|---|---|
+| 04 | 04_lidar_las_cloud.png | camera/deadspace | 3/4 orbit, zoom-fit, colour by height |
+| 04 | 04_packable_volume.png | camera | orbit off edge-on, Clean Scan Mesh to peel cap slivers |
+| 07 | 07_scan_to_mesh.png | stale/artifacts | re-run (cleanup fixed), zoom-fit 3/4 |
+| 09 | uncertainty_safe_yield_3d.png | mismatch | re-render shaded blocks by per-zone yield |
+| 10 | 10_pack2d_result.png | loose (FLAGSHIP) | right-size the sheet, top-view, no floaters |
+| 13 | 13_surface_trencadis.png | artifacts | shade, retriangulate fan cap, drop stray panel |
+| 15 | 15_step2_blocks_exploded.png | artifacts (hero) | shaded solids, clean caps, tighter 3/4 |
+| 15 | 15_step2_block_detail.png | deadspace | zoom block to ~65% frame, shade, label face vs cut |
+| 15 | 15A_evolvedfit.png | deadspace | crop to a few pairs, 3/4, fill frame |
+| 15 | 15B_multibin_pack.png | deadspace | zoom to a couple bins, 3/4 |
+| 15 | 15B_rubble_match_scaled.png | deprecated | drop or re-render current matcher |
+| 15 | 15C_multibin_pack.png | deadspace | zoom to representative bins, 3/4 |
+| 17 | 17_ashlar_wall.png | deadspace | zoom to fill, front-3/4, remove stray origin stone |
+| 21 | 21_stone_to_voussoir.png | artifacts | re-trim to one clean voussoir, centre before/after |
+| 27 | 27_06_wall_generator_stability.png | deadspace/orphan | fix or drop (README holds card 06) |
+| 27 | 27_06_doublecurved_stability.png | loose/orphan | opaque shade, zoom; or drop |
+| 27 | 27_06_canvas_native.png | loose/orphan | close wall gaps, fill frame; or drop |
+| 27 | 27_07_stone_match_lambda.png | deadspace/orphan | zoom the 3 panels, front-on; or drop |
+| 27 | 27_09_ifc_export.png | deadspace/orphan | centre+zoom, colour by metric; or drop |
+| 27 | 27_10_portal_closeup.png | loose/orphan | tighten joints, opaque stone; or drop |
+| 30 | 30_discontinuity_sets.png | deadspace | centre cloud, use matplotlib stereonet inset |
+| 30 | segmentation_tongjiang_AB.png | deadspace | zoom cluster, drop outlier specks |
+| 30 | segmentation_tongjiang_XB.png | deadspace | zoom/centre, crop empty top |
+| 32 | 32_scan_to_blocks.png | deadspace/orphan | recompose one scene; or drop (not in README) |
+| 34 | marble_oblique_hero.jpg | deadspace | opaque size-colour, zoom, expose bed tilt |
+| 42 | hero.png | deadspace | zoom to fill, dark fills, close input↔result gap |
+| 43 | hero.jpg | loose | settle first, frame both straight+curved walls |
+| 44 | hero.jpg | mismatch | zoom on triads + approach vectors + base, scale up |
+| 48 | hero.png | deadspace | bring input+result together, zoom to fill |
+| 49 | hero.jpg | cutoff (FLAGSHIP) | 3/4, all 8 blocks + order labels, nothing clipped |
+| vault | figures/guell_barrel_452_stable.jpg | camera/orphan | 3/4 fill, colour by stability + cert; or drop |
+
+### BORDERLINE (29) — improve if the HITL pass has budget
+03_gpr_radargram_AU · 07_photogrammetry_ingest · 08_gpr_radargram_marble ·
+08f_flat_guillotine · 11_pack3d_result · 12_trencadis_result(mismatch) ·
+14_kintsugi_result · 16_rubble_wall(+stray stone) · 18_settle_bullet ·
+19_evolved_fit · 20_multibin · 21_rubble_arch · 22_pendentive_vault ·
+24_stage3_crossZ_allcuts · 25_0_bench_fractures · 29_classify_irregular ·
+31_discontinuity_ingest · 27_04_wall_with_holes · 27_07_voronoi_3d_pyref(mismatch) ·
+27_10_castle_keep · 27_10_castle_canvas · 30_segmentation_granite_dells ·
+30_segmentation_rockalign · 35_quarry_fab_tail_hero · 35_quarry_fab_facemap ·
+37_cladding_facade_hero(labels overlap) · 39_concave_nest_hero(mismatch) ·
+40_gprsoft_validation · 40_andesite_pipeline_canvas.
+
+### Cleanest folders (leave alone): 25, 40, 41, 23, 35(figures), 08(packs).
 
 ## After validation
 
