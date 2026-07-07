@@ -152,30 +152,65 @@ done.
 ### Proposed new example — 52_mayan_corbel_vault (block-mode vault, corbelled)
 
 Libish's proposal 2026-07-07. A Mayan (corbelled) vault: triangular section
-with a truncated top (capstone course) and two flat gable ends — structurally
-NOT a true arch: cantilevered staggered courses, stability = COM-over-support
-/ overturning, the exact regime the RBE/COM checkers validate. Composes from
-EXISTING components, no new code:
+with a truncated top (capstone course) and two flat gable ends. Structurally it
+is NOT a true arch — cantilevered courses stepping inward.
 
-1. Solid: trapezoidal-section prism (base width B, height H, top width T,
-   length L; e.g. B=3.0, T=0.6, H=2.4, L=4.0 m) — two inclined faces at the
-   classic ~steep corbel angle, two flat ends. Native GH box/loft or a small
-   internalized Brep->Mesh.
-2. `Staggered Block Decompose` (Form=the solid mesh, Course Height ~0.25,
-   Block Length ~0.6, Stagger 0.5, Up=Z) -> running-bond cells; corbelling
-   emerges automatically because the section narrows with height.
-3. Cell meshes -> assembly -> `Masonry Stability (RBE)` (K=8 inscribed, ground
-   course fixed) -> verdict + per-interface utilization; expect stable at
-   modest corbel angle, UNSTABLE when the user steepens the overhang — the
-   didactic knob.
-4. Colour by course index (= build order output), bake, capture.
-5. README: corbel-vs-arch mechanics note (Maya/tholos precedent), the
-   overhang-ratio rule of thumb, numeric sanity row (max tension <= gate,
-   utilization < 1, per-course cantilever ratio).
+**MODELLING CORRECTION (Libish, 2026-07-07): Maya vaults are MORTARED, not dry-
+stacked.** They are a battered facing of dressed stones over a thick core of
+lime-mortar-and-rubble (a near-monolithic cementitious hearting). Stability in
+reality comes from BOTH the massive wall/overburden mass counterweighting each
+cantilever AND the mortar's tensile/shear bond. Frahan's stability model is
+strictly **no-tension frictional** (Heyman/CRA): friction cone anchored at
+`f_n >= 0`, tension penalized to zero, and there is NO cohesion / tensile-bond
+parameter and NO surcharge term (verified in code 2026-07-07:
+`FrictionConeBuilder`, `RbeQpFormulation` lowerBounds). So the checker as
+shipped models the DRY-STONE idealisation only. Three honest ways to represent
+the mortared vault:
+
+- **Path A — dry-stone conservative bound (works today, no code).** Model the
+  full massive walls + overburden and run the existing RBE. A STABLE verdict is
+  a true lower bound: it stands from geometry + self-weight alone, mortar only
+  adds margin. A steep/thin corbel that historically stood ONLY because of
+  mortar will read UNSTABLE — honest ("would not stand un-mortared"), but not
+  the historical mechanism. Frame the example as "stable without relying on
+  mortar."
+- **Path B — add interface cohesion (Mohr-Coulomb), the true mortared model.**
+  Extend the cone to `|f_t| <= c*A + mu*f_n` with a tension cutoff
+  `f_n >= -sigma_t*A` (bond tensile strength). This is the correct
+  cementitious/lime-mortar model and unlocks a whole CLASS (mortared rubble
+  walls, Roman concrete), not just this vault. It changes the validated RBE
+  solver -> HITL-gated + re-validation + parameter calibration (lime-mortar
+  bond ~0.1-0.5 MPa). Opus-tier. When it lands, THIS example gains a "with
+  mortar" toggle: steeper corbels that fail dry-stone become feasible — a
+  before/after teaching moment.
+- **Path C — monolithic-core approximation (works today, geometry trick).**
+  Represent the mortared core as a few large blocks so the interfaces sit in
+  compression and the no-tension model does not spuriously fail. Approximates
+  the mortar's binding via geometry.
+
+Recommendation: **build on Path A now** (honest, ships without touching the
+solver), and log Path B (cohesion) as a real feature. Do NOT present the
+example as dry-stone corbelling if the README shows lime mortar — state the
+model is a conservative no-tension bound and mortar adds margin.
+
+Composition (Path A):
+1. Solid: trapezoidal-section prism (base B, height H, top T, length L; e.g.
+   B=3.0, T=0.6, H=2.4, L=4.0 m) with the FULL wall thickness (mass = the
+   counterweight), two inclined faces, two flat gable ends.
+2. `Staggered Block Decompose` (Course Height ~0.25, Block Length ~0.6,
+   Stagger 0.5, Up=Z) -> running-bond cells; corbelling emerges as the section
+   narrows with height.
+3. Cells -> assembly -> `Masonry Stability (RBE)` (K=8 inscribed, ground course
+   fixed) -> verdict + per-interface utilization.
+4. Colour by course index (= build order), bake, capture.
+5. README: corbel-vs-arch note (Maya precedent, and that it is MORTARED),
+   the no-tension-conservative caveat, overhang-ratio rule of thumb, numeric
+   sanity row.
 
 Numeric-sanity acceptance: RBE verdict present + stable at the reference
-geometry; flipping corbel angle past the documented threshold flips the
-verdict (shows the checker actually computes).
+geometry with full wall mass; steepening the corbel past the documented
+threshold flips the verdict (shows the checker computes). README explicitly
+states mortar is not modelled (conservative).
 
 
 ## After validation
