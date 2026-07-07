@@ -147,6 +147,36 @@ done.
 | 49 | extraction_order_plan | 1 | 1 | yes | flagship — revalidate |
 | 50 | castle_keep_ifc | 1 | 1 | yes | flagship — revalidate (Xbim) |
 | — | vault_generation | 8 | 2 | yes | revalidate (multi-.gh) |
+| 52 | mayan_corbel_vault (NEW, proposed) | 0 | 0 | no | build: see spec below |
+
+### Proposed new example — 52_mayan_corbel_vault (block-mode vault, corbelled)
+
+Libish's proposal 2026-07-07. A Mayan (corbelled) vault: triangular section
+with a truncated top (capstone course) and two flat gable ends — structurally
+NOT a true arch: cantilevered staggered courses, stability = COM-over-support
+/ overturning, the exact regime the RBE/COM checkers validate. Composes from
+EXISTING components, no new code:
+
+1. Solid: trapezoidal-section prism (base width B, height H, top width T,
+   length L; e.g. B=3.0, T=0.6, H=2.4, L=4.0 m) — two inclined faces at the
+   classic ~steep corbel angle, two flat ends. Native GH box/loft or a small
+   internalized Brep->Mesh.
+2. `Staggered Block Decompose` (Form=the solid mesh, Course Height ~0.25,
+   Block Length ~0.6, Stagger 0.5, Up=Z) -> running-bond cells; corbelling
+   emerges automatically because the section narrows with height.
+3. Cell meshes -> assembly -> `Masonry Stability (RBE)` (K=8 inscribed, ground
+   course fixed) -> verdict + per-interface utilization; expect stable at
+   modest corbel angle, UNSTABLE when the user steepens the overhang — the
+   didactic knob.
+4. Colour by course index (= build order output), bake, capture.
+5. README: corbel-vs-arch mechanics note (Maya/tholos precedent), the
+   overhang-ratio rule of thumb, numeric sanity row (max tension <= gate,
+   utilization < 1, per-course cantilever ratio).
+
+Numeric-sanity acceptance: RBE verdict present + stable at the reference
+geometry; flipping corbel angle past the documented threshold flips the
+verdict (shows the checker actually computes).
+
 
 ## After validation
 
