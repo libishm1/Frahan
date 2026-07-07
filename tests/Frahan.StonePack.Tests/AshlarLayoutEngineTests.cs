@@ -7,6 +7,8 @@ using Frahan.Masonry.Equilibrium;
 using Frahan.Masonry.Packing;
 using Frahan.Masonry.Solvers;
 
+#pragma warning disable CS0618 // tests deliberately pin the LEGACY Build sign convention (M2)
+
 namespace Frahan.Tests;
 
 // =============================================================================

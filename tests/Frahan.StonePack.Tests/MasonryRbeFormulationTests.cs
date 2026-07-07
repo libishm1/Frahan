@@ -4,6 +4,8 @@ using Frahan.Masonry.DataModel;
 using Frahan.Masonry.Equilibrium;
 using Frahan.Masonry.Solvers;
 
+#pragma warning disable CS0618 // tests deliberately pin the LEGACY Build sign convention (M2)
+
 namespace Frahan.Tests;
 
 // Phase A.4 unit tests for the RBE QP formulation

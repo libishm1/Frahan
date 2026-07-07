@@ -51,6 +51,10 @@ public static class RbeQpFormulation
     /// </param>
     /// <param name="hessianScale">Diagonal Hessian value used for ½ f^T (hessianScale * I) f.
     ///     Default 1.0 — produces minimum-norm contact-force solutions.</param>
+    [Obsolete("Legacy RHS sign convention: with the equilibrium builder's b (gravity " +
+              "negative) this produces f_n = -m*g against lowerBounds = 0, an INFEASIBLE " +
+              "QP for any real assembly (risk register M2). Use BuildPhysicsCorrected. " +
+              "Kept only for tests that pin the legacy sign expectations.")]
     public static ConvexQpProblem Build(
         EquilibriumSystem equilibrium,
         SparseMatrixCoo frictionAfr,
@@ -225,7 +229,9 @@ public static class RbeQpFormulation
         double tangentialScale = 1.0,
         double negativeNormalScale = 1.0)
     {
+#pragma warning disable CS0618 // intentional: the corrected variant wraps the legacy Build and flips its rhs
         var qp = Build(equilibrium, frictionAfr, hessianScale, tangentialScale, negativeNormalScale);
+#pragma warning restore CS0618
         var newRhs = new double[qp.EqualityRhs.Length];
         for (int i = 0; i < newRhs.Length; i++) newRhs[i] = -qp.EqualityRhs[i];
         if (qp.Hessian == null) // SPARSE-built (size gate): re-wrap with the flipped rhs
