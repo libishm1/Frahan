@@ -318,6 +318,8 @@ var tests = new List<(string Name, Action Body)>
     ("masonry RBE QP equality RHS is -B", MasonryRbeFormulationTests.RbeQpFormulation_EqualityRhs_IsNegB),
     ("masonry RBE QP normal columns LB=0 tangents unbounded", MasonryRbeFormulationTests.RbeQpFormulation_NormalColumnsLowerBoundIsZero_TangentsUnbounded),
     ("masonry RBE QP no friction inequality is null", MasonryRbeFormulationTests.RbeQpFormulation_NoFriction_InequalityIsNull),
+    ("masonry residual audit catches violated solution", MasonryRbeFormulationTests.ResidualAudit_ViolatedSolution_IsCaught),
+    ("masonry residual audit keeps good verdict stable", MasonryRbeFormulationTests.ResidualAudit_FullCheckStillStable),
     // ManagedQpSolver — Dykstra alternating projections (Phase B implementation)
     ("masonry QP solver equality only two vars finds midpoint", ManagedQpSolverTests.Solve_EqualityOnly_TwoVars_FindsMidpoint),
     ("masonry QP solver bounds only one active gives active corner", ManagedQpSolverTests.Solve_BoundsOnly_OneActive_GivesActiveCorner),

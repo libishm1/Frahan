@@ -264,6 +264,23 @@ public static class MasonryStabilityChecker
                 freeCount, assembly.Interfaces.Count, vertexCount), equilibrium, new List<VertexForce>());
         }
 
+        // ---- Independent equality-residual audit (fail-loud, risk H3). ----
+        // A solver can CLAIM Optimal while the iterate still violates Aeq f = b
+        // (ADMM at eps 1e-4 on badly scaled assemblies). The verdict must never
+        // read forces that do not satisfy equilibrium, so re-check the equality
+        // residual here with independent arithmetic and refuse a "stable"
+        // verdict when it fails the scale-relative gate.
+        double audit = EqualityResidualInf(qp, sol.X);
+        if (audit > ResidualAuditGate)
+        {
+            return new DetailedStabilityResult(new StabilityResult(false, sol.Status,
+                $"Penalty-RBE solution failed the independent equilibrium-residual audit " +
+                $"(relative ||Aeq f - b||inf = {audit:0.0e0} > {ResidualAuditGate:0.0e0}); " +
+                "treat as inconclusive, not stable.",
+                0, 0, -1, new List<InterfaceUtilization>(),
+                freeCount, assembly.Interfaces.Count, vertexCount), equilibrium, new List<VertexForce>());
+        }
+
         // ---- Decode per-vertex forces -> tension verdict + per-interface utilization. ----
         double muEff = friction.Mu; // Build() stored the effective coefficient
         var perVertex = new Dictionary<long, double[]>(); // key -> [fnPos, fnNeg, ft1, ft2]
@@ -1144,5 +1161,48 @@ public static class MasonryStabilityChecker
             for (int t = i + 1; t < n; t++) sum -= l[t, i] * x[t];
             x[i] = sum / l[i, i];
         }
+    }
+
+    /// <summary>
+    /// Scale-relative acceptance gate for the independent equilibrium-residual
+    /// audit: relative ||Aeq x - b||inf above this refuses a stable verdict.
+    /// 1e-3 sits an order above the ADMM eps (1e-4) so a converged solve passes
+    /// with margin while a stalled iterate is refused.
+    /// </summary>
+    internal const double ResidualAuditGate = 1e-3;
+
+    /// <summary>
+    /// Independent post-solve audit: relative equality residual
+    /// ||Aeq x - b||inf / max(1, ||b||inf), computed directly from the QP data
+    /// (dense or COO), with arithmetic independent of every solver lane.
+    /// </summary>
+    internal static double EqualityResidualInf(ConvexQpProblem qp, double[] x)
+    {
+        if (x == null || qp.EqualityRhs == null) return 0.0;
+        double[] ax;
+        if (qp.EqualitySparse != null)
+        {
+            ax = qp.EqualitySparse.Multiply(x);
+        }
+        else if (qp.EqualityMatrix != null)
+        {
+            int m = qp.EqualityRhs.Length, n = x.Length;
+            ax = new double[m];
+            for (int r = 0; r < m; r++)
+            {
+                double s = 0.0;
+                for (int c = 0; c < n; c++) s += qp.EqualityMatrix[r, c] * x[c];
+                ax[r] = s;
+            }
+        }
+        else return 0.0;
+
+        double rinf = 0.0, binf = 0.0;
+        for (int r = 0; r < qp.EqualityRhs.Length; r++)
+        {
+            rinf = Math.Max(rinf, Math.Abs(ax[r] - qp.EqualityRhs[r]));
+            binf = Math.Max(binf, Math.Abs(qp.EqualityRhs[r]));
+        }
+        return rinf / Math.Max(1.0, binf);
     }
 }

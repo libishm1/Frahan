@@ -122,6 +122,33 @@ static class MasonryRbeFormulationTests
             $"EqualityMatrix col count expected {system.Aeq.ColCount}, got {qp.EqualityMatrix.GetLength(1)}");
     }
 
+    // -- Residual audit (fail-loud gate, risk H3) ---------------------------
+
+    public static void ResidualAudit_ViolatedSolution_IsCaught()
+    {
+        // A force vector that does NOT satisfy Aeq f = b must produce a large
+        // relative residual, so the checker refuses a stable verdict on it.
+        var assembly = OneFreeOnGroundAssembly();
+        var system = EquilibriumMatrixBuilder.Build(assembly, penalty: false);
+        var qp = RbeQpFormulation.BuildPhysicsCorrected(system, frictionAfr: null);
+
+        var zero = new double[qp.VariableCount]; // all-zero forces cannot balance gravity
+        double r = MasonryStabilityChecker.EqualityResidualInf(qp, zero);
+        Assert(r > MasonryStabilityChecker.ResidualAuditGate,
+            $"all-zero forces should fail the audit, got relative residual {r}");
+    }
+
+    public static void ResidualAudit_FullCheckStillStable()
+    {
+        // The end-to-end checker (which now runs the audit before the verdict)
+        // must still report a single block resting on the ground as stable:
+        // a genuinely converged solve passes the gate with margin.
+        var assembly = OneFreeOnGroundAssembly();
+        var detailed = MasonryStabilityChecker.CheckDetailed(assembly);
+        Assert(detailed.Result.IsStable,
+            $"one block on ground should stay stable with the audit on: {detailed.Result.Message}");
+    }
+
     // -- Box bounds --------------------------------------------------------
 
     public static void RbeQpFormulation_NormalColumnsLowerBoundIsZero_TangentsUnbounded()
