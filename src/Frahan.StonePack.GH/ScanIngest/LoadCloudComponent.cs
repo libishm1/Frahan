@@ -41,7 +41,7 @@ public sealed class LoadCloudComponent
             "set. Pure-managed; no native dependency. Runs on a background " +
             "thread (Run gate) so the canvas stays responsive. Use upstream of " +
             "Cloud ICP / Scale Calibrate.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

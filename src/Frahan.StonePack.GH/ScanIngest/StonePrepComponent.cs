@@ -29,7 +29,7 @@ public sealed class StonePrepComponent : FrahanComponentBase
             "Repair → optional Decimate → StoneDescriptor. Wraps the " +
             "existing Frahan repair + Rhino quadric decimation + Stone " +
             "Descriptor builder. Pure managed.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

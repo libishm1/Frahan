@@ -47,7 +47,7 @@ public sealed class LoadMetashapeDenseCloudComponent : FrahanComponentBase
             "export the .oc3 to PLY in Metashape first, then load with the " +
             "Load Cloud component. v2 will add a Metashape Python worker " +
             "following the E57 out-of-process pattern.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

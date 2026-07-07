@@ -28,7 +28,7 @@ public sealed class ScaleCalibrateComponent : FrahanComponentBase
             "Optionally apply the transform to a list of input meshes. " +
             "Closes the unit-ambiguity gap in photogrammetry / scan workflows. " +
             "Frahan-original method.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

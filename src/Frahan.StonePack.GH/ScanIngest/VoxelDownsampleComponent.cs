@@ -31,7 +31,7 @@ public sealed class VoxelDownsampleComponent : FrahanComponentBase
             "Native Geogram path (Phase I shim) when available; managed " +
             "hash-grid fallback otherwise. Use upstream of Cloud ICP for " +
             "interactive ~10M+-point clouds.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

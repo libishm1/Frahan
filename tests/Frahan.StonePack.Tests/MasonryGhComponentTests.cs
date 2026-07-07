@@ -197,14 +197,15 @@ static class MasonryGhComponentTests
 
     public static void ReadPlyMeshComponent_Metadata_IsCorrect()
     {
-        // Phase F1+F2 rescue-extend (UX architecture report §9.14, 2026-05-19):
-        // subcategory moved from Masonry → Mesh (semantically a scan-prep tool,
-        // not a masonry algorithm). GUID preserved per AGENTS.md §8.
+        // Phase F moved this Masonry → Mesh (scan-prep tool); the 2026-07-07
+        // ribbon pass (blueprint #9) moved the whole scan/cloud loader family
+        // Mesh → Ingest so users find loaders in ONE place. GUID preserved
+        // per AGENTS.md §8 throughout.
         var c = new ReadPlyMeshComponent();
         Assert(c.Category == "Frahan",
             $"Category should be 'Frahan', got '{c.Category}'");
-        Assert(c.SubCategory == "Mesh",
-            $"SubCategory should be 'Mesh' after Phase F rescue-extend, got '{c.SubCategory}'");
+        Assert(c.SubCategory == "Ingest",
+            $"SubCategory should be 'Ingest' after the #9 ribbon pass, got '{c.SubCategory}'");
     }
 
     public static void ReadPlyMeshComponent_HasExpectedInputAndOutputCount()

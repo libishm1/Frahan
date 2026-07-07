@@ -45,7 +45,7 @@ public sealed class LoadE57CloudComponent
             "origin (add the Shift output to georeference back). Runs on a " +
             "background thread (Run gate); needs python + pye57 + numpy on PATH " +
             "and frahan_e57_worker.py deployed beside the .gha.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

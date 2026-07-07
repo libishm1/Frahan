@@ -36,7 +36,7 @@ public sealed class CloudIcpComponent : FrahanComponentBase
             "(native shim, Phase I) when available; falls back to " +
             "managed brute-force / hash-grid otherwise. Scales to 10M+ " +
             "points with the native shim. [Besl & McKay 1992]",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

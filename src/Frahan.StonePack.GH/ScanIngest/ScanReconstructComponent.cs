@@ -47,7 +47,7 @@ public sealed class ScanReconstructComponent
             "unoriented input). Runs on a background thread (Run gate) so the " +
             "canvas never freezes. Requires the Phase H rebuild of " +
             "frahan_cgal.dll / frahan_geogram.dll. [Edelsbrunner & Mücke 1994]",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

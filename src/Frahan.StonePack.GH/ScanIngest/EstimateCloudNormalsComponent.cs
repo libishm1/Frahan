@@ -35,7 +35,7 @@ public sealed class EstimateCloudNormalsComponent
             "thread (Run gate). Requires the Phase H/I rebuild of " +
             "frahan_cgal.dll; falls back to a Warning bubble if the shim " +
             "isn't built. [Hoppe et al. 1992]",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

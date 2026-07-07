@@ -43,7 +43,7 @@ public sealed class ReadLasCloudComponent
             "in real-world coordinates. Runs on a background thread (Run gate); " +
             "the canvas stays responsive. Use upstream of Cloud ICP / Scale " +
             "Calibrate. [Isenburg 2013]",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

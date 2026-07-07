@@ -42,7 +42,7 @@ public sealed class ReadMetashapeProjectComponent : FrahanComponentBase
             "Extract Mesh true, the component unzips mesh.ply to a temp " +
             "dir and returns the on-disk path so Frahan's Load PLY Mesh " +
             "component can consume it directly.",
-            "Frahan", "Mesh")
+            "Frahan", "Ingest")
     {
     }
 

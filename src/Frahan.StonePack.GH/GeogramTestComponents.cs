@@ -45,7 +45,7 @@ public sealed class GeogramMeshDecimateComponent : FrahanComponentBase
 
     // Fresh GUID series for Geogram components: F2D000C? prefix.
     public override Guid ComponentGuid => new Guid("F2D000C0-6E06-4F2D-A0C0-7E60660C0AC1");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("Downsample.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -176,7 +176,7 @@ public sealed class GeogramMeshRepairComponent : FrahanComponentBase
             "Wraps Geogram mesh_repair.",
             "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C1-6E06-4F2D-A0C1-7E60660C0AC1");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("PoissonReconstruct.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -251,7 +251,7 @@ public sealed class GeogramObbComponent : FrahanComponentBase
             "Frahan-original method.",
             "Frahan", "Mesh") { }
     public override Guid ComponentGuid => new Guid("F2D000C2-6E06-4F2D-A0C2-7E60660C0AC1");
-    public override GH_Exposure Exposure => GH_Exposure.primary;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override System.Drawing.Bitmap Icon => IconProvider.Load("MeshBvh.png");
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
