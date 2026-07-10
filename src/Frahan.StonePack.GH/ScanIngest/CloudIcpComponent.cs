@@ -98,8 +98,9 @@ public sealed class CloudIcpComponent
             GH_ParamAccess.item);
         p[2].Optional = true;
         p.AddNumberParameter("Voxel Scales", "Vs",
-            "Coarse-to-fine voxel sizes (model units). Default {0.5, 0.1, " +
-            "0.02} → 50 cm → 10 cm → 2 cm for metre-scale benches.",
+            "Coarse-to-fine voxel sizes (model units). Leave unwired for AUTO: " +
+            "derived from the cloud extent (diag/60, /200, /600), so mm / cm / " +
+            "m models all behave the same.",
             GH_ParamAccess.list);
         p[3].Optional = true;
         p.AddIntegerParameter("Max Iterations", "Mi",
@@ -177,6 +178,7 @@ public sealed class CloudIcpComponent
         public int CorrespondencesUsed;
         public int SrcCount;
         public int TgtCount;
+        public string Diagnostics;
         public string Failure;   // non-null when opts construction or ICP failed
     }
 
@@ -298,6 +300,7 @@ public sealed class CloudIcpComponent
                 CorrespondencesUsed = r.CorrespondencesUsed,
                 SrcCount = s.Src.Count,
                 TgtCount = s.Tgt.Count,
+                Diagnostics = r.Diagnostics,
             };
         }
         catch (OperationCanceledException)
@@ -329,10 +332,17 @@ public sealed class CloudIcpComponent
             $"iters={r.IterationsUsed} converged={r.Converged}; " +
             $"correspondences={r.CorrespondencesUsed}");
 
+        if (r.Diagnostics != null)
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, r.Diagnostics);
         if (!r.Converged)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
-                "ICP did not converge within Max Iterations. Try more iterations, " +
-                "a tighter Trim Fraction, or a better initial guess (marker registration).");
+                $"ICP did not converge within Max Iterations (final RMS = {r.FinalRms:G4} " +
+                "model units; the Transform is still emitted - judge it by that RMS). " +
+                "ICP is a LOCAL refiner: genuinely different scans need a coarse start " +
+                "first - wire Align by Control Points into Initial Guess (X0). For " +
+                "partial overlap raise Trim Fraction to 0.4-0.6. If the two inputs " +
+                "use different units (mm scan vs m model), scale one first: rigid ICP " +
+                "cannot fix scale.");
     }
 
     protected override void EmitIdle(IGH_DataAccess da, string message)

@@ -33,7 +33,7 @@ public sealed class CloudIcpOptions
     public CloudIcpOptions(
         double[] voxelScales = null,
         int maxIterationsPerScale = 30,
-        double translationTolerance = 1e-4,
+        double translationTolerance = double.NaN,
         double rotationToleranceDegrees = 1e-3,
         double trimFraction = 0.2,
         bool usePointToPlane = false,
@@ -72,6 +72,11 @@ public sealed class CloudIcpOptions
     /// coverage, not every sample. 0 = unlimited (old behaviour).</summary>
     public int MaxPointsPerScale { get; } = 400_000;
     public int MaxIterationsPerScale { get; }
+    /// <summary>Convergence gate on the per-iteration rigid-step translation
+    /// AND on the RMS plateau, in MODEL UNITS. NaN (default) = AUTO:
+    /// resolved at Register time as diagonal * 1e-6, so a millimetre model
+    /// does not demand sub-micron steps before reporting convergence (the
+    /// old absolute 1e-4 was metre-tuned - unit bug, risk M1).</summary>
     public double TranslationTolerance { get; }
     public double RotationToleranceDegrees { get; }
     /// <summary>Fraction of worst-residual correspondences dropped per
@@ -87,14 +92,20 @@ public sealed class CloudIcpOptions
 public sealed class CloudIcpResult
 {
     public CloudIcpResult(Transform xform, double finalRms,
-        int iterationsUsed, bool converged, int correspondencesUsed)
+        int iterationsUsed, bool converged, int correspondencesUsed,
+        string diagnostics = null)
     {
         Transform = xform;
         FinalRms = finalRms;
         IterationsUsed = iterationsUsed;
         Converged = converged;
         CorrespondencesUsed = correspondencesUsed;
+        Diagnostics = diagnostics;
     }
+    /// <summary>Non-fatal data warnings worth surfacing to the user
+    /// (unit-mismatch suspicion, centroid pre-alignment applied); null
+    /// when there is nothing to say.</summary>
+    public string Diagnostics { get; }
     public Transform Transform { get; }
     public double FinalRms { get; }
     public int IterationsUsed { get; }
@@ -133,17 +144,58 @@ public static class PointCloudIcp
         var srcFlat = ToFlat(sourcePoints);
         var tgtFlat = ToFlat(targetPoints);
 
+        // DATA DIAGNOSTICS. Rigid ICP recovers rotation + translation ONLY -
+        // it can never fix a SCALE difference. Mixed units between the two
+        // inputs (a mm-unit scan against a metre-unit mesh is 1000x) is the
+        // classic silent killer, so detect and say it.
+        string diagnostics = null;
+        double sDiag = CombinedDiagonal(srcFlat, srcFlat);
+        double tDiag = CombinedDiagonal(tgtFlat, tgtFlat);
+        if (sDiag > 0 && tDiag > 0)
+        {
+            double ratio = Math.Max(sDiag, tDiag) / Math.Min(sDiag, tDiag);
+            if (ratio > 5.0)
+                diagnostics = $"Source extent {sDiag:G4} vs target extent {tDiag:G4} " +
+                    $"(~{ratio:F0}x apart). Rigid ICP cannot fix a scale difference - " +
+                    "check UNITS (mm vs m scan files; readers keep the file's units, " +
+                    "they do not convert to document units). Scale one cloud first.";
+        }
+
+        // Centroid pre-alignment: with no initial guess, translate the source
+        // centroid onto the target centroid before iterating. Standard ICP
+        // prep - rescues same-unit clouds that sit far apart (e.g. UTM vs
+        // local frame), where identity-start ICP has no overlap to latch on.
+        if (cum.Equals(Transform.Identity))
+        {
+            var sc = Centroid(srcFlat);
+            var tc = Centroid(tgtFlat);
+            var shift = new Vector3d(tc.X - sc.X, tc.Y - sc.Y, tc.Z - sc.Z);
+            double rel = diagnostics == null && tDiag > 0 ? shift.Length / tDiag : 0.0;
+            if (shift.Length > 0)
+            {
+                cum = Transform.Translation(shift);
+                if (rel > 0.5)
+                    diagnostics = (diagnostics == null ? "" : diagnostics + " ")
+                        + $"Clouds were {shift.Length:G4} apart (>{rel:F1}x the target extent); "
+                        + "centroid pre-alignment applied as the initial guess.";
+            }
+        }
+
         // AUTO scales: derive from the combined extent so the ladder is
         // unit-aware (mm / cm / m / quarry all get the same relative
-        // coarse-to-fine). diag/60 ≈ the old 0.5 m on a 30 m bench.
+        // coarse-to-fine). diag/60 ~= the old 0.5 m on a 30 m bench.
+        double diag = CombinedDiagonal(srcFlat, tgtFlat);
         double[] scales = options.VoxelScales;
         if (scales == null)
         {
-            double diag = CombinedDiagonal(srcFlat, tgtFlat);
             scales = diag > 0.0
                 ? new[] { diag / 60.0, diag / 200.0, diag / 600.0 }
                 : new[] { 0.0 };
         }
+        // AUTO convergence tolerance: scale-relative, never absolute.
+        double transTol = double.IsNaN(options.TranslationTolerance)
+            ? Math.Max(diag * 1e-6, 1e-12)
+            : options.TranslationTolerance;
 
         int scaleIdx = 0;
         foreach (double voxel in scales)
@@ -171,7 +223,7 @@ public static class PointCloudIcp
 
             var (xform, rms, iters, conv, used) = RunIcpAtScale(
                 srcDs, tgtDs, cum, options, progress, token,
-                $"scale {scaleIdx}/{scales.Length}", voxel);
+                $"scale {scaleIdx}/{scales.Length}", voxel, transTol);
             cum = xform;
             totalIters += iters;
             finalRms = rms;
@@ -179,7 +231,7 @@ public static class PointCloudIcp
             corrUsed = used;
         }
 
-        return new CloudIcpResult(cum, finalRms, totalIters, converged, corrUsed);
+        return new CloudIcpResult(cum, finalRms, totalIters, converged, corrUsed, diagnostics);
     }
 
     private static double CombinedDiagonal(double[] a, double[] b)
@@ -198,6 +250,15 @@ public static class PointCloudIcp
             }
         double dx = maxX - minX, dy = maxY - minY, dz = maxZ - minZ;
         return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    private static Point3d Centroid(double[] flat)
+    {
+        double x = 0, y = 0, z = 0;
+        int n = flat.Length / 3;
+        for (int i = 0; i < n; i++) { x += flat[3 * i]; y += flat[3 * i + 1]; z += flat[3 * i + 2]; }
+        double inv = n > 0 ? 1.0 / n : 0.0;
+        return new Point3d(x * inv, y * inv, z * inv);
     }
 
     /// <summary>Uniform stride subsample down to maxPoints (0 = unlimited).</summary>
@@ -220,7 +281,7 @@ public static class PointCloudIcp
     private static (Transform xform, double rms, int iters, bool converged, int corrUsed)
         RunIcpAtScale(double[] srcFlat, double[] tgtFlat, Transform initial, CloudIcpOptions opt,
             Action<string> progress = null, CancellationToken token = default, string label = "",
-            double cellHint = 0.0)
+            double cellHint = 0.0, double transTol = 1e-4)
     {
         int srcN = srcFlat.Length / 3;
         int tgtN = tgtFlat.Length / 3;
@@ -307,14 +368,14 @@ public static class PointCloudIcp
             // Convergence check.
             double dt = TranslationMagnitude(delta);
             double drDeg = RotationAngleDegrees(delta);
-            if (dt < opt.TranslationTolerance && drDeg < opt.RotationToleranceDegrees)
+            if (dt < transTol && drDeg < opt.RotationToleranceDegrees)
             {
                 converged = true;
                 iters++;
                 prevRms = rms;
                 break;
             }
-            if (Math.Abs(prevRms - rms) < opt.TranslationTolerance)
+            if (Math.Abs(prevRms - rms) < transTol)
             {
                 converged = true;
                 iters++;
