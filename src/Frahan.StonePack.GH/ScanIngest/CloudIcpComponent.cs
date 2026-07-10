@@ -286,7 +286,9 @@ public sealed class CloudIcpComponent
         token.ThrowIfCancellationRequested();
         try
         {
-            CloudIcpResult r = PointCloudIcp.Register(s.Src, s.Tgt, s.X0, opts);
+            // progress -> component label (live iteration ticker); token -> real
+            // mid-solve cancel (Run=false now interrupts between iterations).
+            CloudIcpResult r = PointCloudIcp.Register(s.Src, s.Tgt, s.X0, opts, progress, token);
             return new Payload
             {
                 Transform = r.Transform,
@@ -297,6 +299,10 @@ public sealed class CloudIcpComponent
                 SrcCount = s.Src.Count,
                 TgtCount = s.Tgt.Count,
             };
+        }
+        catch (OperationCanceledException)
+        {
+            throw; // cancellation is not a failure: the base discards the payload
         }
         catch (Exception ex)
         {
