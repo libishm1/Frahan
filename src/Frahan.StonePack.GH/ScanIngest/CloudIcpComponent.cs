@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using Frahan.Core.ScanIngest;
 using Frahan.GH.Attributes;
 using Grasshopper.Kernel;
@@ -18,6 +19,12 @@ namespace Frahan.GH.ScanIngest;
 // graceful managed fallback when the Phase I rebuild of the shims is
 // not present. Coarse-to-fine multi-resolution wrapper hits 10M+ point
 // scale within ~30-40 s wall clock when native is available.
+//
+// NON-BLOCKING (2026-07-09): coarse-to-fine ICP on a big cloud takes tens of
+// seconds and previously ran on the UI thread inside SolveInstance, which froze
+// and could crash Rhino. It now runs on a background thread via
+// AsyncScanComponent, gated by a "Run" toggle (default false). The canvas stays
+// responsive; the result pops in when the Task finishes.
 // =============================================================================
 
 [Algorithm("Trimmed ICP (coarse-to-fine)",
@@ -27,7 +34,8 @@ namespace Frahan.GH.ScanIngest;
     "Register a source point cloud onto a target via coarse-to- fine trimmed ICP",
     DesignFlow.Bridges,
     Precedent = "Besl McKay 1992 Iterative Closest Point; MathNet.Numerics SVD")]
-public sealed class CloudIcpComponent : FrahanComponentBase
+public sealed class CloudIcpComponent
+    : AsyncScanComponent<CloudIcpComponent.Snapshot, CloudIcpComponent.Payload>
 {
     public CloudIcpComponent()
         : base("Cloud ICP", "CloudIcp",
@@ -35,7 +43,8 @@ public sealed class CloudIcpComponent : FrahanComponentBase
             "fine trimmed ICP. Uses Geogram KD-tree + voxel downsample " +
             "(native shim, Phase I) when available; falls back to " +
             "managed brute-force / hash-grid otherwise. Scales to 10M+ " +
-            "points with the native shim. [Besl & McKay 1992]",
+            "points with the native shim. Runs on a background thread (Run " +
+            "gate); the canvas never freezes. [Besl & McKay 1992]",
             "Frahan", "Ingest")
     {
     }
@@ -66,6 +75,13 @@ public sealed class CloudIcpComponent : FrahanComponentBase
             "Drop this fraction of worst-residual pairs each iteration. " +
             "0.2 = standard robust ICP. 0 keeps all.",
             GH_ParamAccess.item, 0.2);
+        // Appended LAST so existing canvases keep their wiring. Default false:
+        // ICP is NOT run until the user toggles Run, so opening a definition
+        // never kicks off a multi-second registration on the UI thread.
+        p.AddBooleanParameter("Run", "R",
+            "Set true to run ICP (on a background thread). False = idle; " +
+            "nothing is computed, the canvas never freezes.",
+            GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -89,54 +105,115 @@ public sealed class CloudIcpComponent : FrahanComponentBase
             "Summary line.", GH_ParamAccess.item);
     }
 
-    protected override void SolveSafe(IGH_DataAccess da)
+    public sealed class Snapshot
     {
+        // Point3d / Transform are value-type structs (pure data, no document
+        // binding), so these copies are safe for the background Task to read.
+        public List<Point3d> Src;
+        public List<Point3d> Tgt;
+        public Transform X0;
+        public double[] Scales;
+        public int MaxIters;
+        public double Trim;
+    }
+
+    public sealed class Payload
+    {
+        public Transform Transform;
+        public double FinalRms;
+        public int IterationsUsed;
+        public bool Converged;
+        public int CorrespondencesUsed;
+        public int SrcCount;
+        public int TgtCount;
+        public string Failure;   // non-null when opts construction or ICP failed
+    }
+
+    protected override bool TryRead(IGH_DataAccess da, out bool run, out Snapshot snapshot)
+    {
+        run = false; snapshot = null;
+        da.GetData(6, ref run);
+        if (!run) return true;
+
         var src = new List<Point3d>();
         var tgt = new List<Point3d>();
-        Transform x0 = Transform.Identity;
-        var voxelScales = new List<double>();
-        int maxIters = 30;
-        double trim = 0.2;
-
         if (!da.GetDataList(0, src) || src.Count < 3)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 3 source points.");
-            return;
+            return false;
         }
         if (!da.GetDataList(1, tgt) || tgt.Count < 3)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 3 target points.");
-            return;
+            return false;
         }
+
+        Transform x0 = Transform.Identity;
         da.GetData(2, ref x0);
+        var voxelScales = new List<double>();
         da.GetDataList(3, voxelScales);
+        int maxIters = 30;
         da.GetData(4, ref maxIters);
+        double trim = 0.2;
         da.GetData(5, ref trim);
 
-        double[] scales = voxelScales.Count > 0 ? voxelScales.ToArray() : null;
+        snapshot = new Snapshot
+        {
+            Src = src,
+            Tgt = tgt,
+            X0 = x0,
+            Scales = voxelScales.Count > 0 ? voxelScales.ToArray() : null,
+            MaxIters = maxIters,
+            Trim = trim,
+        };
+        return true;
+    }
+
+    protected override Payload Compute(Snapshot s, CancellationToken token, Action<string> progress)
+    {
+        progress($"registering {s.Src.Count} -> {s.Tgt.Count} points...");
+        token.ThrowIfCancellationRequested();
+
         CloudIcpOptions opts;
         try
         {
             opts = new CloudIcpOptions(
-                voxelScales: scales,
-                maxIterationsPerScale: maxIters,
-                trimFraction: trim);
+                voxelScales: s.Scales,
+                maxIterationsPerScale: s.MaxIters,
+                trimFraction: s.Trim);
         }
         catch (Exception ex)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message);
-            return;
+            return new Payload { Failure = ex.Message };
         }
 
-        CloudIcpResult r;
+        token.ThrowIfCancellationRequested();
         try
         {
-            r = PointCloudIcp.Register(src, tgt, x0, opts);
+            CloudIcpResult r = PointCloudIcp.Register(s.Src, s.Tgt, s.X0, opts);
+            return new Payload
+            {
+                Transform = r.Transform,
+                FinalRms = r.FinalRms,
+                IterationsUsed = r.IterationsUsed,
+                Converged = r.Converged,
+                CorrespondencesUsed = r.CorrespondencesUsed,
+                SrcCount = s.Src.Count,
+                TgtCount = s.Tgt.Count,
+            };
         }
         catch (Exception ex)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                $"ICP failed: {ex.GetType().Name}: {ex.Message}");
+            return new Payload { Failure = $"ICP failed: {ex.GetType().Name}: {ex.Message}" };
+        }
+    }
+
+    protected override void EmitResult(IGH_DataAccess da, Payload r)
+    {
+        if (r.Failure != null)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, r.Failure);
+            da.SetData(5, $"Failed: {r.Failure}");
             return;
         }
 
@@ -146,15 +223,18 @@ public sealed class CloudIcpComponent : FrahanComponentBase
         da.SetData(3, r.Converged);
         da.SetData(4, r.CorrespondencesUsed);
         da.SetData(5,
-            $"Source={src.Count} Target={tgt.Count} pts; RMS={r.FinalRms:F4}; " +
+            $"Source={r.SrcCount} Target={r.TgtCount} pts; RMS={r.FinalRms:F4}; " +
             $"iters={r.IterationsUsed} converged={r.Converged}; " +
             $"correspondences={r.CorrespondencesUsed}");
 
         if (!r.Converged)
-        {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                 "ICP did not converge within Max Iterations. Try more iterations, " +
                 "a tighter Trim Fraction, or a better initial guess (marker registration).");
-        }
+    }
+
+    protected override void EmitIdle(IGH_DataAccess da, string message)
+    {
+        da.SetData(5, message);
     }
 }
