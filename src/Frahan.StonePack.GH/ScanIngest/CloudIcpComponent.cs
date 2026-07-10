@@ -200,15 +200,18 @@ public sealed class CloudIcpComponent
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                     $"{label} Geometry: {unsupported} item(s) were not Mesh / PointCloud / Point and were skipped.");
             if (pooled.Count >= 3) return pooled;
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                $"{label} Geometry needs >= 3 total vertices from Mesh / PointCloud / points.");
+            // Missing/insufficient input is a WAITING state, not a failure:
+            // orange warning, never red (house rule; risk M8 classification).
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                $"{label} Geometry needs >= 3 total vertices from Mesh / PointCloud / points. Waiting for input.");
             return null;
         }
         var pts = new List<Point3d>();
         if (!da.GetDataList(listIndex, pts) || pts.Count < 3)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                $"Need >= 3 {label.ToLowerInvariant()} points (wire {label} Geometry or {label} Cloud).");
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                $"{label} input is empty - wire {label} Geometry (Mesh / PointCloud / " +
+                $"points) or {label} Cloud, then Run. Waiting for input.");
             return null;
         }
         return pts;
