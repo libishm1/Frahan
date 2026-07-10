@@ -41,10 +41,22 @@ public sealed class VoxelDownsampleComponent : FrahanComponentBase
 
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
-        p.AddPointParameter("Points", "P", "Input cloud.", GH_ParamAccess.list);
+        p.AddPointParameter("Points", "P",
+            "Input cloud as a point list. For big scans wire Geometry instead.",
+            GH_ParamAccess.list);
+        p[0].Optional = true; // geometry-input canvases must still solve
         p.AddNumberParameter("Voxel Size", "V",
             "Edge length of the cubic voxel in model units.",
             GH_ParamAccess.item, 0.05);
+        // PREFERRED for big scans (2026-07-10, same pattern as Cloud ICP):
+        // a Mesh or PointCloud is ONE canvas item - no goo-per-point unwrap,
+        // and native PointCloud outputs (Load Cloud / Read LAS "C") wire in
+        // directly (GH cannot auto-convert PointCloud -> Point list).
+        p.AddGeometryParameter("Geometry", "G",
+            "PREFERRED input: cloud as Mesh(es), PointCloud(s), or points - " +
+            "any mix; all vertices pooled. When wired, Points is ignored.",
+            GH_ParamAccess.list);
+        p[2].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -55,15 +67,37 @@ public sealed class VoxelDownsampleComponent : FrahanComponentBase
             "Output count / input count.", GH_ParamAccess.item);
         p.AddIntegerParameter("Output Count", "N",
             "Number of centroids.", GH_ParamAccess.item);
+        p.AddGeometryParameter("Cloud", "C",
+            "Downsampled result as a single native PointCloud - lag-free to " +
+            "wire onward (Cloud ICP Sg/Tg, Estimate Cloud Normals Cloud).",
+            GH_ParamAccess.item);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
     {
         var pts = new List<Point3d>();
         double voxel = 0.05;
-        if (!da.GetDataList(0, pts) || pts.Count == 0)
+        var goos = new List<Grasshopper.Kernel.Types.IGH_GeometricGoo>();
+        da.GetDataList(2, goos);
+        if (goos.Count > 0)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need at least 1 point.");
+            foreach (var goo in goos)
+                switch (goo?.ScriptVariable())
+                {
+                    case Mesh m: pts.AddRange(m.Vertices.ToPoint3dArray()); break;
+                    case PointCloud pc: pts.AddRange(pc.GetPoints()); break;
+                    case Point3d p3: pts.Add(p3); break;
+                    case Rhino.Geometry.Point pt: pts.Add(pt.Location); break;
+                }
+        }
+        else
+        {
+            da.GetDataList(0, pts);
+        }
+        if (pts.Count == 0)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                "Input empty - wire Geometry (Mesh / PointCloud / points) or Points. Waiting for input.");
             return;
         }
         da.GetData(1, ref voxel);
@@ -99,6 +133,7 @@ public sealed class VoxelDownsampleComponent : FrahanComponentBase
         da.SetDataList(0, outPts);
         da.SetData(1, (double)outN / pts.Count);
         da.SetData(2, outN);
+        da.SetData(3, new PointCloud(outPts));
     }
 
     /// <summary>
