@@ -65,6 +65,22 @@ public sealed class CloudIcpComponent
     protected override Bitmap Icon => IconProvider.Load("PointCloudIcp.png");
     public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
+    /// <summary>Canvases saved with earlier builds serialized S/T as REQUIRED,
+    /// and GH restores that state over the code registration - the component
+    /// then reports "Input parameter S failed to collect data" and never
+    /// solves when the lists are empty. Re-assert the flags after deserialize
+    /// so old canvases behave like fresh drops.</summary>
+    public override bool Read(GH_IO.Serialization.GH_IReader reader)
+    {
+        if (!base.Read(reader)) return false;
+        foreach (int i in new[] { 0, 1, 2, 3 })
+            if (i < Params.Input.Count) Params.Input[i].Optional = true;
+        // Sg/Tg exist only on current builds; guard by count.
+        foreach (int i in new[] { 7, 8 })
+            if (i < Params.Input.Count) Params.Input[i].Optional = true;
+        return true;
+    }
+
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
         p.AddPointParameter("Source Cloud", "S",
