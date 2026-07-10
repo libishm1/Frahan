@@ -36,6 +36,18 @@ public sealed class VoxelDownsampleComponent : FrahanComponentBase
     }
 
     public override Guid ComponentGuid => new Guid("E4F5A6B7-3202-4F5E-A6B7-C8D9E0F12345");
+
+    /// <summary>Canvases saved with earlier builds serialized P as REQUIRED and
+    /// GH restores that over the code registration - the component then reports
+    /// "Input parameter P failed to collect data" when only Geometry is wired.
+    /// Re-assert Optional after deserialize (same fix as Cloud ICP).</summary>
+    public override bool Read(GH_IO.Serialization.GH_IReader reader)
+    {
+        if (!base.Read(reader)) return false;
+        if (Params.Input.Count > 0) Params.Input[0].Optional = true;  // P
+        if (Params.Input.Count > 2) Params.Input[2].Optional = true;  // G
+        return true;
+    }
     protected override Bitmap Icon => IconProvider.Load("Downsample.png");
     public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
