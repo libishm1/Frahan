@@ -25,6 +25,18 @@ namespace Frahan.GH.ScanIngest;
 // and could crash Rhino. It now runs on a background thread via
 // AsyncScanComponent, gated by a "Run" toggle (default false). The canvas stays
 // responsive; the result pops in when the Task finishes.
+//
+// BIG-INPUT PATH (2026-07-10): moving the solve off-thread was not enough for
+// quarry-scale inputs. Two residual UI-thread killers fixed:
+//   1. Millions of points wired as a GH point LIST are unwrapped goo-by-goo in
+//      TryRead (freeze) and cost ~100 bytes/point in GH trees (memory blowup /
+//      crash on a quarry pair). Fix: Source/Target Geometry inputs (Mesh or
+//      PointCloud, ONE canvas item, vertices extracted directly) — wire the
+//      quarry meshes straight in; the point lists remain for small clouds.
+//   2. The completion pass (ExpireSolution when the Task finishes) re-ran the
+//      full TryRead just to emit a transform, re-unwrapping every input on the
+//      UI thread. Fix: TryReadRunOnly override — the emit/progress/idle passes
+//      read only the Run bool; the heavy capture runs exactly once per job.
 // =============================================================================
 
 [Algorithm("Trimmed ICP (coarse-to-fine)",
@@ -56,9 +68,15 @@ public sealed class CloudIcpComponent
     protected override void RegisterInputParams(GH_InputParamManager p)
     {
         p.AddPointParameter("Source Cloud", "S",
-            "Source point cloud to register.", GH_ParamAccess.list);
+            "Source point cloud to register, as a point list. Fine for small " +
+            "clouds; for big scans wire Source Geometry instead (lag-free).",
+            GH_ParamAccess.list);
+        p[0].Optional = true; // geometry-input canvases must still solve (GH skips SolveInstance when a required input is empty)
         p.AddPointParameter("Target Cloud", "T",
-            "Target point cloud (registration goal).", GH_ParamAccess.list);
+            "Target point cloud (registration goal), as a point list. Fine for " +
+            "small clouds; for big scans wire Target Geometry instead.",
+            GH_ParamAccess.list);
+        p[1].Optional = true;
         p.AddTransformParameter("Initial Guess", "X0",
             "Optional initial transform. Identity if not wired.",
             GH_ParamAccess.item);
@@ -82,6 +100,21 @@ public sealed class CloudIcpComponent
             "Set true to run ICP (on a background thread). False = idle; " +
             "nothing is computed, the canvas never freezes.",
             GH_ParamAccess.item, false);
+        // Appended AFTER Run so canvases built on the first async build keep
+        // their wiring. PREFERRED for big scans: ONE canvas item instead of a
+        // per-point goo list (see BIG-INPUT PATH note above).
+        p.AddGeometryParameter("Source Geometry", "Sg",
+            "PREFERRED for big scans: source as a Mesh or PointCloud (one " +
+            "canvas item, lag-free). Its vertices are used. When wired, the " +
+            "Source Cloud point list is ignored.",
+            GH_ParamAccess.item);
+        p[7].Optional = true;
+        p.AddGeometryParameter("Target Geometry", "Tg",
+            "PREFERRED for big scans: target as a Mesh or PointCloud (one " +
+            "canvas item, lag-free). Its vertices are used. When wired, the " +
+            "Target Cloud point list is ignored.",
+            GH_ParamAccess.item);
+        p[8].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -129,24 +162,64 @@ public sealed class CloudIcpComponent
         public string Failure;   // non-null when opts construction or ICP failed
     }
 
+    /// <summary>Light pass: the base resolves idle / in-flight / result-ready
+    /// from Run alone, so million-point inputs are never re-captured just to
+    /// echo progress or emit the finished transform.</summary>
+    protected override bool TryReadRunOnly(IGH_DataAccess da, out bool run)
+    {
+        run = false;
+        da.GetData(6, ref run);
+        return true;
+    }
+
+    /// <summary>Vertices of a Mesh or PointCloud goo; null when neither.</summary>
+    private static List<Point3d> GeometryPoints(Grasshopper.Kernel.Types.IGH_GeometricGoo goo)
+    {
+        switch (goo?.ScriptVariable())
+        {
+            case Mesh m:
+                return new List<Point3d>(m.Vertices.ToPoint3dArray());
+            case PointCloud pc:
+                return new List<Point3d>(pc.GetPoints());
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>Read one side: prefer the Geometry input (one item, fast),
+    /// fall back to the point list.</summary>
+    private List<Point3d> ReadSide(IGH_DataAccess da, int geoIndex, int listIndex, string label)
+    {
+        Grasshopper.Kernel.Types.IGH_GeometricGoo goo = null;
+        da.GetData(geoIndex, ref goo);
+        if (goo != null)
+        {
+            var fromGeo = GeometryPoints(goo);
+            if (fromGeo != null && fromGeo.Count >= 3) return fromGeo;
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                $"{label} Geometry must be a Mesh or PointCloud with >= 3 vertices.");
+            return null;
+        }
+        var pts = new List<Point3d>();
+        if (!da.GetDataList(listIndex, pts) || pts.Count < 3)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                $"Need >= 3 {label.ToLowerInvariant()} points (wire {label} Geometry or {label} Cloud).");
+            return null;
+        }
+        return pts;
+    }
+
     protected override bool TryRead(IGH_DataAccess da, out bool run, out Snapshot snapshot)
     {
         run = false; snapshot = null;
         da.GetData(6, ref run);
         if (!run) return true;
 
-        var src = new List<Point3d>();
-        var tgt = new List<Point3d>();
-        if (!da.GetDataList(0, src) || src.Count < 3)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 3 source points.");
-            return false;
-        }
-        if (!da.GetDataList(1, tgt) || tgt.Count < 3)
-        {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 3 target points.");
-            return false;
-        }
+        var src = ReadSide(da, 7, 0, "Source");
+        if (src == null) return false;
+        var tgt = ReadSide(da, 8, 1, "Target");
+        if (tgt == null) return false;
 
         Transform x0 = Transform.Identity;
         da.GetData(2, ref x0);

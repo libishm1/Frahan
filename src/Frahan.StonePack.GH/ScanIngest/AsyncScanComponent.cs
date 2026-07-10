@@ -64,6 +64,22 @@ public abstract class AsyncScanComponent<TSnapshot, TPayload> : GH_Component
     /// </summary>
     protected abstract bool TryRead(IGH_DataAccess da, out bool run, out TSnapshot snapshot);
 
+    /// <summary>
+    /// OPTIONAL cheap read of just the Run toggle, no heavy input capture.
+    /// Return true and set <paramref name="run"/> when supported; the base then
+    /// resolves the idle / in-flight / result-ready states WITHOUT calling the
+    /// full <see cref="TryRead"/> — on million-point inputs the full capture is
+    /// itself a UI freeze, and the completion pass (ExpireSolution after the
+    /// Task finishes) used to re-unwrap every input just to emit the result.
+    /// The full TryRead still runs exactly once per job, right before a new
+    /// Task starts. Default: return false (base behaves exactly as before).
+    /// </summary>
+    protected virtual bool TryReadRunOnly(IGH_DataAccess da, out bool run)
+    {
+        run = false;
+        return false;
+    }
+
     /// <summary>Heavy work on the background thread. Honor the token; report progress.</summary>
     protected abstract TPayload Compute(TSnapshot snapshot, CancellationToken token, Action<string> progress);
 
@@ -77,7 +93,16 @@ public abstract class AsyncScanComponent<TSnapshot, TPayload> : GH_Component
 
     protected override void SolveInstance(IGH_DataAccess da)
     {
-        bool readOk = TryRead(da, out bool run, out TSnapshot snapshot);
+        // Light pass first when the subclass supports it: idle / in-flight /
+        // result-ready need only the Run state, so skip the heavy capture.
+        TSnapshot snapshot = null;
+        bool readOk = true;
+        bool captured = false;
+        if (!TryReadRunOnly(da, out bool run))
+        {
+            readOk = TryRead(da, out run, out snapshot);
+            captured = true;
+        }
 
         if (!run)
         {
@@ -87,7 +112,7 @@ public abstract class AsyncScanComponent<TSnapshot, TPayload> : GH_Component
                 : "Run is false. Set Run = true to execute.");
             return;
         }
-        if (!readOk) return; // subclass already reported the validation error
+        if (captured && !readOk) return; // subclass already reported the validation error
 
         lock (_gate)
         {
@@ -117,7 +142,20 @@ public abstract class AsyncScanComponent<TSnapshot, TPayload> : GH_Component
             }
         }
 
-        // No result, no task in flight: start one.
+        // No result, no task in flight: start one. If only the light read ran,
+        // do the full capture now (exactly once per job).
+        if (!captured)
+        {
+            readOk = TryRead(da, out run, out snapshot);
+            if (!run)
+            {
+                // Run flicked false between the two reads: treat as idle.
+                EmitIdle(da, "Run is false. Set Run = true to execute.");
+                return;
+            }
+            if (!readOk) return; // subclass already reported the validation error
+        }
+
         var doc = OnPingDocument();
         Guid iguid = InstanceGuid;
         try { _cts?.Cancel(); } catch { }
