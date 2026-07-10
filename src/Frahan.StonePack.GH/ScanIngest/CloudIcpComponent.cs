@@ -104,16 +104,18 @@ public sealed class CloudIcpComponent
         // their wiring. PREFERRED for big scans: ONE canvas item instead of a
         // per-point goo list (see BIG-INPUT PATH note above).
         p.AddGeometryParameter("Source Geometry", "Sg",
-            "PREFERRED for big scans: source as a Mesh or PointCloud (one " +
-            "canvas item, lag-free). Its vertices are used. When wired, the " +
-            "Source Cloud point list is ignored.",
-            GH_ParamAccess.item);
+            "PREFERRED input: source as Mesh(es), PointCloud(s), or points - " +
+            "any mix; all vertices are pooled. A Mesh/PointCloud is ONE canvas " +
+            "item (lag-free) - wire the quarry mesh straight in, no Deconstruct. " +
+            "When wired, the Source Cloud point list is ignored.",
+            GH_ParamAccess.list);
         p[7].Optional = true;
         p.AddGeometryParameter("Target Geometry", "Tg",
-            "PREFERRED for big scans: target as a Mesh or PointCloud (one " +
-            "canvas item, lag-free). Its vertices are used. When wired, the " +
-            "Target Cloud point list is ignored.",
-            GH_ParamAccess.item);
+            "PREFERRED input: target as Mesh(es), PointCloud(s), or points - " +
+            "any mix; all vertices are pooled. A Mesh/PointCloud is ONE canvas " +
+            "item (lag-free) - wire the quarry mesh straight in, no Deconstruct. " +
+            "When wired, the Target Cloud point list is ignored.",
+            GH_ParamAccess.list);
         p[8].Optional = true;
     }
 
@@ -172,32 +174,34 @@ public sealed class CloudIcpComponent
         return true;
     }
 
-    /// <summary>Vertices of a Mesh or PointCloud goo; null when neither.</summary>
-    private static List<Point3d> GeometryPoints(Grasshopper.Kernel.Types.IGH_GeometricGoo goo)
-    {
-        switch (goo?.ScriptVariable())
-        {
-            case Mesh m:
-                return new List<Point3d>(m.Vertices.ToPoint3dArray());
-            case PointCloud pc:
-                return new List<Point3d>(pc.GetPoints());
-            default:
-                return null;
-        }
-    }
-
-    /// <summary>Read one side: prefer the Geometry input (one item, fast),
-    /// fall back to the point list.</summary>
+    /// <summary>Read one side: prefer the Geometry input (Mesh / PointCloud /
+    /// points, pooled), fall back to the point list.</summary>
     private List<Point3d> ReadSide(IGH_DataAccess da, int geoIndex, int listIndex, string label)
     {
-        Grasshopper.Kernel.Types.IGH_GeometricGoo goo = null;
-        da.GetData(geoIndex, ref goo);
-        if (goo != null)
+        var goos = new List<Grasshopper.Kernel.Types.IGH_GeometricGoo>();
+        da.GetDataList(geoIndex, goos);
+        if (goos.Count > 0)
         {
-            var fromGeo = GeometryPoints(goo);
-            if (fromGeo != null && fromGeo.Count >= 3) return fromGeo;
+            var pooled = new List<Point3d>();
+            int unsupported = 0;
+            foreach (var goo in goos)
+            {
+                switch (goo?.ScriptVariable())
+                {
+                    case Mesh m: pooled.AddRange(m.Vertices.ToPoint3dArray()); break;
+                    case PointCloud pc: pooled.AddRange(pc.GetPoints()); break;
+                    case Point3d p3: pooled.Add(p3); break;
+                    case Rhino.Geometry.Point pt: pooled.Add(pt.Location); break;
+                    case null: break;
+                    default: unsupported++; break;
+                }
+            }
+            if (unsupported > 0)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                    $"{label} Geometry: {unsupported} item(s) were not Mesh / PointCloud / Point and were skipped.");
+            if (pooled.Count >= 3) return pooled;
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-                $"{label} Geometry must be a Mesh or PointCloud with >= 3 vertices.");
+                $"{label} Geometry needs >= 3 total vertices from Mesh / PointCloud / points.");
             return null;
         }
         var pts = new List<Point3d>();
