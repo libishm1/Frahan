@@ -472,19 +472,23 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         {
             if (facetId[seed] >= 0) continue;
             int id = nFacets++;
-            var meanN = normals[seed];
             var queue = new Queue<int>();
             queue.Enqueue(seed);
             facetId[seed] = id;
             while (queue.Count > 0)
             {
                 int f = queue.Dequeue();
-                meanN += normals[f];
-                var mu = meanN; mu.Unitize();
                 foreach (var g in adj[f])
                 {
                     if (facetId[g] >= 0) continue;
-                    if (normals[g] * mu < cosTol) continue;
+                    // LOCAL crease criterion (2026-07-11, from Libish's
+                    // canvas evidence): comparing against the REGION MEAN
+                    // made wavy fracture surfaces drift past the threshold
+                    // and shatter into ragged patches (over-segmentation,
+                    // asymmetric across mates). The local dihedral between
+                    // adjacent smoothed normals is drift-free: wavy surfaces
+                    // stay one facet, sharp interface corners still split.
+                    if (normals[f] * normals[g] < cosTol) continue;
                     facetId[g] = id;
                     queue.Enqueue(g);
                 }
