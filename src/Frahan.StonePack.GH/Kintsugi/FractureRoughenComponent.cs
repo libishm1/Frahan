@@ -431,9 +431,50 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
             }
         }
 
-        // Displace every cap vertex by the SHARED field, tapered at the rim.
-        // Rim (weight 0): tangential-only -> outer skin silhouette preserved,
-        // crack line still wiggles. Interior (weight 1): full 3D displacement.
+        // PER-INTERFACE SALT (v2, 2026-07-11): key the noise field to each
+        // vertex's local PRE-DISPLACEMENT cut plane (canonical-sign normal +
+        // offset, coarsely quantized). Both mates of an interface share the
+        // plane exactly -> same salt -> they still move identically; other
+        // interfaces get decorrelated relief. Vertex plane = average normal
+        // of adjacent (flat, pre-displacement) cap triangles.
+        double saltQuantum = Math.Max(1e-6, taperWorld > 0 ? taperWorld * 0.5 : ampWorld);
+        var vertexPlaneN = new Dictionary<int, Vector3d>();
+        foreach (var tcap in capTris)
+        {
+            var a = PosOf(tcap[0]); var b = PosOf(tcap[1]); var c = PosOf(tcap[2]);
+            var n = Vector3d.CrossProduct(b - a, c - a);
+            if (n.Length < 1e-12) continue;
+            n.Unitize();
+            for (int k2 = 0; k2 < 3; k2++)
+            {
+                vertexPlaneN.TryGetValue(tcap[k2], out var acc);
+                vertexPlaneN[tcap[k2]] = acc + n;
+            }
+        }
+        int PlaneSalt(int v)
+        {
+            if (!vertexPlaneN.TryGetValue(v, out var n) || n.Length < 1e-12) return 0;
+            n.Unitize();
+            // canonicalise the sign so both mates (opposite orientation)
+            // agree: largest-magnitude component made positive
+            double ax = Math.Abs(n.X), ay = Math.Abs(n.Y), az = Math.Abs(n.Z);
+            double lead = ax >= ay && ax >= az ? n.X : (ay >= az ? n.Y : n.Z);
+            if (lead < 0) n = -n;
+            var p = PosOf(v);
+            int qx = (int)Math.Round(n.X * 20);
+            int qy = (int)Math.Round(n.Y * 20);
+            int qz = (int)Math.Round(n.Z * 20);
+            int qd = (int)Math.Round((n.X * p.X + n.Y * p.Y + n.Z * p.Z) / saltQuantum);
+            unchecked
+            {
+                int h = qx * 73856093 ^ qy * 19349663 ^ qz * 83492791 ^ qd * (int)0x9E3779B1;
+                return h == 0 ? 1 : h;
+            }
+        }
+
+        // Displace every cap vertex by the plane-salted field, tapered at
+        // the rim. Rim (weight 0): tangential-only -> outer skin silhouette
+        // preserved, crack line still wiggles. Interior: full displacement.
         var moved = new Dictionary<int, Point3d>();
         var displaceTargets = new List<int>(capVertSet.Count + newPos.Count);
         foreach (var v in capVertSet) displaceTargets.Add(v);
@@ -442,7 +483,7 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         {
             var p = PosOf(v);
             field.Sample(p.X * freqScale, p.Y * freqScale, p.Z * freqScale,
-                         out double dx, out double dy, out double dz);
+                         PlaneSalt(v), out double dx, out double dy, out double dz);
             var d = new Vector3d(dx * ampWorld, dy * ampWorld, dz * ampWorld);
             double w = taperWorld <= 0 ? 1.0
                 : Math.Min(1.0, (dist.TryGetValue(v, out var dv) ? dv : taperWorld) / taperWorld);
@@ -675,9 +716,23 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         public void Sample(double x, double y, double z,
                            out double dx, out double dy, out double dz)
         {
-            dx = Fbm(x, y, z, 0);
-            dy = Fbm(x + 137.13, y + 71.7, z + 19.3, 1);
-            dz = Fbm(x - 53.7, y - 113.1, z + 211.9, 2);
+            Sample(x, y, z, 0, out dx, out dy, out dz);
+        }
+
+        /// <summary>
+        /// Salted sampling: interfaceSalt keys the field PER CUT PLANE so
+        /// different interfaces carry DECORRELATED relief while both mates
+        /// of one interface (same plane, same salt) still move identically.
+        /// Without this, one shared field made all interfaces statistically
+        /// similar -- the facet matcher could not separate true pairs from
+        /// impostors (found 2026-07-11).
+        /// </summary>
+        public void Sample(double x, double y, double z, int interfaceSalt,
+                           out double dx, out double dy, out double dz)
+        {
+            dx = Fbm(x, y, z, 0 + interfaceSalt * 101);
+            dy = Fbm(x + 137.13, y + 71.7, z + 19.3, 1 + interfaceSalt * 101);
+            dz = Fbm(x - 53.7, y - 113.1, z + 211.9, 2 + interfaceSalt * 101);
         }
 
         private double Fbm(double x, double y, double z, int channel)
