@@ -505,7 +505,7 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
     /// is bit-exact). The fan's rim edges stay protected in the refinement
     /// (they appear once in the cap soup); its spokes are splittable.
     /// </summary>
-    private static void FanCapRemainingHoles(Mesh m)
+    internal static void FanCapRemainingHoles(Mesh m)
     {
         var naked = m.GetNakedEdges();
         if (naked == null || naked.Length == 0) return;

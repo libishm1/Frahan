@@ -548,18 +548,36 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
         try { cell.Vertices.CombineIdentical(true, true); } catch { }
         try { cell.Faces.CullDegenerateFaces(); } catch { }
         try { cell.Faces.ConvertNonPlanarQuadsToTriangles(1e-6, 0.01, 0); } catch { }
-        // HealNakedEdges tolerance: 0.1% of the cell's bounding box
-        // diagonal. Bridges the tiny gaps that Mesh.Split sometimes
-        // leaves between adjacent triangles on the same cut plane.
-        // Note: Mesh.HealNakedEdges welds matching naked-edge pairs
-        // within the tolerance -- it will NOT close the deliberate
-        // fracture-rim openings (those are far apart on the mesh, not
-        // matching pairs).
+        // HealNakedEdges bridges the tiny gaps Mesh.Split leaves between
+        // adjacent triangles on the same cut plane. DANGER (field defect,
+        // 2026-07-11): on SMALL impact-clustered cells the two sides of a
+        // fracture rim can fall within the tolerance; healing then stitches
+        // the deliberate opening shut in a degenerate, half-welded way --
+        // GetNakedEdges() returns null and IsClosed misreports, killing the
+        // geometric rim-matching path downstream. Guard: heal a duplicate
+        // first, keep it ONLY if the heal removed a small share of the
+        // naked edges (gap bridging), never a large share (rim eating).
         try
         {
             var bb = cell.GetBoundingBox(true);
-            double tol = Math.Max(1e-6, bb.Diagonal.Length * 1e-3);
-            cell.HealNakedEdges(tol);
+            double tol = Math.Max(1e-6, bb.Diagonal.Length * 1e-4);
+            int NakedCount(Mesh m)
+            {
+                int c = 0;
+                var te = m.TopologyEdges;
+                for (int e = 0; e < te.Count; e++)
+                    if (te.GetConnectedFaces(e).Length == 1) c++;
+                return c;
+            }
+            int before = NakedCount(cell);
+            var healed = cell.DuplicateMesh();
+            healed.HealNakedEdges(tol);
+            int after = NakedCount(healed);
+            if (after >= before * 0.7 && healed.GetNakedEdges() != null)
+            {
+                cell.CopyFrom(healed);
+            }
+            // else: healing ate the rim; keep the honest open mesh.
         }
         catch { }
         try { cell.UnifyNormals(); } catch { }

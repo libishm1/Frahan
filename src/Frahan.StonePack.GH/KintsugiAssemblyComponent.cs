@@ -211,6 +211,18 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             "(OrderedBoundaryMatcher); more robust on wiggly / noisy rims where " +
             "free matching tangles. Ignored in Mode=Port.",
             GH_ParamAccess.item, false);
+        // Appended 2026-07-11 (index 17). Geometric path only.
+        p.AddNumberParameter("Interface Split", "Is",
+            "Geometric path only. A fragment's naked rim LOOP meanders across " +
+            "every cut face it borders, so two neighbours share only a SUB-ARC " +
+            "of each other's loops and whole-loop matching degrades (Libish's " +
+            "2026-07-11 diagnosis). This splits each loop into maximal " +
+            "COPLANAR arcs (one per cut interface, closed with their chord) " +
+            "before matching; neighbours then share a whole arc.\n" +
+            "0 (default) = auto tolerance (2% of the loop diagonal). " +
+            "> 0 = absolute plane-RMS tolerance in document units (raise it " +
+            "for roughened wiggly rims). < 0 = off (legacy whole loops).",
+            GH_ParamAccess.item, 0.0);
 
         // Fragments and Point Clouds are mutually-substitutable sources:
         // the geometric path needs Fragments; Mode=Port can run from either
@@ -268,6 +280,7 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         bool useTorchSharp = false;
         double verifierAcceptThreshold = 0.5;
         bool nonCrossing = false;
+        double interfaceSplit = 0.0;
 
         // Fragments may be optional in Mode=Port when Point Clouds is
         // wired -- defer the empty check to after the param sweep so we
@@ -289,6 +302,8 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         if (Params.Input.Count > 15) da.GetData(15, ref verifierAcceptThreshold);
         // Non-Crossing toggle appended at index 16 (geometric path only).
         if (Params.Input.Count > 16) da.GetData(16, ref nonCrossing);
+        // Interface Split appended at index 17 (geometric path only).
+        if (Params.Input.Count > 17) da.GetData(17, ref interfaceSplit);
         if (Params.Input.Count > 13)
         {
             da.GetData(10, ref diffusionSteps);
@@ -633,13 +648,26 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             }
         }
 
-        // 1. Extract naked-edge rim polylines per fragment.
+        // 1. Extract naked-edge rim polylines per fragment. With Interface
+        // Split enabled, each loop is broken into per-cut-face coplanar
+        // arcs (closed by their chord) so neighbours share WHOLE panels
+        // instead of sub-arcs of meandering loops.
         var rimLoopsPerFragment = new List<List<PolylineCurve>>();
         var diagnosticRims = new List<Curve>();
         int rimCount = 0;
+        var arcCountPerFragment = new int[fragments.Count];
         for (int f = 0; f < fragments.Count; f++)
         {
             var loops = ExtractNakedRimLoops(fragments[f], minLoopLength);
+            if (interfaceSplit >= 0)
+            {
+                var arcs = new List<PolylineCurve>();
+                foreach (var lp in loops)
+                    arcs.AddRange(SplitLoopIntoInterfaceArcs(
+                        lp, interfaceSplit, minLoopLength * 0.5));
+                if (arcs.Count > 0) loops = arcs;
+            }
+            arcCountPerFragment[f] = loops.Count;
             rimLoopsPerFragment.Add(loops);
             rimCount += loops.Count;
             diagnosticRims.AddRange(loops.Select(p => (Curve)p.DuplicateCurve()));
@@ -687,6 +715,38 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             segmentCountPerFragment[f] = total;
         }
 
+        // 1c. Closed proxies for the penetration verifier. IsPointInside is
+        // meaningless on OPEN shells (field defect 2026-07-11: congruent
+        // interface arcs aligned onto the WRONG partners and the verifier
+        // rejected nothing). Cap each fragment (FillHoles + fan) ONCE; the
+        // proxies are used only for verification, never emitted.
+        var closedProxies = new Mesh[fragments.Count];
+        if (verifierPenetration > 0)
+        {
+            for (int f = 0; f < fragments.Count; f++)
+            {
+                var proxy = fragments[f]?.DuplicateMesh();
+                if (proxy == null) continue;
+                try { proxy.FillHoles(); } catch { }
+                try { FractureRoughenComponent.FanCapRemainingHoles(proxy); } catch { }
+                try { proxy.Vertices.CombineIdentical(true, true); } catch { }
+                proxy.Normals.ComputeNormals();
+                closedProxies[f] = proxy;
+            }
+        }
+
+        // 1d. Rim samples with SKIN normals for the normal-continuity gate.
+        // Along a true crack line the two skins are tangent-continuous
+        // (they were ONE surface before the break), so mating rim samples
+        // have nearly EQUAL normals. A flipped placement (arc matched to
+        // its own reverse: 180-degree in-plane rotation) or a wrong-arc
+        // pairing breaks that. Field defect 2026-07-11: interface-split
+        // arcs placed 5/5 but several flipped/mis-paired with tiny rim
+        // residual; penetration could not reject them (they float).
+        var rimSamplesPerFragment = new List<(Point3d p, Vector3d n)[]>();
+        for (int f = 0; f < fragments.Count; f++)
+            rimSamplesPerFragment.Add(BuildRimNormalSamples(fragments[f]));
+
         // 2. Auto-agglomerative outer loop. Mirrors PuzzleFusion++ Sec 3
         // outer schedule: anchor cluster grows each round; unplaced
         // fragments retry against the larger anchor. Pure geometric --
@@ -694,6 +754,7 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         var fragmentTransform = new Transform[fragments.Count];
         var placedFragmentMask = new bool[fragments.Count];
         var rejectedByVerifier = new List<int>();
+        var rejectedByNormalGate = new List<int>();
         fragmentTransform[0] = Transform.Identity;
         placedFragmentMask[0] = true;
 
@@ -767,21 +828,37 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
                 if (!roundPanelToFragment.TryGetValue(panel.Id, out int fIdx)) continue;
                 if (placedFragmentMask[fIdx]) continue; // anchor
 
-                // Geometric verifier: reject if the candidate placement
-                // penetrates any already-placed fragment beyond tolerance.
+                // Geometric verifier on CLOSED proxies: reject if the
+                // candidate placement penetrates any already-placed
+                // fragment beyond tolerance. Open shells always passed
+                // (IsPointInside undefined); the capped proxies make
+                // wrong-arc / wrong-side placements actually collide.
                 if (verifierPenetration > 0)
                 {
-                    var candidateMesh = fragments[fIdx]?.DuplicateMesh();
+                    var candidateMesh = (closedProxies[fIdx] ?? fragments[fIdx])?.DuplicateMesh();
                     if (candidateMesh != null)
                     {
                         candidateMesh.Transform(panel.AppliedTransform);
-                        if (PenetratesAnyPlaced(candidateMesh, fragments, fragmentTransform,
+                        var proxyList = new List<Mesh>(fragments.Count);
+                        for (int pf = 0; pf < fragments.Count; pf++)
+                            proxyList.Add(closedProxies[pf] ?? fragments[pf]);
+                        if (PenetratesAnyPlaced(candidateMesh, proxyList, fragmentTransform,
                                                 placedFragmentMask, verifierPenetration))
                         {
                             rejectedByVerifier.Add(fIdx);
                             continue;
                         }
                     }
+                }
+
+                // Normal-continuity gate (interface-split mode only; the
+                // legacy whole-loop path keeps its historical behaviour).
+                if (interfaceSplit >= 0 && !NormalContinuityOk(
+                        rimSamplesPerFragment, fIdx, panel.AppliedTransform,
+                        fragmentTransform, placedFragmentMask, jointWidth))
+                {
+                    rejectedByNormalGate.Add(fIdx);
+                    continue;
                 }
 
                 fragmentTransform[fIdx] = panel.AppliedTransform;
@@ -793,6 +870,78 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             placedPanelsTotal += state.PlacedPanels.Count;
 
             if (progressedThisRound == 0) break; // no progress; stop.
+        }
+
+        // 3. Direct arc-pairing fallback (interface-split mode). The beam
+        // proposes ONE placement per panel; when the normal gate rejects a
+        // flipped/mis-paired proposal the correct alternative never gets
+        // retried. Here every unplaced fragment's arcs are paired directly
+        // against every placed fragment's arcs using ORIENTED arc frames
+        // (origin = centroid, X = chord, Z = fit normal signed by the skin
+        // normal -- which kills the flip ambiguity by construction). Both
+        // chord orientations are tested; residual + penetration + normal
+        // gates decide.
+        int directPlaced = 0;
+        if (interfaceSplit >= 0)
+        {
+            var arcFrames = new List<(int frag, Plane frame, Point3d[] pts)>();
+            for (int f = 0; f < fragments.Count; f++)
+                foreach (var arc in rimLoopsPerFragment[f])
+                {
+                    var af = BuildArcFrame(arc, rimSamplesPerFragment[f]);
+                    if (af.HasValue) arcFrames.Add((f, af.Value.frame, af.Value.pts));
+                }
+
+            bool progress = true;
+            while (progress)
+            {
+                progress = false;
+                for (int f = 0; f < fragments.Count; f++)
+                {
+                    if (placedFragmentMask[f]) continue;
+                    double bestResid = jointWidth;
+                    Transform bestT = Transform.Identity;
+                    foreach (var ca in arcFrames.Where(a => a.frag == f))
+                    foreach (var ga in arcFrames.Where(a => a.frag != f && placedFragmentMask[a.frag]))
+                    {
+                        var gFrame = ga.frame;
+                        gFrame.Transform(fragmentTransform[ga.frag]);
+                        var gPts = ga.pts.Select(p => { var q = p; q.Transform(fragmentTransform[ga.frag]); return q; }).ToArray();
+                        for (int flip = 0; flip < 2; flip++)
+                        {
+                            var target = gFrame;
+                            if (flip == 1)
+                                target = new Plane(gFrame.Origin, -gFrame.XAxis, -gFrame.YAxis);
+                            var T = Transform.PlaneToPlane(ca.frame, target);
+                            double resid = ArcResidual(ca.pts, T, gPts);
+                            if (resid >= bestResid) continue;
+                            // gates
+                            var candMesh = (closedProxies[f] ?? fragments[f])?.DuplicateMesh();
+                            if (candMesh == null) continue;
+                            candMesh.Transform(T);
+                            var proxyList2 = new List<Mesh>(fragments.Count);
+                            for (int pf = 0; pf < fragments.Count; pf++)
+                                proxyList2.Add(closedProxies[pf] ?? fragments[pf]);
+                            if (verifierPenetration > 0 &&
+                                PenetratesAnyPlaced(candMesh, proxyList2, fragmentTransform,
+                                                    placedFragmentMask, verifierPenetration))
+                                continue;
+                            if (!NormalContinuityOk(rimSamplesPerFragment, f, T,
+                                                    fragmentTransform, placedFragmentMask, jointWidth))
+                                continue;
+                            bestResid = resid;
+                            bestT = T;
+                        }
+                    }
+                    if (bestResid < jointWidth)
+                    {
+                        fragmentTransform[f] = bestT;
+                        placedFragmentMask[f] = true;
+                        directPlaced++;
+                        progress = true;
+                    }
+                }
+            }
         }
 
         var assembled = new List<Mesh>(fragments.Count);
@@ -818,7 +967,10 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         var report = new StringBuilder();
         report.AppendLine($"Kintsugi: {placedIdx.Count}/{fragments.Count} fragments placed");
         report.AppendLine($"Rounds      : {totalRounds} of {maxRounds} max");
-        report.AppendLine($"Rims        : {rimCount} across all fragments");
+        report.AppendLine($"Rims        : {rimCount} across all fragments" +
+            (interfaceSplit >= 0
+                ? $" (interface-split arcs: [{string.Join(",", arcCountPerFragment)}])"
+                : " (whole loops; Interface Split off)"));
         report.AppendLine($"Segments    : [{string.Join(",", segmentCountPerFragment)}] per fragment");
         if (segmentCountPerFragment.All(s => s <= 1))
         {
@@ -832,6 +984,11 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             report.AppendLine($"Verifier    : penetration tol {verifierPenetration:F3} ({rejectedByVerifier.Count} rejections)");
         else
             report.AppendLine($"Verifier    : OFF (Vp = 0)");
+        if (interfaceSplit >= 0)
+        {
+            report.AppendLine($"Normal gate : skin-continuity along mating rims ({rejectedByNormalGate.Count} rejections)");
+            report.AppendLine($"Direct pair : {directPlaced} fragments placed by oriented arc-frame pairing");
+        }
         report.AppendLine($"Total resid : {totalResidual:F4}");
         if (unplacedIdx.Count > 0)
         {
@@ -903,6 +1060,236 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
     }
 
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Build an ORIENTED frame for an interface arc: origin = centroid of
+    /// the arc points, X = chord direction, Z = fit-plane normal signed so
+    /// it agrees with the mean skin normal along the arc. Mating arcs of a
+    /// true crack get frames that coincide under the correct placement
+    /// (skin normals are tangent-continuous across the crack), so
+    /// PlaneToPlane gives the candidate pose directly and the flip
+    /// ambiguity reduces to the chord's two orientations.
+    /// </summary>
+    private static (Plane frame, Point3d[] pts)? BuildArcFrame(
+        PolylineCurve arcCurve, (Point3d p, Vector3d n)[] rimSamples)
+    {
+        Polyline pl;
+        if (arcCurve == null || !arcCurve.TryGetPolyline(out pl)) return null;
+        int n = pl.Count - 1;                    // closed with chord
+        if (n < 4) return null;
+        var pts = new Point3d[n];
+        for (int i = 0; i < n; i++) pts[i] = pl[i];
+
+        var cen = new Point3d(0, 0, 0);
+        foreach (var p in pts) cen += p;
+        cen /= n;
+        Plane fit;
+        if (Plane.FitPlaneToPoints(pts, out fit) != PlaneFitResult.Success) return null;
+
+        // mean skin normal near the arc (rim samples within a loose radius)
+        double r2 = pts[0].DistanceToSquared(pts[n / 2]);   // arc-scale radius^2
+        var meanN = Vector3d.Zero;
+        foreach (var (p, nn) in rimSamples)
+        {
+            double best = double.MaxValue;
+            for (int i = 0; i < n; i += 2)
+                best = Math.Min(best, p.DistanceToSquared(pts[i]));
+            if (best < r2 * 0.02) meanN += nn;
+        }
+        var z = fit.Normal;
+        if (meanN.Length > 1e-9 && z * meanN < 0) z = -z;
+
+        var x = pts[n - 1] - pts[0];             // chord
+        if (x.Length < 1e-9) return null;
+        x.Unitize();
+        // orthogonalise x against z
+        x = x - z * (x * z);
+        if (x.Length < 1e-9) return null;
+        x.Unitize();
+        return (new Plane(cen, x, Vector3d.CrossProduct(z, x)), pts);
+    }
+
+    /// <summary>
+    /// RMS distance from the transformed candidate arc points to the
+    /// nearest target arc point (coarse, order-free).
+    /// </summary>
+    private static double ArcResidual(Point3d[] cand, Transform t, Point3d[] target)
+    {
+        double s = 0; int cnt = 0;
+        int step = Math.Max(1, cand.Length / 24);
+        for (int i = 0; i < cand.Length; i += step)
+        {
+            var p = cand[i]; p.Transform(t);
+            double best = double.MaxValue;
+            for (int j = 0; j < target.Length; j++)
+                best = Math.Min(best, p.DistanceToSquared(target[j]));
+            s += best; cnt++;
+        }
+        return cnt > 0 ? Math.Sqrt(s / cnt) : double.MaxValue;
+    }
+
+    /// <summary>
+    /// Sample points along a fragment's naked edges together with the
+    /// outward SKIN normal of the adjacent face. Mating rims of a true
+    /// crack have nearly EQUAL normals (the skins were one surface).
+    /// </summary>
+    private static (Point3d p, Vector3d n)[] BuildRimNormalSamples(Mesh mesh)
+    {
+        var samples = new List<(Point3d, Vector3d)>();
+        if (mesh == null) return samples.ToArray();
+        try
+        {
+            mesh.FaceNormals.ComputeFaceNormals();
+            var te = mesh.TopologyEdges;
+            for (int e = 0; e < te.Count; e++)
+            {
+                var faces = te.GetConnectedFaces(e);
+                if (faces.Length != 1) continue;
+                var ln = te.EdgeLine(e);
+                var n = (Vector3d)mesh.FaceNormals[faces[0]];
+                if (n.Length < 1e-12) continue;
+                n.Unitize();
+                samples.Add((ln.PointAt(0.5), n));
+            }
+        }
+        catch { }
+        return samples.ToArray();
+    }
+
+    /// <summary>
+    /// Skin-normal continuity gate. Transform the candidate's rim samples,
+    /// pair each with the nearest rim sample of any placed fragment within
+    /// 2*jointWidth, and demand the mean normal dot over the paired subset
+    /// be positive-and-strong. Flipped placements score ~-1; wrong-arc
+    /// pairings score near 0; true matings score near +1.
+    /// </summary>
+    private static bool NormalContinuityOk(
+        List<(Point3d p, Vector3d n)[]> rimSamples, int candidateIdx,
+        Transform candidateTransform, Transform[] placedTransforms,
+        bool[] placedMask, double jointWidth)
+    {
+        var cand = rimSamples[candidateIdx];
+        if (cand == null || cand.Length == 0) return true;   // nothing to test
+        double tol = Math.Max(1e-6, jointWidth * 2.0);
+        double tol2 = tol * tol;
+
+        int step = Math.Max(1, cand.Length / 80);
+        double dotSum = 0;
+        int pairs = 0;
+        for (int i = 0; i < cand.Length; i += step)
+        {
+            var p = cand[i].p; p.Transform(candidateTransform);
+            var n = cand[i].n; n.Transform(candidateTransform);
+
+            double bestD2 = tol2;
+            Vector3d bestN = Vector3d.Zero;
+            for (int g = 0; g < rimSamples.Count; g++)
+            {
+                if (g == candidateIdx || !placedMask[g]) continue;
+                var gs = rimSamples[g];
+                for (int j = 0; j < gs.Length; j++)
+                {
+                    var q = gs[j].p; q.Transform(placedTransforms[g]);
+                    double d2 = p.DistanceToSquared(q);
+                    if (d2 < bestD2)
+                    {
+                        bestD2 = d2;
+                        bestN = gs[j].n;
+                        bestN.Transform(placedTransforms[g]);
+                    }
+                }
+            }
+            if (bestN.Length > 1e-12)
+            {
+                dotSum += n * bestN;
+                pairs++;
+            }
+        }
+        if (pairs < 5) return false;          // no real mating contact found
+        return dotSum / pairs >= 0.3;
+    }
+
+    /// <summary>
+    /// Split a closed naked rim loop into maximal COPLANAR arcs, one per cut
+    /// interface, each closed with its chord. Both fragments of an interface
+    /// share the same arc AND the same chord endpoints, so the closed panels
+    /// correspond exactly. Greedy cyclic walk with incremental best-fit-plane
+    /// RMS; the wrap pair (first/last run) merges when coplanar.
+    /// tol 0 = auto (2% of loop bbox diagonal). Arcs shorter than
+    /// minArcLength are dropped (mesh-noise nubs).
+    /// </summary>
+    private static List<PolylineCurve> SplitLoopIntoInterfaceArcs(
+        PolylineCurve loopCurve, double tol, double minArcLength)
+    {
+        var fallback = new List<PolylineCurve> { loopCurve };
+        if (loopCurve == null) return fallback;
+        Polyline loop;
+        if (!loopCurve.TryGetPolyline(out loop) || !loop.IsClosed) return fallback;
+        int n = loop.Count - 1;             // unique vertices (last == first)
+        if (n < 8) return fallback;
+
+        var bb = loopCurve.GetBoundingBox(true);
+        double tolW = tol > 0 ? tol : bb.Diagonal.Length * 0.02;
+
+        double RunRms(List<Point3d> pts)
+        {
+            if (pts.Count < 4) return 0;
+            Plane pl;
+            if (Plane.FitPlaneToPoints(pts, out pl) != PlaneFitResult.Success)
+                return double.MaxValue;
+            double s = 0;
+            foreach (var p in pts) { double d = pl.DistanceTo(p); s += d * d; }
+            return Math.Sqrt(s / pts.Count);
+        }
+
+        // Greedy cyclic walk. Runs are index ranges [start, end] inclusive
+        // over the unique vertices; consecutive runs share their corner
+        // vertex.
+        var runs = new List<(int start, int end)>();
+        int runStart = 0;
+        var runPts = new List<Point3d> { loop[0], loop[1] };
+        for (int i = 2; i <= n; i++)
+        {
+            var next = loop[i % n];
+            runPts.Add(next);
+            if (RunRms(runPts) > tolW && runPts.Count >= 5)
+            {
+                runs.Add((runStart, i - 1));
+                runStart = i - 1;           // corner shared with next run
+                runPts = new List<Point3d> { loop[(i - 1) % n], next };
+            }
+        }
+        runs.Add((runStart, n));            // final run wraps to vertex 0
+
+        if (runs.Count <= 1) return fallback;
+
+        // Merge the wrap pair when their union is still coplanar.
+        if (runs.Count >= 2)
+        {
+            var first = runs[0];
+            var last = runs[runs.Count - 1];
+            var merged = new List<Point3d>();
+            for (int i = last.start; i <= last.end; i++) merged.Add(loop[i % n]);
+            for (int i = first.start + 1; i <= first.end; i++) merged.Add(loop[i]);
+            if (RunRms(merged) <= tolW)
+            {
+                runs.RemoveAt(runs.Count - 1);
+                runs[0] = (last.start, first.end + n);  // spans the wrap
+            }
+        }
+
+        var arcs = new List<PolylineCurve>();
+        foreach (var (start, end) in runs)
+        {
+            var pts = new List<Point3d>();
+            for (int i = start; i <= end; i++) pts.Add(loop[i % n]);
+            var arc = new Polyline(pts);
+            if (arc.Length < minArcLength) continue;
+            pts.Add(pts[0]);                // close with the chord
+            arcs.Add(new Polyline(pts).ToPolylineCurve());
+        }
+        return arcs.Count >= 2 ? arcs : fallback;
+    }
 
     private static List<PolylineCurve> ExtractNakedRimLoops(Mesh mesh, double minLoopLength)
     {
