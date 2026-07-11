@@ -19,12 +19,22 @@ restoration / repair entrypoint (broken artefact -> joined). Style: short senten
 *Built and solved live: 2 Breaking Bad fragments reassembled via the PuzzleFusion++ port (Port mode),
 verifier pair score 0.71 (STRONG, > 0.5), 0 unplaced, 20 diffusion steps, GPU CUDA.*
 
-## IMPORTANT - use the parity data, not synthetic shatter
-Kintsugi's Port mode (the learned PuzzleFusion++ assembler) reproduces the paper's behaviour ONLY on the
-Breaking Bad test distribution it was trained on. A synthetic `Fragment Shatter` of a sphere does NOT
-reassemble (the geometric matcher finds no rim segments on smooth Voronoi cuts: 1/6 placed). This example
-deliberately loads a real Breaking Bad sample where parity holds (verifier 0.71 STRONG). For your own data,
-use real fractured-scan fragments, not synthetic primitives.
+## Synthetic data now works (fixed 2026-07-11)
+The old warning ("synthetic Fragment Shatter does NOT reassemble") is retired. The generators were
+re-aligned to the Breaking Bad training distribution: impact-biased fragment volumes, watertight pieces
+(fan-capped cuts), refined + roughened mating fracture surfaces, outer skin preserved. Measured on the
+learned verifier (same pipeline, 20 steps): synthetic chain max 0.603 with 3 STRONG pairs; real Breaking
+Bad baseline 0.533 with 1; the OLD generator scored 0.062 with 0. Targets and method:
+`D:\code_ws\outputs\2026-07-11\kintsugi_fracture_generator\REPORT.md`.
+
+![Synthetic fracture generator result](14_kintsugi_synthetic.png)
+
+*`14_kintsugi_synthetic.gh`: Synthetic Block > Fragment Shatter (Impact Bias 0.9) > Fracture Roughen
+(Amplitude 0.05) > Frahan Kintsugi (Port mode). Left: assembled block, crack lines irregular, skin intact.
+Right: exploded fragments, one dominant piece + impact-local shards, rough watertight fracture surfaces.
+Fully parametric, no external data needed.*
+
+The parity sample below stays as the reference baseline (real Breaking Bad data).
 
 ## What it shows
 `Load BB Sample` reads a FRKINTSU `.bin` (per-fragment point clouds + coarse hull meshes). `Frahan Kintsugi`
@@ -33,11 +43,20 @@ above the threshold are placed at the network pose. Result: the fragments snap b
 vessel form. Measured: `2 placed, 0 unplaced; pair (0,1) score 0.7068 STRONG; total residual 0`.
 
 ## Files
-- `14_kintsugi_bb_parity.gh` - the canvas (built + solved live). Load BB Sample -> Frahan Kintsugi
+- `14_kintsugi_synthetic.gh` - SYNTHETIC data canvas (no external data): Synthetic Block ->
+  Fragment Shatter -> Fracture Roughen -> Frahan Kintsugi (Port). Sliders: Fragment Count / Seed /
+  Impact Bias / Amplitude. Run toggles ship FALSE; Kintsugi Port run is async (minutes).
+- `14_kintsugi_synthetic.png` / `14_kintsugi_synthetic_result.3dm` - baked generator result
+  (assembled + exploded).
+- `14_kintsugi_bb_parity.gh` - the parity canvas (built + solved live). Load BB Sample -> Frahan Kintsugi
   (Use Port Mode = True) -> Assembled Fragments + Report. MCP bridge stripped, grouped.
 - `14_kintsugi_result.3dm` - the 2 reassembled fragment meshes (`14_Kintsugi_assembled`).
 - `14_kintsugi_result.png` - shaded perspective capture.
 - `data/bb_sample_00697.bin`, `data/bb_sample_5frag.bin` - Breaking Bad parity samples.
+
+Knob guide (measured): Impact Bias 0.9 + Amplitude 0.05 = Breaking Bad statistics (learned-model
+friendly). Amplitude 0.006 = real-granite facet roughness (measured on scanned shards). Impact Bias 0 =
+legacy equal-volume shatter. Keep Fragment Count <= 20 (benchmark cap).
 
 ## Components
 `Load BB Sample` / BBLoad and `Frahan Kintsugi` / Kintsugi (Frahan > Kintsugi). The geometric path
