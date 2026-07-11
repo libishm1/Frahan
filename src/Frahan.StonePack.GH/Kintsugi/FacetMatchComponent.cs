@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using Frahan.EdgeMatching;
 using Frahan.GH.Attributes;
+using Frahan.GH.ScanIngest;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
@@ -57,7 +59,8 @@ namespace Frahan.GH.Kintsugi;
     DesignFlow.BottomUp,
     Precedent = "Libish's facet-matching proposal 2026-07-11; region-growing segmentation; CPD soft ICP",
     Tolerance = "facet-sample RMS <= Joint Width at acceptance; report prints per-placement residuals")]
-public sealed class FacetMatchComponent : FrahanComponentBase
+public sealed class FacetMatchComponent
+    : AsyncScanComponent<FacetMatchComponent.MatchSnapshot, FacetMatchComponent.MatchPayload>
 {
     public FacetMatchComponent()
         : base("Facet Match", "FacetMatch",
@@ -66,9 +69,31 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             "complementary fracture facets across fragments, and refining " +
             "with Soft ICP. The closed-mesh sibling of the rim-matching " +
             "Kintsugi path: use THIS when fragments have no naked rims " +
-            "(scanned pieces, Fracture Roughen with Cap Cuts=True).",
+            "(scanned pieces, Fracture Roughen with Cap Cuts=True). ASYNC: " +
+            "runs on a background task; the canvas stays navigable and " +
+            "results pop in when ready (Run=false cancels).",
             "Frahan", "Kintsugi")
     {
+    }
+
+    /// <summary>Immutable inputs captured on the UI thread.</summary>
+    public sealed class MatchSnapshot
+    {
+        public List<Mesh> Fragments;
+        public List<List<Mesh>> Regions;   // null = regions input unwired/mismatched
+        public double AngleDeg, MinShare, JointWidth, PenTol, AcceptFloor;
+        public bool SoftIcp, PenHinge;
+    }
+
+    /// <summary>Result produced on the background thread.</summary>
+    public sealed class MatchPayload
+    {
+        public List<Mesh> Assembled;
+        public List<Transform> Transforms;
+        public List<int> PlacedIdx, UnplacedIdx;
+        public List<Curve> Outlines;
+        public string Report;
+        public List<string> Warnings = new List<string>();
     }
 
     // F2D00508: verified unique 2026-07-11 (501=Kintsugi, 502=Shatter,
@@ -186,18 +211,29 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         public double[] BoundaryRelief;
     }
 
-    protected override void SolveSafe(IGH_DataAccess da)
+    protected override bool TryReadRunOnly(IGH_DataAccess da, out bool run)
     {
+        run = false;
+        da.GetData(6, ref run);
+        return true;
+    }
+
+    protected override bool TryRead(IGH_DataAccess da, out bool run, out MatchSnapshot snapshot)
+    {
+        snapshot = null;
+        run = false;
+        da.GetData(6, ref run);
+        if (!run) return true;
+
         var fragments = new List<Mesh>();
         double angleDeg = 30.0, minShare = 0.05, jointWidth = 1.0, penTol = 0.5;
-        bool softIcp = true, run = false, penHinge = false;
-        if (!da.GetDataList(0, fragments)) return;
+        bool softIcp = true, penHinge = false;
+        if (!da.GetDataList(0, fragments)) return true;
         da.GetData(1, ref angleDeg);
         da.GetData(2, ref minShare);
         da.GetData(3, ref jointWidth);
         da.GetData(4, ref penTol);
         da.GetData(5, ref softIcp);
-        da.GetData(6, ref run);
         if (Params.Input.Count > 7) da.GetData(7, ref penHinge);
         Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Mesh> regionTree = null;
         if (Params.Input.Count > 8)
@@ -206,19 +242,74 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         }
         double acceptFloor = 1.3;
         if (Params.Input.Count > 9) da.GetData(9, ref acceptFloor);
-        if (!run)
-        {
-            da.SetData(5, "Run is false. Toggle to execute.");
-            return;
-        }
         if (fragments.Count < 2)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 2 fragments.");
-            return;
+            return false;
         }
+
+        // owned deep copies: the background task must never touch live GH data
+        List<List<Mesh>> regions = null;
+        if (regionTree != null && regionTree.PathCount == fragments.Count && !regionTree.IsEmpty)
+        {
+            regions = new List<List<Mesh>>(fragments.Count);
+            for (int f = 0; f < fragments.Count; f++)
+            {
+                var lst = new List<Mesh>();
+                foreach (var gm in regionTree.Branches[f])
+                {
+                    var piece = gm?.Value;
+                    if (piece != null && piece.Faces.Count > 0)
+                        lst.Add(piece.DuplicateMesh());
+                }
+                regions.Add(lst);
+            }
+        }
+        snapshot = new MatchSnapshot
+        {
+            Fragments = fragments.Select(m => m?.DuplicateMesh()).ToList(),
+            Regions = regions,
+            AngleDeg = angleDeg,
+            MinShare = minShare,
+            JointWidth = jointWidth,
+            PenTol = penTol,
+            AcceptFloor = acceptFloor,
+            SoftIcp = softIcp,
+            PenHinge = penHinge,
+        };
+        return true;
+    }
+
+    protected override void EmitResult(IGH_DataAccess da, MatchPayload payload)
+    {
+        foreach (var w in payload.Warnings)
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, w);
+        da.SetDataList(0, payload.Assembled);
+        da.SetDataList(1, payload.Transforms);
+        da.SetDataList(2, payload.PlacedIdx);
+        da.SetDataList(3, payload.UnplacedIdx);
+        da.SetDataList(4, payload.Outlines);
+        da.SetData(5, payload.Report);
+    }
+
+    protected override void EmitIdle(IGH_DataAccess da, string message)
+    {
+        da.SetData(5, message);
+    }
+
+    protected override MatchPayload Compute(MatchSnapshot snap,
+        CancellationToken token, Action<string> progress)
+    {
+        var fragments = snap.Fragments;
+        double angleDeg = snap.AngleDeg, minShare = snap.MinShare,
+               jointWidth = snap.JointWidth, penTol = snap.PenTol,
+               acceptFloor = snap.AcceptFloor;
+        bool softIcp = snap.SoftIcp, penHinge = snap.PenHinge;
+        var payload = new MatchPayload();
 
         var report = new System.Text.StringBuilder();
         var rng = new Random(42);
+        progress("segmenting...");
 
         // 1-2. Segment + describe. The dominant-facet guard runs GLOBALLY:
         // per-fragment angle retries segmented the two mates of an
@@ -249,7 +340,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             // Defensive normal hygiene: scans and generator output arrive
             // with arbitrary winding; the opposition gate needs consistent
             // OUTWARD normals.
-            var m2 = src?.DuplicateMesh();
+            var m2 = src;
             if (m2 == null) return null;
             try
             {
@@ -260,15 +351,14 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             m2.Normals.ComputeNormals();
             return m2;
         }).ToList();
-        bool useRegions = regionTree != null &&
-                          regionTree.PathCount == fragments.Count &&
-                          !regionTree.IsEmpty;
+        bool useRegions = snap.Regions != null;
         for (int f = 0; f < fragments.Count; f++)
         {
+            token.ThrowIfCancellationRequested();
             var m = fragments[f];
             if (m == null) continue;
             if (!m.IsClosed)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                payload.Warnings.Add(
                     $"Fragment {f} is not closed; facet matching expects " +
                     "watertight meshes (results may degrade).");
             List<Facet> fs;
@@ -281,12 +371,9 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 // re-segmentation asymmetry that broke closed-loop
                 // registration (2026-07-11) cannot occur.
                 fs = new List<Facet>();
-                var branch = regionTree.Branches[f];
-                foreach (var gm in branch)
+                foreach (var piece in snap.Regions[f])
                 {
-                    var piece = gm?.Value;
                     if (piece == null || piece.Faces.Count == 0) continue;
-                    piece = piece.DuplicateMesh();
                     piece.Normals.ComputeNormals();
                     var fct = new Facet { FragIdx = f };
                     fct.Faces.AddRange(Enumerable.Range(0, piece.Faces.Count));
@@ -338,11 +425,13 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         RefreshPlaced(anchor);
         bool progressReported = false;
         var gateLog = new List<string>();
-        bool progress = true;
+        bool moved = true;
         var swGreedy = System.Diagnostics.Stopwatch.StartNew();
-        while (progress)
+        while (moved)
         {
-            progress = false;
+            moved = false;
+            token.ThrowIfCancellationRequested();
+            progress($"matching... {placedCount}/{fragments.Count} placed");
             // CHEAP scan first (residual + normal opposition only); the
             // expensive per-vertex inside-mesh penetration test runs only
             // on the ranked survivors (this was the 300s hotspot).
@@ -506,7 +595,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 placed[frag] = true;
                 RefreshPlaced(frag);
                 placedCount++;
-                progress = true;
+                moved = true;
                 report.AppendLine($"  placed fragment {frag}: facet RMS-multiple {resid:F3}");
             }
         }
@@ -530,6 +619,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         {
             try
             {
+                progress("soft ICP polish...");
                 var swIcp = System.Diagnostics.Stopwatch.StartNew();
                 var refFrags = new List<SoftIcpRefiner.Fragment>();
                 for (int f = 0; f < fragments.Count; f++)
@@ -564,7 +654,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             }
             catch (Exception ex)
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                payload.Warnings.Add(
                     "Soft ICP polish failed: " + ex.Message + " (greedy poses kept).");
             }
         }
@@ -585,12 +675,13 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         report.AppendLine($"FacetMatch: {placedIdx.Count}/{fragments.Count} placed" +
                           (unplacedIdx.Count > 0 ? $"; unplaced: {string.Join(",", unplacedIdx)}" : "."));
 
-        da.SetDataList(0, assembled);
-        da.SetDataList(1, transforms);
-        da.SetDataList(2, placedIdx);
-        da.SetDataList(3, unplacedIdx);
-        da.SetDataList(4, outlines);
-        da.SetData(5, report.ToString());
+        payload.Assembled = assembled;
+        payload.Transforms = transforms;
+        payload.PlacedIdx = placedIdx;
+        payload.UnplacedIdx = unplacedIdx;
+        payload.Outlines = outlines;
+        payload.Report = report.ToString();
+        return payload;
     }
 
     // -------------------------------------------------------------------------
