@@ -43,6 +43,15 @@ above the threshold are placed at the network pose. Result: the fragments snap b
 vessel form. Measured: `2 placed, 0 unplaced; pair (0,1) score 0.7068 STRONG; total residual 0`.
 
 ## Files
+- `14_kintsugi_rims_facets_bench.gh` - RIMS + FACETS test bench (no external data).
+  Shared generator (Synthetic Block -> Fragment Shatter), then two groups:
+  GROUP A (gold): Fracture Roughen v2 (per-interface decorrelated relief, capped) ->
+  Scramble Fragments -> FACET MATCH (blue = facet-outline diagnostics);
+  GROUP B (green): open shatter fragments -> Scramble Fragments -> Frahan Kintsugi
+  geometric path (Interface Split rim arcs + skin-normal gate). Run order:
+  Run Shatter -> Run Roughen -> the match toggles. Both Reports print candidate
+  diagnostics. STATUS: precision gates verified (no wrong placements emitted);
+  recall on synthetic congruent interfaces is the open work item.
 - `14_kintsugi_synthetic.gh` - SYNTHETIC data canvas (no external data): Synthetic Block ->
   Fragment Shatter -> Fracture Roughen -> Frahan Kintsugi (Port). Sliders: Fragment Count / Seed /
   Impact Bias / Amplitude. Run toggles ship FALSE; Kintsugi Port run is async (minutes).
