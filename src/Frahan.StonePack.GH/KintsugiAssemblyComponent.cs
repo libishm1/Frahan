@@ -350,8 +350,7 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
 
         if (usePortMode)
         {
-            string deployDir = System.IO.Path.GetDirectoryName(
-                System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string deployDir = ResolveDeployDir();
             // TorchSharp/libtorch native loading: when hosted in Rhino the
             // process base directory is Rhino's install dir, NOT this .gha's
             // deploy folder, so the OS loader can't resolve the libtorch DLL
@@ -369,11 +368,13 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             {
                 EmitEmpty(da,
                     "Port mode requires the converted PuzzleFusion++ weights at " +
-                    $"'{weightPath ?? "<deploy>/kintsugi.bin"}'. " +
-                    "Run Frahan.Kintsugi.Port/Weights/convert_pytorch_checkpoint.py " +
-                    "against the upstream PyTorch checkpoint to produce kintsugi.bin, " +
-                    "then drop it next to Frahan.StonePack.gha. " +
-                    "Use Port=False for the geometric path until weights are validated.");
+                    $"'{weightPath ?? "<deploy>/kintsugi.bin"}' (resolved deploy dir: " +
+                    $"'{deployDir ?? "<none>"}'). " +
+                    "Drop kintsugi.bin next to Frahan.StonePack.gha in the " +
+                    "Grasshopper Libraries folder (install/deploy.ps1 does this), or " +
+                    "convert it from the upstream checkpoint via " +
+                    "Frahan.Kintsugi.Port/Weights/convert_pytorch_checkpoint.py. " +
+                    "Use Port=False for the geometric path until weights are present.");
                 return;
             }
             // ---- ASYNC Mode=Port ----
@@ -645,8 +646,11 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         }
         if (rimCount == 0)
         {
-            EmitEmpty(da, "No naked-edge rims found on any fragment. " +
-                          "Are your meshes closed? Open boundaries needed for rim-matching.");
+            EmitEmpty(da, "No naked-edge rims found on any fragment: the meshes are " +
+                          "closed (watertight). That is CORRECT for the learned path -- " +
+                          "set Use Port Mode = True. The GEOMETRIC path matches open " +
+                          "fracture rims, so feed it Fragment Shatter output directly " +
+                          "(open cuts), or Fracture Roughen with Cap Cuts = False.");
             return;
         }
 
@@ -926,6 +930,45 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             ? BoundarySegmenter3D.Segment(panel, segOpt3D)
             : BoundarySegmenter.Segment(panel, segOpt);
         foreach (var s in segs) index.Add(s);
+    }
+
+    /// <summary>
+    /// Resolve the .gha's on-disk deploy folder (where kintsugi.bin and the
+    /// libtorch DLLs live). Assembly.Location alone is NOT reliable: Rhino 8
+    /// on .NET 8 memory-loads .gha assemblies, so Location is EMPTY and the
+    /// old code reported "<deploy>/kintsugi.bin" missing even with the
+    /// weights correctly deployed (field defect, 2026-07-11). Ladder:
+    /// Grasshopper's own record of the library file, then Assembly.Location,
+    /// then the Grasshopper Libraries folders probed for kintsugi.bin.
+    /// </summary>
+    private string ResolveDeployDir()
+    {
+        try
+        {
+            var lib = Grasshopper.Instances.ComponentServer.FindAssemblyByObject(this);
+            if (lib != null && !string.IsNullOrEmpty(lib.Location))
+                return System.IO.Path.GetDirectoryName(lib.Location);
+        }
+        catch { }
+        try
+        {
+            var loc = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            if (!string.IsNullOrEmpty(loc))
+                return System.IO.Path.GetDirectoryName(loc);
+        }
+        catch { }
+        try
+        {
+            foreach (var f in Grasshopper.Folders.AssemblyFolders)
+            {
+                if (string.IsNullOrEmpty(f.Folder)) continue;
+                if (System.IO.File.Exists(System.IO.Path.Combine(f.Folder, "kintsugi.bin")))
+                    return f.Folder;
+            }
+            return Grasshopper.Folders.DefaultAssemblyFolder;
+        }
+        catch { }
+        return null;
     }
 
     // Adds a directory to the native DLL search path (process-wide). Used
