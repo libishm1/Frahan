@@ -9,7 +9,7 @@ polished documentation — for the user-facing docs start at the
 [component reference](../docs/components/COMPONENTS.md) and
 [results & benchmarks](../docs/results/RESULTS.md).
 
-To discuss the research or the plugin, [book a meeting](https://calendly.com/libish-1234) (Calendly).
+To discuss the research or the plugin, [book a meeting](https://calendly.com/libish-1234/30min) (Calendly).
 
 ## Layout
 

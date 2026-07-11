@@ -80,4 +80,4 @@ and an interdisciplinary synthesis (ROSES). Example: the 2D nester crosses the 8
 0 overlap with holes; the studies are in `wiki/research/`.
 
 ## Contact
-Questions, a collaboration, or a walkthrough of the plugin? **[Book a meeting](https://calendly.com/libish-1234)** (Calendly).
+Questions, a collaboration, or a walkthrough of the plugin? **[Book a meeting](https://calendly.com/libish-1234/30min)** (Calendly).
