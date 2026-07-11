@@ -93,6 +93,25 @@ OLD generator max 0.062 / 0 strong. Synthetic fractures are now
 in-distribution for the learned path. Tuned defaults (bias 0.9, amp 0.05)
 built + deployed + byte-verified.
 
+## LATE-SESSION MILESTONE + NEXT TRIO (Libish, 2026-07-11 close)
+
+FIRST VERIFIED REASSEMBLY (commit b422ebb): N=2 scrambled -> Facet Match
+reassembles CORRECT (pose error 1.9 on diag 160). Keystone = Roughen's new
+"Fracture Surfaces" output (per-interface salt-split cap submeshes) wired
+into Facet Match's "Fracture Regions" input: exact mate correspondence by
+construction. Evidence: outputs/2026-07-11/kintsugi_fracture_generator/
+facetmatch_assembled.png + _v001.3dm.
+
+NEXT SESSION (explicitly ordered by Libish):
+1. Fold the regions wire into 14_kintsugi_rims_facets_bench.gh:
+   Roughen.Fs -> Scramble Fragments (SAME seed as the fragment scrambler;
+   transforms are deterministic per index) -> FacetMatch.Fr.
+2. FIX N>=3: per-interface pieces split correctly but candidates die at
+   the gates. First check: compare PlaneSalt values of mating pieces
+   (suspect quantisation disagreement at plane corners / offset bins).
+3. Make Facet Match ASYNC (AsyncScanComponent run-gate pattern, as Cloud
+   ICP) - Libish flagged the sync solve on canvas.
+
 ## Resume points
 
 1. **HITL**: Libish reviews `fragments_new_assembled_exploded.jpg` +
