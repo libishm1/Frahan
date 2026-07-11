@@ -165,6 +165,15 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
             GH_ParamAccess.item);
         p.AddTextParameter("Report", "Rp", "Per-fragment displacement count.",
             GH_ParamAccess.item);
+        // Appended 2026-07-11 (output index 3; appending preserves saved
+        // canvases).
+        p.AddMeshParameter("Fracture Surfaces", "Fs",
+            "Per-fragment FRACTURE surface submesh (the displaced caps " +
+            "only, no skin). Wire into Facet Match's Fracture Regions input " +
+            "for exact-correspondence matching: mates carry the identical " +
+            "surface by construction. Parallel to Roughened Fragments; " +
+            "empty when Cap Cuts is FALSE.",
+            GH_ParamAccess.list);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -223,6 +232,7 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         double taperWorld = Math.Max(0.0, rimTaper) * diag;
 
         var outputs = new List<Mesh>(inputs.Count);
+        var capMeshes = new List<Mesh>(inputs.Count);
         int totalDisplaced = 0;
         var report = new System.Text.StringBuilder();
 
@@ -235,7 +245,9 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
             {
                 var m = RoughenCapped(src, field, freqScale, ampWorld,
                     targetEdge, taperWorld,
-                    out int displaced, out double capAreaFrac, out int added);
+                    out int displaced, out double capAreaFrac, out int added,
+                    out Mesh capMesh);
+                capMeshes.Add(capMesh);
                 outputs.Add(m);
                 totalDisplaced += displaced;
                 report.AppendLine(
@@ -266,6 +278,7 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
                 m.Normals.ComputeNormals();
                 m.Compact();
                 outputs.Add(m);
+                capMeshes.Add(new Mesh());
                 totalDisplaced += displaced;
                 report.AppendLine($"Fragment {f}: displaced {displaced} rim vertices (open rim).");
             }
@@ -286,6 +299,7 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         da.SetDataList(0, outputs);
         da.SetData(1, totalDisplaced);
         da.SetData(2, report.ToString());
+        if (Params.Output.Count > 3) da.SetDataList(3, capMeshes);
     }
 
     // -------------------------------------------------------------------------
@@ -297,11 +311,13 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
 
     private static Mesh RoughenCapped(Mesh src, FractalField field,
         double freqScale, double ampWorld, double targetEdge, double taperWorld,
-        out int displaced, out double capAreaFrac, out int addedVerts)
+        out int displaced, out double capAreaFrac, out int addedVerts,
+        out Mesh capMesh)
     {
         displaced = 0;
         capAreaFrac = 0;
         addedVerts = 0;
+        capMesh = new Mesh();
 
         var m = src.DuplicateMesh();
         int preFaces = m.Faces.Count;
@@ -515,6 +531,35 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
             m.Vertices.SetVertex(kv.Key, new Point3f(
                 (float)kv.Value.X, (float)kv.Value.Y, (float)kv.Value.Z));
 
+        // FRACTURE SURFACE SUBMESH (2026-07-11): the displaced caps as a
+        // standalone mesh. Mates carry the IDENTICAL surface by
+        // construction, so downstream exact-correspondence matching (Facet
+        // Match's Fracture Regions input) needs no re-segmentation.
+        // Vertices are keyed by (interface salt, index): triangles of
+        // DIFFERENT cut planes never share vertices in the submesh, so
+        // SplitDisjointPieces downstream yields one piece PER INTERFACE
+        // even when a single meandering cap spans several planes -- the
+        // exact-correspondence guarantee then holds for any fragment count.
+        var vmap2 = new Dictionary<(int salt, int idx), int>();
+        foreach (var tcap in capTris)
+        {
+            int salt = PlaneSalt(tcap[0]);
+            var idx3 = new int[3];
+            for (int k2 = 0; k2 < 3; k2++)
+            {
+                if (!vmap2.TryGetValue((salt, tcap[k2]), out int nv))
+                {
+                    nv = capMesh.Vertices.Count;
+                    capMesh.Vertices.Add(m.Vertices[tcap[k2]]);
+                    vmap2[(salt, tcap[k2])] = nv;
+                }
+                idx3[k2] = nv;
+            }
+            capMesh.Faces.AddFace(idx3[0], idx3[1], idx3[2]);
+        }
+        capMesh.Normals.ComputeNormals();
+        capMesh.Compact();
+
         // Fracture-surface area share (target: BB neighbour-contact point
         // share 0.04-0.27, median 0.11).
         double capArea = 0;
@@ -534,6 +579,16 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         }
         capAreaFrac = totalArea > 1e-12 ? capArea / totalArea : 0;
 
+        // Fan-cap faces were added with arbitrary winding; unify and make
+        // outward (closed mesh with negative volume = inward normals).
+        // Without this, downstream normal-based logic (Facet Match's
+        // opposition gate) sees random signs (found 2026-07-11).
+        try
+        {
+            m.UnifyNormals();
+            if (m.IsClosed && m.Volume() < 0) m.Flip(true, true, true);
+        }
+        catch { }
         m.Normals.ComputeNormals();
         m.Compact();
         return m;

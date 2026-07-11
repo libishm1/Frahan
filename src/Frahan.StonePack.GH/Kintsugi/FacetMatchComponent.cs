@@ -117,6 +117,15 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             "term in the Soft ICP polish. Default FALSE = fast contact-only " +
             "refinement; enable for final-quality passes on small sets.",
             GH_ParamAccess.item, false);
+        p.AddMeshParameter("Fracture Regions", "Fr",
+            "OPTIONAL per-fragment FRACTURE surface submeshes (parallel to " +
+            "Fragments; wire Fracture Roughen's Fracture Surfaces output). " +
+            "When provided, facets come directly from these regions -- " +
+            "mates then carry the IDENTICAL surface by construction and no " +
+            "re-segmentation runs. Leave unwired for scans (dihedral " +
+            "segmentation fallback).",
+            GH_ParamAccess.list);
+        Params.Input[Params.Input.Count - 1].Optional = true;
         p.AddNumberParameter("Accept Floor", "Af",
             "Accept a facet pairing when its sample RMS is below this " +
             "MULTIPLE of the sampling-density floor (sqrt(area/K)). Two " +
@@ -160,6 +169,21 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         public double Rms;             // deviation from the fit plane
         public Point3d[] Samples;      // area-weighted surface samples
         public Vector3d[] SampleNormals;
+        // closed boundary loop resampled to fixed count, in FRAME coords
+        // (u,v). Mates share the identical boundary curve, so 2D contour
+        // registration recovers the true in-plane rotation.
+        public Point2d[] Boundary2D;
+        // the same resampled loop in 3D (input pose). Corresponded 3D
+        // boundary distance is the pose-pinning score: NN sample RMS on
+        // dense near-planar sets is blind to in-plane sliding/rotation.
+        public Point3d[] Boundary3D;
+        public double BoundaryLength;
+        // relief signature along the boundary: signed height of the nearby
+        // facet surface above the frame plane. Disambiguates symmetric
+        // outlines: mates read the same bumps with OPPOSITE sign, so
+        // cand[i]+host[matched i] is ~constant only for the true
+        // correspondence.
+        public double[] BoundaryRelief;
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -175,8 +199,10 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         da.GetData(5, ref softIcp);
         da.GetData(6, ref run);
         if (Params.Input.Count > 7) da.GetData(7, ref penHinge);
+        var regions = new List<Mesh>();
+        if (Params.Input.Count > 8) da.GetDataList(8, regions);
         double acceptFloor = 1.3;
-        if (Params.Input.Count > 8) da.GetData(8, ref acceptFloor);
+        if (Params.Input.Count > 9) da.GetData(9, ref acceptFloor);
         if (!run)
         {
             da.SetData(5, "Run is false. Toggle to execute.");
@@ -191,10 +217,48 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         var report = new System.Text.StringBuilder();
         var rng = new Random(42);
 
-        // 1-2. Segment + describe.
+        // 1-2. Segment + describe. The dominant-facet guard runs GLOBALLY:
+        // per-fragment angle retries segmented the two mates of an
+        // interface at DIFFERENT angles, guaranteeing asymmetric facets
+        // (found 2026-07-11, N=2 case). One shared angle for everyone.
+        var swSeg = System.Diagnostics.Stopwatch.StartNew();
         var facets = new List<Facet>();
         var outlines = new List<Curve>();
         var fragArea = new double[fragments.Count];
+        double angleUse = angleDeg;
+        for (int attempt = 0; attempt < 2 && angleUse > 12.0; attempt++)
+        {
+            bool dominant = false;
+            foreach (var m in fragments)
+            {
+                if (m == null) continue;
+                // lightweight probe: areas only, no descriptors/boundaries
+                var probe = SegmentFacets(m, 0, angleUse, new Random(42), describe: false);
+                if (probe.Count > 60) { dominant = false; break; }
+                double tot = probe.Sum(x => x.Area);
+                if (tot > 1e-12 && probe.Max(x => x.Area) > tot * 0.6) { dominant = true; break; }
+            }
+            if (!dominant) break;
+            angleUse = Math.Max(12.0, angleUse * 0.6);
+        }
+        fragments = fragments.Select(src =>
+        {
+            // Defensive normal hygiene: scans and generator output arrive
+            // with arbitrary winding; the opposition gate needs consistent
+            // OUTWARD normals.
+            var m2 = src?.DuplicateMesh();
+            if (m2 == null) return null;
+            try
+            {
+                m2.UnifyNormals();
+                if (m2.IsClosed && m2.Volume() < 0) m2.Flip(true, true, true);
+            }
+            catch { }
+            m2.Normals.ComputeNormals();
+            return m2;
+        }).ToList();
+        bool useRegions = regions.Count == fragments.Count &&
+                          regions.Any(r => r != null && r.Faces.Count > 0);
         for (int f = 0; f < fragments.Count; f++)
         {
             var m = fragments[f];
@@ -203,7 +267,31 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                     $"Fragment {f} is not closed; facet matching expects " +
                     "watertight meshes (results may degrade).");
-            var fs = SegmentFacets(m, f, angleDeg, rng);
+            List<Facet> fs;
+            if (useRegions && regions[f] != null && regions[f].Faces.Count > 0)
+            {
+                // EXACT-CORRESPONDENCE mode: one facet per connected piece
+                // of the supplied fracture region. Mates carry the identical
+                // surface, so descriptors/boundaries correspond by
+                // construction -- the re-segmentation asymmetry that broke
+                // closed-loop registration (2026-07-11) cannot occur.
+                fs = new List<Facet>();
+                var pieces = regions[f].SplitDisjointPieces() ?? new[] { regions[f] };
+                foreach (var piece in pieces)
+                {
+                    if (piece == null || piece.Faces.Count == 0) continue;
+                    piece.Normals.ComputeNormals();
+                    var fct = new Facet { FragIdx = f };
+                    fct.Faces.AddRange(Enumerable.Range(0, piece.Faces.Count));
+                    Describe(piece, fct, rng);
+                    BuildBoundary2D(piece, fct);
+                    fs.Add(fct);
+                }
+            }
+            else
+            {
+                fs = SegmentFacets(m, f, angleUse, rng);
+            }
             fragArea[f] = fs.Sum(x => x.Area);
             // keep at most the 10 largest qualifying facets per fragment --
             // candidate pairing is O(facets^2) and small facets rarely carry
@@ -216,7 +304,8 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             }
         }
         report.AppendLine($"Facets: {facets.Count} kept across {fragments.Count} fragments " +
-                          $"(angle {angleDeg:F0} deg, min share {minShare:F2}).");
+                          $"(angle {angleDeg:F0} deg, min share {minShare:F2}; " +
+                          $"segmentation {swSeg.Elapsed.TotalSeconds:F1} s).");
         report.AppendLine("  per fragment: [" + string.Join(",",
             Enumerable.Range(0, fragments.Count).Select(f => facets.Count(x => x.FragIdx == f))) + "]");
 
@@ -241,6 +330,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         }
         RefreshPlaced(anchor);
         bool progressReported = false;
+        var gateLog = new List<string>();
         bool progress = true;
         var swGreedy = System.Diagnostics.Stopwatch.StartNew();
         while (progress)
@@ -249,8 +339,11 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             // CHEAP scan first (residual + normal opposition only); the
             // expensive per-vertex inside-mesh penetration test runs only
             // on the ranked survivors (this was the 300s hotspot).
-            var ranked = new List<(double resid, int frag, int hostFacet, Transform t)>();
+            var ranked = new List<(double resid, int frag, int hostFacet, Transform t, double penEff)>();
             var diag = new List<(double mult, int cand, int host)>();
+            var prelim = new List<(double coarseMult, Facet cand, int hostIdx, Transform t,
+                                   Point3d[] hostSamples, Vector3d[] hostNormals, double spacing,
+                                   int bShiftIdx, bool bRev, Point3d[] host3World, double bFloor)>();
             foreach (var cand in facets)
             {
                 if (placed[cand.FragIdx]) continue;
@@ -291,37 +384,93 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                                                Math.Max(1, host.Samples.Length));
                     double thr = Math.Max(jointWidth, 1.6 * spacing);
 
-                    int spins = (cand.E1 / Math.Max(1e-9, cand.E2) < 1.2) ? 4 : 2;
-                    for (int s = 0; s < spins; s++)
-                    {
-                        double ang = s * Math.PI * 2.0 / spins;
-                        var tx = hostFrame.XAxis * Math.Cos(ang) + hostFrame.YAxis * Math.Sin(ang);
-                        // mating target: candidate's outward normal must OPPOSE
-                        // the host facet's, so target Z = -hostZ (Z = X x Y with
-                        // Y = (-hostZ) x X gives exactly that)
-                        var target = new Plane(hostFrame.Origin, tx,
-                            Vector3d.CrossProduct(-hostFrame.ZAxis, tx));
-                        var T = Transform.PlaneToPlane(cand.Frame, target);
+                    // BOUNDARY REGISTRATION (2026-07-11): mates carry the
+                    // IDENTICAL facet boundary loop, so registering the
+                    // candidate's mirrored 2D outline against the host's
+                    // yields the true in-plane rotation + offset directly.
+                    // The old 2/4-spin guesses started the mini-ICP >45 deg
+                    // off and it locked onto self-similar relief at wrong
+                    // offsets (true pair placed 57 units off, verifier
+                    // rightly rejected it). Boundary misfit also separates
+                    // false pairs whose outlines differ.
+                    if (cand.Boundary2D == null || host.Boundary2D == null) continue;
+                    double bLenRatio = Math.Min(cand.BoundaryLength, host.BoundaryLength) /
+                                       Math.Max(cand.BoundaryLength, host.BoundaryLength);
+                    if (bLenRatio < 0.7) continue;
+                    if (!RegisterBoundaries(cand.Boundary2D, host.Boundary2D,
+                                            cand.BoundaryRelief, host.BoundaryRelief,
+                                            0.5 * (cand.Rms + host.Rms),
+                                            out double bAng, out Vector2d bShift,
+                                            out double bMisfit, out int bShiftIdx,
+                                            out bool bRev)) continue;
+                    // boundary misfit gate: identical loops register to the
+                    // resampling floor (~perimeter/48); different outlines
+                    // stay far above it
+                    double bFloor = host.BoundaryLength / BoundarySamples;
+                    if (bMisfit > 2.5 * bFloor) continue;
 
-                        // REFINE-THEN-SCORE (2026-07-11): the coarse frame
-                        // pose is a few degrees off on rough facets, which
-                        // inflated true-pair residuals to 1.5-1.9 floor
-                        // multiples and erased the separation from wrong
-                        // pairs. A short point-to-point ICP (4 Kabsch
-                        // iterations on the facet samples) drops true pairs
-                        // toward the sampling floor; relief mismatch keeps
-                        // wrong pairs high.
-                        T = MiniIcp(cand.Samples, T, hostSamples, spacing * 3, 4);
-                        double resid = SampleRms(cand.Samples, T, hostSamples);
-                        double floorMult = resid / Math.Max(1e-9, spacing);
-                        diag.Add((floorMult, cand.FragIdx, host.FragIdx));
-                        if (floorMult >= acceptFloor && resid >= jointWidth) continue;
-                        double dot = MeanNormalDot(cand.Samples, cand.SampleNormals, T,
-                                                   hostSamples, hostNormals, spacing * 3);
-                        if (dot > -0.3) continue;
-                        ranked.Add((floorMult, cand.FragIdx, hostIdx, T));
+                    {
+                        // build the 3D mating transform from the registered
+                        // 2D pose: mirrored candidate frame -> host frame
+                        // rotated by bAng, origin offset by bShift.
+                        var mirroredCand = new Plane(cand.Frame.Origin,
+                            cand.Frame.XAxis, -cand.Frame.YAxis);
+                        var tx = hostFrame.XAxis * Math.Cos(bAng) + hostFrame.YAxis * Math.Sin(bAng);
+                        var ty = -hostFrame.XAxis * Math.Sin(bAng) + hostFrame.YAxis * Math.Cos(bAng);
+                        var origin = hostFrame.Origin + hostFrame.XAxis * bShift.X
+                                                      + hostFrame.YAxis * bShift.Y;
+                        var target = new Plane(origin, tx, ty);
+                        var T = Transform.PlaneToPlane(mirroredCand, target);
+
+                        double coarse = SampleRms(cand.Samples, T, hostSamples);
+                        if (coarse >= 5.0 * spacing && coarse >= jointWidth) continue;
+                        var host3World = TransformPoints(host.Boundary3D, pose[host.FragIdx]);
+                        prelim.Add(((coarse / Math.Max(1e-9, spacing)) + bMisfit / bFloor * 0.1,
+                                    cand, hostIdx, T, hostSamples, hostNormals, spacing,
+                                    bShiftIdx, bRev, host3World, bFloor));
                     }
                 }
+            }
+
+            // Phase 2: refine-then-score ONLY the best prelim candidates.
+            foreach (var pc in prelim.OrderBy(p => p.coarseMult).Take(24))
+            {
+                // Refine on the LOCKED boundary correspondence (closed-form
+                // Kabsch on fixed pairs). The earlier free-NN mini-ICP slid
+                // the registered pose along the interface plane (in-plane
+                // slide is invisible to NN RMS) -- corresponded refinement
+                // cannot slide by construction.
+                var T = BoundaryKabsch(pc.cand.Boundary3D, pc.t,
+                                       pc.host3World, pc.bShiftIdx, pc.bRev, 3);
+                // pose-pinning score: CORRESPONDED boundary distance
+                double bResid = BoundaryResid3D(pc.cand.Boundary3D, T,
+                                                pc.host3World, pc.bShiftIdx, pc.bRev);
+                double resid = Math.Max(SampleRms(pc.cand.Samples, T, pc.hostSamples),
+                                        bResid * 0.5);
+                double floorMult = Math.Max(
+                    resid / Math.Max(1e-9, pc.spacing),
+                    bResid / Math.Max(1e-9, pc.bFloor));
+                diag.Add((floorMult, pc.cand.FragIdx, facets[pc.hostIdx].FragIdx));
+                if (floorMult >= acceptFloor && resid >= jointWidth)
+                {
+                    gateLog.Add($"frag {pc.cand.FragIdx}->{facets[pc.hostIdx].FragIdx}: REJECT floor {floorMult:F2}");
+                    continue;
+                }
+                double dot = MeanNormalDot(pc.cand.Samples, pc.cand.SampleNormals, T,
+                                           pc.hostSamples, pc.hostNormals, pc.spacing * 3);
+                if (dot > -0.3)
+                {
+                    gateLog.Add($"frag {pc.cand.FragIdx}->{facets[pc.hostIdx].FragIdx}: REJECT normal dot {dot:F2} (floor {floorMult:F2})");
+                    continue;
+                }
+                gateLog.Add($"frag {pc.cand.FragIdx}->{facets[pc.hostIdx].FragIdx}: RANKED floor {floorMult:F2} dot {dot:F2}");
+                // Effective penetration tolerance scales with the matched
+                // residual: mating rough surfaces legitimately interpenetrate
+                // by ~the registration residual (the true pair was rejected
+                // at the fixed 0.5 tol, found 2026-07-11). Wrong poses
+                // overlap at fragment scale, far above 3x resid.
+                double penEff = Math.Max(penTol, 3.0 * resid);
+                ranked.Add((floorMult, pc.cand.FragIdx, pc.hostIdx, T, penEff));
             }
             // candidate diagnostics: the measured floor-multiples, best first
             if (!progressReported && diag.Count > 0)
@@ -338,11 +487,14 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             // then minimizing total floor-multiple. Candidate lists are
             // tiny (< ~30), exhaustive DFS is free.
             var chosen = SelectNonConflicting(ranked);
-            foreach (var (resid, frag, _, T) in chosen.OrderBy(r => r.resid))
+            foreach (var (resid, frag, _, T, penEff) in chosen.OrderBy(r => r.resid))
             {
                 if (placed[frag]) continue;
-                if (penTol > 0 && Penetrates(fragments, placedWorld, placed, frag, T, penTol))
+                if (penTol > 0 && Penetrates(fragments, placedWorld, placed, frag, T, penEff))
+                {
+                    gateLog.Add($"frag {frag}: REJECT penetration (eff tol {penEff:F2})");
                     continue;
+                }
                 pose[frag] = T;
                 placed[frag] = true;
                 RefreshPlaced(frag);
@@ -352,6 +504,11 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             }
         }
         report.AppendLine($"Greedy assembly: {swGreedy.Elapsed.TotalSeconds:F1} s.");
+        if (gateLog.Count > 0)
+        {
+            report.AppendLine("  gate log (first 16):");
+            foreach (var g in gateLog.Take(16)) report.AppendLine("    " + g);
+        }
 
         // 6. Soft ICP polish.
         if (softIcp && placedCount >= 2)
@@ -425,7 +582,8 @@ public sealed class FacetMatchComponent : FrahanComponentBase
     // Segmentation.
     // -------------------------------------------------------------------------
 
-    private static List<Facet> SegmentFacets(Mesh m, int fragIdx, double angleDeg, Random rng)
+    private static List<Facet> SegmentFacets(Mesh m, int fragIdx, double angleDeg, Random rng,
+                                             bool describe = true)
     {
         m.FaceNormals.ComputeFaceNormals();
         int fc = m.Faces.Count;
@@ -529,10 +687,272 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         var result = new List<Facet>();
         foreach (var fct in byRoot.Values)
         {
-            Describe(m, fct, rng);
+            if (describe)
+            {
+                Describe(m, fct, rng);
+                BuildBoundary2D(m, fct);
+            }
+            else
+            {
+                // area-only (guard probe): cheap triangle-area sum
+                double area = 0;
+                foreach (var fi2 in fct.Faces)
+                {
+                    var face = m.Faces[fi2];
+                    Point3d a = m.Vertices[face.A], b = m.Vertices[face.B], c = m.Vertices[face.C];
+                    area += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+                    if (face.IsQuad)
+                    {
+                        Point3d d2 = m.Vertices[face.D];
+                        area += 0.5 * Vector3d.CrossProduct(c - a, d2 - a).Length;
+                    }
+                }
+                fct.Area = area;
+            }
             result.Add(fct);
         }
         return result;
+    }
+
+    /// <summary>
+    /// Longest closed boundary loop of the facet, resampled to 48 points in
+    /// the facet-frame (u,v). Mates carry the SAME boundary curve, so 2D
+    /// registration of these loops recovers the true mating rotation.
+    /// </summary>
+    private const int BoundarySamples = 48;
+
+    private static void BuildBoundary2D(Mesh m, Facet facet)
+    {
+        facet.Boundary2D = null;
+        if (facet.Area <= 1e-12) return;
+        var lines = FacetBoundaries(m, facet).OfType<LineCurve>()
+                    .Select(lc => lc.Line).ToList();
+        if (lines.Count < 3) return;
+        var joined = Curve.JoinCurves(
+            lines.Select(l => (Curve)new LineCurve(l)), 1e-6);
+        Curve best = null;
+        double bestLen = 0;
+        foreach (var c in joined)
+        {
+            if (!c.IsClosed) continue;
+            double len = c.GetLength();
+            if (len > bestLen) { bestLen = len; best = c; }
+        }
+        if (best == null) return;
+        var pts = new Point2d[BoundarySamples];
+        var pts3 = new Point3d[BoundarySamples];
+        var tt = best.DivideByCount(BoundarySamples, true);
+        if (tt == null || tt.Length < BoundarySamples) return;
+        for (int i = 0; i < BoundarySamples; i++)
+        {
+            var p = best.PointAt(tt[i]);
+            pts3[i] = p;
+            double u, v;
+            facet.Frame.ClosestParameter(p, out u, out v);
+            pts[i] = new Point2d(u, v);
+        }
+        facet.Boundary2D = pts;
+        facet.Boundary3D = pts3;
+        facet.BoundaryLength = bestLen;
+
+        // relief signature: nearest interior sample's signed height above
+        // the frame plane, per boundary sample
+        facet.BoundaryRelief = new double[BoundarySamples];
+        if (facet.Samples != null && facet.Samples.Length > 0)
+        {
+            for (int i = 0; i < BoundarySamples; i++)
+            {
+                double best2 = double.MaxValue;
+                int bj = -1;
+                for (int j = 0; j < facet.Samples.Length; j++)
+                {
+                    double d2 = pts3[i].DistanceToSquared(facet.Samples[j]);
+                    if (d2 < best2) { best2 = d2; bj = j; }
+                }
+                facet.BoundaryRelief[i] = bj >= 0
+                    ? facet.Frame.DistanceTo(facet.Samples[bj])
+                    : 0.0;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Register the candidate's MIRRORED boundary loop (the mating view:
+    /// v flips, traversal reverses) against the host's loop over all cyclic
+    /// shifts with closed-form 2D Kabsch. Returns the best in-plane angle,
+    /// 2D translation (host-frame coords) and the RMS misfit normalised by
+    /// loop length -- false pairs with different outlines misfit badly.
+    /// </summary>
+    private static bool RegisterBoundaries(
+        Point2d[] cand, Point2d[] host,
+        double[] candRelief, double[] hostRelief, double reliefScale,
+        out double angle, out Vector2d shift, out double misfit,
+        out int bestShift, out bool reversed)
+    {
+        angle = 0; shift = new Vector2d(0, 0); misfit = double.MaxValue; bestShift = 0;
+        reversed = false;
+        if (cand == null || host == null) return false;
+        int n = host.Length;
+        // mating view of the candidate: mirror v. Traversal direction of
+        // each joined loop is ARBITRARY (Curve.JoinCurves), so BOTH
+        // directions must be tried; assuming one flipped the correspondence
+        // randomly per pair (found 2026-07-11, N=2 case 37 units off).
+        for (int rev = 0; rev < 2; rev++)
+        {
+        var cm = new Point2d[n];
+        for (int i = 0; i < n; i++)
+        {
+            var p = cand[rev == 0 ? (n - 1 - i) : i];
+            cm[i] = new Point2d(p.X, -p.Y);
+        }
+        double cx = 0, cy = 0, hx = 0, hy = 0;
+        for (int i = 0; i < n; i++)
+        { cx += cm[i].X; cy += cm[i].Y; hx += host[i].X; hy += host[i].Y; }
+        cx /= n; cy /= n; hx /= n; hy /= n;
+
+        for (int s = 0; s < n; s++)
+        {
+            // closed-form 2D rotation for correspondence i <-> (i+s) mod n
+            double a = 0, b = 0;
+            for (int i = 0; i < n; i++)
+            {
+                double ux = cm[i].X - cx, uy = cm[i].Y - cy;
+                var h = host[(i + s) % n];
+                double vx = h.X - hx, vy = h.Y - hy;
+                a += ux * vx + uy * vy;
+                b += ux * vy - uy * vx;
+            }
+            double th = Math.Atan2(b, a);
+            double cth = Math.Cos(th), sth = Math.Sin(th);
+            double sum = 0;
+            for (int i = 0; i < n; i++)
+            {
+                double ux = cm[i].X - cx, uy = cm[i].Y - cy;
+                double rx = cth * ux - sth * uy, ry = sth * ux + cth * uy;
+                var h = host[(i + s) % n];
+                double dx = rx - (h.X - hx), dy = ry - (h.Y - hy);
+                sum += dx * dx + dy * dy;
+            }
+            double rms = Math.Sqrt(sum / n);
+            // relief-signature disambiguation for symmetric outlines:
+            // mates read the same physical bumps with opposite sign, so
+            // candRelief + hostRelief is ~constant only for the true
+            // correspondence. Score = 2D rms scaled by (1 + reliefStd/scale).
+            if (candRelief != null && hostRelief != null && reliefScale > 1e-9)
+            {
+                double mean = 0;
+                for (int i = 0; i < n; i++)
+                    mean += candRelief[rev == 0 ? (n - 1 - i) : i] + hostRelief[(i + s) % n];
+                mean /= n;
+                double var2 = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    double d = candRelief[rev == 0 ? (n - 1 - i) : i] + hostRelief[(i + s) % n] - mean;
+                    var2 += d * d;
+                }
+                double reliefStd = Math.Sqrt(var2 / n);
+                rms *= 1.0 + reliefStd / reliefScale;
+            }
+            if (rms < misfit)
+            {
+                misfit = rms;
+                angle = th;
+                bestShift = s;
+                reversed = rev == 1;
+                double rcx = cth * cx - sth * cy, rcy = sth * cx + cth * cy;
+                shift = new Vector2d(hx - rcx, hy - rcy);
+            }
+        }
+        }
+        return misfit < double.MaxValue;
+    }
+
+    /// <summary>
+    /// Rigid refinement on the LOCKED boundary correspondence: iterate a
+    /// closed-form Horn/Kabsch solve over the fixed pairs. No nearest-
+    /// neighbour step, so the pose cannot slide along the interface.
+    /// </summary>
+    private static Transform BoundaryKabsch(
+        Point3d[] cand3, Transform t0, Point3d[] host3World, int shift,
+        bool reversed, int iterations)
+    {
+        var t = t0;
+        int n = host3World.Length;
+        for (int it = 0; it < iterations; it++)
+        {
+            var src = new List<Point3d>(n);
+            var dst = new List<Point3d>(n);
+            for (int i = 0; i < n; i++)
+            {
+                var p = cand3[reversed ? i : (n - 1 - i)];
+                p.Transform(t);
+                src.Add(p);
+                dst.Add(host3World[(i + shift) % n]);
+            }
+            var step = RigidFromPairs(src, dst);
+            t = Transform.Multiply(step, t);
+        }
+        return t;
+    }
+
+    /// <summary>Closed-form rigid transform (Horn quaternion) mapping the
+    /// paired src points onto dst.</summary>
+    private static Transform RigidFromPairs(List<Point3d> src, List<Point3d> dst)
+    {
+        var cs = new Point3d(0, 0, 0); var cd = new Point3d(0, 0, 0);
+        for (int i = 0; i < src.Count; i++) { cs += src[i]; cd += dst[i]; }
+        cs /= src.Count; cd /= dst.Count;
+        double xx=0, xy=0, xz=0, yx=0, yy=0, yz=0, zx=0, zy=0, zz=0;
+        for (int i = 0; i < src.Count; i++)
+        {
+            var a = src[i] - cs; var b = dst[i] - cd;
+            xx += a.X*b.X; xy += a.X*b.Y; xz += a.X*b.Z;
+            yx += a.Y*b.X; yy += a.Y*b.Y; yz += a.Y*b.Z;
+            zx += a.Z*b.X; zy += a.Z*b.Y; zz += a.Z*b.Z;
+        }
+        double[,] N = {
+            { xx+yy+zz, yz-zy,     zx-xz,     xy-yx     },
+            { yz-zy,    xx-yy-zz,  xy+yx,     zx+xz     },
+            { zx-xz,    xy+yx,    -xx+yy-zz,  yz+zy     },
+            { xy-yx,    zx+xz,     yz+zy,    -xx-yy+zz  } };
+        var q = new double[] { 1, 0.1, 0.1, 0.1 };
+        for (int pi = 0; pi < 30; pi++)
+        {
+            var nq = new double[4];
+            for (int i2 = 0; i2 < 4; i2++)
+                for (int j2 = 0; j2 < 4; j2++) nq[i2] += N[i2, j2] * q[j2];
+            for (int i2 = 0; i2 < 4; i2++) nq[i2] += q[i2] * (Math.Abs(xx)+Math.Abs(yy)+Math.Abs(zz)+1);
+            double nrm = Math.Sqrt(nq.Sum(v2 => v2 * v2));
+            if (nrm < 1e-12) break;
+            for (int i2 = 0; i2 < 4; i2++) q[i2] = nq[i2] / nrm;
+        }
+        double w = q[0], x = q[1], y = q[2], z = q[3];
+        var R = Transform.Identity;
+        R.M00 = 1-2*(y*y+z*z); R.M01 = 2*(x*y-z*w); R.M02 = 2*(x*z+y*w);
+        R.M10 = 2*(x*y+z*w);   R.M11 = 1-2*(x*x+z*z); R.M12 = 2*(y*z-x*w);
+        R.M20 = 2*(x*z-y*w);   R.M21 = 2*(y*z+x*w);   R.M22 = 1-2*(x*x+y*y);
+        return Transform.Multiply(Transform.Translation(cd - Point3d.Origin),
+               Transform.Multiply(R, Transform.Translation(Point3d.Origin - cs)));
+    }
+
+    /// <summary>
+    /// Pose-pinning score: mean 3D distance between CORRESPONDED boundary
+    /// samples (the cyclic correspondence the 2D registration selected:
+    /// candidate traversed reversed, offset by shift). Unlike NN sample RMS
+    /// this is fully sensitive to in-plane sliding and rotation.
+    /// </summary>
+    private static double BoundaryResid3D(
+        Point3d[] cand3, Transform t, Point3d[] host3World, int shift, bool reversed)
+    {
+        int n = host3World.Length;
+        double s = 0;
+        for (int i = 0; i < n; i++)
+        {
+            var p = cand3[reversed ? i : (n - 1 - i)];
+            p.Transform(t);
+            s += p.DistanceTo(host3World[(i + shift) % n]);
+        }
+        return s / n;
     }
 
     private static void Describe(Mesh m, Facet facet, Random rng)
@@ -657,20 +1077,20 @@ public sealed class FacetMatchComponent : FrahanComponentBase
     /// floor-multiple. Impostor placements (congruent skin planes) tend to
     /// claim the same big host facet and knock each other out here.
     /// </summary>
-    private static List<(double resid, int frag, int hostFacet, Transform t)>
-        SelectNonConflicting(List<(double resid, int frag, int hostFacet, Transform t)> ranked)
+    private static List<(double resid, int frag, int hostFacet, Transform t, double penEff)>
+        SelectNonConflicting(List<(double resid, int frag, int hostFacet, Transform t, double penEff)> ranked)
     {
-        var best = new List<(double, int, int, Transform)>();
+        var best = new List<(double, int, int, Transform, double)>();
         double bestSum = double.MaxValue;
         var sorted = ranked.OrderBy(r => r.resid).Take(24).ToList();
-        var cur = new List<(double, int, int, Transform)>();
+        var cur = new List<(double, int, int, Transform, double)>();
 
         void Dfs(int i, HashSet<int> frags, HashSet<int> hosts, double sum)
         {
             if (cur.Count > best.Count ||
                 (cur.Count == best.Count && sum < bestSum))
             {
-                best = new List<(double, int, int, Transform)>(cur);
+                best = new List<(double, int, int, Transform, double)>(cur);
                 bestSum = sum;
             }
             if (i >= sorted.Count) return;
