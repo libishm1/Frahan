@@ -102,15 +102,42 @@ into Facet Match's "Fracture Regions" input: exact mate correspondence by
 construction. Evidence: outputs/2026-07-11/kintsugi_fracture_generator/
 facetmatch_assembled.png + _v001.3dm.
 
-NEXT SESSION (explicitly ordered by Libish):
-1. Fold the regions wire into 14_kintsugi_rims_facets_bench.gh:
-   Roughen.Fs -> Scramble Fragments (SAME seed as the fragment scrambler;
-   transforms are deterministic per index) -> FacetMatch.Fr.
-2. FIX N>=3: per-interface pieces split correctly but candidates die at
-   the gates. First check: compare PlaneSalt values of mating pieces
-   (suspect quantisation disagreement at plane corners / offset bins).
-3. Make Facet Match ASYNC (AsyncScanComponent run-gate pattern, as Cloud
-   ICP) - Libish flagged the sync solve on canvas.
+## TRIO CLOSED (2026-07-12, commits 950d75c / 36763ce / dab3b5d PUSHED)
+
+All three next-session items are DONE and verified live:
+
+1. N>=3 FIXED. Not the suspected salt bins: fragment-local capping can
+   NEVER mate-correspond, because sequential cell clipping tessellates
+   the shared rim curve differently per fragment (only ~half the rim
+   points coincide at N>=3; three per-fragment rewrites failed 10-27
+   rms). Fix = Fracture Roughen v4 PAIR-BASED surfaces: each interface
+   built ONCE per pair from the lower-index fragment's rim, pair-salted
+   displacement with pinned boundary, the SAME mesh stitched into both
+   fragments (owner welds by rim index; partner gets a rail-stitch zip),
+   pieces oriented OUTWARD per fragment (mates oppose - identical
+   normals had silently killed every true pair at the opposition gate).
+   Also: Soft ICP is SKIPPED in regions mode (it dragged correct poses
+   13-27% of diag away). Sweep N=2/3/5/8: ALL fragments CORRECT at 0.0%
+   pose error, ~1 s solves. Evidence:
+   D:/code_ws/outputs/2026-07-12/kintsugi_n3plus/ (PNG + 3dm pairs).
+2. Facet Match is ASYNC (AsyncScanComponent run-gate; cancel via
+   Run=false; verified non-blocking, same poses as sync).
+3. Bench canvas wire folded in + cold-verified 5/5 CORRECT
+   (14_kintsugi_rims_facets_bench.gh; Scramble gained Regions in /
+   Scrambled Regions out so the surfaces ride the scramble).
+
+NEXT (research lane): one-sided scans of real shards. Brief + three
+survey reports (partial fracture matching, heritage pipelines +
+datasets, global assembly + completion): D:/code_ws/outputs/2026-07-12/
+kintsugi_n3plus/RESEARCH_BRIEF_kintsugi_deterministic.md + research/.
+Headline findings: no published deterministic method handles one-sided
+fracture matching; GARF (ICCV 2025) still fails on stone; proposed
+composite gate = scan-ray free-space reject + trimmed-overlap band +
+spectral contact-band correlation (Thompson 2024, 38/38 on real
+fractures); do NOT scan-complete before matching (completion
+hallucinates fracture relief - DeepMend/Jigsaw++ evidence); cheapest
+global-assembly upgrade = deterministic cycle-consistency check over
+committed pairwise poses.
 
 ## Resume points
 
