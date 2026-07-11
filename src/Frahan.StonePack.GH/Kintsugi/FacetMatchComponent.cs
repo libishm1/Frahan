@@ -408,10 +408,8 @@ public sealed class FacetMatchComponent : FrahanComponentBase
 
     private static List<Facet> SegmentFacets(Mesh m, int fragIdx, double angleDeg, Random rng)
     {
-        var result = new List<Facet>();
         m.FaceNormals.ComputeFaceNormals();
         int fc = m.Faces.Count;
-        var visited = new bool[fc];
         double cosTol = Math.Cos(angleDeg * Math.PI / 180.0);
         var te = m.TopologyEdges;
 
@@ -426,32 +424,90 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 { adj[faces[a]].Add(faces[b]); adj[faces[b]].Add(faces[a]); }
         }
 
+        // LOW-PASS the face normals before region growing (segmentation-
+        // symmetry fix, 2026-07-11): the two sides of a rough interface
+        // sample the SAME displaced surface with independent triangulations;
+        // raw-normal growing split the sides differently and true facet
+        // pairs died at the descriptor gates. Three averaging passes
+        // converge both sides to the shared low-frequency geometry.
+        var normals = new Vector3d[fc];
+        for (int i = 0; i < fc; i++) normals[i] = (Vector3d)m.FaceNormals[i];
+        for (int pass = 0; pass < 3; pass++)
+        {
+            var next = new Vector3d[fc];
+            for (int i = 0; i < fc; i++)
+            {
+                var acc = normals[i];
+                foreach (var g in adj[i]) acc += normals[g];
+                if (acc.Length > 1e-12) acc.Unitize();
+                next[i] = acc;
+            }
+            normals = next;
+        }
+
+        // region-grow on the smoothed normals
+        var facetId = new int[fc];
+        for (int i = 0; i < fc; i++) facetId[i] = -1;
+        int nFacets = 0;
         for (int seed = 0; seed < fc; seed++)
         {
-            if (visited[seed]) continue;
-            var facet = new Facet { FragIdx = fragIdx };
-            var meanN = (Vector3d)m.FaceNormals[seed];
+            if (facetId[seed] >= 0) continue;
+            int id = nFacets++;
+            var meanN = normals[seed];
             var queue = new Queue<int>();
             queue.Enqueue(seed);
-            visited[seed] = true;
+            facetId[seed] = id;
             while (queue.Count > 0)
             {
                 int f = queue.Dequeue();
-                facet.Faces.Add(f);
-                var nf = (Vector3d)m.FaceNormals[f];
-                meanN += nf;
+                meanN += normals[f];
                 var mu = meanN; mu.Unitize();
                 foreach (var g in adj[f])
                 {
-                    if (visited[g]) continue;
-                    var ng = (Vector3d)m.FaceNormals[g];
-                    if (ng * mu < cosTol) continue;
-                    visited[g] = true;
+                    if (facetId[g] >= 0) continue;
+                    if (normals[g] * mu < cosTol) continue;
+                    facetId[g] = id;
                     queue.Enqueue(g);
                 }
             }
-            Describe(m, facet, rng);
-            result.Add(facet);
+        }
+
+        // CONSOLIDATION: merge adjacent facets whose mean smoothed normals
+        // are near-parallel (75% of the grow tolerance). Fixes the residual
+        // asymmetry where one side reads as one facet and the other splits.
+        var parent = Enumerable.Range(0, nFacets).ToArray();
+        int Find(int x) { while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+        double cosMerge = Math.Cos(angleDeg * 0.75 * Math.PI / 180.0);
+        for (int iter = 0; iter < 2; iter++)
+        {
+            var accN = new Vector3d[nFacets];
+            for (int i = 0; i < fc; i++) accN[Find(facetId[i])] += normals[i];
+            for (int i = 0; i < nFacets; i++) if (accN[i].Length > 1e-12) accN[i].Unitize();
+            bool merged = false;
+            for (int e = 0; e < te.Count; e++)
+            {
+                var faces = te.GetConnectedFaces(e);
+                if (faces.Length != 2) continue;
+                int ra = Find(facetId[faces[0]]), rb = Find(facetId[faces[1]]);
+                if (ra == rb) continue;
+                if (accN[ra] * accN[rb] >= cosMerge) { parent[rb] = ra; merged = true; }
+            }
+            if (!merged) break;
+        }
+
+        var byRoot = new Dictionary<int, Facet>();
+        for (int i = 0; i < fc; i++)
+        {
+            int r = Find(facetId[i]);
+            if (!byRoot.TryGetValue(r, out var fct))
+                byRoot[r] = fct = new Facet { FragIdx = fragIdx };
+            fct.Faces.Add(i);
+        }
+        var result = new List<Facet>();
+        foreach (var fct in byRoot.Values)
+        {
+            Describe(m, fct, rng);
+            result.Add(fct);
         }
         return result;
     }
