@@ -45,13 +45,19 @@ vessel form. Measured: `2 placed, 0 unplaced; pair (0,1) score 0.7068 STRONG; to
 ## Files
 - `14_kintsugi_rims_facets_bench.gh` - RIMS + FACETS test bench (no external data).
   Shared generator (Synthetic Block -> Fragment Shatter), then two groups:
-  GROUP A (gold): Fracture Roughen v2 (per-interface decorrelated relief, capped) ->
-  Scramble Fragments -> FACET MATCH (blue = facet-outline diagnostics);
+  GROUP A (gold): Fracture Roughen v4 (PAIR-BASED interface surfaces, capped) ->
+  Scramble Fragments -> FACET MATCH (blue = facet-outline diagnostics). The
+  regions wire is folded in (2026-07-12): Roughen `Fs` -> Scramble `Rg`,
+  Scramble `SRg` -> Facet Match `Fr`, so the matcher gets exact-correspondence
+  fracture surfaces that ride with the scramble. Facet Match is ASYNC: toggle
+  Run, watch the component label, results pop in (~1 s at N=5).
   GROUP B (green): open shatter fragments -> Scramble Fragments -> Frahan Kintsugi
   geometric path (Interface Split rim arcs + skin-normal gate). Run order:
   Run Shatter -> Run Roughen -> the match toggles. Both Reports print candidate
-  diagnostics. STATUS: precision gates verified (no wrong placements emitted);
-  recall on synthetic congruent interfaces is the open work item.
+  diagnostics. STATUS (2026-07-12): GROUP A verified cold - reassembles
+  5/5 fragments CORRECT at 0.0% pose error (sweep N=2/3/5/8 all correct;
+  evidence D:/code_ws/outputs/2026-07-12/kintsugi_n3plus/). Group B rim-path
+  recall is still the open work item.
 - `14_kintsugi_synthetic.gh` - SYNTHETIC data canvas (no external data): Synthetic Block ->
   Fragment Shatter -> Fracture Roughen -> Frahan Kintsugi (Port). Sliders: Fragment Count / Seed /
   Impact Bias / Amplitude. Run toggles ship FALSE; Kintsugi Port run is async (minutes).
