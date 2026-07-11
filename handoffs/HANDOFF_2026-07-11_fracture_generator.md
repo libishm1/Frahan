@@ -85,18 +85,23 @@ Full numbers: `D:\code_ws\outputs\2026-07-11\kintsugi_fracture_generator\REPORT.
 - Spawned-slot Rhino can survive `close_slot` (stuck process holds the .gha
   file lock); kill before deploy.
 
+## Verifier RESULT (session close-out)
+
+Same pipeline (manual C# denoiser, CPU, 20 steps, seed 42):
+real BB bb_00008 max 0.533 / 1 strong; NEW generator max 0.603 / 3 strong;
+OLD generator max 0.062 / 0 strong. Synthetic fractures are now
+in-distribution for the learned path. Tuned defaults (bias 0.9, amp 0.05)
+built + deployed + byte-verified.
+
 ## Resume points
 
-1. Read `port_scores.log`; if the new generator's true-neighbour pairs score
-   below the BB baseline meaningfully, iterate amplitude/bias with the sweep
-   scripts (all knobs are component INPUTS; no rebuild needed).
-2. Final deploy of the tuned-defaults build (built, NOT yet deployed:
-   deploy needs all Rhino closed; slot may still be running inference).
-3. HITL: Libish reviews `fragments_new_assembled_exploded.jpg` + the .3dm +
-   example 14 with the new components (canvas revalidation per
-   HANDOFF_2026-07-07_examples_validation.md).
-4. Commit: 2 component files + this handoff on
-   `fix/kintsugi-fracture-generator` (<=5 files, no push without HITL).
+1. **HITL**: Libish reviews `fragments_new_assembled_exploded.jpg` +
+   `fragments_new_v001.3dm` + example 14 with the new components (canvas
+   revalidation per HANDOFF_2026-07-07_examples_validation.md).
+2. Push `fix/kintsugi-fracture-generator` only on Libish's go (stacks on
+   fix/examples-arch-coherence -> fix/cloud-icp-async PR chain).
    `D:\code_ws\outputs\2026-07-11\` artifacts uncommitted (HITL, >5 files).
-5. Consider: regenerate docs/components entries for the two components
-   (descriptions changed); example 14 README note about Impact Bias.
+3. Consider: regenerate docs/components entries for the two components
+   (descriptions changed); example 14 README note about Impact Bias;
+   TorchSharp DLLs are NOT bundled (manual-port fallback ran here) — decide
+   whether to ship them.
