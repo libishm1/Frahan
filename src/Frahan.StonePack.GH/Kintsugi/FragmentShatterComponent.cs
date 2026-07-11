@@ -40,6 +40,27 @@ namespace Frahan.GH.Kintsugi;
 // CGAL booleans (CgalMeshBoolean.Difference) are available as a fallback
 // when the input is non-convex and the Mesh.Split clipper leaves slivers;
 // expose via Mode=Cgal when CGAL is installed.
+//
+// IMPACT-BIASED SEEDING (2026-07-11 fix, Breaking-Bad alignment)
+// --------------------------------------------------------------
+// The Kintsugi Port model (PuzzleFusion++) was trained on the Breaking Bad
+// dataset, generated with fracture modes (Sellan et al. 2022): an impact
+// point breaks off a cluster of small local pieces and leaves most of the
+// object as one dominant piece. Measured on 300 everyday/val fractures
+// (outputs/2026-07-11/kintsugi_fracture_generator/bb_target_stats.json):
+//   largest piece volume share : p25-p50-p75 = 0.46 - 0.69 - 0.92
+//   piece extent ratio max/min : p25-p50-p75 = 2.5 - 4.0 - 11.5
+//   piece count                : p50 = 5, mode = 2, benchmark cap = 20
+// A jittered-grid Voronoi produces near-EQUAL cells (largest share ~1/N,
+// extent ratio ~1.5) -- far out of distribution. Fix: cluster a fraction
+// (Impact Bias) of the Voronoi seeds around an impact point with a
+// half-normal radial falloff. Dense seeds near the impact = small local
+// shards; sparse seeds elsewhere = one or few dominant pieces. Bias 0
+// restores the legacy jittered grid exactly.
+//
+// For the learned path, wire Fragments through Frahan Fracture Roughen
+// (Cap Cuts = TRUE) so the open Voronoi rims become closed, refined,
+// realistically rough fracture SURFACES the encoder can sample.
 // =============================================================================
 
 [Algorithm("Voronoi shatter for fracture test-beds",
@@ -49,6 +70,16 @@ namespace Frahan.GH.Kintsugi;
     Note = "O(N^2) plane splits. Convex seeds work best; for highly non-convex inputs, " +
            "small slivers can appear at concave folds. Workaround: feed a convex hull or " +
            "use a larger Min Fragment Volume to drop slivers.")]
+[Algorithm("Impact-biased seeding (Breaking Bad alignment)",
+    "Seeds clustered around an impact point with half-normal radial falloff " +
+    "emulate the impact-projected fracture-mode statistics of the Breaking " +
+    "Bad dataset: one dominant piece + a cluster of small local shards. " +
+    "Sellan, Luong et al. 2022, NeurIPS D&B, arXiv:2210.11463; fracture " +
+    "modes: Sellan et al. SIGGRAPH 2022, github.com/sgsellan/fracture-modes",
+    Doi = "arXiv:2210.11463",
+    Note = "Measured targets (300 everyday/val fractures): largest volume share " +
+           "0.46-0.92 (median 0.69); extent ratio 2.5-11.5 (median 4.0); piece " +
+           "count 2-20. Impact Bias 0 = legacy jittered grid.")]
 [DesignApplication(
     "Voronoi-shatter a solid input mesh into N fragments suitable  for round-trip testing of Frahan Kintsugi",
     DesignFlow.BottomUp,
@@ -98,6 +129,25 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
             GH_ParamAccess.item, 0.005);
         p.AddBooleanParameter("Run", "R", "Execute the shatter.",
             GH_ParamAccess.item, false);
+        // Appended 2026-07-11 (Breaking-Bad alignment). Appending keeps the
+        // wiring of canvases saved before these inputs existed.
+        p.AddNumberParameter("Impact Bias", "Ib",
+            "Fraction of Voronoi seeds clustered around the Impact Point " +
+            "(half-normal radial falloff). 0 = legacy jittered grid (equal-" +
+            "volume cells). 0.9 (default) reproduces the Breaking Bad " +
+            "statistics the Kintsugi Port model was trained on: one dominant " +
+            "piece (~0.5-0.9 of the volume) plus small shards near the " +
+            "impact. Measured BB targets: largest-share median 0.69, extent " +
+            "ratio median 4.0. Default 0.9 (tuned live 2026-07-11: largest " +
+            "share 0.49 = inside the BB band; 0.75 gave 0.44).",
+            GH_ParamAccess.item, 0.9);
+        p.AddPointParameter("Impact Point", "Ip",
+            "OPTIONAL impact location. Seeds cluster around it. Unwired = " +
+            "a deterministic surface point derived from Seed (reproducible). " +
+            "Place it on the mesh surface where the 'hit' should break the " +
+            "object.",
+            GH_ParamAccess.item);
+        Params.Input[Params.Input.Count - 1].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -124,6 +174,8 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
         double jitter = 0.6;
         double vminFrac = 0.005;
         bool run = false;
+        double impactBias = 0.9;
+        Point3d impactPoint = Point3d.Unset;
 
         if (!da.GetData(0, ref solid) || solid == null)
         {
@@ -135,6 +187,12 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
         da.GetData(3, ref jitter);
         da.GetData(4, ref vminFrac);
         da.GetData(5, ref run);
+        // Appended inputs (index 6/7) -- guard for canvases saved before
+        // they existed (deserialized component may still carry 6 inputs).
+        if (Params.Input.Count > 6) da.GetData(6, ref impactBias);
+        if (Params.Input.Count > 7) da.GetData(7, ref impactPoint);
+        if (impactBias < 0) impactBias = 0;
+        if (impactBias > 1) impactBias = 1;
 
         if (!run)
         {
@@ -146,6 +204,13 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Fragment Count must be >= 2 (got {n}).");
             return;
+        }
+        if (n > 20)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                $"Fragment Count {n} exceeds 20. The Breaking Bad benchmark " +
+                "(and the Kintsugi Port model) uses 2-20 pieces; more is " +
+                "out of the trained envelope.");
         }
 
         var bbox = solid.GetBoundingBox(true);
@@ -159,10 +224,19 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
         try { inputVolume = solid.Volume(); } catch { inputVolume = 0.0; }
         if (inputVolume <= 0) inputVolume = bbox.Volume;
 
-        var seeds = SamplePoissonInBbox(bbox, n, seed, jitter);
+        var seeds = SampleSeeds(solid, bbox, n, seed, jitter, impactBias,
+                                impactPoint, out Point3d impactUsed);
         var fragments = new List<Mesh>(n);
+        var keptVolumes = new List<double>(n);
         int dropCount = 0;
         var report = new System.Text.StringBuilder();
+        if (impactBias > 0)
+        {
+            report.AppendLine(
+                $"Impact-biased seeding: bias={impactBias:F2}, impact=" +
+                $"({impactUsed.X:F3},{impactUsed.Y:F3},{impactUsed.Z:F3})" +
+                (impactPoint.IsValid ? " (user)" : " (auto from Seed)"));
+        }
 
         for (int i = 0; i < seeds.Count; i++)
         {
@@ -200,6 +274,7 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
             cell.Normals.ComputeNormals();
             cell.Compact();
             fragments.Add(cell);
+            keptVolumes.Add(cellVol);
 
             int nakedEdges = 0;
             try
@@ -229,6 +304,32 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
             return;
         }
 
+        // Distribution summary vs the measured Breaking Bad targets
+        // (outputs/2026-07-11/kintsugi_fracture_generator/bb_target_stats.json).
+        double volSum = 0;
+        foreach (var v in keptVolumes) volSum += v;
+        if (volSum > 0 && keptVolumes.Count > 0)
+        {
+            var shares = new List<double>(keptVolumes.Count);
+            foreach (var v in keptVolumes) shares.Add(v / volSum);
+            shares.Sort((a, b) => b.CompareTo(a));
+            var top = new System.Text.StringBuilder();
+            for (int i = 0; i < shares.Count && i < 8; i++)
+                top.Append($"{shares[i]:F2} ");
+            report.AppendLine();
+            report.AppendLine($"Volume shares (desc): {top}" +
+                              (shares.Count > 8 ? "..." : ""));
+            report.AppendLine($"Largest share: {shares[0]:F2}  " +
+                              "[Breaking Bad target: 0.46-0.92, median 0.69]");
+            if (impactBias > 0 && shares[0] < 0.35)
+            {
+                report.AppendLine(
+                    "  -> below the BB band. Raise Impact Bias, lower " +
+                    "Fragment Count, or move the Impact Point closer to " +
+                    "the surface.");
+            }
+        }
+
         da.SetDataList(0, fragments);
         da.SetDataList(1, seeds);
         da.SetData(2, dropCount);
@@ -236,8 +337,103 @@ public sealed class FragmentShatterComponent : FrahanComponentBase
     }
 
     // -------------------------------------------------------------------------
-    // Seed generation (Poisson-style with grid bias).
+    // Seed generation.
+    //
+    // Impact mode (bias > 0): round(n*bias) seeds cluster around the impact
+    // point with a half-normal radius (sigma = falloff length). Dense seeds
+    // near the impact produce SMALL Voronoi cells there; the sparse
+    // remainder produces one or few DOMINANT cells covering the rest of the
+    // solid -- the Breaking Bad volume distribution. The remaining seeds use
+    // the legacy jittered grid so bias = 0 is bit-identical to the old
+    // behaviour.
     // -------------------------------------------------------------------------
+
+    private static List<Point3d> SampleSeeds(
+        Mesh solid, BoundingBox bbox, int n, int seed, double jitter,
+        double bias, Point3d impact, out Point3d impactUsed)
+    {
+        impactUsed = Point3d.Unset;
+        if (bias <= 0)
+            return SamplePoissonInBbox(bbox, n, seed, jitter);
+
+        var rng = new Random(seed);
+        double diag = bbox.Diagonal.Length;
+
+        // Impact point: user input, or a deterministic mesh surface vertex.
+        if (impact.IsValid)
+        {
+            impactUsed = impact;
+        }
+        else
+        {
+            int vi = rng.Next(Math.Max(1, solid.Vertices.Count));
+            impactUsed = solid.Vertices.Count > 0
+                ? (Point3d)solid.Vertices[vi]
+                : bbox.Center;
+        }
+
+        // Falloff length: tight at bias 1 (0.07 * diag), loose at bias -> 0.
+        // Tuned live 2026-07-11: 0.10 + 0.35 gave largest-share 0.40, just
+        // under the BB p25 of 0.46; tightening lands the default inside the
+        // band.
+        double sigma = diag * (0.07 + 0.28 * (1.0 - bias));
+
+        int nCluster = Math.Max(1, (int)Math.Round(n * bias));
+        if (nCluster >= n) nCluster = n - 1;   // keep >= 1 distal seed
+        int nUniform = n - nCluster;
+
+        var pts = new List<Point3d>(n);
+        // Clustered seeds: half-normal radius, uniform direction. Clamped to
+        // the (slightly deflated) bbox so degenerate far-outside seeds don't
+        // produce systematically empty cells.
+        var inner = bbox;
+        inner.Inflate(-diag * 0.01);
+        for (int i = 0; i < nCluster; i++)
+        {
+            double r = Math.Abs(Gaussian(rng)) * sigma;
+            var d = RandomUnitVector(rng);
+            var p = impactUsed + d * r;
+            p.X = Clamp(p.X, inner.Min.X, inner.Max.X);
+            p.Y = Clamp(p.Y, inner.Min.Y, inner.Max.Y);
+            p.Z = Clamp(p.Z, inner.Min.Z, inner.Max.Z);
+            pts.Add(p);
+        }
+        // Distal seeds: legacy jittered grid over the whole bbox (fresh
+        // deterministic stream so counts don't reshuffle the cluster).
+        var distal = SamplePoissonInBbox(bbox, nUniform, seed + 7919, jitter);
+        pts.AddRange(distal);
+        return pts;
+    }
+
+    private static double Gaussian(Random rng)
+    {
+        // Box-Muller; guards the log(0) corner.
+        double u1 = 1.0 - rng.NextDouble();
+        double u2 = rng.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(Math.Max(u1, 1e-12)))
+             * Math.Cos(2.0 * Math.PI * u2);
+    }
+
+    private static Vector3d RandomUnitVector(Random rng)
+    {
+        // Marsaglia rejection sampling on the unit sphere.
+        for (int k = 0; k < 64; k++)
+        {
+            double x = rng.NextDouble() * 2 - 1;
+            double y = rng.NextDouble() * 2 - 1;
+            double z = rng.NextDouble() * 2 - 1;
+            double m2 = x * x + y * y + z * z;
+            if (m2 > 1e-8 && m2 <= 1.0)
+            {
+                double inv = 1.0 / Math.Sqrt(m2);
+                return new Vector3d(x * inv, y * inv, z * inv);
+            }
+        }
+        return new Vector3d(0, 0, 1);
+    }
+
+    private static double Clamp(double v, double lo, double hi)
+        => v < lo ? lo : (v > hi ? hi : v);
 
     private static List<Point3d> SamplePoissonInBbox(BoundingBox bbox, int n, int seed, double jitter)
     {
