@@ -249,13 +249,14 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             // CHEAP scan first (residual + normal opposition only); the
             // expensive per-vertex inside-mesh penetration test runs only
             // on the ranked survivors (this was the 300s hotspot).
-            var ranked = new List<(double resid, int frag, Transform t)>();
+            var ranked = new List<(double resid, int frag, int hostFacet, Transform t)>();
             var diag = new List<(double mult, int cand, int host)>();
             foreach (var cand in facets)
             {
                 if (placed[cand.FragIdx]) continue;
-                foreach (var host in facets)
+                for (int hostIdx = 0; hostIdx < facets.Count; hostIdx++)
                 {
+                    var host = facets[hostIdx];
                     if (!placed[host.FragIdx] || host.FragIdx == cand.FragIdx) continue;
                     double aRatio = Math.Min(cand.Area, host.Area) / Math.Max(cand.Area, host.Area);
                     if (aRatio < 0.55) continue;
@@ -267,6 +268,15 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                     double rMax = Math.Max(cand.Rms, host.Rms);
                     if (rMax > 1e-9 &&
                         Math.Abs(cand.Rms - host.Rms) / rMax > 0.5) continue;
+                    // FLAT-PAIR EXCLUSION (2026-07-11): opposing-normal mating
+                    // is only meaningful between FRACTURE facets. Two flat
+                    // facets (skin/sawn faces, relief < 0.2% of extent) are
+                    // congruent across fragments of one solid and score
+                    // BETTER than true pairs while placing the fragment on
+                    // the wrong side of the plane. Measured real granite
+                    // fracture facets carry 0.45% relief -- safely above.
+                    if (cand.Rms < 0.002 * cand.E1 && host.Rms < 0.002 * host.E1)
+                        continue;
 
                     var hostFrame = host.Frame;
                     hostFrame.Transform(pose[host.FragIdx]);
@@ -293,18 +303,23 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                             Vector3d.CrossProduct(-hostFrame.ZAxis, tx));
                         var T = Transform.PlaneToPlane(cand.Frame, target);
 
+                        // REFINE-THEN-SCORE (2026-07-11): the coarse frame
+                        // pose is a few degrees off on rough facets, which
+                        // inflated true-pair residuals to 1.5-1.9 floor
+                        // multiples and erased the separation from wrong
+                        // pairs. A short point-to-point ICP (4 Kabsch
+                        // iterations on the facet samples) drops true pairs
+                        // toward the sampling floor; relief mismatch keeps
+                        // wrong pairs high.
+                        T = MiniIcp(cand.Samples, T, hostSamples, spacing * 3, 4);
                         double resid = SampleRms(cand.Samples, T, hostSamples);
-                        // rank + accept in FLOOR MULTIPLES: two independent
-                        // samplings of the SAME surface sit ~0.7-1.0*spacing
-                        // apart; wrong partners mismatch the relief and land
-                        // higher. Acceptance threshold = Accept Floor input.
                         double floorMult = resid / Math.Max(1e-9, spacing);
                         diag.Add((floorMult, cand.FragIdx, host.FragIdx));
                         if (floorMult >= acceptFloor && resid >= jointWidth) continue;
                         double dot = MeanNormalDot(cand.Samples, cand.SampleNormals, T,
                                                    hostSamples, hostNormals, spacing * 3);
                         if (dot > -0.3) continue;
-                        ranked.Add((floorMult, cand.FragIdx, T));
+                        ranked.Add((floorMult, cand.FragIdx, hostIdx, T));
                     }
                 }
             }
@@ -316,9 +331,14 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 foreach (var d2 in diag.OrderBy(x => x.mult).Take(12))
                     report.AppendLine($"    frag {d2.cand} -> {d2.host}: {d2.mult:F2}");
             }
-            // verify survivors best-first; accept the first that clears
-            // the penetration gate
-            foreach (var (resid, frag, T) in ranked.OrderBy(r => r.resid))
+            // CONFLICT-AWARE GLOBAL SELECTION (2026-07-11): choose at most
+            // one candidate per fragment such that no two claim the SAME
+            // host facet (impostor placements pile onto the same big host
+            // plane and eliminate each other), maximizing placements and
+            // then minimizing total floor-multiple. Candidate lists are
+            // tiny (< ~30), exhaustive DFS is free.
+            var chosen = SelectNonConflicting(ranked);
+            foreach (var (resid, frag, _, T) in chosen.OrderBy(r => r.resid))
             {
                 if (placed[frag]) continue;
                 if (penTol > 0 && Penetrates(fragments, placedWorld, placed, frag, T, penTol))
@@ -328,8 +348,7 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                 RefreshPlaced(frag);
                 placedCount++;
                 progress = true;
-                report.AppendLine($"  placed fragment {frag}: facet RMS {resid:F3}");
-                break;   // rescan with the grown cluster
+                report.AppendLine($"  placed fragment {frag}: facet RMS-multiple {resid:F3}");
             }
         }
         report.AppendLine($"Greedy assembly: {swGreedy.Elapsed.TotalSeconds:F1} s.");
@@ -627,6 +646,45 @@ public sealed class FacetMatchComponent : FrahanComponentBase
     // Scoring + gates.
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Exhaustive DFS over the (small) candidate list: at most one candidate
+    /// per fragment, no two candidates claiming the same HOST facet.
+    /// Maximizes the number of placements, then minimizes the total
+    /// floor-multiple. Impostor placements (congruent skin planes) tend to
+    /// claim the same big host facet and knock each other out here.
+    /// </summary>
+    private static List<(double resid, int frag, int hostFacet, Transform t)>
+        SelectNonConflicting(List<(double resid, int frag, int hostFacet, Transform t)> ranked)
+    {
+        var best = new List<(double, int, int, Transform)>();
+        double bestSum = double.MaxValue;
+        var sorted = ranked.OrderBy(r => r.resid).Take(24).ToList();
+        var cur = new List<(double, int, int, Transform)>();
+
+        void Dfs(int i, HashSet<int> frags, HashSet<int> hosts, double sum)
+        {
+            if (cur.Count > best.Count ||
+                (cur.Count == best.Count && sum < bestSum))
+            {
+                best = new List<(double, int, int, Transform)>(cur);
+                bestSum = sum;
+            }
+            if (i >= sorted.Count) return;
+            // prune: even taking every remaining candidate can't beat best
+            if (cur.Count + (sorted.Count - i) < best.Count) return;
+            var c = sorted[i];
+            if (!frags.Contains(c.frag) && !hosts.Contains(c.hostFacet))
+            {
+                frags.Add(c.frag); hosts.Add(c.hostFacet); cur.Add(c);
+                Dfs(i + 1, frags, hosts, sum + c.resid);
+                frags.Remove(c.frag); hosts.Remove(c.hostFacet); cur.RemoveAt(cur.Count - 1);
+            }
+            Dfs(i + 1, frags, hosts, sum);
+        }
+        Dfs(0, new HashSet<int>(), new HashSet<int>(), 0);
+        return best;
+    }
+
     private static Point3d[] TransformPoints(Point3d[] pts, Transform t)
     {
         var r = new Point3d[pts.Length];
@@ -639,6 +697,78 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         var r = new Vector3d[vs.Length];
         for (int i = 0; i < vs.Length; i++) { r[i] = vs[i]; r[i].Transform(t); }
         return r;
+    }
+
+    /// <summary>
+    /// Short point-to-point ICP: nearest-neighbour pairs within
+    /// <paramref name="radius"/>, closed-form Kabsch update (quaternion
+    /// method, no external SVD), few iterations. Returns the refined
+    /// transform (left-composed onto <paramref name="t0"/>).
+    /// </summary>
+    private static Transform MiniIcp(Point3d[] cand, Transform t0, Point3d[] host,
+                                     double radius, int iterations)
+    {
+        var t = t0;
+        double r2 = radius * radius;
+        for (int it = 0; it < iterations; it++)
+        {
+            var src = new List<Point3d>();
+            var dst = new List<Point3d>();
+            for (int i = 0; i < cand.Length; i++)
+            {
+                var p = cand[i]; p.Transform(t);
+                double best = r2; int bj = -1;
+                for (int j = 0; j < host.Length; j++)
+                {
+                    double d2 = p.DistanceToSquared(host[j]);
+                    if (d2 < best) { best = d2; bj = j; }
+                }
+                if (bj >= 0) { src.Add(p); dst.Add(host[bj]); }
+            }
+            if (src.Count < 6) return t;
+            // centroids
+            var cs = new Point3d(0, 0, 0); var cd = new Point3d(0, 0, 0);
+            for (int i = 0; i < src.Count; i++) { cs += src[i]; cd += dst[i]; }
+            cs /= src.Count; cd /= dst.Count;
+            // cross-covariance
+            double xx=0, xy=0, xz=0, yx=0, yy=0, yz=0, zx=0, zy=0, zz=0;
+            for (int i = 0; i < src.Count; i++)
+            {
+                var a = src[i] - cs; var b = dst[i] - cd;
+                xx += a.X*b.X; xy += a.X*b.Y; xz += a.X*b.Z;
+                yx += a.Y*b.X; yy += a.Y*b.Y; yz += a.Y*b.Z;
+                zx += a.Z*b.X; zy += a.Z*b.Y; zz += a.Z*b.Z;
+            }
+            // Horn's quaternion method: max eigenvector of the 4x4 N matrix
+            // via power iteration (deterministic start).
+            double[,] N = {
+                { xx+yy+zz, yz-zy,     zx-xz,     xy-yx     },
+                { yz-zy,    xx-yy-zz,  xy+yx,     zx+xz     },
+                { zx-xz,    xy+yx,    -xx+yy-zz,  yz+zy     },
+                { xy-yx,    zx+xz,     yz+zy,    -xx-yy+zz  } };
+            var q = new double[] { 1, 0.1, 0.1, 0.1 };
+            for (int pi = 0; pi < 30; pi++)
+            {
+                var nq = new double[4];
+                for (int i2 = 0; i2 < 4; i2++)
+                    for (int j2 = 0; j2 < 4; j2++) nq[i2] += N[i2, j2] * q[j2];
+                // shift to keep the dominant eigenvalue positive
+                for (int i2 = 0; i2 < 4; i2++) nq[i2] += q[i2] * (Math.Abs(xx)+Math.Abs(yy)+Math.Abs(zz)+1);
+                double nrm = Math.Sqrt(nq.Sum(v => v * v));
+                if (nrm < 1e-12) break;
+                for (int i2 = 0; i2 < 4; i2++) q[i2] = nq[i2] / nrm;
+            }
+            double w = q[0], x = q[1], y = q[2], z = q[3];
+            var R = Transform.Identity;
+            R.M00 = 1-2*(y*y+z*z); R.M01 = 2*(x*y-z*w); R.M02 = 2*(x*z+y*w);
+            R.M10 = 2*(x*y+z*w);   R.M11 = 1-2*(x*x+z*z); R.M12 = 2*(y*z-x*w);
+            R.M20 = 2*(x*z-y*w);   R.M21 = 2*(y*z+x*w);   R.M22 = 1-2*(x*x+y*y);
+            // update: rotate about source centroid, translate to dest centroid
+            var step = Transform.Multiply(Transform.Translation(cd - Point3d.Origin),
+                       Transform.Multiply(R, Transform.Translation(Point3d.Origin - cs)));
+            t = Transform.Multiply(step, t);
+        }
+        return t;
     }
 
     private static double SampleRms(Point3d[] cand, Transform t, Point3d[] host)
