@@ -118,13 +118,13 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             "refinement; enable for final-quality passes on small sets.",
             GH_ParamAccess.item, false);
         p.AddMeshParameter("Fracture Regions", "Fr",
-            "OPTIONAL per-fragment FRACTURE surface submeshes (parallel to " +
-            "Fragments; wire Fracture Roughen's Fracture Surfaces output). " +
-            "When provided, facets come directly from these regions -- " +
-            "mates then carry the IDENTICAL surface by construction and no " +
-            "re-segmentation runs. Leave unwired for scans (dihedral " +
-            "segmentation fallback).",
-            GH_ParamAccess.list);
+            "OPTIONAL fracture surface TREE (one branch per fragment, one " +
+            "item per interface; wire Fracture Roughen's Fracture Surfaces " +
+            "output). When provided, facets come directly from these " +
+            "regions -- mates then carry the IDENTICAL surface by " +
+            "construction and no re-segmentation runs. Leave unwired for " +
+            "scans (dihedral segmentation fallback).",
+            GH_ParamAccess.tree);
         Params.Input[Params.Input.Count - 1].Optional = true;
         p.AddNumberParameter("Accept Floor", "Af",
             "Accept a facet pairing when its sample RMS is below this " +
@@ -199,8 +199,11 @@ public sealed class FacetMatchComponent : FrahanComponentBase
         da.GetData(5, ref softIcp);
         da.GetData(6, ref run);
         if (Params.Input.Count > 7) da.GetData(7, ref penHinge);
-        var regions = new List<Mesh>();
-        if (Params.Input.Count > 8) da.GetDataList(8, regions);
+        Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Mesh> regionTree = null;
+        if (Params.Input.Count > 8)
+        {
+            try { da.GetDataTree(8, out regionTree); } catch { regionTree = null; }
+        }
         double acceptFloor = 1.3;
         if (Params.Input.Count > 9) da.GetData(9, ref acceptFloor);
         if (!run)
@@ -257,8 +260,9 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             m2.Normals.ComputeNormals();
             return m2;
         }).ToList();
-        bool useRegions = regions.Count == fragments.Count &&
-                          regions.Any(r => r != null && r.Faces.Count > 0);
+        bool useRegions = regionTree != null &&
+                          regionTree.PathCount == fragments.Count &&
+                          !regionTree.IsEmpty;
         for (int f = 0; f < fragments.Count; f++)
         {
             var m = fragments[f];
@@ -268,18 +272,21 @@ public sealed class FacetMatchComponent : FrahanComponentBase
                     $"Fragment {f} is not closed; facet matching expects " +
                     "watertight meshes (results may degrade).");
             List<Facet> fs;
-            if (useRegions && regions[f] != null && regions[f].Faces.Count > 0)
+            if (useRegions)
             {
-                // EXACT-CORRESPONDENCE mode: one facet per connected piece
-                // of the supplied fracture region. Mates carry the identical
-                // surface, so descriptors/boundaries correspond by
-                // construction -- the re-segmentation asymmetry that broke
-                // closed-loop registration (2026-07-11) cannot occur.
+                // EXACT-CORRESPONDENCE mode: one facet per supplied region
+                // piece (branch f of the tree = fragment f, one item per
+                // interface). Mates carry the identical surface, so
+                // descriptors/boundaries correspond by construction -- the
+                // re-segmentation asymmetry that broke closed-loop
+                // registration (2026-07-11) cannot occur.
                 fs = new List<Facet>();
-                var pieces = regions[f].SplitDisjointPieces() ?? new[] { regions[f] };
-                foreach (var piece in pieces)
+                var branch = regionTree.Branches[f];
+                foreach (var gm in branch)
                 {
+                    var piece = gm?.Value;
                     if (piece == null || piece.Faces.Count == 0) continue;
+                    piece = piece.DuplicateMesh();
                     piece.Normals.ComputeNormals();
                     var fct = new Facet { FragIdx = f };
                     fct.Faces.AddRange(Enumerable.Range(0, piece.Faces.Count));
@@ -510,8 +517,16 @@ public sealed class FacetMatchComponent : FrahanComponentBase
             foreach (var g in gateLog.Take(16)) report.AppendLine("    " + g);
         }
 
-        // 6. Soft ICP polish.
-        if (softIcp && placedCount >= 2)
+        // 6. Soft ICP polish. SKIPPED in regions mode: exact-correspondence
+        // placements are corresponded-boundary Kabsch poses (residual well
+        // under the sampling floor) and the contact-only polish measurably
+        // dragged CORRECT poses 13-27% of diag away (N=3/5 sweep,
+        // 2026-07-12). The polish stays available for the scan path, where
+        // segmentation noise leaves real slack to recover.
+        if (softIcp && useRegions)
+            report.AppendLine("Soft ICP skipped: exact-correspondence regions " +
+                              "already lock the greedy poses.");
+        if (softIcp && !useRegions && placedCount >= 2)
         {
             try
             {

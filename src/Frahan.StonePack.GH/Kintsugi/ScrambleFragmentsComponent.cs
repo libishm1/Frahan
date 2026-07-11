@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using Frahan.GH.Attributes;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 namespace Frahan.GH.Kintsugi;
@@ -62,6 +64,15 @@ public sealed class ScrambleFragmentsComponent : FrahanComponentBase
         p.AddIntegerParameter("Anchor", "An",
             "Index of the fragment left unmoved. Default 0.",
             GH_ParamAccess.item, 0);
+        // Appended 2026-07-12 (appending preserves saved canvases).
+        p.AddMeshParameter("Regions", "Rg",
+            "OPTIONAL fracture-surface TREE (one branch per fragment; wire " +
+            "Fracture Roughen's Fracture Surfaces output). Every mesh in " +
+            "branch f gets fragment f's transform, so the regions stay glued " +
+            "to their scrambled fragments. Wire the Scrambled Regions output " +
+            "into Facet Match's Fracture Regions input.",
+            GH_ParamAccess.tree);
+        Params.Input[Params.Input.Count - 1].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -71,6 +82,11 @@ public sealed class ScrambleFragmentsComponent : FrahanComponentBase
         p.AddTransformParameter("Transforms", "X",
             "Applied transform per fragment (identity for the anchor). " +
             "Invert to recover ground truth.", GH_ParamAccess.list);
+        // Appended 2026-07-12.
+        p.AddMeshParameter("Scrambled Regions", "SRg",
+            "The Regions tree with each branch moved by its fragment's " +
+            "transform (same paths). Empty when Regions is unwired.",
+            GH_ParamAccess.tree);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -117,5 +133,27 @@ public sealed class ScrambleFragmentsComponent : FrahanComponentBase
         }
         da.SetDataList(0, outMeshes);
         da.SetDataList(1, outXf);
+
+        // Regions tree: branch f rides with fragment f. Branch index maps
+        // by the path's LAST index (Roughen emits {f}).
+        GH_Structure<GH_Mesh> regionTree = null;
+        da.GetDataTree(5, out regionTree);
+        var srg = new GH_Structure<GH_Mesh>();
+        if (regionTree != null && !regionTree.IsEmpty)
+        {
+            foreach (var path in regionTree.Paths)
+            {
+                int f = path.Indices[path.Indices.Length - 1];
+                var T = f >= 0 && f < outXf.Count ? outXf[f] : Transform.Identity;
+                foreach (var gm in regionTree.get_Branch(path))
+                {
+                    var mesh = (gm as GH_Mesh)?.Value?.DuplicateMesh();
+                    if (mesh == null) { srg.Append(null, path); continue; }
+                    mesh.Transform(T);
+                    srg.Append(new GH_Mesh(mesh), path);
+                }
+            }
+        }
+        da.SetDataTree(2, srg);
     }
 }

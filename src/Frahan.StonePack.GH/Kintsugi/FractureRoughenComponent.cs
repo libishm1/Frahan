@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Frahan.GH.Attributes;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 namespace Frahan.GH.Kintsugi;
@@ -168,12 +170,13 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         // Appended 2026-07-11 (output index 3; appending preserves saved
         // canvases).
         p.AddMeshParameter("Fracture Surfaces", "Fs",
-            "Per-fragment FRACTURE surface submesh (the displaced caps " +
-            "only, no skin). Wire into Facet Match's Fracture Regions input " +
-            "for exact-correspondence matching: mates carry the identical " +
-            "surface by construction. Parallel to Roughened Fragments; " +
-            "empty when Cap Cuts is FALSE.",
-            GH_ParamAccess.list);
+            "TREE of fracture surface submeshes: one BRANCH per fragment, " +
+            "one ITEM per cut interface (the displaced caps, no skin; " +
+            "separate meshes because position-welded topology would " +
+            "reconnect them). Wire into Facet Match's Fracture Regions " +
+            "input for exact-correspondence matching: mates carry the " +
+            "identical surface by construction. Empty when Cap Cuts=FALSE.",
+            GH_ParamAccess.tree);
     }
 
     protected override void SolveSafe(IGH_DataAccess da)
@@ -232,56 +235,56 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         double taperWorld = Math.Max(0.0, rimTaper) * diag;
 
         var outputs = new List<Mesh>(inputs.Count);
-        var capMeshes = new List<Mesh>(inputs.Count);
+        var capTree = new Grasshopper.Kernel.Data.GH_Structure<GH_Mesh>();
         int totalDisplaced = 0;
         var report = new System.Text.StringBuilder();
 
-        for (int f = 0; f < inputs.Count; f++)
+        if (capCuts)
+        {
+            // pair-based: each interface surface is built ONCE and shared by
+            // both fragments (see RoughenCappedPaired header)
+            var piecesPer = new List<Mesh>[inputs.Count];
+            RoughenCappedPaired(inputs, field, freqScale, ampWorld,
+                targetEdge, taperWorld, outputs, piecesPer,
+                out totalDisplaced, report);
+            for (int f = 0; f < inputs.Count; f++)
+            {
+                var path = new Grasshopper.Kernel.Data.GH_Path(f);
+                capTree.EnsurePath(path);
+                if (piecesPer[f] == null) continue;
+                foreach (var piece in piecesPer[f])
+                    capTree.Append(new GH_Mesh(piece), path);
+            }
+        }
+        else for (int f = 0; f < inputs.Count; f++)
         {
             var src = inputs[f];
             if (src == null) { outputs.Add(null); continue; }
 
-            if (capCuts)
+            // Legacy open-rim path (geometric Kintsugi wants OPEN rims).
+            var m = src.DuplicateMesh();
+            int preVerts = m.Vertices.Count;
+            var cut = new bool[preVerts];
+            MarkNakedEdgeVertices(m, cut);
+            int displaced = 0;
+            for (int v = 0; v < m.Vertices.Count; v++)
             {
-                var m = RoughenCapped(src, field, freqScale, ampWorld,
-                    targetEdge, taperWorld,
-                    out int displaced, out double capAreaFrac, out int added,
-                    out Mesh capMesh);
-                capMeshes.Add(capMesh);
-                outputs.Add(m);
-                totalDisplaced += displaced;
-                report.AppendLine(
-                    $"Fragment {f}: displaced {displaced} cap vertices " +
-                    $"(+{added} refinement verts), fracture-surface area " +
-                    $"share {capAreaFrac:F2}.");
+                if (v >= cut.Length || !cut[v]) continue;
+                var p = m.Vertices[v];
+                field.Sample(p.X * freqScale, p.Y * freqScale, p.Z * freqScale,
+                             out double dx, out double dy, out double dz);
+                m.Vertices.SetVertex(v, new Point3f(
+                    (float)(p.X + dx * ampWorld),
+                    (float)(p.Y + dy * ampWorld),
+                    (float)(p.Z + dz * ampWorld)));
+                displaced++;
             }
-            else
-            {
-                // Legacy open-rim path (geometric Kintsugi wants OPEN rims).
-                var m = src.DuplicateMesh();
-                int preVerts = m.Vertices.Count;
-                var cut = new bool[preVerts];
-                MarkNakedEdgeVertices(m, cut);
-                int displaced = 0;
-                for (int v = 0; v < m.Vertices.Count; v++)
-                {
-                    if (v >= cut.Length || !cut[v]) continue;
-                    var p = m.Vertices[v];
-                    field.Sample(p.X * freqScale, p.Y * freqScale, p.Z * freqScale,
-                                 out double dx, out double dy, out double dz);
-                    m.Vertices.SetVertex(v, new Point3f(
-                        (float)(p.X + dx * ampWorld),
-                        (float)(p.Y + dy * ampWorld),
-                        (float)(p.Z + dz * ampWorld)));
-                    displaced++;
-                }
-                m.Normals.ComputeNormals();
-                m.Compact();
-                outputs.Add(m);
-                capMeshes.Add(new Mesh());
-                totalDisplaced += displaced;
-                report.AppendLine($"Fragment {f}: displaced {displaced} rim vertices (open rim).");
-            }
+            m.Normals.ComputeNormals();
+            m.Compact();
+            outputs.Add(m);
+            capTree.EnsurePath(new Grasshopper.Kernel.Data.GH_Path(f));
+            totalDisplaced += displaced;
+            report.AppendLine($"Fragment {f}: displaced {displaced} rim vertices (open rim).");
         }
         report.AppendLine();
         report.AppendLine($"Total displaced: {totalDisplaced}.");
@@ -299,308 +302,495 @@ public sealed class FractureRoughenComponent : FrahanComponentBase
         da.SetDataList(0, outputs);
         da.SetData(1, totalDisplaced);
         da.SetData(2, report.ToString());
-        if (Params.Output.Count > 3) da.SetDataList(3, capMeshes);
+        if (Params.Output.Count > 3) da.SetDataTree(3, capTree);
     }
 
-    // -------------------------------------------------------------------------
-    // Capped-cut path: FillHoles -> refine cap interior -> displace with rim
-    // taper. See the header comment for why each stage exists.
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // PAIR-BASED capping (v4, 2026-07-12). Each interface surface is built
+    // ONCE per fragment pair -- from the lower-index fragment's rim sampling
+    // -- then the SAME mesh is stitched into both fragments and emitted to
+    // both branches of the pieces tree. Mate correspondence is bit-exact by
+    // construction. Per-fragment capping (v1-v3) could not achieve this:
+    // sequential cell clipping tessellates the shared rim curve differently
+    // per fragment (measured 2026-07-12: only ~half the rim points coincide
+    // at N>=3), so every fragment-local decomposition diverged from its mate
+    // near junctions by 10-27 rms on a diag-165 block.
+    // =========================================================================
 
-    private const int CapVertexBudget = 20000;
+    private const int PairSurfaceVertexBudget = 8000;
 
-    private static Mesh RoughenCapped(Mesh src, FractalField field,
-        double freqScale, double ampWorld, double targetEdge, double taperWorld,
-        out int displaced, out double capAreaFrac, out int addedVerts,
-        out Mesh capMesh)
+    private sealed class PairSurface
+    {
+        public Mesh Mesh;             // final displaced surface
+        public List<Point3d> Pos;     // local vertex positions (displaced)
+        public List<int[]> Tris;      // local triangles
+        public int BoundaryCount;     // Pos[0..BoundaryCount-1] = polygon boundary order
+    }
+
+    private static void RoughenCappedPaired(
+        List<Mesh> inputs, FractalField field, double freqScale, double ampWorld,
+        double targetEdge, double taperWorld,
+        List<Mesh> outputs, List<Mesh>[] piecesPer, out int displacedTotal,
+        System.Text.StringBuilder report)
+    {
+        int nF = inputs.Count;
+        displacedTotal = 0;
+        var W = new Mesh[nF];
+        var loopsPer = new List<List<int>>[nF];
+        for (int f = 0; f < nF; f++)
+        {
+            piecesPer[f] = new List<Mesh>();
+            if (inputs[f] == null) continue;
+            W[f] = inputs[f].DuplicateMesh();
+            loopsPer[f] = ExtractNakedLoops(W[f]);
+        }
+
+        // mean rim edge length -> proximity tolerance
+        double sumE = 0; int cntE = 0;
+        for (int f = 0; f < nF; f++)
+        {
+            if (loopsPer[f] == null) continue;
+            foreach (var loop in loopsPer[f])
+                for (int k = 0; k < loop.Count; k++)
+                {
+                    sumE += ((Point3d)W[f].Vertices[loop[k]]).DistanceTo(
+                            (Point3d)W[f].Vertices[loop[(k + 1) % loop.Count]]);
+                    cntE++;
+                }
+        }
+        double tolNear = 3.0 * (cntE > 0 ? sumE / cntE : 1.0);
+
+        // flattened rim clouds per fragment
+        var rimPts = new List<Point3d>[nF];
+        for (int f = 0; f < nF; f++)
+        {
+            rimPts[f] = new List<Point3d>();
+            if (loopsPer[f] == null) continue;
+            foreach (var loop in loopsPer[f])
+                foreach (var vi in loop) rimPts[f].Add((Point3d)W[f].Vertices[vi]);
+        }
+        double DistToRim(Point3d p, int g)
+        {
+            double best = double.MaxValue;
+            var lst = rimPts[g];
+            for (int k = 0; k < lst.Count; k++)
+            {
+                double d = (p - lst[k]).SquareLength;
+                if (d < best) best = d;
+            }
+            return Math.Sqrt(best);
+        }
+
+        // EXCLUSIVE nearest-rim assignment of every rim point: p belongs to
+        // interface (f, owner) where owner's rim is nearest within tolNear.
+        // Exclusivity keeps adjacent pair surfaces from overlapping at
+        // junction corners; unassigned corner slop is filled per fragment
+        // at the end (pinned, no piece).
+        var ownerPer = new int[nF][][];
+        for (int f = 0; f < nF; f++)
+        {
+            if (loopsPer[f] == null) continue;
+            ownerPer[f] = new int[loopsPer[f].Count][];
+            for (int L = 0; L < loopsPer[f].Count; L++)
+            {
+                var loop = loopsPer[f][L];
+                var own = new int[loop.Count];
+                for (int k = 0; k < loop.Count; k++)
+                {
+                    var p = (Point3d)W[f].Vertices[loop[k]];
+                    double bd = double.MaxValue; int bo = -1;
+                    for (int g = 0; g < nF; g++)
+                    {
+                        if (g == f || rimPts[g] == null || rimPts[g].Count == 0) continue;
+                        double d = DistToRim(p, g);
+                        if (d < bd) { bd = d; bo = g; }
+                    }
+                    own[k] = bd <= tolNear ? bo : -1;
+                }
+                // cyclic majority smoothing: kill single-point flickers
+                var sm = new int[loop.Count];
+                for (int k = 0; k < loop.Count; k++)
+                {
+                    int lp = own[(k + loop.Count - 1) % loop.Count];
+                    int ln = own[(k + 1) % loop.Count];
+                    sm[k] = lp == ln ? lp : own[k];
+                }
+                ownerPer[f][L] = sm;
+            }
+        }
+
+        // contiguous same-owner runs = the arcs of interface (f, g) as
+        // sampled by fragment f
+        List<(List<int> chain, bool closed)> ArcsOf(int f, int g)
+        {
+            var res = new List<(List<int>, bool)>();
+            if (loopsPer[f] == null) return res;
+            for (int L = 0; L < loopsPer[f].Count; L++)
+            {
+                var loop = loopsPer[f][L];
+                var own = ownerPer[f][L];
+                int n = loop.Count;
+                int start = -1; bool all = true;
+                for (int k = 0; k < n; k++)
+                {
+                    if (own[k] != g) all = false;
+                    if (start < 0 && own[k] == g && own[(k + n - 1) % n] != g) start = k;
+                }
+                if (all) { res.Add((new List<int>(loop), true)); continue; }
+                if (start < 0) continue;
+                var chain = new List<int>();
+                for (int t = 0; t < n; t++)
+                {
+                    int k = (start + t) % n;
+                    if (own[k] == g) chain.Add(loop[k]);
+                    else if (chain.Count > 0)
+                    {
+                        if (chain.Count >= 4) res.Add((chain, false));
+                        chain = new List<int>();
+                    }
+                }
+                if (chain.Count >= 4) res.Add((chain, false));
+            }
+            return res;
+        }
+
+        for (int i = 0; i < nF; i++)
+        {
+            if (W[i] == null) continue;
+            for (int j = i + 1; j < nF; j++)
+            {
+                if (W[j] == null) continue;
+                var arcsI = ArcsOf(i, j);
+                if (arcsI.Count == 0) continue;
+                var arcsJ = ArcsOf(j, i);
+                if (arcsJ.Count == 0) continue;
+                int pairSalt = unchecked(31 * (i + 1) + 977 * (j + 1));
+
+                var polys = ClosePolygons(W[i], arcsI);
+                int pieceVerts = 0;
+                foreach (var poly in polys)
+                {
+                    var S = BuildInterfaceSurface(W[i], poly, field, freqScale,
+                        ampWorld, targetEdge, taperWorld, pairSalt, out int disp);
+                    if (S == null) continue;
+                    displacedTotal += disp;
+                    pieceVerts += S.Mesh.Vertices.Count;
+
+                    AttachToOwner(W[i], poly, S);
+                    AttachToPartnerAndZip(W[j], S, arcsJ, tolNear);
+
+                    piecesPer[i].Add(S.Mesh.DuplicateMesh());
+                    piecesPer[j].Add(S.Mesh.DuplicateMesh());
+                }
+                report.AppendLine($"Interface ({i},{j}): {arcsI.Count}/{arcsJ.Count} arcs " +
+                                  $"-> {polys.Count} surface(s), {pieceVerts} verts.");
+            }
+        }
+
+        // Close junction slop + zip leftovers (pinned, fragment-local,
+        // never a piece), then orient outward. The zip strip is largely
+        // degenerate (most partner rim points coincide bit-exactly with the
+        // surface boundary), so weld identical vertices and cull the
+        // zero-area faces BEFORE filling the remaining slits.
+        for (int f = 0; f < nF; f++)
+        {
+            if (W[f] == null) { outputs.Add(null); continue; }
+            W[f].Vertices.CombineIdentical(true, true);
+            W[f].Faces.CullDegenerateFaces();
+            FanCapRemainingHoles(W[f]);
+            W[f].Faces.CullDegenerateFaces();
+            if (!W[f].IsClosed) FanCapRemainingHoles(W[f]);
+            W[f].Normals.ComputeNormals();
+            W[f].FaceNormals.ComputeFaceNormals();
+            W[f].UnifyNormals();
+            W[f].FaceNormals.ComputeFaceNormals();
+            if (W[f].Volume() < 0) W[f].Flip(true, true, true);
+            W[f].Compact();
+            outputs.Add(W[f]);
+            report.AppendLine($"Fragment {f}: closed={W[f].IsClosed}, " +
+                              $"{piecesPer[f].Count} interface piece(s).");
+        }
+
+        // Orient every piece OUTWARD from its own fragment. The two copies
+        // of one interface surface then carry OPPOSING normals -- what
+        // downstream mating logic (Facet Match) expects of mates.
+        for (int f = 0; f < nF; f++)
+        {
+            if (W[f] == null || !W[f].IsClosed) continue;
+            foreach (var piece in piecesPer[f])
+            {
+                piece.Normals.ComputeNormals();
+                double eps = Math.Max(1e-6, piece.GetBoundingBox(true).Diagonal.Length * 0.02);
+                int inside = 0, total = 0;
+                int step = Math.Max(1, piece.Vertices.Count / 7);
+                for (int v = 0; v < piece.Vertices.Count && total < 9; v += step)
+                {
+                    var n = new Vector3d(piece.Normals[v]);
+                    if (n.Length < 1e-9) continue;
+                    n.Unitize();
+                    var q = (Point3d)piece.Vertices[v] + n * eps;
+                    if (W[f].IsPointInside(q, 1e-6, true)) inside++;
+                    total++;
+                }
+                if (inside * 2 > total) piece.Flip(true, true, true);
+            }
+        }
+    }
+
+    /// <summary>Naked-edge loops as vertex-index chains (exact float match
+    /// back to mesh vertices; unresolvable loops skipped).</summary>
+    private static List<List<int>> ExtractNakedLoops(Mesh m)
+    {
+        var res = new List<List<int>>();
+        var naked = m.GetNakedEdges();
+        if (naked == null) return res;
+        var vmap = new Dictionary<Point3f, int>(m.Vertices.Count);
+        for (int vi = 0; vi < m.Vertices.Count; vi++) vmap[m.Vertices[vi]] = vi;
+        foreach (var loop in naked)
+        {
+            if (loop == null || !loop.IsClosed || loop.Count < 4) continue;
+            var idx = new List<int>(loop.Count - 1);
+            bool ok = true;
+            for (int k = 0; k < loop.Count - 1; k++)
+            {
+                var pf = new Point3f((float)loop[k].X, (float)loop[k].Y, (float)loop[k].Z);
+                if (!vmap.TryGetValue(pf, out int vi)) { ok = false; break; }
+                idx.Add(vi);
+            }
+            if (ok && idx.Count >= 3) res.Add(idx);
+        }
+        return res;
+    }
+
+    /// <summary>Chain open arcs into closed polygons by nearest free
+    /// endpoint (closed arcs pass through as-is). Chords between chained
+    /// arcs are implicit; a jump limit splits disjoint interface patches
+    /// into separate polygons.</summary>
+    private static List<List<int>> ClosePolygons(
+        Mesh m, List<(List<int> chain, bool closed)> arcs)
+    {
+        var res = new List<List<int>>();
+        var open = new List<List<int>>();
+        foreach (var a in arcs)
+        {
+            if (a.closed) res.Add(new List<int>(a.chain));
+            else open.Add(new List<int>(a.chain));
+        }
+        if (open.Count == 0) return res;
+        Point3d P(int vi) => (Point3d)m.Vertices[vi];
+        var bb = BoundingBox.Empty;
+        foreach (var c in open) foreach (var vi in c) bb.Union(P(vi));
+        double jumpMax = Math.Max(1e-9, bb.Diagonal.Length * 0.6);
+        var used = new bool[open.Count];
+        for (int s = 0; s < open.Count; s++)
+        {
+            if (used[s]) continue;
+            var poly = new List<int>(open[s]);
+            used[s] = true;
+            while (true)
+            {
+                var tail = P(poly[poly.Count - 1]);
+                double bestD = double.MaxValue; int bestA = -1; bool atStart = true;
+                for (int t = 0; t < open.Count; t++)
+                {
+                    if (used[t]) continue;
+                    double dS = tail.DistanceTo(P(open[t][0]));
+                    double dE = tail.DistanceTo(P(open[t][open[t].Count - 1]));
+                    if (dS < bestD) { bestD = dS; bestA = t; atStart = true; }
+                    if (dE < bestD) { bestD = dE; bestA = t; atStart = false; }
+                }
+                double closeD = tail.DistanceTo(P(poly[0]));
+                if (bestA < 0 || bestD >= closeD || bestD > jumpMax) break;
+                var next = new List<int>(open[bestA]);
+                if (!atStart) next.Reverse();
+                poly.AddRange(next);
+                used[bestA] = true;
+            }
+            if (poly.Count >= 3) res.Add(poly);
+        }
+        return res;
+    }
+
+    /// <summary>Fan the polygon from its centroid, refine interior edges to
+    /// the target length, then displace the interior with the pair-salted
+    /// field (boundary PINNED: the crack line is shared with the skin of
+    /// both fragments and must not move).</summary>
+    private static PairSurface BuildInterfaceSurface(Mesh mOwner, List<int> poly,
+        FractalField field, double freqScale, double ampWorld,
+        double targetEdge, double taperWorld, int pairSalt, out int displaced)
     {
         displaced = 0;
-        capAreaFrac = 0;
-        addedVerts = 0;
-        capMesh = new Mesh();
+        int B = poly.Count;
+        if (B < 3) return null;
+        var pos = new List<Point3d>(B + 16);
+        foreach (var vi in poly) pos.Add((Point3d)mOwner.Vertices[vi]);
+        var cen = new Point3d(0, 0, 0);
+        foreach (var p in pos) cen += p;
+        cen /= B;
+        pos.Add(cen);
+        var tris = new List<int[]>(B);
+        for (int k = 0; k < B; k++) tris.Add(new[] { k, (k + 1) % B, B });
 
-        var m = src.DuplicateMesh();
-        int preFaces = m.Faces.Count;
-        try { m.FillHoles(); } catch { }
-        // FillHoles declines the LARGE rim loops that meander across several
-        // Voronoi cut planes (verified live 2026-07-11: every shatter
-        // fragment kept 1-2 big naked loops, so pieces were never closed and
-        // the learned path sampled no fracture surface there). Cap whatever
-        // is still open with a centroid fan; refinement + the noise field
-        // turn the fan into a normal rough fracture surface.
-        try { FanCapRemainingHoles(m); } catch { }
-        // FillHoles DUPLICATES the rim vertices for its cap (verified live:
-        // +1 cap vertex per rim vertex). The cap is then only position-
-        // welded, not index-welded; displacing rim vertices on one side
-        // splits the seam into two naked loops. Weld BEFORE collecting cap
-        // triangles so skin and cap share rim indices and move together.
-        try { m.Vertices.CombineIdentical(true, true); } catch { }
-        int postVerts = m.Vertices.Count;
-        int postFaces = m.Faces.Count;
-
-        // Cap triangles = faces added by FillHoles (appended at the END, so
-        // deleting them later leaves skin face indices untouched).
-        var capTris = new List<int[]>();
-        for (int fi = preFaces; fi < postFaces; fi++)
-        {
-            var face = m.Faces[fi];
-            if (face.IsQuad)
-            {
-                capTris.Add(new[] { face.A, face.B, face.C });
-                capTris.Add(new[] { face.A, face.C, face.D });
-            }
-            else capTris.Add(new[] { face.A, face.B, face.C });
-        }
-        if (capTris.Count == 0)
-        {
-            // Nothing was capped (already closed, or FillHoles failed).
-            m.Normals.ComputeNormals();
-            m.Compact();
-            return m;
-        }
-
-        // Outer-skin normals at cap vertices (accumulated from PRE-cap faces
-        // only). Rim vertices sit on both skin and cap; their skin normal
-        // defines the tangent plane the taper projects onto.
-        var capVertSet = new HashSet<int>();
-        foreach (var t in capTris) { capVertSet.Add(t[0]); capVertSet.Add(t[1]); capVertSet.Add(t[2]); }
-        m.FaceNormals.ComputeFaceNormals();
-        var skinNormal = new Dictionary<int, Vector3d>();
-        for (int fi = 0; fi < preFaces; fi++)
-        {
-            var face = m.Faces[fi];
-            var n = (Vector3d)m.FaceNormals[fi];
-            int cnt = face.IsQuad ? 4 : 3;
-            for (int c = 0; c < cnt; c++)
-            {
-                int v = face[c];
-                if (!capVertSet.Contains(v)) continue;
-                skinNormal.TryGetValue(v, out var acc);
-                skinNormal[v] = acc + n;
-            }
-        }
-
-        // New vertex positions appended past the mesh's current count.
-        var newPos = new List<Point3d>();
-        Point3d PosOf(int idx) => idx < postVerts
-            ? (Point3d)m.Vertices[idx]
-            : newPos[idx - postVerts];
-
-        // Iterative conforming refinement of cap INTERIOR edges. Rim edges
-        // (edge soup count == 1, i.e. shared with the un-split skin) are
-        // never split, so no T-junction against the skin can form.
         if (targetEdge > 0)
         {
-            for (int round = 0; round < 8 && newPos.Count < CapVertexBudget; round++)
+            for (int round = 0; round < 8 && pos.Count < PairSurfaceVertexBudget; round++)
             {
-                var edgeUse = CountEdges(capTris);
+                var use = CountEdges(tris);
                 var mid = new Dictionary<(int, int), int>();
-                foreach (var kv in edgeUse)
+                foreach (var kv in use)
                 {
-                    if (kv.Value < 2) continue; // rim edge: never split
+                    if (kv.Value < 2) continue;   // boundary edge: never split
                     var (a, b) = kv.Key;
-                    if (PosOf(a).DistanceTo(PosOf(b)) <= targetEdge) continue;
-                    var mp = (PosOf(a) + PosOf(b)) * 0.5;
-                    mid[kv.Key] = postVerts + newPos.Count;
-                    newPos.Add(mp);
-                    if (newPos.Count >= CapVertexBudget) break;
+                    if (pos[a].DistanceTo(pos[b]) <= targetEdge) continue;
+                    mid[kv.Key] = pos.Count;
+                    pos.Add((pos[a] + pos[b]) * 0.5);
+                    if (pos.Count >= PairSurfaceVertexBudget) break;
                 }
                 if (mid.Count == 0) break;
-                capTris = SplitTriangles(capTris, mid);
+                tris = SplitTriangles(tris, mid);
             }
         }
 
-        // Rim vertices of the FINAL cap triangulation.
-        var finalEdgeUse = CountEdges(capTris);
-        var rimVerts = new HashSet<int>();
-        foreach (var kv in finalEdgeUse)
-        {
-            if (kv.Value == 1) { rimVerts.Add(kv.Key.Item1); rimVerts.Add(kv.Key.Item2); }
-        }
-
-        // Multi-source BFS from the rim across cap edges: taper distance +
-        // propagated skin normal (first visit wins). Edges are near-uniform
-        // after refinement, so accumulated edge lengths approximate the
-        // geodesic well enough for a blend weight.
+        // taper: edge-distance BFS from the pinned boundary
+        var adj = BuildAdjacency(CountEdges(tris));
         var dist = new Dictionary<int, double>();
-        var rimN = new Dictionary<int, Vector3d>();
         var queue = new Queue<int>();
-        foreach (var rv in rimVerts)
-        {
-            dist[rv] = 0;
-            skinNormal.TryGetValue(rv, out var n);
-            if (n.Length > 1e-12) n.Unitize();
-            rimN[rv] = n;
-            queue.Enqueue(rv);
-        }
-        var adj = BuildAdjacency(finalEdgeUse);
+        for (int b = 0; b < B; b++) { dist[b] = 0; queue.Enqueue(b); }
         while (queue.Count > 0)
         {
             int v = queue.Dequeue();
             if (!adj.TryGetValue(v, out var nbrs)) continue;
-            foreach (var w in nbrs)
+            foreach (var w2 in nbrs)
             {
-                if (dist.ContainsKey(w)) continue;
-                dist[w] = dist[v] + PosOf(v).DistanceTo(PosOf(w));
-                rimN[w] = rimN[v];
-                queue.Enqueue(w);
+                if (dist.ContainsKey(w2)) continue;
+                dist[w2] = dist[v] + pos[v].DistanceTo(pos[w2]);
+                queue.Enqueue(w2);
             }
         }
 
-        // PER-INTERFACE SALT (v2, 2026-07-11): key the noise field to each
-        // vertex's local PRE-DISPLACEMENT cut plane (canonical-sign normal +
-        // offset, coarsely quantized). Both mates of an interface share the
-        // plane exactly -> same salt -> they still move identically; other
-        // interfaces get decorrelated relief. Vertex plane = average normal
-        // of adjacent (flat, pre-displacement) cap triangles.
-        double saltQuantum = Math.Max(1e-6, taperWorld > 0 ? taperWorld * 0.5 : ampWorld);
-        var vertexPlaneN = new Dictionary<int, Vector3d>();
-        foreach (var tcap in capTris)
+        for (int v = B; v < pos.Count; v++)
         {
-            var a = PosOf(tcap[0]); var b = PosOf(tcap[1]); var c = PosOf(tcap[2]);
-            var n = Vector3d.CrossProduct(b - a, c - a);
-            if (n.Length < 1e-12) continue;
-            n.Unitize();
-            for (int k2 = 0; k2 < 3; k2++)
-            {
-                vertexPlaneN.TryGetValue(tcap[k2], out var acc);
-                vertexPlaneN[tcap[k2]] = acc + n;
-            }
-        }
-        int PlaneSalt(int v)
-        {
-            if (!vertexPlaneN.TryGetValue(v, out var n) || n.Length < 1e-12) return 0;
-            n.Unitize();
-            // canonicalise the sign so both mates (opposite orientation)
-            // agree: largest-magnitude component made positive
-            double ax = Math.Abs(n.X), ay = Math.Abs(n.Y), az = Math.Abs(n.Z);
-            double lead = ax >= ay && ax >= az ? n.X : (ay >= az ? n.Y : n.Z);
-            if (lead < 0) n = -n;
-            var p = PosOf(v);
-            int qx = (int)Math.Round(n.X * 20);
-            int qy = (int)Math.Round(n.Y * 20);
-            int qz = (int)Math.Round(n.Z * 20);
-            int qd = (int)Math.Round((n.X * p.X + n.Y * p.Y + n.Z * p.Z) / saltQuantum);
-            unchecked
-            {
-                int h = qx * 73856093 ^ qy * 19349663 ^ qz * 83492791 ^ qd * (int)0x9E3779B1;
-                return h == 0 ? 1 : h;
-            }
-        }
-
-        // Displace every cap vertex by the plane-salted field, tapered at
-        // the rim. Rim (weight 0): tangential-only -> outer skin silhouette
-        // preserved, crack line still wiggles. Interior: full displacement.
-        var moved = new Dictionary<int, Point3d>();
-        var displaceTargets = new List<int>(capVertSet.Count + newPos.Count);
-        foreach (var v in capVertSet) displaceTargets.Add(v);
-        for (int k = 0; k < newPos.Count; k++) displaceTargets.Add(postVerts + k);
-        foreach (var v in displaceTargets)
-        {
-            var p = PosOf(v);
-            field.Sample(p.X * freqScale, p.Y * freqScale, p.Z * freqScale,
-                         PlaneSalt(v), out double dx, out double dy, out double dz);
+            var p = pos[v];
+            field.Sample(p.X * freqScale, p.Y * freqScale, p.Z * freqScale, pairSalt,
+                out double dx, out double dy, out double dz);
             var d = new Vector3d(dx * ampWorld, dy * ampWorld, dz * ampWorld);
             double w = taperWorld <= 0 ? 1.0
                 : Math.Min(1.0, (dist.TryGetValue(v, out var dv) ? dv : taperWorld) / taperWorld);
-            if (w < 1.0)
-            {
-                var n = rimN.TryGetValue(v, out var rn) ? rn : Vector3d.Zero;
-                if (n.Length > 1e-12)
-                {
-                    var tangential = d - n * (d * n);
-                    d = tangential * (1.0 - w) + d * w;
-                }
-            }
-            moved[v] = p + d;
+            pos[v] = p + d * w;
             displaced++;
         }
 
-        // Rebuild: drop the coarse cap faces, append refined ones. Cap faces
-        // are the mesh's LAST faces, so skin face indices survive the delete.
-        var capFaceIdx = new List<int>(postFaces - preFaces);
-        for (int fi = preFaces; fi < postFaces; fi++) capFaceIdx.Add(fi);
-        // compact:false -- vertex indices must stay stable for `moved` and
-        // the refined-triangle index references.
-        m.Faces.DeleteFaces(capFaceIdx, false);
-        foreach (var p in newPos) m.Vertices.Add(p);
-        foreach (var t in capTris) m.Faces.AddFace(t[0], t[1], t[2]);
-        addedVerts = newPos.Count;
-
-        foreach (var kv in moved)
-            m.Vertices.SetVertex(kv.Key, new Point3f(
-                (float)kv.Value.X, (float)kv.Value.Y, (float)kv.Value.Z));
-
-        // FRACTURE SURFACE SUBMESH (2026-07-11): the displaced caps as a
-        // standalone mesh. Mates carry the IDENTICAL surface by
-        // construction, so downstream exact-correspondence matching (Facet
-        // Match's Fracture Regions input) needs no re-segmentation.
-        // Vertices are keyed by (interface salt, index): triangles of
-        // DIFFERENT cut planes never share vertices in the submesh, so
-        // SplitDisjointPieces downstream yields one piece PER INTERFACE
-        // even when a single meandering cap spans several planes -- the
-        // exact-correspondence guarantee then holds for any fragment count.
-        var vmap2 = new Dictionary<(int salt, int idx), int>();
-        foreach (var tcap in capTris)
-        {
-            int salt = PlaneSalt(tcap[0]);
-            var idx3 = new int[3];
-            for (int k2 = 0; k2 < 3; k2++)
-            {
-                if (!vmap2.TryGetValue((salt, tcap[k2]), out int nv))
-                {
-                    nv = capMesh.Vertices.Count;
-                    capMesh.Vertices.Add(m.Vertices[tcap[k2]]);
-                    vmap2[(salt, tcap[k2])] = nv;
-                }
-                idx3[k2] = nv;
-            }
-            capMesh.Faces.AddFace(idx3[0], idx3[1], idx3[2]);
-        }
-        capMesh.Normals.ComputeNormals();
-        capMesh.Compact();
-
-        // Fracture-surface area share (target: BB neighbour-contact point
-        // share 0.04-0.27, median 0.11).
-        double capArea = 0;
-        foreach (var t in capTris)
-            capArea += TriArea(PosOfMoved(m, t[0]), PosOfMoved(m, t[1]), PosOfMoved(m, t[2]));
-        double totalArea = 0;
-        m.FaceNormals.ComputeFaceNormals();
-        for (int fi = 0; fi < m.Faces.Count; fi++)
-        {
-            var face = m.Faces[fi];
-            var a = (Point3d)m.Vertices[face.A];
-            var b = (Point3d)m.Vertices[face.B];
-            var c = (Point3d)m.Vertices[face.C];
-            totalArea += TriArea(a, b, c);
-            if (face.IsQuad)
-                totalArea += TriArea(a, c, (Point3d)m.Vertices[face.D]);
-        }
-        capAreaFrac = totalArea > 1e-12 ? capArea / totalArea : 0;
-
-        // Fan-cap faces were added with arbitrary winding; unify and make
-        // outward (closed mesh with negative volume = inward normals).
-        // Without this, downstream normal-based logic (Facet Match's
-        // opposition gate) sees random signs (found 2026-07-11).
-        try
-        {
-            m.UnifyNormals();
-            if (m.IsClosed && m.Volume() < 0) m.Flip(true, true, true);
-        }
-        catch { }
-        m.Normals.ComputeNormals();
-        m.Compact();
-        return m;
+        var mesh = new Mesh();
+        foreach (var p in pos) mesh.Vertices.Add(p.X, p.Y, p.Z);
+        foreach (var t in tris) mesh.Faces.AddFace(t[0], t[1], t[2]);
+        mesh.Normals.ComputeNormals();
+        return new PairSurface { Mesh = mesh, Pos = pos, Tris = tris, BoundaryCount = B };
     }
 
-    /// <summary>
-    /// Cap every remaining closed naked-edge loop with a centroid fan.
-    /// Loop points are mapped back to vertex indices by exact float match
-    /// (naked-edge points originate from those vertices, so the roundtrip
-    /// is bit-exact). The fan's rim edges stay protected in the refinement
-    /// (they appear once in the cap soup); its spokes are splittable.
-    /// </summary>
+    /// <summary>Weld the surface into the fragment whose rim sampled it:
+    /// boundary positions ARE that fragment's rim vertices, so the weld is
+    /// exact by index.</summary>
+    private static void AttachToOwner(Mesh mi, List<int> poly, PairSurface S)
+    {
+        var map = new int[S.Pos.Count];
+        for (int b = 0; b < S.BoundaryCount; b++) map[b] = poly[b];
+        for (int v = S.BoundaryCount; v < S.Pos.Count; v++)
+            map[v] = mi.Vertices.Add(S.Pos[v].X, S.Pos[v].Y, S.Pos[v].Z);
+        foreach (var t in S.Tris) mi.Faces.AddFace(map[t[0]], map[t[1]], map[t[2]]);
+    }
+
+    /// <summary>Append the identical surface to the partner fragment, then
+    /// stitch the partner's own rim arcs to the surface boundary with thin
+    /// rail triangles (both polylines sample the same physical curve, so
+    /// the strip is near-degenerate).</summary>
+    private static void AttachToPartnerAndZip(Mesh mj, PairSurface S,
+        List<(List<int> chain, bool closed)> arcsJ, double tolNear)
+    {
+        int baseJ = mj.Vertices.Count;
+        foreach (var p in S.Pos) mj.Vertices.Add(p.X, p.Y, p.Z);
+        foreach (var t in S.Tris)
+            mj.Faces.AddFace(baseJ + t[0], baseJ + t[1], baseJ + t[2]);
+
+        int B = S.BoundaryCount;
+        foreach (var (chain, closed) in arcsJ)
+        {
+            // polygon membership gate: the arc must actually run along THIS
+            // surface's boundary (a pair can have disjoint patches)
+            var midP = (Point3d)mj.Vertices[chain[chain.Count / 2]];
+            double bd = double.MaxValue; int bMid = 0;
+            for (int b = 0; b < B; b++)
+            {
+                double d = midP.DistanceTo(S.Pos[b]);
+                if (d < bd) { bd = d; bMid = b; }
+            }
+            if (bd > 2 * tolNear) continue;
+
+            var railA = new List<int>(chain);
+            List<int> railB;
+            var a0 = (Point3d)mj.Vertices[chain[0]];
+            var a1 = (Point3d)mj.Vertices[chain[Math.Min(1, chain.Count - 1)]];
+            int b0 = 0; double b0d = double.MaxValue;
+            for (int b = 0; b < B; b++)
+            {
+                double d = a0.DistanceTo(S.Pos[b]);
+                if (d < b0d) { b0d = d; b0 = b; }
+            }
+            if (closed)
+            {
+                railA.Add(chain[0]);   // close the cycle
+                bool fwd = S.Pos[(b0 + 1) % B].DistanceTo(a1)
+                        <= S.Pos[(b0 + B - 1) % B].DistanceTo(a1);
+                railB = new List<int>(B + 1);
+                for (int t = 0; t <= B; t++)
+                    railB.Add(baseJ + (fwd ? (b0 + t) % B : (b0 + B - (t % B)) % B));
+            }
+            else
+            {
+                var aE = (Point3d)mj.Vertices[chain[chain.Count - 1]];
+                int b1 = 0; double b1d = double.MaxValue;
+                for (int b = 0; b < B; b++)
+                {
+                    double d = aE.DistanceTo(S.Pos[b]);
+                    if (d < b1d) { b1d = d; b1 = b; }
+                }
+                // both cyclic directions from b0 to b1; pick the one passing
+                // nearest the arc midpoint
+                var fwdChain = new List<int>();
+                for (int b = b0; ; b = (b + 1) % B) { fwdChain.Add(b); if (b == b1) break; }
+                var bwdChain = new List<int>();
+                for (int b = b0; ; b = (b + B - 1) % B) { bwdChain.Add(b); if (b == b1) break; }
+                double fwdMid = double.MaxValue, bwdMid = double.MaxValue;
+                foreach (var b in fwdChain)
+                    fwdMid = Math.Min(fwdMid, midP.DistanceTo(S.Pos[b]));
+                foreach (var b in bwdChain)
+                    bwdMid = Math.Min(bwdMid, midP.DistanceTo(S.Pos[b]));
+                var pick = fwdMid <= bwdMid ? fwdChain : bwdChain;
+                railB = new List<int>(pick.Count);
+                foreach (var b in pick) railB.Add(baseJ + b);
+            }
+            StitchRails(mj, railA, railB);
+        }
+    }
+
+    /// <summary>Greedy rail stitch between two same-direction polylines of
+    /// mesh vertex indices.</summary>
+    private static void StitchRails(Mesh mj, List<int> railA, List<int> railB)
+    {
+        int ia = 0, ib = 0;
+        while (ia < railA.Count - 1 || ib < railB.Count - 1)
+        {
+            bool advA;
+            if (ia >= railA.Count - 1) advA = false;
+            else if (ib >= railB.Count - 1) advA = true;
+            else advA = ((Point3d)mj.Vertices[railA[ia + 1]]).DistanceTo(
+                            (Point3d)mj.Vertices[railB[ib]])
+                     <= ((Point3d)mj.Vertices[railB[ib + 1]]).DistanceTo(
+                            (Point3d)mj.Vertices[railA[ia]]);
+            if (advA) { mj.Faces.AddFace(railA[ia], railA[ia + 1], railB[ib]); ia++; }
+            else { mj.Faces.AddFace(railA[ia], railB[ib + 1], railB[ib]); ib++; }
+        }
+    }
+
     internal static void FanCapRemainingHoles(Mesh m)
     {
         var naked = m.GetNakedEdges();
