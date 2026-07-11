@@ -2,22 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Rhino 8 (hot reload)",
-      "type": "coreclr",
-      "request": "launch",
-      "program": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
-      "args": ["/nosplash", "/runscript=_-MCPStart"],
-      "cwd": "${workspaceFolder}",
-      "justMyCode": false,
-      "env": {
-        "DOTNET_MODIFIABLE_ASSEMBLIES": "debug"
-      },
-      "symbolOptions": {
-        "searchMicrosoftSymbolServer": false,
-        "searchNuGetSymbolServer": false
-      }
-    },
-    {
       "name": "Attach to Rhino 8",
       "type": "coreclr",
       "request": "attach",
