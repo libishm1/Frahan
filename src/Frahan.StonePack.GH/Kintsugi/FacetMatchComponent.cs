@@ -548,6 +548,14 @@ public sealed class FacetMatchComponent
         // passes, so the rescue mates against the pass-0 placements. Rescue off
         // runs one pass = pinned behaviour exactly.
         bool rescuePass = false;
+        // Near-mate gate (INC-4, 2026-07-13). The rescue interlock residual gate,
+        // as a fraction of candSpacing. Measured separation: a TRUE mate sits at
+        // ~0.36x, a hard cross-object NEAR-mate at ~0.72x. 0.55 splits them with
+        // margin and rejects the near-mate while keeping the true mate. CAVEAT:
+        // this is TWO data points; the residual is logged in the gate log, so
+        // re-tune from the report once more mates/near-mates are gathered. Do NOT
+        // treat 0.55 as final. See NEARMATE_gate_study.md.
+        const double rescueInterlockGate = 0.55;
         int passCount = (snap.RoughMode && snap.InterlockRescue) ? 2 : 1;
         for (int escPass = 0; escPass < passCount; escPass++)
         {
@@ -713,9 +721,9 @@ public sealed class FacetMatchComponent
                             var Ti = InterlockRefine(candFracSub, hostFracSub, Tt,
                                 candSpacing, out double interStd, out double slideOff);
                             double interMult = interStd / Math.Max(1e-9, candSpacing);
-                            if (interStd >= 0.9 * candSpacing)
+                            if (interStd >= rescueInterlockGate * candSpacing)
                             {
-                                gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: RESCUE reject interlock {interMult:F2}x slide {slideOff:F1} (rms {tMult:F2}x)");
+                                gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: RESCUE reject interlock {interMult:F2}x >= {rescueInterlockGate:F2} slide {slideOff:F1} (rms {tMult:F2}x)");
                                 continue;
                             }
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: RESCUE RANKED interlock {interMult:F2}x slide {slideOff:F1} rms {tMult:F2}x bcov {bCov:F2}");
