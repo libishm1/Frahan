@@ -53,7 +53,25 @@ scrambled input. Right (gold): the reassembled block. Cold-verified 5/5 fragment
 pose error; sweep N=2/3/5/8 all correct, ~1 s solves. Toggles ship FALSE; run order 1-2-3 left to
 right. No external data needed.*
 
+## Real-scan bench: Fantastic Breaks (added 2026-07-12)
+
+`14_kintsugi_fantastic_breaks_bench.gh` runs the deterministic pipeline on REAL scanned
+breaks from the Fantastic Breaks dataset (CVPR 2023; 150 household objects, each a broken
+piece + its aligned repair chip). NO DATA IS SHIPPED: the dataset has no published license,
+so download it yourself (public Drive folder, ~8.2 GB zip; see the dataset license notes in
+`D:\code_ws\outputs\2026-07-12\kintsugi_n3plus\research\dataset_licenses.md`). Run:
+import an object's `model_b_0.ply` + `model_r_0.ply` into Rhino, `_ReduceMesh` the big piece
+to ~25k faces, Set One Mesh on the two params, toggle Run. The canvas scale-normalizes
+(the PLYs are ~0.0015 units across) and exposes the calibration knobs (Angle Threshold,
+Min Facet Share, Joint Width, Accept Floor). STATUS (2026-07-12): PRECISION holds on real
+scans (no false placements; the granite-debris negative control passes, ~1 s solves after
+the KB-12 fix) but the chip does NOT yet place: dihedral segmentation cannot isolate the
+shallow fracture facet on a smooth household object. That segmentation gap is the open
+research item (roughness-based fracture/skin classification, GRAVITATE-style; see the
+research pack RQ1-RQ6).
+
 ## Files
+- `14_kintsugi_fantastic_breaks_bench.gh` - real-scan calibration bench (section above).
 - `14_kintsugi_facet_reassembly.gh` - DETERMINISTIC REASSEMBLY example (canvas above):
   three coloured groups (Generate / Scramble / Reassemble), Fragments + Seed +
   Scramble Seed + Explode X sliders, async Facet Match with Report panel.
