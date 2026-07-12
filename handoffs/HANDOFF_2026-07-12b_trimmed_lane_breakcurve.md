@@ -120,3 +120,27 @@ host outline edges qualify only when the outside face is below it.
 Resume exactly there, plus the 100k-face decimation lever (relief was
 mostly destroyed at 25k; Reduce normalizeSize:true; ~4-6 min for the
 2.48M-face scan - cache the result like fb00002_pair_scaled.3dm).
+
+## SESSION C (155e5ab): FIRST REAL-SCAN PLACEMENT ACHIEVED
+
+FB 00002 chip PLACES at 10.9 units (13% of chip) from dataset GT, E2E
+through the async component in 11 s. The winning chain (each step
+GT-measured, in commit 155e5ab's message): true-skin second Otsu +
+2-ring halo crack rings (26 -> 509 pts), ESCALATING Otsu for bleed
+hosts (0.135 -> 0.21, 22k blob -> 1739 band), RANSAC congruent-triplet
+seeding on the ring clouds (guess seeds never entered the ~20-unit
+basin), product ranking rms x brms (only truth wins both), opposing-
+FRACTION gate (mean-dot ~0 at a true seat is EXPECTED), dominant-facet
+gate (kills tiny-support impostors), CrackRing cached per facet (per-
+pair recomputation crashed under ~100 pairs). Precision intact: debris
+control 0 false placements (3 s); synthetic N=3 3/3.
+
+Visual: outputs/2026-07-12/kintsugi_n3plus/fb00002_first_real_placement
+.png (+_v001.3dm; code_ws ff459120). 100k pair cache:
+fb00002_pair_100k.3dm (Reduce 2.48M -> 100k took ~4.5 min).
+
+NEXT: (1) residual-rock refinement (10.9 -> ~3: e.g. final dense-sample
+polish at the found seat); (2) generalize across objects 00003/00005/
+00006/00008 (extract + decimate 100k + same harness); (3) then ship the
+dedicated example canvas per Libish's unique-cases rule; (4) pottery
+scans when Libish photographs them (same lane, Rm on).
