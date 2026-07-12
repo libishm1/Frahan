@@ -565,31 +565,43 @@ public sealed class FacetMatchComponent
                         // correspondences go to the FULL host mesh: the host
                         // facet region is unreliable on real scans (patchy
                         // band coverage resolved through the wall to the
-                        // interior). The opposition filter inside the ICP is
-                        // what prevents glue-to-skin solutions; the host
-                        // facet only supplies the seed FRAME.
+                        // interior). The opposition filter inside the ICP
+                        // prevents glue-to-skin solutions; the BREAK-CURVE
+                        // pairs pin the in-plane pose the surface statistics
+                        // cannot (band-slide degeneracy, FB 00002).
+                        var fracCand = new HashSet<int>(facets
+                            .Where(x => x.FragIdx == cand.FragIdx).SelectMany(x => x.Faces));
+                        var fracHost = new HashSet<int>(facets
+                            .Where(x => x.FragIdx == host.FragIdx).SelectMany(x => x.Faces));
+                        var candB = BoundaryPointsOf(fragments[cand.FragIdx], cand, fracCand);
+                        var hostB = TransformPoints(
+                            BoundaryPointsOf(fragments[host.FragIdx], host, fracHost),
+                            pose[host.FragIdx]);
                         var Tt = TrimmedRegister(cand, hostWorld, hostFrame,
-                            candSpacing, out double tRms, out double cov,
-                            out double tDot);
+                            candSpacing, candB, hostB,
+                            out double tRms, out double cov, out double tDot,
+                            out double bRms, out double bCov);
                         double tMult = tRms / Math.Max(1e-9, candSpacing);
-                        diag.Add((tMult, cand.FragIdx, host.FragIdx));
-                        if (cov < 0.45)
+                        double bMult = bRms / Math.Max(1e-9, candSpacing);
+                        diag.Add((bMult, cand.FragIdx, host.FragIdx));
+                        if (cov < 0.45 || bCov < 0.4)
                         {
-                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject coverage {cov:F2} (rms {tMult:F2}x)");
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject cov {cov:F2}/bcov {bCov:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
                         }
-                        if (tRms >= acceptFloor * spacing && tRms >= jointWidth)
+                        if ((tRms >= acceptFloor * candSpacing ||
+                             bRms >= 2.0 * acceptFloor * candSpacing) && tRms >= jointWidth)
                         {
-                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject rms {tMult:F2}x (cov {cov:F2})");
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject rms {tMult:F2}x brms {bMult:F2}x (cov {cov:F2})");
                             continue;
                         }
                         if (tDot > -0.3)
                         {
-                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject dot {tDot:F2} (rms {tMult:F2}x cov {cov:F2})");
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject dot {tDot:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
                         }
-                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED rms {tMult:F2}x cov {cov:F2} dot {tDot:F2}");
-                        ranked.Add((tMult, cand.FragIdx, hostIdx, Tt,
+                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED brms {bMult:F2}x rms {tMult:F2}x cov {cov:F2} bcov {bCov:F2} dot {tDot:F2}");
+                        ranked.Add((bMult, cand.FragIdx, hostIdx, Tt,
                                     Math.Max(penTol, 3.0 * tRms)));
                         continue;
                     }
@@ -1331,7 +1343,9 @@ public sealed class FacetMatchComponent
     /// </summary>
     private static Transform TrimmedRegister(Facet cand, Mesh hostWorld,
         Plane hostFrameWorld, double candSpacing,
-        out double rms, out double coverage, out double meanDot)
+        Point3d[] candBoundary, Point3d[] hostBoundaryWorld,
+        out double rms, out double coverage, out double meanDot,
+        out double bRms, out double bCov)
     {
         var mirrored = new Plane(cand.Frame.Origin, cand.Frame.XAxis, -cand.Frame.YAxis);
         const int Spins = 12;
@@ -1343,20 +1357,34 @@ public sealed class FacetMatchComponent
             var ty = -hostFrameWorld.XAxis * Math.Sin(ang) + hostFrameWorld.YAxis * Math.Cos(ang);
             var target = new Plane(hostFrameWorld.Origin, tx, ty);
             var T0 = Transform.PlaneToPlane(mirrored, target);
-            // coarse: mean point-to-mesh distance on a sample subset
-            var moved = TransformPoints(cand.Samples, T0);
+            // coarse: BOUNDARY alignment first (the outline carries the
+            // in-plane pose signal), surface as tie-break
+            var movedB = TransformPoints(candBoundary, T0);
             double sum = 0; int cnt = 0;
-            for (int i = 0; i < moved.Length; i += 4)
-            { sum += moved[i].DistanceTo(hostWorld.ClosestPoint(moved[i])); cnt++; }
+            for (int i = 0; i < movedB.Length; i += 2)
+            {
+                double bd = double.MaxValue;
+                for (int j = 0; j < hostBoundaryWorld.Length; j++)
+                {
+                    double d2 = (movedB[i] - hostBoundaryWorld[j]).SquareLength;
+                    if (d2 < bd) bd = d2;
+                }
+                sum += Math.Sqrt(bd); cnt++;
+            }
             seeds.Add((sum / Math.Max(1, cnt), T0));
         }
-        rms = double.MaxValue; coverage = 0; meanDot = 1;
+        rms = double.MaxValue; coverage = 0; meanDot = 1; bRms = double.MaxValue; bCov = 0;
         var best = Transform.Identity;
         foreach (var seed in seeds.OrderBy(x => x.coarse).Take(3))
         {
             var T = TrimmedIcpMesh(cand.Samples, cand.SampleNormals, hostWorld,
-                seed.t, candSpacing, out double r2, out double cov2, out double dot2);
-            if (r2 < rms) { rms = r2; coverage = cov2; meanDot = dot2; best = T; }
+                candBoundary, hostBoundaryWorld, seed.t, candSpacing,
+                out double r2, out double cov2, out double dot2,
+                out double br2, out double bc2);
+            // rank seeds by boundary rms first: the surface rms is blind to
+            // the band slide
+            if (br2 < bRms || (Math.Abs(br2 - bRms) < 1e-9 && r2 < rms))
+            { rms = r2; coverage = cov2; meanDot = dot2; bRms = br2; bCov = bc2; best = T; }
         }
         return best;
     }
@@ -1371,8 +1399,10 @@ public sealed class FacetMatchComponent
     /// the covered samples (host normal from the hit face).
     /// </summary>
     private static Transform TrimmedIcpMesh(Point3d[] candS, Vector3d[] candN,
-        Mesh hostWorld, Transform T0, double candSpacing,
-        out double rms, out double coverage, out double meanDot)
+        Mesh hostWorld, Point3d[] candB, Point3d[] hostB,
+        Transform T0, double candSpacing,
+        out double rms, out double coverage, out double meanDot,
+        out double bRms, out double bCov)
     {
         var T = T0;
         rms = double.MaxValue;
@@ -1422,9 +1452,64 @@ public sealed class FacetMatchComponent
                 sum += entries[k].d2;
             }
             double newRms = Math.Sqrt(sum / keep);
+            // BREAK-CURVE pairs: candidate outline midpoints -> nearest host
+            // outline midpoints (radius-capped, trimmed to the closest 70%),
+            // weighted 2x by duplication. The closed outline pins the
+            // in-plane pose the surface statistics cannot.
+            if (candB.Length >= 8 && hostB.Length >= 8)
+            {
+                var movedB = TransformPoints(candB, T);
+                var bPairs = new List<(double d2, Point3d src, Point3d dst)>();
+                double bCap2 = 4.0 * candSpacing * (4.0 * candSpacing);
+                for (int i = 0; i < movedB.Length; i++)
+                {
+                    double bd = double.MaxValue; int bj = -1;
+                    for (int j = 0; j < hostB.Length; j++)
+                    {
+                        double d2 = (movedB[i] - hostB[j]).SquareLength;
+                        if (d2 < bd) { bd = d2; bj = j; }
+                    }
+                    if (bj >= 0 && bd < bCap2)
+                        bPairs.Add((bd, movedB[i], hostB[bj]));
+                }
+                if (bPairs.Count >= 8)
+                {
+                    bPairs.Sort((a, b) => a.d2.CompareTo(b.d2));
+                    int bKeep = Math.Max(8, (int)(bPairs.Count * 0.7));
+                    for (int k = 0; k < bKeep && k < bPairs.Count; k++)
+                    {
+                        src.Add(bPairs[k].src); dst.Add(bPairs[k].dst);
+                        src.Add(bPairs[k].src); dst.Add(bPairs[k].dst);
+                    }
+                }
+            }
             T = Transform.Multiply(RigidFromPairs(src, dst), T);
             if (iter > 2 && Math.Abs(newRms - rms) < 1e-4 * candSpacing) { rms = newRms; break; }
             rms = newRms;
+        }
+        // final boundary alignment metrics
+        bRms = double.MaxValue; bCov = 0;
+        if (candB.Length >= 8 && hostB.Length >= 8)
+        {
+            var movedB = TransformPoints(candB, T);
+            var bd2 = new List<double>(movedB.Length);
+            foreach (var p in movedB)
+            {
+                double bd = double.MaxValue;
+                for (int j = 0; j < hostB.Length; j++)
+                {
+                    double d2 = (p - hostB[j]).SquareLength;
+                    if (d2 < bd) bd = d2;
+                }
+                bd2.Add(bd);
+            }
+            bd2.Sort();
+            int bKeep = Math.Max(8, (int)(bd2.Count * 0.7));
+            double sumB = 0;
+            for (int k = 0; k < bKeep && k < bd2.Count; k++) sumB += bd2[k];
+            bRms = Math.Sqrt(sumB / Math.Min(bKeep, bd2.Count));
+            double covTolB = 1.5 * candSpacing;
+            bCov = (double)bd2.Count(d2 => d2 < covTolB * covTolB) / bd2.Count;
         }
         // final coverage + normal opposition against the hit faces
         hostWorld.FaceNormals.ComputeFaceNormals();
@@ -1452,6 +1537,45 @@ public sealed class FacetMatchComponent
         coverage = (double)close / Math.Max(1, n);
         meanDot = dotCnt > 0 ? dotSum / dotCnt : 1.0;
         return T;
+    }
+
+    /// <summary>
+    /// BREAK-CURVE point cloud of a facet: midpoints of the region's
+    /// boundary segments (where fracture meets skin -- the physical crack
+    /// outline). Used as extra correspondences in the trimmed ICP: the
+    /// outline is a closed curve, so the band-slide degeneracy (chip
+    /// sliding along a narrow break band with indistinguishable surface
+    /// statistics, measured FB 00002) misaligns it and dies.
+    /// </summary>
+    private static Point3d[] BoundaryPointsOf(Mesh m, Facet fct)
+        => BoundaryPointsOf(m, fct, null);
+
+    /// <summary>
+    /// With <paramref name="fractureAll"/> given, only CRACK-LINE edges
+    /// qualify: boundary edges whose outside face is SKIN (in no fracture
+    /// region). Interior-bleed boundaries (fracture-to-fracture) polluted
+    /// the host outline and let the band slide persist (measured FB 00002).
+    /// </summary>
+    private static Point3d[] BoundaryPointsOf(Mesh m, Facet fct, HashSet<int> fractureAll)
+    {
+        var inFacet = new HashSet<int>(fct.Faces);
+        var te = m.TopologyEdges;
+        var pts = new List<Point3d>();
+        for (int e = 0; e < te.Count; e++)
+        {
+            var faces = te.GetConnectedFaces(e);
+            int inside = 0; bool outsideIsSkin = true;
+            for (int k = 0; k < faces.Length; k++)
+            {
+                if (inFacet.Contains(faces[k])) inside++;
+                else if (fractureAll != null && fractureAll.Contains(faces[k]))
+                    outsideIsSkin = false;
+            }
+            if (inside != 1) continue;
+            if (fractureAll != null && !outsideIsSkin) continue;
+            pts.Add(te.EdgeLine(e).PointAt(0.5));
+        }
+        return pts.ToArray();
     }
 
     /// <summary>Compact standalone copy of a face subset (facet region).</summary>
