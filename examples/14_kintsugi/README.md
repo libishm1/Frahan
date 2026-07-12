@@ -66,9 +66,14 @@ to ~25k faces, Set One Mesh on the two params, toggle Run. The canvas scale-norm
 Min Facet Share, Joint Width, Accept Floor). STATUS (2026-07-12): PRECISION holds on real
 scans (no false placements; the granite-debris negative control passes, ~1 s solves after
 the KB-12 fix) but the chip does NOT yet place: dihedral segmentation cannot isolate the
-shallow fracture facet on a smooth household object. That segmentation gap is the open
-research item (roughness-based fracture/skin classification, GRAVITATE-style; see the
-research pack RQ1-RQ6).
+shallow fracture facet on a smooth household object. UPDATE (later 2026-07-12): Facet Match
+now has a ROUGHNESS MODE (inputs Rm/Rt, appended): faces classify fracture-vs-skin by local
+normal dispersion (auto Otsu threshold, report prints it). Measured on object 00002: the
+chip's fracture face is found as its largest region (jaccard 0.65 vs ground-truth contact),
+but on the mug the break band bleeds into the equally-rough unglazed interior, so the pair
+still fails the congruence gates. Remaining research item: PARTIAL-OVERLAP matching (trimmed
+scoring; see research pack RQ1/RQ3). Precision is intact in both modes (debris negative
+control places nothing).
 
 ## Files
 - `14_kintsugi_fantastic_breaks_bench.gh` - real-scan calibration bench (section above).
