@@ -309,6 +309,31 @@ public sealed class FacetMatchComponent
 
         var report = new System.Text.StringBuilder();
         var rng = new Random(42);
+        progress("sanitizing...");
+
+        // KB-12 sanitation pre-pass (2026-07-12): real scan shells arrive
+        // with degenerate faces and duplicate vertices; cull and weld before
+        // ANY heavier native call. Snapshot meshes are owned copies, safe to
+        // mutate. A fragment that resists sanitation is kept as-is with a
+        // warning rather than dropped.
+        for (int f = 0; f < fragments.Count; f++)
+        {
+            var mf = fragments[f];
+            if (mf == null) continue;
+            try
+            {
+                mf.Faces.CullDegenerateFaces();
+                mf.Vertices.CombineIdentical(true, true);
+                mf.Compact();
+            }
+            catch (Exception ex)
+            {
+                payload.Warnings.Add($"Fragment {f}: sanitation failed ({ex.Message}); using it as-is.");
+            }
+            if (mf.Faces.Count > 40000)
+                payload.Warnings.Add($"Fragment {f} has {mf.Faces.Count} faces (scan-grade). " +
+                    "Decimate to ~20k faces for faster, more reliable matching.");
+        }
         progress("segmenting...");
 
         // 1-2. Segment + describe. The dominant-facet guard runs GLOBALLY:
@@ -793,29 +818,37 @@ public sealed class FacetMatchComponent
         var result = new List<Facet>();
         foreach (var fct in byRoot.Values)
         {
-            if (describe)
+            // cheap triangle-area sum for EVERY facet (fragment totals and
+            // ranking need it; full descriptors do not)
+            double area = 0;
+            foreach (var fi2 in fct.Faces)
+            {
+                var face = m.Faces[fi2];
+                Point3d a = m.Vertices[face.A], b = m.Vertices[face.B], c = m.Vertices[face.C];
+                area += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+                if (face.IsQuad)
+                {
+                    Point3d d2 = m.Vertices[face.D];
+                    area += 0.5 * Vector3d.CrossProduct(c - a, d2 - a).Length;
+                }
+            }
+            fct.Area = area;
+            result.Add(fct);
+        }
+        if (describe)
+        {
+            // KB-12 (2026-07-12): describe ONLY the facets that can matter.
+            // Scan shells segment into THOUSANDS of micro-facets; running
+            // Describe + BuildBoundary2D on all of them exploded time and
+            // memory until the Rhino process died. Downstream keeps at most
+            // 10 facets per fragment, so 24 described candidates is ample.
+            // Undescribed facets keep Boundary2D == null and the candidate
+            // scan skips them.
+            foreach (var fct in result.OrderByDescending(x => x.Area).Take(24))
             {
                 Describe(m, fct, rng);
                 BuildBoundary2D(m, fct);
             }
-            else
-            {
-                // area-only (guard probe): cheap triangle-area sum
-                double area = 0;
-                foreach (var fi2 in fct.Faces)
-                {
-                    var face = m.Faces[fi2];
-                    Point3d a = m.Vertices[face.A], b = m.Vertices[face.B], c = m.Vertices[face.C];
-                    area += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
-                    if (face.IsQuad)
-                    {
-                        Point3d d2 = m.Vertices[face.D];
-                        area += 0.5 * Vector3d.CrossProduct(c - a, d2 - a).Length;
-                    }
-                }
-                fct.Area = area;
-            }
-            result.Add(fct);
         }
         return result;
     }

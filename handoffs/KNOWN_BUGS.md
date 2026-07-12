@@ -231,7 +231,7 @@ Fixture stays a LOUD SKIP (KB-11). To close it properly: either (a) a completene
 (tighter engaged-set handling / multi-restart), or (b) accept incompleteness and document the conservative
 verdict for users (RBE STABLE is the actionable result here). Wedge type-b certifies fine (3 iter, 46 ms),
 so this is bridge-scale-specific.
-## KB-12 — Facet Match scan path CRASHES Rhino on real scan shells [OPEN, 2026-07-12]
+## KB-12 — Facet Match scan path CRASHES Rhino on real scan shells [FIXED, 2026-07-12]
 Facet Match (F2D00508, background task) hard-kills the Rhino process ~20 s into
 segmentation when fed real one-sided scan shells (granite shards,
 D:\granite_shards.ply, extracted 8 shards of 5k-23k faces). Reproduced 4x on
@@ -245,3 +245,16 @@ warning, RebuildNormals), a ~30k face cap with a decimate-first warning, then
 bisect the exact native call with per-stage file checkpoints on shard 0.
 Details + extracted shards + logs:
 D:\code_ws\outputs\2026-07-12\kintsugi_n3plus\REPORT_real_scan_findings.md.
+
+KB-12 RESOLUTION (same day): the killer was cost explosion, not one bad
+native call (a full per-call ladder passes on every shard). Dihedral
+segmentation on scan shells produces hundreds of micro-facets and Describe +
+BuildBoundary2D ran on ALL of them. Fix: (a) describe only the top-24 facets
+by area (downstream keeps max 10; undescribed facets are skipped by the
+candidate scan), (b) sanitation pre-pass per fragment before segmentation
+(CullDegenerateFaces, CombineIdentical, Compact, >40k-face decimate warning).
+VERIFIED: debris negative control completes in ~1 s async, 1/8 placed
+(anchor only, ZERO false placements); synthetic N=3 regression 3/3 CORRECT
+(transform metric). Caveat for headless tests: poll by pumping
+doc.NewSolution(false); force-expiring the async component every 500 ms
+races the completion schedule and can kill the process.
