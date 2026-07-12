@@ -518,6 +518,18 @@ public sealed class FacetMatchComponent
         var gateLog = new List<string>();
         bool moved = true;
         var swGreedy = System.Diagnostics.Stopwatch.StartNew();
+        // Resolution-escalation (INC-2, 2026-07-12): pass 0 = pinned matching;
+        // pass 1 = interlock RESCUE over whatever pass 0 left unplaced (only
+        // when Interlock Rescue is on). pose/placed/placedWorld persist across
+        // passes, so the rescue mates against the pass-0 placements. Rescue off
+        // runs one pass = pinned behaviour exactly.
+        bool rescuePass = false;
+        int passCount = (snap.RoughMode && snap.InterlockRescue) ? 2 : 1;
+        for (int escPass = 0; escPass < passCount; escPass++)
+        {
+        rescuePass = escPass == 1;
+        if (rescuePass && placedCount >= fragments.Count) break;
+        moved = true;
         while (moved)
         {
             moved = false;
@@ -634,7 +646,12 @@ public sealed class FacetMatchComponent
                         double tMult = tRms / Math.Max(1e-9, candSpacing);
                         double bMult = bRms / Math.Max(1e-9, candSpacing);
                         diag.Add((bMult, cand.FragIdx, host.FragIdx));
-                        if (cov < 0.45 || bCov < 0.35)
+                        // Pass 0 keeps the pinned bCov 0.35 (complete-rim
+                        // precision). Pass 1 (rescue) drops it to a near-empty
+                        // guard 0.1: a partial rim carries little boundary, and
+                        // the interlock residual below is the precision
+                        // mechanism there, not boundary coverage.
+                        if (cov < 0.45 || bCov < (rescuePass ? 0.1 : 0.35))
                         {
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject cov {cov:F2}/bcov {bCov:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
@@ -650,6 +667,33 @@ public sealed class FacetMatchComponent
                         if (tDot < 0.2)
                         {
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject oppFrac {tDot:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
+                            continue;
+                        }
+                        if (rescuePass)
+                        {
+                            // PASS 2 INTERLOCK RESCUE: pin the along-band slide
+                            // by the dense signed-distance-std minimum and gate
+                            // on that residual (the physical micro-relief fit).
+                            // A non-mate has no interlock minimum and stays
+                            // high, so debris still rejects. Needs a high-res
+                            // host to bite; on a coarse host the std floor is
+                            // high and this simply rejects (safe).
+                            var candFracSub = SubMesh(fragments[cand.FragIdx], cand.Faces);
+                            var hostFracSub = SubMesh(fragments[host.FragIdx], host.Faces);
+                            if (hostFracSub != null) hostFracSub.Transform(pose[host.FragIdx]);
+                            var Ti = InterlockRefine(candFracSub, hostFracSub, Tt,
+                                candSpacing, out double interStd, out double slideOff);
+                            double interMult = interStd / Math.Max(1e-9, candSpacing);
+                            if (interStd >= 0.9 * candSpacing)
+                            {
+                                gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: RESCUE reject interlock {interMult:F2}x slide {slideOff:F1} (rms {tMult:F2}x)");
+                                continue;
+                            }
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: RESCUE RANKED interlock {interMult:F2}x slide {slideOff:F1} rms {tMult:F2}x bcov {bCov:F2}");
+                            // rank by the INTERLOCK residual; generous penetration
+                            // tol (the interlock already verified a tight fit).
+                            ranked.Add((interMult, cand.FragIdx, hostIdx, Ti,
+                                        Math.Max(penTol, 4.0 * candSpacing)));
                             continue;
                         }
                         gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED brms {bMult:F2}x rms {tMult:F2}x cov {cov:F2} bcov {bCov:F2} oppFrac {tDot:F2}");
@@ -777,6 +821,7 @@ public sealed class FacetMatchComponent
                 report.AppendLine($"  placed fragment {frag}: facet RMS-multiple {resid:F3}");
             }
         }
+        } // end escalation pass loop (INC-2)
         report.AppendLine($"Greedy assembly: {swGreedy.Elapsed.TotalSeconds:F1} s.");
         if (gateLog.Count > 0)
         {
@@ -793,7 +838,12 @@ public sealed class FacetMatchComponent
         if (softIcp && useRegions)
             report.AppendLine("Soft ICP skipped: exact-correspondence regions " +
                               "already lock the greedy poses.");
-        if (softIcp && !useRegions && placedCount >= 2)
+        // INC-2: also skip in interlock-rescue mode. The rescue slid each
+        // placement to the fracture-relief minimum; the contact-only polish
+        // then dragged a correct FB 00003 seat to 58% error (measured).
+        if (softIcp && !useRegions && snap.InterlockRescue)
+            report.AppendLine("Soft ICP skipped: interlock rescue already locks the poses.");
+        if (softIcp && !useRegions && !snap.InterlockRescue && placedCount >= 2)
         {
             try
             {
