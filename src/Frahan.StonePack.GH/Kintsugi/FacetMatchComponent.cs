@@ -228,6 +228,11 @@ public sealed class FacetMatchComponent
         // cand[i]+host[matched i] is ~constant only for the true
         // correspondence.
         public double[] BoundaryRelief;
+        // RoughMode: crack-line ring (facet boundary bordering TRUE skin),
+        // fragment-local coordinates; computed ONCE per kept facet -- the
+        // per-pair recomputation rebuilt a 100k-face adjacency per pair and
+        // killed the process under ~100 candidate pairs
+        public Point3d[] CrackRing;
     }
 
     protected override bool TryReadRunOnly(IGH_DataAccess da, out bool run)
@@ -369,6 +374,9 @@ public sealed class FacetMatchComponent
         var facets = new List<Facet>();
         var outlines = new List<Curve>();
         var fragArea = new double[fragments.Count];
+        // RoughMode: per-fragment TRUE-SKIN faces (below the second, lower
+        // Otsu threshold) -- the crack-line boundary filter needs them
+        var trueSkinPer = new Dictionary<int, HashSet<int>>();
         double angleUse = angleDeg;
         for (int attempt = 0; attempt < 2 && angleUse > 12.0 && !snap.RoughMode; attempt++)
         {
@@ -435,11 +443,14 @@ public sealed class FacetMatchComponent
             }
             else if (snap.RoughMode)
             {
-                fs = SegmentFacetsRoughness(m, f, snap.RoughThreshold, angleUse, rng,
-                    out double thrUsed, out double roughShare);
+                fs = SegmentFacetsRoughness(m, f, snap.RoughThreshold, angleUse, 0.05,
+                    rng, out double thrUsed, out double roughShare,
+                    out HashSet<int> skinF);
+                trueSkinPer[f] = skinF;
                 report.AppendLine($"  fragment {f}: roughness threshold " +
                     $"{thrUsed:F3}{(snap.RoughThreshold <= 0 ? " (auto)" : "")}, " +
-                    $"fracture area share {roughShare:F2}, {fs.Count} region(s).");
+                    $"fracture area share {roughShare:F2}, {fs.Count} region(s), " +
+                    $"true-skin faces {skinF.Count}.");
             }
             else
             {
@@ -452,6 +463,8 @@ public sealed class FacetMatchComponent
             foreach (var fc in fs.Where(x => x.Area >= fragArea[f] * minShare)
                                  .OrderByDescending(x => x.Area).Take(10))
             {
+                if (snap.RoughMode && trueSkinPer.TryGetValue(f, out var skinSet))
+                    fc.CrackRing = BoundaryPointsOf(m, fc, skinSet);
                 facets.Add(fc);
                 foreach (var b in FacetBoundaries(m, fc)) outlines.Add(b);
             }
@@ -512,7 +525,11 @@ public sealed class FacetMatchComponent
                     // break band bleeds into its rough interior, 2310 area
                     // vs the chip's 1027) -- extents never agree, so equal-
                     // extent gates would hold out every true pair.
-                    if (aRatio < (snap.RoughMode ? 0.12 : 0.55)) continue;
+                    // RoughMode floor is nearly open: rough-region EXTENTS
+                    // are meaningless when the host side bleeds (measured
+                    // 22k-area blob vs 1.3k chip at 100k faces); the
+                    // boundary metrics gate instead
+                    if (aRatio < (snap.RoughMode ? 0.04 : 0.55)) continue;
                     if (!snap.RoughMode)
                     {
                         double e1Ratio = Math.Min(cand.E1, host.E1) / Math.Max(cand.E1, host.E1);
@@ -569,14 +586,28 @@ public sealed class FacetMatchComponent
                         // prevents glue-to-skin solutions; the BREAK-CURVE
                         // pairs pin the in-plane pose the surface statistics
                         // cannot (band-slide degeneracy, FB 00002).
-                        var fracCand = new HashSet<int>(facets
-                            .Where(x => x.FragIdx == cand.FragIdx).SelectMany(x => x.Faces));
-                        var fracHost = new HashSet<int>(facets
-                            .Where(x => x.FragIdx == host.FragIdx).SelectMany(x => x.Faces));
-                        var candB = BoundaryPointsOf(fragments[cand.FragIdx], cand, fracCand);
-                        var hostB = TransformPoints(
-                            BoundaryPointsOf(fragments[host.FragIdx], host, fracHost),
-                            pose[host.FragIdx]);
+                        // the fragment's break face is its DOMINANT fracture
+                        // region: a small bogus facet can out-score the true
+                        // seat by hugging tightly with tiny support (measured
+                        // FB 00002: an impostor pairing won at rms 0.08x /
+                        // brms 0.93x via a minor chip facet)
+                        double candMaxArea = facets
+                            .Where(x => x.FragIdx == cand.FragIdx)
+                            .Max(x => x.Area);
+                        if (cand.Area < 0.3 * candMaxArea)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject minor facet ({cand.Area:F0} vs {candMaxArea:F0})");
+                            continue;
+                        }
+                        var candB = cand.CrackRing ?? new Point3d[0];
+                        var hostB = host.CrackRing == null
+                            ? new Point3d[0]
+                            : TransformPoints(host.CrackRing, pose[host.FragIdx]);
+                        if (candB.Length < 12 || hostB.Length < 12)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject no crack ring ({candB.Length}/{hostB.Length} pts)");
+                            continue;
+                        }
                         var Tt = TrimmedRegister(cand, hostWorld, hostFrame,
                             candSpacing, candB, hostB,
                             out double tRms, out double cov, out double tDot,
@@ -584,7 +615,7 @@ public sealed class FacetMatchComponent
                         double tMult = tRms / Math.Max(1e-9, candSpacing);
                         double bMult = bRms / Math.Max(1e-9, candSpacing);
                         diag.Add((bMult, cand.FragIdx, host.FragIdx));
-                        if (cov < 0.45 || bCov < 0.4)
+                        if (cov < 0.45 || bCov < 0.35)
                         {
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject cov {cov:F2}/bcov {bCov:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
@@ -595,13 +626,15 @@ public sealed class FacetMatchComponent
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject rms {tMult:F2}x brms {bMult:F2}x (cov {cov:F2})");
                             continue;
                         }
-                        if (tDot > -0.3)
+                        // tDot = OPPOSING FRACTION of covered samples (a true
+                        // seat mixes band and continuous skin, so ~0.2-0.5)
+                        if (tDot < 0.2)
                         {
-                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject dot {tDot:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject oppFrac {tDot:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
                         }
-                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED brms {bMult:F2}x rms {tMult:F2}x cov {cov:F2} bcov {bCov:F2} dot {tDot:F2}");
-                        ranked.Add((bMult, cand.FragIdx, hostIdx, Tt,
+                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED brms {bMult:F2}x rms {tMult:F2}x cov {cov:F2} bcov {bCov:F2} oppFrac {tDot:F2}");
+                        ranked.Add((tMult * bMult, cand.FragIdx, hostIdx, Tt,
                                     Math.Max(penTol, 3.0 * tRms)));
                         continue;
                     }
@@ -974,12 +1007,21 @@ public sealed class FacetMatchComponent
     private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
         double userThreshold, double angleDeg, Random rng,
         out double thresholdUsed, out double fractureAreaShare)
-        => SegmentFacetsRoughness(m, fragIdx, userThreshold, angleDeg, 0.05, rng,
-            out thresholdUsed, out fractureAreaShare);
+        // 0.02 is the MEASURED radius factor (FB 00002 sweep: chip fracture
+        // region jaccard 0.65 rank#0 at 0.02; 0.05 fattened the host blob)
+        => SegmentFacetsRoughness(m, fragIdx, userThreshold, angleDeg, 0.02, rng,
+            out thresholdUsed, out fractureAreaShare, out _);
 
     private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
         double userThreshold, double angleDeg, double radiusFactor, Random rng,
         out double thresholdUsed, out double fractureAreaShare)
+        => SegmentFacetsRoughness(m, fragIdx, userThreshold, angleDeg, radiusFactor,
+            rng, out thresholdUsed, out fractureAreaShare, out _);
+
+    private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
+        double userThreshold, double angleDeg, double radiusFactor, Random rng,
+        out double thresholdUsed, out double fractureAreaShare,
+        out HashSet<int> trueSkin)
     {
         m.FaceNormals.ComputeFaceNormals();
         int fc = m.Faces.Count;
@@ -1059,16 +1101,19 @@ public sealed class FacetMatchComponent
         }
         rough = sm;
 
-        // threshold: user value, or Otsu on a 64-bin histogram
-        thresholdUsed = userThreshold;
-        if (userThreshold <= 0)
+        // threshold: user value, or area-weighted Otsu on a 64-bin
+        // histogram over an arbitrary face subset (reused below for the
+        // second, TRUE-SKIN threshold)
+        double OtsuOver(Func<int, bool> include)
         {
             const int Bins = 64;
-            double rMax = rough.Max();
-            if (rMax < 1e-9) rMax = 1e-9;
+            double rMax = 1e-9;
+            for (int i = 0; i < fc; i++)
+                if (include(i) && rough[i] > rMax) rMax = rough[i];
             var hist = new double[Bins];
             for (int i = 0; i < fc; i++)
             {
+                if (!include(i)) continue;
                 int bin = Math.Min(Bins - 1, (int)(rough[i] / rMax * (Bins - 1)));
                 hist[bin] += areas[i];
             }
@@ -1086,49 +1131,90 @@ public sealed class FacetMatchComponent
                 double v = wB * wF * (mB - mF) * (mB - mF);
                 if (v > bestVar) { bestVar = v; bestBin = b; }
             }
-            thresholdUsed = (bestBin + 0.5) / (Bins - 1) * rMax;
+            return (bestBin + 0.5) / (Bins - 1) * rMax;
         }
+        thresholdUsed = userThreshold > 0 ? userThreshold : OtsuOver(i => true);
 
-        // fracture components
+        // fracture class + components (rebuilt below if escalation fires)
+        double totArea = areas.Sum();
         var isFracture = new bool[fc];
-        double fracArea = 0, totArea = 0;
-        for (int i = 0; i < fc; i++)
-        {
-            isFracture[i] = rough[i] >= thresholdUsed;
-            totArea += areas[i];
-            if (isFracture[i]) fracArea += areas[i];
-        }
-        fractureAreaShare = totArea > 1e-12 ? fracArea / totArea : 0;
-
-        // Pure roughness components. A per-edge smoothed-normal constraint
-        // during growth was tried twice and removed twice: the dihedral per
-        // edge is RESOLUTION-DEPENDENT, so it shredded the finer-meshed
-        // chip's fracture face into hundreds of slivers (measured FB 00002:
-        // 1006-area jaccard-0.65 region -> ~150-area shreds). Superset
-        // bleeding on the host side is handled downstream by the trimmed-
-        // ICP lane instead.
         var facetId = new int[fc];
-        for (int i = 0; i < fc; i++) facetId[i] = -1;
         int nFacets = 0;
         var grow = new Queue<int>();
-        for (int seed = 0; seed < fc; seed++)
+        double BuildComponents(double thr)   // returns largest component area
         {
-            if (!isFracture[seed] || facetId[seed] >= 0) continue;
-            int id = nFacets++;
-            grow.Clear();
-            grow.Enqueue(seed);
-            facetId[seed] = id;
-            while (grow.Count > 0)
+            for (int i = 0; i < fc; i++)
             {
-                int f2 = grow.Dequeue();
-                foreach (var g in adj[f2])
+                isFracture[i] = rough[i] >= thr;
+                facetId[i] = -1;
+            }
+            nFacets = 0;
+            double largest = 0;
+            for (int seed = 0; seed < fc; seed++)
+            {
+                if (!isFracture[seed] || facetId[seed] >= 0) continue;
+                int id = nFacets++;
+                grow.Clear();
+                grow.Enqueue(seed);
+                facetId[seed] = id;
+                double compArea = areas[seed];
+                while (grow.Count > 0)
                 {
-                    if (!isFracture[g] || facetId[g] >= 0) continue;
-                    facetId[g] = id;
-                    grow.Enqueue(g);
+                    int f2 = grow.Dequeue();
+                    foreach (var g in adj[f2])
+                    {
+                        if (!isFracture[g] || facetId[g] >= 0) continue;
+                        facetId[g] = id;
+                        compArea += areas[g];
+                        grow.Enqueue(g);
+                    }
                 }
+                if (compArea > largest) largest = compArea;
+            }
+            return largest;
+        }
+        double largestArea = BuildComponents(thresholdUsed);
+
+        // ESCALATING Otsu (auto mode only): a fracture facet spanning over
+        // 30% of the whole fragment is bleed, not a break face (measured FB
+        // 00002 mug at 100k: auto 0.135 -> one 22k-area blob = band + matte
+        // interior; re-Otsu WITHIN the fracture class lands ~0.20 and the
+        // band separates). True fracture faces (the chip: ~10% share) never
+        // trigger this.
+        if (userThreshold <= 0)
+        {
+            for (int esc = 0; esc < 3 && largestArea > 0.30 * totArea; esc++)
+            {
+                double thrCur = thresholdUsed;
+                double t2 = OtsuOver(i => rough[i] >= thrCur);
+                if (t2 <= thresholdUsed * 1.05) break;
+                thresholdUsed = t2;
+                largestArea = BuildComponents(thresholdUsed);
             }
         }
+        double fracArea = 0;
+        for (int i = 0; i < fc; i++) if (isFracture[i]) fracArea += areas[i];
+        fractureAreaShare = totArea > 1e-12 ? fracArea / totArea : 0;
+
+        // TRUE SKIN = a second, lower Otsu over the non-fracture faces:
+        // separates genuinely smooth skin (glaze, saw cut) from the
+        // moderately rough rest (matte interior, weathering). The physical
+        // CRACK LINE is the facet boundary bordering TRUE skin; boundaries
+        // bordering merely non-fracture faces are bleed edges (label-based
+        // filtering is vacuous by construction, measured 2026-07-12).
+        double lowThr = thresholdUsed;
+        double capped = thresholdUsed;
+        {
+            double t2 = OtsuOver(i => rough[i] < capped);
+            if (t2 > 1e-9 && t2 < thresholdUsed) lowThr = t2;
+        }
+        trueSkin = new HashSet<int>();
+        for (int i = 0; i < fc; i++)
+            if (rough[i] < lowThr) trueSkin.Add(i);
+
+        // Components already built by BuildComponents above (pure roughness
+        // growth: NO per-edge normal-coherence constraint -- tried twice,
+        // removed twice, resolution-dependent shredding).
         var byId = new Dictionary<int, Facet>();
         for (int i = 0; i < fc; i++)
         {
@@ -1347,44 +1433,132 @@ public sealed class FacetMatchComponent
         out double rms, out double coverage, out double meanDot,
         out double bRms, out double bCov)
     {
-        var mirrored = new Plane(cand.Frame.Origin, cand.Frame.XAxis, -cand.Frame.YAxis);
-        const int Spins = 12;
-        var seeds = new List<(double coarse, Transform t)>(Spins);
-        for (int s = 0; s < Spins; s++)
+        // SEED FRAMES from the CRACK-LINE RINGS when both sides have them:
+        // plane fit through the boundary cloud, origin at its centroid. The
+        // candidate's crack ring belongs exactly ON the host's hole rim, so
+        // this anchors the seed where the fragment physically sits -- the
+        // host FACET frame is useless when the rough region bleeds (its
+        // centroid sits mid-interior, measured FB 00002 at 100k faces).
+        // RANSAC CONGRUENT-TRIPLET seeds on the ring clouds. Every guess-
+        // based scheme failed measurably (facet frames: origin mid-bleed;
+        // ring centroid: 24 units off along a PARTIAL rim; rim stations:
+        // half a patch off the ring's true center) -- none started inside
+        // the ~20-unit basin. Instead find 3-point correspondences between
+        // the candidate ring and the host ring (pairwise-distance congruent
+        // triangles): a true triplet gives a POSE-ACCURATE seed directly.
+        var seeds = new List<Transform>(256);
         {
-            double ang = s * (2 * Math.PI / Spins);
-            var tx = hostFrameWorld.XAxis * Math.Cos(ang) + hostFrameWorld.YAxis * Math.Sin(ang);
-            var ty = -hostFrameWorld.XAxis * Math.Sin(ang) + hostFrameWorld.YAxis * Math.Cos(ang);
-            var target = new Plane(hostFrameWorld.Origin, tx, ty);
-            var T0 = Transform.PlaneToPlane(mirrored, target);
-            // coarse: BOUNDARY alignment first (the outline carries the
-            // in-plane pose signal), surface as tie-break
-            var movedB = TransformPoints(candBoundary, T0);
-            double sum = 0; int cnt = 0;
-            for (int i = 0; i < movedB.Length; i += 2)
+            var rngS = new Random(1234);
+            int nc = candBoundary.Length;
+            // subsample host ring for the pair-distance table
+            var hostSub = new List<Point3d>();
+            int hStep = Math.Max(1, hostBoundaryWorld.Length / 120);
+            for (int i = 0; i < hostBoundaryWorld.Length; i += hStep)
+                hostSub.Add(hostBoundaryWorld[i]);
+            int nh = hostSub.Count;
+            double ringExt = 0;
+            var bbC = new BoundingBox(candBoundary);
+            ringExt = bbC.Diagonal.Length;
+            double tol = Math.Max(1.0, 0.6 * candSpacing);
+            // candidate triples with good spread
+            var triples = new List<(int a, int b, int c)>();
+            for (int tries = 0; tries < 400 && triples.Count < 16; tries++)
             {
-                double bd = double.MaxValue;
-                for (int j = 0; j < hostBoundaryWorld.Length; j++)
-                {
-                    double d2 = (movedB[i] - hostBoundaryWorld[j]).SquareLength;
-                    if (d2 < bd) bd = d2;
-                }
-                sum += Math.Sqrt(bd); cnt++;
+                int a = rngS.Next(nc), b = rngS.Next(nc), c = rngS.Next(nc);
+                if (a == b || b == c || a == c) continue;
+                double dab = candBoundary[a].DistanceTo(candBoundary[b]);
+                double dac = candBoundary[a].DistanceTo(candBoundary[c]);
+                double dbc = candBoundary[b].DistanceTo(candBoundary[c]);
+                if (dab < 0.3 * ringExt || dac < 0.3 * ringExt || dbc < 0.3 * ringExt) continue;
+                triples.Add((a, b, c));
             }
-            seeds.Add((sum / Math.Max(1, cnt), T0));
+            foreach (var (a, b, c) in triples)
+            {
+                if (seeds.Count >= 240) break;
+                var A = candBoundary[a]; var B = candBoundary[b]; var C = candBoundary[c];
+                double dab = A.DistanceTo(B), dac = A.DistanceTo(C), dbc = B.DistanceTo(C);
+                for (int p = 0; p < nh && seeds.Count < 240; p++)
+                    for (int q = 0; q < nh && seeds.Count < 240; q++)
+                    {
+                        if (p == q) continue;
+                        if (Math.Abs(hostSub[p].DistanceTo(hostSub[q]) - dab) > tol) continue;
+                        for (int r = 0; r < nh; r++)
+                        {
+                            if (r == p || r == q) continue;
+                            if (Math.Abs(hostSub[p].DistanceTo(hostSub[r]) - dac) > tol) continue;
+                            if (Math.Abs(hostSub[q].DistanceTo(hostSub[r]) - dbc) > tol) continue;
+                            seeds.Add(RigidFromPairs(
+                                new List<Point3d> { A, B, C },
+                                new List<Point3d> { hostSub[p], hostSub[q], hostSub[r] }));
+                            if (seeds.Count >= 240) break;
+                        }
+                    }
+            }
+        }
+        // quick ring-NN screen: triplet seeds are pose-accurate when true,
+        // so a static score suffices to shortlist
+        if (seeds.Count > 24)
+        {
+            var scored = new List<(double s, Transform t)>(seeds.Count);
+            foreach (var T0 in seeds)
+            {
+                var movedB = TransformPoints(candBoundary, T0);
+                double sum = 0; int cnt = 0;
+                for (int i = 0; i < movedB.Length; i += 4)
+                {
+                    double bdd = double.MaxValue;
+                    for (int j = 0; j < hostBoundaryWorld.Length; j += 2)
+                    {
+                        double d2 = (movedB[i] - hostBoundaryWorld[j]).SquareLength;
+                        if (d2 < bdd) bdd = d2;
+                    }
+                    sum += Math.Sqrt(bdd); cnt++;
+                }
+                scored.Add((sum / Math.Max(1, cnt), T0));
+            }
+            seeds = scored.OrderBy(x => x.s).Take(24).Select(x => x.t).ToList();
+        }
+        // classic facet-frame spins ONLY when triplet matching came up dry
+        if (seeds.Count < 8)
+        {
+            var cc2 = new Point3d(0, 0, 0);
+            foreach (var p in candBoundary) cc2 += p;
+            cc2 /= Math.Max(1, candBoundary.Length);
+            var candFrame = new Plane(cc2, cand.Frame.XAxis, cand.Frame.YAxis);
+            var mirrored = new Plane(candFrame.Origin, candFrame.XAxis, -candFrame.YAxis);
+            for (int s = 0; s < 12; s++)
+            {
+                double ang = s * (2 * Math.PI / 12);
+                var tx = hostFrameWorld.XAxis * Math.Cos(ang) + hostFrameWorld.YAxis * Math.Sin(ang);
+                var ty = -hostFrameWorld.XAxis * Math.Sin(ang) + hostFrameWorld.YAxis * Math.Cos(ang);
+                seeds.Add(Transform.PlaneToPlane(mirrored, new Plane(hostFrameWorld.Origin, tx, ty)));
+            }
         }
         rms = double.MaxValue; coverage = 0; meanDot = 1; bRms = double.MaxValue; bCov = 0;
         var best = Transform.Identity;
-        foreach (var seed in seeds.OrderBy(x => x.coarse).Take(3))
+        // Full-depth ICP on EVERY seed. A short-ICP screen ranked by
+        // boundary rms dropped the true seed: ring impostors (the chip ring
+        // hugging another smooth junction, e.g. a foot rim) converge FAST
+        // to low boundary rms while the true seed needs the full iteration
+        // budget. Rank converged poses by the PRODUCT of surface-rms and
+        // boundary-rms multiples: only the true seat wins BOTH (measured
+        // FB 00002: GT 0.14x * 1.48x vs impostor 0.49x * 1.88x).
+        double bestScore = double.MaxValue;
+        foreach (var seed in seeds)
         {
+            // triplet seeds are pose-accurate when true; 7 iterations refine
+            // them fully and bound the per-pair budget
             var T = TrimmedIcpMesh(cand.Samples, cand.SampleNormals, hostWorld,
-                candBoundary, hostBoundaryWorld, seed.t, candSpacing,
+                candBoundary, hostBoundaryWorld, seed, candSpacing,
                 out double r2, out double cov2, out double dot2,
-                out double br2, out double bc2);
-            // rank seeds by boundary rms first: the surface rms is blind to
-            // the band slide
-            if (br2 < bRms || (Math.Abs(br2 - bRms) < 1e-9 && r2 < rms))
-            { rms = r2; coverage = cov2; meanDot = dot2; bRms = br2; bCov = bc2; best = T; }
+                out double br2, out double bc2, 7);
+            if (r2 >= double.MaxValue || br2 >= double.MaxValue) continue;
+            double score = Math.Max(r2, 0.05 * candSpacing) * Math.Max(br2, 0.05 * candSpacing);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                rms = r2; coverage = cov2; meanDot = dot2; bRms = br2; bCov = bc2; best = T;
+            }
         }
         return best;
     }
@@ -1402,14 +1576,14 @@ public sealed class FacetMatchComponent
         Mesh hostWorld, Point3d[] candB, Point3d[] hostB,
         Transform T0, double candSpacing,
         out double rms, out double coverage, out double meanDot,
-        out double bRms, out double bCov)
+        out double bRms, out double bCov, int maxIter = 10)
     {
         var T = T0;
         rms = double.MaxValue;
         int n = candS.Length;
         hostWorld.FaceNormals.ComputeFaceNormals();
         var entries = new List<(double d2, Point3d src, Point3d dst)>(n);
-        for (int iter = 0; iter < 10; iter++)
+        for (int iter = 0; iter < maxIter; iter++)
         {
             var moved = TransformPoints(candS, T);
             var movedNi = TransformVectors(candN, T);
@@ -1511,12 +1685,16 @@ public sealed class FacetMatchComponent
             double covTolB = 1.5 * candSpacing;
             bCov = (double)bd2.Count(d2 => d2 < covTolB * covTolB) / bd2.Count;
         }
-        // final coverage + normal opposition against the hit faces
+        // final coverage + OPPOSING FRACTION against the hit faces. The
+        // covered set at a TRUE seat mixes the opposing fracture band with
+        // same-side continuous skin across the crack, so the MEAN dot sits
+        // near 0 (measured +0.04 at the recovered FB 00002 seat) -- gate on
+        // the fraction of clearly opposing samples instead.
         hostWorld.FaceNormals.ComputeFaceNormals();
         var movedF = TransformPoints(candS, T);
         var movedN = TransformVectors(candN, T);
         double covTol = 1.5 * candSpacing;
-        int close = 0; double dotSum = 0; int dotCnt = 0;
+        int close = 0, opp = 0, dotCnt = 0;
         for (int i = 0; i < n; i++)
         {
             var mp = hostWorld.ClosestMeshPoint(movedF[i], covTol * 4);
@@ -1530,12 +1708,13 @@ public sealed class FacetMatchComponent
                 {
                     hn.Unitize();
                     var cn = movedN[i]; cn.Unitize();
-                    dotSum += cn * hn; dotCnt++;
+                    if (cn * hn < -0.3) opp++;
+                    dotCnt++;
                 }
             }
         }
         coverage = (double)close / Math.Max(1, n);
-        meanDot = dotCnt > 0 ? dotSum / dotCnt : 1.0;
+        meanDot = dotCnt > 0 ? (double)opp / dotCnt : 0.0;   // opposing FRACTION
         return T;
     }
 
@@ -1551,28 +1730,65 @@ public sealed class FacetMatchComponent
         => BoundaryPointsOf(m, fct, null);
 
     /// <summary>
-    /// With <paramref name="fractureAll"/> given, only CRACK-LINE edges
-    /// qualify: boundary edges whose outside face is SKIN (in no fracture
-    /// region). Interior-bleed boundaries (fracture-to-fracture) polluted
-    /// the host outline and let the band slide persist (measured FB 00002).
+    /// With <paramref name="trueSkin"/> given, only CRACK-LINE edges
+    /// qualify: boundary edges whose outside face is TRUE SKIN (below the
+    /// second, lower roughness threshold: glaze, saw cut). Filtering by
+    /// fracture-region labels was VACUOUS (a region's boundary borders
+    /// non-fracture faces by construction); only the roughness VALUES
+    /// separate the physical crack line from bleed edges into moderately
+    /// rough surfaces (matte interior). Measured FB 00002, 2026-07-12.
     /// </summary>
-    private static Point3d[] BoundaryPointsOf(Mesh m, Facet fct, HashSet<int> fractureAll)
+    private static Point3d[] BoundaryPointsOf(Mesh m, Facet fct, HashSet<int> trueSkin)
     {
         var inFacet = new HashSet<int>(fct.Faces);
         var te = m.TopologyEdges;
+        // face adjacency for the halo test below
+        Dictionary<int, List<int>> adj = null;
+        if (trueSkin != null)
+        {
+            adj = new Dictionary<int, List<int>>();
+            for (int e = 0; e < te.Count; e++)
+            {
+                var fcs = te.GetConnectedFaces(e);
+                for (int a = 0; a < fcs.Length; a++)
+                    for (int b = a + 1; b < fcs.Length; b++)
+                    {
+                        if (!adj.TryGetValue(fcs[a], out var la)) adj[fcs[a]] = la = new List<int>();
+                        la.Add(fcs[b]);
+                        if (!adj.TryGetValue(fcs[b], out var lb)) adj[fcs[b]] = lb = new List<int>();
+                        lb.Add(fcs[a]);
+                    }
+            }
+        }
+        // TRUE SKIN within 2 rings of the outside face: the smoothing pass
+        // leaves a HALO of intermediate roughness between fracture and
+        // glaze, so direct skin adjacency starves the ring (26 points
+        // instead of hundreds, measured FB 00002 at 100k)
+        bool NearSkin(int face)
+        {
+            if (trueSkin.Contains(face)) return true;
+            if (!adj.TryGetValue(face, out var r1)) return false;
+            foreach (var g in r1)
+            {
+                if (trueSkin.Contains(g)) return true;
+                if (adj.TryGetValue(g, out var r2))
+                    foreach (var h in r2)
+                        if (trueSkin.Contains(h)) return true;
+            }
+            return false;
+        }
         var pts = new List<Point3d>();
         for (int e = 0; e < te.Count; e++)
         {
             var faces = te.GetConnectedFaces(e);
-            int inside = 0; bool outsideIsSkin = true;
+            int inside = 0; bool outsideIsSkin = false;
             for (int k = 0; k < faces.Length; k++)
             {
                 if (inFacet.Contains(faces[k])) inside++;
-                else if (fractureAll != null && fractureAll.Contains(faces[k]))
-                    outsideIsSkin = false;
+                else if (trueSkin == null || NearSkin(faces[k]))
+                    outsideIsSkin = true;
             }
-            if (inside != 1) continue;
-            if (fractureAll != null && !outsideIsSkin) continue;
+            if (inside != 1 || !outsideIsSkin) continue;
             pts.Add(te.EdgeLine(e).PointAt(0.5));
         }
         return pts.ToArray();
