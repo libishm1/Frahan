@@ -144,3 +144,37 @@ polish at the found seat); (2) generalize across objects 00003/00005/
 00006/00008 (extract + decimate 100k + same harness); (3) then ship the
 dedicated example canvas per Libish's unique-cases rule; (4) pottery
 scans when Libish photographs them (same lane, Rm on).
+
+## SESSION C CLOSE-OUT (c2530fe, 9a2d33f): generalization probe + honest boundary
+
+Ran the generalization test on a SECOND Fantastic Breaks object (00003,
+100k cache fb00003_pair_100k.3dm) with ZERO per-object tuning.
+- 00002: still seats correctly (13%). 00003: does NOT place.
+- ROOT CAUSE (measured, not guessed): 00003's host mug rim is far more
+  PARTIAL (crack ring 138 pts vs the chip's complete 551; 00002 had ~695).
+  The true pose IS recoverable -- TrimmedRegister on the true regions
+  lands 3% chip error. But candidate-side boundary coverage caps at 0.29
+  even at truth, so the bcov>=0.35 gate rejects it.
+- TRIED: measure coverage relative to the SMALLER ring (max of both
+  directions). It let the true pose pass -- but ALSO admitted false
+  partial-overlap poses that won the rms*brms ranking -> 00003 placed at
+  56% error, a FALSE POSITIVE. REVERTED. Precision (debris control +
+  00003 both reject cleanly) beats recall on the most partial rims.
+- The component is functionally identical to 155e5ab; c2530fe only adds
+  the documented boundary. 9a2d33f updates the bench README honestly.
+
+NEXT (the one real lever left, documented inline in TrimmedIcpMesh):
+HOST-SIDE-TRIMMED boundary score. At a true partial seat the partial
+host rim lies fully on the complete candidate ring, so a boundary rms
+computed over the host ring's nearest-candidate distances (host->cand,
+trimmed) is LOW at truth and HIGH at false poses -- it discriminates
+where candidate-side coverage cannot. Rank by that instead of loosening
+the coverage gate. Then re-run 00003 (expect place ~3-8%), re-confirm
+00002 + debris (must stay clean), then 00005/00006/00008.
+Caches ready: fb00002_pair_100k.3dm, fb00003_pair_100k.3dm.
+
+STATE: synthetic N-fragment reassembly SOLVED + shipped as example;
+FIRST REAL-SCAN PLACEMENT achieved and shipped (00002); real-scan recall
+generalizes when both rims are reasonably complete, safely rejects (no
+false positives) when a rim is very partial. Precision is the invariant
+throughout. Two example canvases live in examples/14_kintsugi/.
