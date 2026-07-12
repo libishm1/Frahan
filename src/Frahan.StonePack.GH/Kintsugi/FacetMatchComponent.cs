@@ -83,6 +83,8 @@ public sealed class FacetMatchComponent
         public List<List<Mesh>> Regions;   // null = regions input unwired/mismatched
         public double AngleDeg, MinShare, JointWidth, PenTol, AcceptFloor;
         public bool SoftIcp, PenHinge;
+        public bool RoughMode;
+        public double RoughThreshold;      // 0 = auto (Otsu)
     }
 
     /// <summary>Result produced on the background thread.</summary>
@@ -159,6 +161,23 @@ public sealed class FacetMatchComponent
             "Default 1.3. The report's candidate diagnostics show the " +
             "measured multiples; tune from there.",
             GH_ParamAccess.item, 1.3);
+        // Appended 2026-07-12 (appending preserves saved canvases).
+        p.AddBooleanParameter("Roughness Mode", "Rm",
+            "TRUE = segment facets by SURFACE ROUGHNESS instead of dihedral " +
+            "angles: faces are classified fracture (rough) vs skin (smooth) " +
+            "by local normal dispersion at a scale-relative radius, and " +
+            "connected fracture regions become the facets. Use for REAL " +
+            "SCANS of smooth objects (ceramics, glazed pottery), where the " +
+            "shallow fracture facet never shows up as a dihedral crease. " +
+            "Default FALSE (dihedral segmentation).",
+            GH_ParamAccess.item, false);
+        p.AddNumberParameter("Roughness Threshold", "Rt",
+            "Roughness Mode only. Faces whose local normal dispersion " +
+            "(0=perfectly smooth, 1=isotropic) exceeds this are FRACTURE. " +
+            "0 (default) = automatic Otsu threshold on the roughness " +
+            "histogram; the report prints the value used. Tune from there " +
+            "when auto misjudges (e.g. all-rough natural stone).",
+            GH_ParamAccess.item, 0.0);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -242,6 +261,10 @@ public sealed class FacetMatchComponent
         }
         double acceptFloor = 1.3;
         if (Params.Input.Count > 9) da.GetData(9, ref acceptFloor);
+        bool roughMode = false;
+        double roughThreshold = 0.0;
+        if (Params.Input.Count > 10) da.GetData(10, ref roughMode);
+        if (Params.Input.Count > 11) da.GetData(11, ref roughThreshold);
         if (fragments.Count < 2)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 2 fragments.");
@@ -276,6 +299,8 @@ public sealed class FacetMatchComponent
             AcceptFloor = acceptFloor,
             SoftIcp = softIcp,
             PenHinge = penHinge,
+            RoughMode = roughMode,
+            RoughThreshold = roughThreshold,
         };
         return true;
     }
@@ -345,7 +370,7 @@ public sealed class FacetMatchComponent
         var outlines = new List<Curve>();
         var fragArea = new double[fragments.Count];
         double angleUse = angleDeg;
-        for (int attempt = 0; attempt < 2 && angleUse > 12.0; attempt++)
+        for (int attempt = 0; attempt < 2 && angleUse > 12.0 && !snap.RoughMode; attempt++)
         {
             bool dominant = false;
             foreach (var m in fragments)
@@ -389,6 +414,7 @@ public sealed class FacetMatchComponent
             List<Facet> fs;
             if (useRegions)
             {
+                // (regions mode takes precedence over Roughness Mode)
                 // EXACT-CORRESPONDENCE mode: one facet per supplied region
                 // piece (branch f of the tree = fragment f, one item per
                 // interface). Mates carry the identical surface, so
@@ -406,6 +432,14 @@ public sealed class FacetMatchComponent
                     BuildBoundary2D(piece, fct);
                     fs.Add(fct);
                 }
+            }
+            else if (snap.RoughMode)
+            {
+                fs = SegmentFacetsRoughness(m, f, snap.RoughThreshold, angleUse, rng,
+                    out double thrUsed, out double roughShare);
+                report.AppendLine($"  fragment {f}: roughness threshold " +
+                    $"{thrUsed:F3}{(snap.RoughThreshold <= 0 ? " (auto)" : "")}, " +
+                    $"fracture area share {roughShare:F2}, {fs.Count} region(s).");
             }
             else
             {
@@ -849,6 +883,212 @@ public sealed class FacetMatchComponent
                 Describe(m, fct, rng);
                 BuildBoundary2D(m, fct);
             }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// ROUGHNESS-BASED fracture/skin segmentation (2026-07-12; GRAVITATE /
+    /// ElNaghy-Dorst direction from the one-sided-scan research pack).
+    /// Dihedral segmentation fails on REAL scans of smooth objects: the
+    /// fracture facet is a shallow rough patch, not a crease, so region
+    /// growing lumps it into the skin. Here every face gets a ROUGHNESS
+    /// score (normal dispersion within a scale-relative radius), Otsu (or a
+    /// user threshold) splits fracture from skin, and connected fracture
+    /// components become the facets. Downstream descriptors and gates are
+    /// unchanged.
+    /// </summary>
+    private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
+        double userThreshold, Random rng, out double thresholdUsed,
+        out double fractureAreaShare)
+        => SegmentFacetsRoughness(m, fragIdx, userThreshold, 30.0, rng,
+            out thresholdUsed, out fractureAreaShare);
+
+    private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
+        double userThreshold, double angleDeg, Random rng,
+        out double thresholdUsed, out double fractureAreaShare)
+    {
+        m.FaceNormals.ComputeFaceNormals();
+        int fc = m.Faces.Count;
+        var te = m.TopologyEdges;
+        var adj = new List<int>[fc];
+        for (int i = 0; i < fc; i++) adj[i] = new List<int>(3);
+        for (int e = 0; e < te.Count; e++)
+        {
+            var faces = te.GetConnectedFaces(e);
+            for (int a = 0; a < faces.Length; a++)
+                for (int b = a + 1; b < faces.Length; b++)
+                { adj[faces[a]].Add(faces[b]); adj[faces[b]].Add(faces[a]); }
+        }
+        var centroids = new Point3d[fc];
+        var normals = new Vector3d[fc];
+        var areas = new double[fc];
+        for (int i = 0; i < fc; i++)
+        {
+            var face = m.Faces[i];
+            Point3d a = m.Vertices[face.A], b = m.Vertices[face.B], c = m.Vertices[face.C];
+            centroids[i] = face.IsQuad
+                ? (a + b + c + (Point3d)m.Vertices[face.D]) / 4.0
+                : (a + b + c) / 3.0;
+            normals[i] = (Vector3d)m.FaceNormals[i];
+            areas[i] = 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+            if (face.IsQuad)
+                areas[i] += 0.5 * Vector3d.CrossProduct(
+                    c - a, (Point3d)m.Vertices[face.D] - a).Length;
+        }
+
+        // per-face roughness = area-weighted normal dispersion within a
+        // SCALE-RELATIVE radius (2% of bbox diagonal), gathered by BFS over
+        // face adjacency. 0 = perfectly smooth, 1 = isotropic normals.
+        double radius = m.GetBoundingBox(true).Diagonal.Length * 0.02;
+        double r2 = radius * radius;
+        var rough = new double[fc];
+        var stamp = new int[fc];
+        var bfs = new Queue<int>();
+        for (int i = 0; i < fc; i++)
+        {
+            bfs.Clear();
+            bfs.Enqueue(i);
+            stamp[i] = i + 1;
+            var acc = Vector3d.Zero;
+            double wSum = 0;
+            int visited = 0;
+            while (bfs.Count > 0 && visited < 80)
+            {
+                int f2 = bfs.Dequeue();
+                visited++;
+                var n2 = normals[f2];
+                if (n2.Length > 1e-12) n2.Unitize();
+                acc += n2 * areas[f2];
+                wSum += areas[f2];
+                foreach (var g in adj[f2])
+                {
+                    if (stamp[g] == i + 1) continue;
+                    if ((centroids[g] - centroids[i]).SquareLength > r2) continue;
+                    stamp[g] = i + 1;
+                    bfs.Enqueue(g);
+                }
+            }
+            rough[i] = wSum > 1e-12 ? 1.0 - acc.Length / wSum : 0.0;
+        }
+        // one cyclic-free majority-style smoothing pass (mean over ring 1)
+        var sm = new double[fc];
+        for (int i = 0; i < fc; i++)
+        {
+            double s = rough[i]; int n = 1;
+            foreach (var g in adj[i]) { s += rough[g]; n++; }
+            sm[i] = s / n;
+        }
+        rough = sm;
+
+        // threshold: user value, or Otsu on a 64-bin histogram
+        thresholdUsed = userThreshold;
+        if (userThreshold <= 0)
+        {
+            const int Bins = 64;
+            double rMax = rough.Max();
+            if (rMax < 1e-9) rMax = 1e-9;
+            var hist = new double[Bins];
+            for (int i = 0; i < fc; i++)
+            {
+                int bin = Math.Min(Bins - 1, (int)(rough[i] / rMax * (Bins - 1)));
+                hist[bin] += areas[i];
+            }
+            double total = hist.Sum(), sumAll = 0;
+            for (int b = 0; b < Bins; b++) sumAll += b * hist[b];
+            double wB = 0, sumB = 0, bestVar = -1; int bestBin = Bins / 2;
+            for (int b = 0; b < Bins; b++)
+            {
+                wB += hist[b];
+                if (wB <= 0) continue;
+                double wF = total - wB;
+                if (wF <= 0) break;
+                sumB += b * hist[b];
+                double mB = sumB / wB, mF = (sumAll - sumB) / wF;
+                double v = wB * wF * (mB - mF) * (mB - mF);
+                if (v > bestVar) { bestVar = v; bestBin = b; }
+            }
+            thresholdUsed = (bestBin + 0.5) / (Bins - 1) * rMax;
+        }
+
+        // fracture components
+        var isFracture = new bool[fc];
+        double fracArea = 0, totArea = 0;
+        for (int i = 0; i < fc; i++)
+        {
+            isFracture[i] = rough[i] >= thresholdUsed;
+            totArea += areas[i];
+            if (isFracture[i]) fracArea += areas[i];
+        }
+        fractureAreaShare = totArea > 1e-12 ? fracArea / totArea : 0;
+
+        // HYBRID growth (measured on Fantastic Breaks 00002): roughness
+        // alone merges the break band with other rough surfaces it touches
+        // (a mug's unglazed interior swallowed the fracture: one 6798-area
+        // blob vs the chip's 1027 -> area gate killed the true pair). Grow
+        // components over fracture-labeled faces ONLY while the SMOOTHED
+        // local normals stay coherent: the break band meets the interior at
+        // the sharp wall edge, which stops the walk there.
+        var smoothN = new Vector3d[fc];
+        for (int i = 0; i < fc; i++)
+        {
+            var n2 = normals[i];
+            if (n2.Length > 1e-12) n2.Unitize();
+            smoothN[i] = n2;
+        }
+        for (int pass = 0; pass < 3; pass++)
+        {
+            var next = new Vector3d[fc];
+            for (int i = 0; i < fc; i++)
+            {
+                var acc = smoothN[i];
+                foreach (var g in adj[i]) acc += smoothN[g];
+                if (acc.Length > 1e-12) acc.Unitize();
+                next[i] = acc;
+            }
+            smoothN = next;
+        }
+        double cosTol = Math.Cos(angleDeg * Math.PI / 180.0);
+
+        var facetId = new int[fc];
+        for (int i = 0; i < fc; i++) facetId[i] = -1;
+        int nFacets = 0;
+        var grow = new Queue<int>();
+        for (int seed = 0; seed < fc; seed++)
+        {
+            if (!isFracture[seed] || facetId[seed] >= 0) continue;
+            int id = nFacets++;
+            grow.Clear();
+            grow.Enqueue(seed);
+            facetId[seed] = id;
+            while (grow.Count > 0)
+            {
+                int f2 = grow.Dequeue();
+                foreach (var g in adj[f2])
+                {
+                    if (!isFracture[g] || facetId[g] >= 0) continue;
+                    if (smoothN[f2] * smoothN[g] < cosTol) continue;
+                    facetId[g] = id;
+                    grow.Enqueue(g);
+                }
+            }
+        }
+        var byId = new Dictionary<int, Facet>();
+        for (int i = 0; i < fc; i++)
+        {
+            if (facetId[i] < 0) continue;
+            if (!byId.TryGetValue(facetId[i], out var fct))
+                byId[facetId[i]] = fct = new Facet { FragIdx = fragIdx };
+            fct.Faces.Add(i);
+            fct.Area += areas[i];
+        }
+        var result = byId.Values.ToList();
+        // same KB-12 guard as the dihedral path: describe only the facets
+        // that can matter
+        foreach (var fct in result.OrderByDescending(x => x.Area).Take(24))
+        {
+            Describe(m, fct, rng);
+            BuildBoundary2D(m, fct);
         }
         return result;
     }
