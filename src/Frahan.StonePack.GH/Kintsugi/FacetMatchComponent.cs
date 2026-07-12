@@ -85,6 +85,11 @@ public sealed class FacetMatchComponent
         public bool SoftIcp, PenHinge;
         public bool RoughMode;
         public double RoughThreshold;      // 0 = auto (Otsu)
+        // Resolution-escalation (2026-07-12): when true, run a SECOND
+        // interlock-rescue pass over the fragments the primary pass left
+        // unplaced. Default false = pinned behaviour exactly. Wired in INC-2;
+        // INC-1 only carries the flag + the dormant InterlockRefine method.
+        public bool InterlockRescue;
     }
 
     /// <summary>Result produced on the background thread.</summary>
@@ -178,6 +183,17 @@ public sealed class FacetMatchComponent
             "histogram; the report prints the value used. Tune from there " +
             "when auto misjudges (e.g. all-rough natural stone).",
             GH_ParamAccess.item, 0.0);
+        // Appended 2026-07-12 (appending preserves saved canvases).
+        p.AddBooleanParameter("Interlock Rescue", "Ir",
+            "TRUE = after the primary rough-mode pass, run a SECOND pass that " +
+            "tries to place the fragments the first pass rejected, using the " +
+            "dense-sampled INTERLOCK REFINE (a line-search along the fracture " +
+            "band to the micro-relief minimum). This rescues PARTIAL-RIM " +
+            "mates (e.g. a thin sliver) that boundary matching cannot pin, at " +
+            "the cost of the full-resolution interlock search. Needs a " +
+            "high-resolution host mesh to bite; on a coarse host it simply " +
+            "rejects (safe). Default FALSE (single pass, pinned behaviour).",
+            GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -268,8 +284,10 @@ public sealed class FacetMatchComponent
         if (Params.Input.Count > 9) da.GetData(9, ref acceptFloor);
         bool roughMode = false;
         double roughThreshold = 0.0;
+        bool interlockRescue = false;
         if (Params.Input.Count > 10) da.GetData(10, ref roughMode);
         if (Params.Input.Count > 11) da.GetData(11, ref roughThreshold);
+        if (Params.Input.Count > 12) da.GetData(12, ref interlockRescue);
         if (fragments.Count < 2)
         {
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Need >= 2 fragments.");
@@ -306,6 +324,7 @@ public sealed class FacetMatchComponent
             PenHinge = penHinge,
             RoughMode = roughMode,
             RoughThreshold = roughThreshold,
+            InterlockRescue = interlockRescue,
         };
         return true;
     }
@@ -1807,6 +1826,97 @@ public sealed class FacetMatchComponent
             pts.Add(te.EdgeLine(e).PointAt(0.5));
         }
         return pts.ToArray();
+    }
+
+    /// <summary>
+    /// Phase 3 INTERLOCK REFINE (2026-07-12, measured on FB 00003 at 400k
+    /// faces + dense sampling). The fracture band is self-similar under
+    /// translation ALONG its length, so surface rms / coverage / relief
+    /// correlation cannot pin the along-band position -- a band-slid pose
+    /// scores as well as the true seat (the session-D negative result). But
+    /// at sufficient resolution the micro-relief DOES pin it: the std of the
+    /// signed candidate-to-host distance over DENSE fracture samples has a
+    /// sharp minimum at the true offset (measured 0.63 at truth rising to
+    /// 2.1 at +-8). This does a line-search along the band and slides the
+    /// pose to that minimum (auto-correcting a band-slide), returning the
+    /// residual std for gating. REQUIRES a high-resolution host mesh
+    /// (~400k+); at 100k the minimum is broad and mis-placed. Dormant until
+    /// INC-2 wires the rescue pass (2026-07-12).
+    /// </summary>
+    private static Transform InterlockRefine(Mesh candFracSub, Mesh hostFracSubWorld,
+        Transform T0, double candSpacing, out double minStd, out double slideOffset)
+    {
+        minStd = double.MaxValue; slideOffset = 0;
+        if (candFracSub == null || hostFracSubWorld == null ||
+            candFracSub.Faces.Count < 8 || hostFracSubWorld.Faces.Count < 8)
+            return T0;
+        // dense area-weighted samples of the candidate fracture surface
+        var rng = new Random(7);
+        int K = 1200;
+        var cum = new double[candFracSub.Faces.Count];
+        double acc = 0;
+        for (int fi = 0; fi < candFracSub.Faces.Count; fi++)
+        {
+            var f = candFracSub.Faces[fi];
+            Point3d a = candFracSub.Vertices[f.A], b = candFracSub.Vertices[f.B], c = candFracSub.Vertices[f.C];
+            acc += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+            cum[fi] = acc;
+        }
+        var samp = new Point3d[K];
+        for (int k = 0; k < K; k++)
+        {
+            double tv = rng.NextDouble() * acc;
+            int lo = 0, hi = cum.Length - 1;
+            while (lo < hi) { int mid = (lo + hi) / 2; if (cum[mid] < tv) lo = mid + 1; else hi = mid; }
+            var f = candFracSub.Faces[lo];
+            Point3d a = candFracSub.Vertices[f.A], b = candFracSub.Vertices[f.B], c = candFracSub.Vertices[f.C];
+            double r1 = rng.NextDouble(), r2 = rng.NextDouble(), s = Math.Sqrt(r1);
+            double w0 = 1 - s, w1 = s * (1 - r2), w2 = s * r2;
+            samp[k] = new Point3d(w0 * a.X + w1 * b.X + w2 * c.X,
+                                  w0 * a.Y + w1 * b.Y + w2 * c.Y, w0 * a.Z + w1 * b.Z + w2 * c.Z);
+        }
+        // band direction from a plane fit of the samples (major in-plane PCA)
+        var world = TransformPoints(samp, T0);
+        Plane pl;
+        if (Plane.FitPlaneToPoints(world, out pl) != PlaneFitResult.Success) return T0;
+        double su = 0, sv = 0; var uv = new double[world.Length, 2];
+        for (int i = 0; i < world.Length; i++)
+        { double u, v; pl.ClosestParameter(world[i], out u, out v); uv[i, 0] = u; uv[i, 1] = v; su += u; sv += v; }
+        su /= world.Length; sv /= world.Length;
+        double suu = 0, svv = 0, suv = 0;
+        for (int i = 0; i < world.Length; i++)
+        { double du = uv[i, 0] - su, dv = uv[i, 1] - sv; suu += du * du; svv += dv * dv; suv += du * dv; }
+        double tr = suu + svv, det = suu * svv - suv * suv, disc = Math.Sqrt(Math.Max(0, tr * tr / 4 - det)), l1 = tr / 2 + disc;
+        var bUV = Math.Abs(suv) > 1e-9 ? new Vector2d(l1 - svv, suv)
+                                       : new Vector2d(suu >= svv ? 1 : 0, suu >= svv ? 0 : 1);
+        bUV.Unitize();
+        var bandDir = pl.XAxis * bUV.X + pl.YAxis * bUV.Y; bandDir.Unitize();
+
+        // std of the (unsigned) distance at an offset along the band
+        double StdAt(double off)
+        {
+            var d = bandDir * off;
+            double sum = 0, sum2 = 0; int cnt = 0;
+            for (int i = 0; i < world.Length; i++)
+            {
+                var q = world[i] + d;
+                var mp = hostFracSubWorld.ClosestMeshPoint(q, 8.0);
+                if (mp == null) continue;
+                double dist = q.DistanceTo(mp.Point);
+                sum += dist; sum2 += dist * dist; cnt++;
+            }
+            if (cnt < 50) return double.MaxValue;
+            double m = sum / cnt;
+            return Math.Sqrt(Math.Max(0, sum2 / cnt - m * m));
+        }
+        // coarse line-search +-20 step 2, then refine +-2 step 0.5
+        double bestOff = 0, bestStd = StdAt(0);
+        for (double off = -20; off <= 20.0001; off += 2)
+        { double s = StdAt(off); if (s < bestStd) { bestStd = s; bestOff = off; } }
+        for (double off = bestOff - 2; off <= bestOff + 2.0001; off += 0.5)
+        { double s = StdAt(off); if (s < bestStd) { bestStd = s; bestOff = off; } }
+        minStd = bestStd; slideOffset = bestOff;
+        return Transform.Multiply(Transform.Translation(bandDir * bestOff), T0);
     }
 
     /// <summary>Compact standalone copy of a face subset (facet region).</summary>
