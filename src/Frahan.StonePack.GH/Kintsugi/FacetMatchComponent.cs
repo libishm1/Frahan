@@ -615,7 +615,14 @@ public sealed class FacetMatchComponent
                         double tMult = tRms / Math.Max(1e-9, candSpacing);
                         double bMult = bRms / Math.Max(1e-9, candSpacing);
                         diag.Add((bMult, cand.FragIdx, host.FragIdx));
-                        if (cov < 0.45 || bCov < 0.35)
+                        // candidate-side boundary coverage is now only a
+                        // near-empty guard (0.1): it varies with mesh
+                        // resolution (FB 00002 0.44 at 100k -> 0.13 at 400k)
+                        // and is NOT the precision mechanism -- the Phase 3
+                        // interlock refine + residual gate (below) is. Keep a
+                        // small floor so obviously non-overlapping rings do
+                        // not reach the expensive interlock step.
+                        if (cov < 0.45 || bCov < 0.1)
                         {
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject cov {cov:F2}/bcov {bCov:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
@@ -633,9 +640,33 @@ public sealed class FacetMatchComponent
                             gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject oppFrac {tDot:F2} (rms {tMult:F2}x brms {bMult:F2}x)");
                             continue;
                         }
-                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED brms {bMult:F2}x rms {tMult:F2}x cov {cov:F2} bcov {bCov:F2} oppFrac {tDot:F2}");
-                        ranked.Add((tMult * bMult, cand.FragIdx, hostIdx, Tt,
-                                    Math.Max(penTol, 3.0 * tRms)));
+                        // PHASE 3: INTERLOCK REFINE. Line-search along the band
+                        // to the signed-distance-std MINIMUM (auto-corrects a
+                        // band-slide) and gate on the residual std, which is
+                        // the physical fit of the fracture micro-relief. True
+                        // seat ~0.6-0.9 at 400k; a wrong facet / non-mate has
+                        // no interlock minimum and stays high. Needs a
+                        // high-resolution host mesh; on a coarse host the std
+                        // floor is high and the gate simply rejects (safe).
+                        var candFracSub = SubMesh(fragments[cand.FragIdx], cand.Faces);
+                        var hostFracSub = SubMesh(fragments[host.FragIdx], host.Faces);
+                        if (hostFracSub != null) hostFracSub.Transform(pose[host.FragIdx]);
+                        var Ti = InterlockRefine(candFracSub, hostFracSub, Tt,
+                            candSpacing, out double interStd, out double slideOff);
+                        double interMult = interStd / Math.Max(1e-9, candSpacing);
+                        if (interStd >= 0.9 * candSpacing)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject interlock {interMult:F2}x slide {slideOff:F1} (rms {tMult:F2}x)");
+                            continue;
+                        }
+                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED interlock {interMult:F2}x slide {slideOff:F1} rms {tMult:F2}x brms {bMult:F2}x bcov {bCov:F2} oppFrac {tDot:F2}");
+                        // rank by the INTERLOCK residual (the physical fit).
+                        // penetration tol is GENEROUS here: the interlock
+                        // refine already verified a tight surface fit, so the
+                        // fine penetration gate would falsely reject it; keep
+                        // only the gross fragment-scale overlap guard.
+                        ranked.Add((interMult, cand.FragIdx, hostIdx, Ti,
+                                    Math.Max(penTol, 4.0 * candSpacing)));
                         continue;
                     }
 
@@ -771,10 +802,15 @@ public sealed class FacetMatchComponent
         // dragged CORRECT poses 13-27% of diag away (N=3/5 sweep,
         // 2026-07-12). The polish stays available for the scan path, where
         // segmentation noise leaves real slack to recover.
-        if (softIcp && useRegions)
-            report.AppendLine("Soft ICP skipped: exact-correspondence regions " +
-                              "already lock the greedy poses.");
-        if (softIcp && !useRegions && placedCount >= 2)
+        // Also skipped in ROUGH mode (Phase 3, 2026-07-12): the interlock
+        // refine already slid each placement to the fracture-relief minimum;
+        // the contact-only polish then DRAGGED a correct FB 00003 seat to 58%
+        // error (measured). Rough-mode poses are interlock-locked, like
+        // regions poses.
+        bool skipPolish = useRegions || snap.RoughMode;
+        if (softIcp && skipPolish)
+            report.AppendLine("Soft ICP skipped: interlock/regions already lock the poses.");
+        if (softIcp && !skipPolish && placedCount >= 2)
         {
             try
             {
@@ -1810,6 +1846,96 @@ public sealed class FacetMatchComponent
     }
 
     /// <summary>Compact standalone copy of a face subset (facet region).</summary>
+    /// <summary>
+    /// Phase 3 INTERLOCK REFINE (2026-07-12, measured on FB 00003 at 400k
+    /// faces + dense sampling). The fracture band is self-similar under
+    /// translation ALONG its length, so surface rms / coverage / relief
+    /// correlation cannot pin the along-band position -- a band-slid pose
+    /// scores as well as the true seat (the session-D negative result). But
+    /// at sufficient resolution the micro-relief DOES pin it: the std of the
+    /// signed candidate-to-host distance over DENSE fracture samples has a
+    /// sharp minimum at the true offset (measured 0.63 at truth rising to
+    /// 2.1 at +-8). This does a line-search along the band and slides the
+    /// pose to that minimum (auto-correcting a band-slide), returning the
+    /// residual std for gating. REQUIRES a high-resolution host mesh
+    /// (~400k+); at 100k the minimum is broad and mis-placed.
+    /// </summary>
+    private static Transform InterlockRefine(Mesh candFracSub, Mesh hostFracSubWorld,
+        Transform T0, double candSpacing, out double minStd, out double slideOffset)
+    {
+        minStd = double.MaxValue; slideOffset = 0;
+        if (candFracSub == null || hostFracSubWorld == null ||
+            candFracSub.Faces.Count < 8 || hostFracSubWorld.Faces.Count < 8)
+            return T0;
+        // dense area-weighted samples of the candidate fracture surface
+        var rng = new Random(7);
+        int K = 1200;
+        var cum = new double[candFracSub.Faces.Count];
+        double acc = 0;
+        for (int fi = 0; fi < candFracSub.Faces.Count; fi++)
+        {
+            var f = candFracSub.Faces[fi];
+            Point3d a = candFracSub.Vertices[f.A], b = candFracSub.Vertices[f.B], c = candFracSub.Vertices[f.C];
+            acc += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+            cum[fi] = acc;
+        }
+        var samp = new Point3d[K];
+        for (int k = 0; k < K; k++)
+        {
+            double tv = rng.NextDouble() * acc;
+            int lo = 0, hi = cum.Length - 1;
+            while (lo < hi) { int mid = (lo + hi) / 2; if (cum[mid] < tv) lo = mid + 1; else hi = mid; }
+            var f = candFracSub.Faces[lo];
+            Point3d a = candFracSub.Vertices[f.A], b = candFracSub.Vertices[f.B], c = candFracSub.Vertices[f.C];
+            double r1 = rng.NextDouble(), r2 = rng.NextDouble(), s = Math.Sqrt(r1);
+            double w0 = 1 - s, w1 = s * (1 - r2), w2 = s * r2;
+            samp[k] = new Point3d(w0 * a.X + w1 * b.X + w2 * c.X,
+                                  w0 * a.Y + w1 * b.Y + w2 * c.Y, w0 * a.Z + w1 * b.Z + w2 * c.Z);
+        }
+        // band direction from a plane fit of the samples (major in-plane PCA)
+        var world = TransformPoints(samp, T0);
+        Plane pl;
+        if (Plane.FitPlaneToPoints(world, out pl) != PlaneFitResult.Success) return T0;
+        double su = 0, sv = 0; var uv = new double[world.Length, 2];
+        for (int i = 0; i < world.Length; i++)
+        { double u, v; pl.ClosestParameter(world[i], out u, out v); uv[i, 0] = u; uv[i, 1] = v; su += u; sv += v; }
+        su /= world.Length; sv /= world.Length;
+        double suu = 0, svv = 0, suv = 0;
+        for (int i = 0; i < world.Length; i++)
+        { double du = uv[i, 0] - su, dv = uv[i, 1] - sv; suu += du * du; svv += dv * dv; suv += du * dv; }
+        double tr = suu + svv, det = suu * svv - suv * suv, disc = Math.Sqrt(Math.Max(0, tr * tr / 4 - det)), l1 = tr / 2 + disc;
+        var bUV = Math.Abs(suv) > 1e-9 ? new Vector2d(l1 - svv, suv)
+                                       : new Vector2d(suu >= svv ? 1 : 0, suu >= svv ? 0 : 1);
+        bUV.Unitize();
+        var bandDir = pl.XAxis * bUV.X + pl.YAxis * bUV.Y; bandDir.Unitize();
+
+        // std of signed (unsigned) distance at an offset along the band
+        double StdAt(double off)
+        {
+            var d = bandDir * off;
+            double sum = 0, sum2 = 0; int cnt = 0;
+            for (int i = 0; i < world.Length; i++)
+            {
+                var q = world[i] + d;
+                var mp = hostFracSubWorld.ClosestMeshPoint(q, 8.0);
+                if (mp == null) continue;
+                double dist = q.DistanceTo(mp.Point);
+                sum += dist; sum2 += dist * dist; cnt++;
+            }
+            if (cnt < 50) return double.MaxValue;
+            double m = sum / cnt;
+            return Math.Sqrt(Math.Max(0, sum2 / cnt - m * m));
+        }
+        // coarse line-search +-20 step 2, then refine +-2 step 0.5
+        double bestOff = 0, bestStd = StdAt(0);
+        for (double off = -20; off <= 20.0001; off += 2)
+        { double s = StdAt(off); if (s < bestStd) { bestStd = s; bestOff = off; } }
+        for (double off = bestOff - 2; off <= bestOff + 2.0001; off += 0.5)
+        { double s = StdAt(off); if (s < bestStd) { bestStd = s; bestOff = off; } }
+        minStd = bestStd; slideOffset = bestOff;
+        return Transform.Multiply(Transform.Translation(bandDir * bestOff), T0);
+    }
+
     private static Mesh SubMesh(Mesh m, List<int> faces)
     {
         var sub = new Mesh();
