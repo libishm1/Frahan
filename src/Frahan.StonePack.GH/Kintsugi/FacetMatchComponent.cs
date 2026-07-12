@@ -507,15 +507,23 @@ public sealed class FacetMatchComponent
                     var host = facets[hostIdx];
                     if (!placed[host.FragIdx] || host.FragIdx == cand.FragIdx) continue;
                     double aRatio = Math.Min(cand.Area, host.Area) / Math.Max(cand.Area, host.Area);
-                    if (aRatio < 0.55) continue;
-                    double e1Ratio = Math.Min(cand.E1, host.E1) / Math.Max(cand.E1, host.E1);
-                    if (e1Ratio < 0.6) continue;
-                    double e2Ratio = Math.Min(cand.E2, host.E2) / Math.Max(cand.E2, host.E2);
-                    if (e2Ratio < 0.5) continue;
-                    // mating facets share the same relief -> near-equal RMS
-                    double rMax = Math.Max(cand.Rms, host.Rms);
-                    if (rMax > 1e-9 &&
-                        Math.Abs(cand.Rms - host.Rms) / rMax > 0.5) continue;
+                    // ROUGHNESS MODE relaxes the congruence pre-gates: real
+                    // mates are PARTIAL overlaps (measured FB 00002: mug
+                    // break band bleeds into its rough interior, 2310 area
+                    // vs the chip's 1027) -- extents never agree, so equal-
+                    // extent gates would hold out every true pair.
+                    if (aRatio < (snap.RoughMode ? 0.12 : 0.55)) continue;
+                    if (!snap.RoughMode)
+                    {
+                        double e1Ratio = Math.Min(cand.E1, host.E1) / Math.Max(cand.E1, host.E1);
+                        if (e1Ratio < 0.6) continue;
+                        double e2Ratio = Math.Min(cand.E2, host.E2) / Math.Max(cand.E2, host.E2);
+                        if (e2Ratio < 0.5) continue;
+                        // mating facets share the same relief -> near-equal RMS
+                        double rMax = Math.Max(cand.Rms, host.Rms);
+                        if (rMax > 1e-9 &&
+                            Math.Abs(cand.Rms - host.Rms) / rMax > 0.5) continue;
+                    }
                     // FLAT-PAIR EXCLUSION (2026-07-11): opposing-normal mating
                     // is only meaningful between FRACTURE facets. Two flat
                     // facets (skin/sawn faces, relief < 0.2% of extent) are
@@ -538,6 +546,53 @@ public sealed class FacetMatchComponent
                     double spacing = Math.Sqrt(Math.Max(cand.Area, host.Area) /
                                                Math.Max(1, host.Samples.Length));
                     double thr = Math.Max(jointWidth, 1.6 * spacing);
+
+                    if (snap.RoughMode)
+                    {
+                        // TRIMMED-ICP lane (2026-07-12, partial-overlap real
+                        // scans; trimmed-ICP/contact-band direction from the
+                        // research pack RQ1/RQ3). Boundary registration
+                        // assumes identical loops and cannot pose partial
+                        // mates; instead: seed poses by mating the mirrored
+                        // candidate frame at 12 in-plane spins, refine the
+                        // best seeds with TRIMMED ICP (only the closest 60%
+                        // of sample pairs vote), score by trimmed RMS +
+                        // coverage + normal opposition on the trimmed band.
+                        double candSpacing = Math.Sqrt(cand.Area /
+                            Math.Max(1, cand.Samples.Length));
+                        var hostWorld = placedWorld[host.FragIdx];
+                        if (hostWorld == null) continue;
+                        // correspondences go to the FULL host mesh: the host
+                        // facet region is unreliable on real scans (patchy
+                        // band coverage resolved through the wall to the
+                        // interior). The opposition filter inside the ICP is
+                        // what prevents glue-to-skin solutions; the host
+                        // facet only supplies the seed FRAME.
+                        var Tt = TrimmedRegister(cand, hostWorld, hostFrame,
+                            candSpacing, out double tRms, out double cov,
+                            out double tDot);
+                        double tMult = tRms / Math.Max(1e-9, candSpacing);
+                        diag.Add((tMult, cand.FragIdx, host.FragIdx));
+                        if (cov < 0.45)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject coverage {cov:F2} (rms {tMult:F2}x)");
+                            continue;
+                        }
+                        if (tRms >= acceptFloor * spacing && tRms >= jointWidth)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject rms {tMult:F2}x (cov {cov:F2})");
+                            continue;
+                        }
+                        if (tDot > -0.3)
+                        {
+                            gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM reject dot {tDot:F2} (rms {tMult:F2}x cov {cov:F2})");
+                            continue;
+                        }
+                        gateLog.Add($"frag {cand.FragIdx}->{host.FragIdx}: TRIM RANKED rms {tMult:F2}x cov {cov:F2} dot {tDot:F2}");
+                        ranked.Add((tMult, cand.FragIdx, hostIdx, Tt,
+                                    Math.Max(penTol, 3.0 * tRms)));
+                        continue;
+                    }
 
                     // BOUNDARY REGISTRATION (2026-07-11): mates carry the
                     // IDENTICAL facet boundary loop, so registering the
@@ -907,6 +962,12 @@ public sealed class FacetMatchComponent
     private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
         double userThreshold, double angleDeg, Random rng,
         out double thresholdUsed, out double fractureAreaShare)
+        => SegmentFacetsRoughness(m, fragIdx, userThreshold, angleDeg, 0.05, rng,
+            out thresholdUsed, out fractureAreaShare);
+
+    private static List<Facet> SegmentFacetsRoughness(Mesh m, int fragIdx,
+        double userThreshold, double angleDeg, double radiusFactor, Random rng,
+        out double thresholdUsed, out double fractureAreaShare)
     {
         m.FaceNormals.ComputeFaceNormals();
         int fc = m.Faces.Count;
@@ -938,9 +999,14 @@ public sealed class FacetMatchComponent
         }
 
         // per-face roughness = area-weighted normal dispersion within a
-        // SCALE-RELATIVE radius (2% of bbox diagonal), gathered by BFS over
-        // face adjacency. 0 = perfectly smooth, 1 = isotropic normals.
-        double radius = m.GetBoundingBox(true).Diagonal.Length * 0.02;
+        // SCALE-RELATIVE radius, gathered by BFS over face adjacency.
+        // 0 = perfectly smooth, 1 = isotropic normals. Radius derives from
+        // TOTAL MESH AREA, not the bbox diagonal: the bbox changes with
+        // pose, and a scrambled fragment segmented differently from its
+        // unscrambled self (measured FB 00002: chip top region 1027 -> 154
+        // after a rigid scramble).
+        double totalMeshArea = areas.Sum();
+        double radius = radiusFactor * Math.Sqrt(Math.Max(1e-12, totalMeshArea));
         double r2 = radius * radius;
         var rough = new double[fc];
         var stamp = new int[fc];
@@ -1022,34 +1088,13 @@ public sealed class FacetMatchComponent
         }
         fractureAreaShare = totArea > 1e-12 ? fracArea / totArea : 0;
 
-        // HYBRID growth (measured on Fantastic Breaks 00002): roughness
-        // alone merges the break band with other rough surfaces it touches
-        // (a mug's unglazed interior swallowed the fracture: one 6798-area
-        // blob vs the chip's 1027 -> area gate killed the true pair). Grow
-        // components over fracture-labeled faces ONLY while the SMOOTHED
-        // local normals stay coherent: the break band meets the interior at
-        // the sharp wall edge, which stops the walk there.
-        var smoothN = new Vector3d[fc];
-        for (int i = 0; i < fc; i++)
-        {
-            var n2 = normals[i];
-            if (n2.Length > 1e-12) n2.Unitize();
-            smoothN[i] = n2;
-        }
-        for (int pass = 0; pass < 3; pass++)
-        {
-            var next = new Vector3d[fc];
-            for (int i = 0; i < fc; i++)
-            {
-                var acc = smoothN[i];
-                foreach (var g in adj[i]) acc += smoothN[g];
-                if (acc.Length > 1e-12) acc.Unitize();
-                next[i] = acc;
-            }
-            smoothN = next;
-        }
-        double cosTol = Math.Cos(angleDeg * Math.PI / 180.0);
-
+        // Pure roughness components. A per-edge smoothed-normal constraint
+        // during growth was tried twice and removed twice: the dihedral per
+        // edge is RESOLUTION-DEPENDENT, so it shredded the finer-meshed
+        // chip's fracture face into hundreds of slivers (measured FB 00002:
+        // 1006-area jaccard-0.65 region -> ~150-area shreds). Superset
+        // bleeding on the host side is handled downstream by the trimmed-
+        // ICP lane instead.
         var facetId = new int[fc];
         for (int i = 0; i < fc; i++) facetId[i] = -1;
         int nFacets = 0;
@@ -1067,7 +1112,6 @@ public sealed class FacetMatchComponent
                 foreach (var g in adj[f2])
                 {
                     if (!isFracture[g] || facetId[g] >= 0) continue;
-                    if (smoothN[f2] * smoothN[g] < cosTol) continue;
                     facetId[g] = id;
                     grow.Enqueue(g);
                 }
@@ -1276,6 +1320,170 @@ public sealed class FacetMatchComponent
 
     /// <summary>Closed-form rigid transform (Horn quaternion) mapping the
     /// paired src points onto dst.</summary>
+    /// <summary>
+    /// Partial-overlap registration: mate the mirrored candidate frame to
+    /// the host frame at 12 in-plane spins, coarse-score each seed by
+    /// point-to-MESH RMS, refine the best 3 with trimmed point-to-mesh ICP.
+    /// Sample-to-sample NN was tried first and ALIASES the fracture relief
+    /// (measured FB 00002: ICP seeded AT ground truth drifted 37% of diag
+    /// at 240 samples); the continuous host mesh has no such alias.
+    /// rms/coverage/meanDot describe the TRIMMED contact band at the pose.
+    /// </summary>
+    private static Transform TrimmedRegister(Facet cand, Mesh hostWorld,
+        Plane hostFrameWorld, double candSpacing,
+        out double rms, out double coverage, out double meanDot)
+    {
+        var mirrored = new Plane(cand.Frame.Origin, cand.Frame.XAxis, -cand.Frame.YAxis);
+        const int Spins = 12;
+        var seeds = new List<(double coarse, Transform t)>(Spins);
+        for (int s = 0; s < Spins; s++)
+        {
+            double ang = s * (2 * Math.PI / Spins);
+            var tx = hostFrameWorld.XAxis * Math.Cos(ang) + hostFrameWorld.YAxis * Math.Sin(ang);
+            var ty = -hostFrameWorld.XAxis * Math.Sin(ang) + hostFrameWorld.YAxis * Math.Cos(ang);
+            var target = new Plane(hostFrameWorld.Origin, tx, ty);
+            var T0 = Transform.PlaneToPlane(mirrored, target);
+            // coarse: mean point-to-mesh distance on a sample subset
+            var moved = TransformPoints(cand.Samples, T0);
+            double sum = 0; int cnt = 0;
+            for (int i = 0; i < moved.Length; i += 4)
+            { sum += moved[i].DistanceTo(hostWorld.ClosestPoint(moved[i])); cnt++; }
+            seeds.Add((sum / Math.Max(1, cnt), T0));
+        }
+        rms = double.MaxValue; coverage = 0; meanDot = 1;
+        var best = Transform.Identity;
+        foreach (var seed in seeds.OrderBy(x => x.coarse).Take(3))
+        {
+            var T = TrimmedIcpMesh(cand.Samples, cand.SampleNormals, hostWorld,
+                seed.t, candSpacing, out double r2, out double cov2, out double dot2);
+            if (r2 < rms) { rms = r2; coverage = cov2; meanDot = dot2; best = T; }
+        }
+        return best;
+    }
+
+    /// <summary>
+    /// Trimmed point-to-MESH ICP: correspondences are closest points on the
+    /// continuous host mesh; only the closest 60% (min 24) pairs vote in
+    /// the Kabsch update, so the pose converges on the OVERLAPPING band and
+    /// the non-mated remainder cannot drag it. rms is over the trimmed set;
+    /// coverage = fraction of candidate samples within 1.5 candidate
+    /// spacings of the host surface; meanDot = mean normal opposition over
+    /// the covered samples (host normal from the hit face).
+    /// </summary>
+    private static Transform TrimmedIcpMesh(Point3d[] candS, Vector3d[] candN,
+        Mesh hostWorld, Transform T0, double candSpacing,
+        out double rms, out double coverage, out double meanDot)
+    {
+        var T = T0;
+        rms = double.MaxValue;
+        int n = candS.Length;
+        hostWorld.FaceNormals.ComputeFaceNormals();
+        var entries = new List<(double d2, Point3d src, Point3d dst)>(n);
+        for (int iter = 0; iter < 10; iter++)
+        {
+            var moved = TransformPoints(candS, T);
+            var movedNi = TransformVectors(candN, T);
+            entries.Clear();
+            for (int i = 0; i < n; i++)
+            {
+                var mp = hostWorld.ClosestMeshPoint(moved[i], 0.0);
+                if (mp == null) continue;
+                // contact is OPPOSING by physics: reject same-side pairs so
+                // the walk cannot settle on a non-mating rest of the facet
+                var hn = (Vector3d)hostWorld.FaceNormals[mp.FaceIndex];
+                if (hn.Length > 1e-12)
+                {
+                    hn.Unitize();
+                    // FRONT-SIDE filter: the sample must lie on the outward
+                    // side of the matched face. Thin shards otherwise pair
+                    // through the wall to the far surface and the update
+                    // drags the fragment through the material (measured).
+                    if ((moved[i] - mp.Point) * hn < -0.2 * candSpacing) continue;
+                    var cn = movedNi[i];
+                    if (cn.Length > 1e-12) { cn.Unitize(); if (cn * hn > -0.2) continue; }
+                }
+                entries.Add(((moved[i] - mp.Point).SquareLength, moved[i], mp.Point));
+            }
+            if (entries.Count < 24) { rms = double.MaxValue; break; }
+            entries.Sort((a, b) => a.d2.CompareTo(b.d2));
+            // trim relative to the VALID (opposing) set, not the raw sample
+            // count: with n-based trimming and ~half the samples rejected by
+            // the opposition filter, nothing was ever trimmed and the far
+            // bleed tail poisoned the objective (measured: GT scored 1.07x
+            // while a false nest scored 0.76x)
+            int keep = Math.Min(entries.Count, Math.Max(24, (int)(entries.Count * 0.6)));
+            var src = new List<Point3d>(keep);
+            var dst = new List<Point3d>(keep);
+            double sum = 0;
+            for (int k = 0; k < keep; k++)
+            {
+                src.Add(entries[k].src);
+                dst.Add(entries[k].dst);
+                sum += entries[k].d2;
+            }
+            double newRms = Math.Sqrt(sum / keep);
+            T = Transform.Multiply(RigidFromPairs(src, dst), T);
+            if (iter > 2 && Math.Abs(newRms - rms) < 1e-4 * candSpacing) { rms = newRms; break; }
+            rms = newRms;
+        }
+        // final coverage + normal opposition against the hit faces
+        hostWorld.FaceNormals.ComputeFaceNormals();
+        var movedF = TransformPoints(candS, T);
+        var movedN = TransformVectors(candN, T);
+        double covTol = 1.5 * candSpacing;
+        int close = 0; double dotSum = 0; int dotCnt = 0;
+        for (int i = 0; i < n; i++)
+        {
+            var mp = hostWorld.ClosestMeshPoint(movedF[i], covTol * 4);
+            if (mp == null) continue;
+            double d = movedF[i].DistanceTo(mp.Point);
+            if (d < covTol)
+            {
+                close++;
+                var hn = (Vector3d)hostWorld.FaceNormals[mp.FaceIndex];
+                if (hn.Length > 1e-12 && movedN[i].Length > 1e-12)
+                {
+                    hn.Unitize();
+                    var cn = movedN[i]; cn.Unitize();
+                    dotSum += cn * hn; dotCnt++;
+                }
+            }
+        }
+        coverage = (double)close / Math.Max(1, n);
+        meanDot = dotCnt > 0 ? dotSum / dotCnt : 1.0;
+        return T;
+    }
+
+    /// <summary>Compact standalone copy of a face subset (facet region).</summary>
+    private static Mesh SubMesh(Mesh m, List<int> faces)
+    {
+        var sub = new Mesh();
+        var vmap = new Dictionary<int, int>();
+        foreach (var fi in faces)
+        {
+            if (fi < 0 || fi >= m.Faces.Count) continue;
+            var face = m.Faces[fi];
+            int Map(int v)
+            {
+                if (!vmap.TryGetValue(v, out int nv))
+                {
+                    nv = sub.Vertices.Count;
+                    sub.Vertices.Add(m.Vertices[v]);
+                    vmap[v] = nv;
+                }
+                return nv;
+            }
+            if (face.IsQuad)
+                sub.Faces.AddFace(Map(face.A), Map(face.B), Map(face.C), Map(face.D));
+            else
+                sub.Faces.AddFace(Map(face.A), Map(face.B), Map(face.C));
+        }
+        if (sub.Faces.Count == 0) return null;
+        sub.Normals.ComputeNormals();
+        sub.FaceNormals.ComputeFaceNormals();
+        return sub;
+    }
+
     private static Transform RigidFromPairs(List<Point3d> src, List<Point3d> dst)
     {
         var cs = new Point3d(0, 0, 0); var cd = new Point3d(0, 0, 0);
