@@ -42,7 +42,22 @@ in Port mode runs the C# port of the PuzzleFusion++ diffusion denoiser + a geome
 above the threshold are placed at the network pose. Result: the fragments snap back into the original
 vessel form. Measured: `2 placed, 0 unplaced; pair (0,1) score 0.7068 STRONG; total residual 0`.
 
+## Deterministic reassembly example (added 2026-07-12)
+
+![Facet reassembly result](14_kintsugi_facet_reassembly.png)
+
+*`14_kintsugi_facet_reassembly.gh`: the VERIFIED deterministic loop. Synthetic Block > Fragment
+Shatter (impact Voronoi) > Fracture Roughen v4 (pair-based rough interfaces) > Scramble Fragments
+(regions ride along) > Facet Match (async, exact-correspondence regions). Left (dusty red): the
+scrambled input. Right (gold): the reassembled block. Cold-verified 5/5 fragments CORRECT at 0.0%
+pose error; sweep N=2/3/5/8 all correct, ~1 s solves. Toggles ship FALSE; run order 1-2-3 left to
+right. No external data needed.*
+
 ## Files
+- `14_kintsugi_facet_reassembly.gh` - DETERMINISTIC REASSEMBLY example (canvas above):
+  three coloured groups (Generate / Scramble / Reassemble), Fragments + Seed +
+  Scramble Seed + Explode X sliders, async Facet Match with Report panel.
+  `14_kintsugi_facet_reassembly.png` / `_result.3dm` = baked result.
 - `14_kintsugi_rims_facets_bench.gh` - RIMS + FACETS test bench (no external data).
   Shared generator (Synthetic Block -> Fragment Shatter), then two groups:
   GROUP A (gold): Fracture Roughen v4 (PAIR-BASED interface surfaces, capped) ->
