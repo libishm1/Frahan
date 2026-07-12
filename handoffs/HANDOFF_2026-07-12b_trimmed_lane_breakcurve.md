@@ -208,3 +208,27 @@ D:\code_ws\outputs6-07-12\kintsugi_n3plus\PHASE1234_findings.md.
   cycle-consistency. METHOD LESSON: build the false-pose test set from
   the OPTIMIZER'S band-slides, not hand-picked rotations, before
   trusting any cue.
+
+## SESSION E (branch experiment/interlock-phase3 @ 55537d9): PARTIAL-RIM BREAKTHROUGH
+
+Phase 3 INTERLOCK REFINEMENT overturns the session-D negative result for
+00003. At 400k host resolution + 1200-pt dense fracture sampling, the
+signed-distance STD has a SHARP minimum at the true along-band offset
+(measured 0.63, rising monotonically to 2.1 at +-8; at 100k/240-samples
+it was broad and mis-placed). InterlockRefine line-searches to that min,
+auto-correcting the band-slide. Plus: skip Soft ICP in rough mode (it
+dragged the seat 58% away) and relax the fine penetration gate.
+- FB 00003 (partial rim, PREVIOUSLY UNPLACEABLE): places at 5% under two
+  scrambles. Debris control still places nothing.
+- NOT shipped: regresses 00002 (large 2D-cap chip -> the 1D band search
+  finds spurious minima, slides -22 to a wrong seat; true pose rms 0.18x
+  gets interlock 1.65x rejected). bcov gate is resolution-dependent
+  (00002 0.44@100k -> 0.13@400k).
+- SHIPPED branch reverted to pinned (468e294): 00002 correct, 00003
+  reject, debris clean. Interlock preserved on experiment branch (pushed).
+- TO SHIP: sliver-vs-2D-cap dispatch (engage interlock only for elongated
+  fractures, keep pinned boundary ranking for caps); object-adaptive
+  interlock gate (interStd/surfaceRms, not fixed candSpacing multiple);
+  wider/edge-rejecting search; adaptive per-object resolution; 2D-offset
+  interlock for caps. Full detail: outputs/2026-07-12/kintsugi_n3plus/
+  PHASE3_interlock_findings.md. Caches fb0000{2,3}_pair_400k.3dm.
