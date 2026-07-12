@@ -68,12 +68,27 @@ scans (no false placements; the granite-debris negative control passes, ~1 s sol
 the KB-12 fix) but the chip does NOT yet place: dihedral segmentation cannot isolate the
 shallow fracture facet on a smooth household object. UPDATE (later 2026-07-12): Facet Match
 now has a ROUGHNESS MODE (inputs Rm/Rt, appended): faces classify fracture-vs-skin by local
-normal dispersion (auto Otsu threshold, report prints it). Measured on object 00002: the
-chip's fracture face is found as its largest region (jaccard 0.65 vs ground-truth contact),
-but on the mug the break band bleeds into the equally-rough unglazed interior, so the pair
-still fails the congruence gates. Remaining research item: PARTIAL-OVERLAP matching (trimmed
-scoring; see research pack RQ1/RQ3). Precision is intact in both modes (debris negative
-control places nothing).
+normal dispersion (auto Otsu threshold, report prints it).
+
+FIRST REAL-SCAN PLACEMENT ACHIEVED (2026-07-12, object 00002): the mug chip seats into the
+break end-to-end through the async component in ~11 s, 13% of chip extent from the dataset
+ground truth (correct seat with residual rock). The winning chain: true-skin second Otsu +
+2-ring-halo crack rings, escalating Otsu for bleed hosts, RANSAC congruent-triplet seeding
+on the crack-line clouds, rms*brms product ranking, opposing-FRACTION + dominant-facet
+gates. Toggle Roughness Mode ON for scanned smooth objects and watch the per-fragment
+threshold in the Report; override Rt for all-rough natural stone. Evidence capture (not
+shipped here; the dataset has no license):
+`D:\code_ws\outputs\2026-07-12\kintsugi_n3plus\fb00002_first_real_placement.png`.
+
+CURRENT BOUNDARY (honest): recall works when both mating rims are reasonably complete.
+Object 00003 (mug + a long sliver chip) does NOT place: its host rim is far more partial
+(138 crack-ring points vs the chip's 551), and while the true pose IS recoverable (3% error
+in isolation), the partial-overlap coverage needed to admit it also admits false poses that
+win the ranking. The pipeline SAFELY REJECTS it (chip left unplaced) rather than emit a
+false positive. Precision is the invariant: the granite-debris negative control and 00003
+both place NOTHING wrong. The fix that recovers the most partial rims without losing
+precision is a host-side-trimmed boundary score (documented inline in FacetMatchComponent);
+that is the next research step (partial-overlap matching, research pack RQ1/RQ3).
 
 ## Files
 - `14_kintsugi_fantastic_breaks_bench.gh` - real-scan calibration bench (section above).
