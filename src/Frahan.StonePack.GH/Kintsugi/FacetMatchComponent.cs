@@ -428,11 +428,35 @@ public sealed class FacetMatchComponent
             m2.Normals.ComputeNormals();
             return m2;
         }).ToList();
+        // INC-3 (2026-07-12): DECIMATE-FOR-SEGMENTATION. The roughness BFS
+        // measures a finer physical scale as the mesh densifies, so the
+        // fracture region degenerates (and the pass is slow / crash-prone) at
+        // high resolution. Segment + boundary-match on a ~100k copy
+        // (resolution-invariant, fast, no crash), and keep the FULL-RES mesh
+        // for the pass-2 interlock host, where the micro-relief must be full
+        // resolution to pin the along-band slide. Only when Interlock Rescue is
+        // on and the fragment is dense; otherwise seg == full (pinned).
+        var segFragments = fragments;
+        if (snap.RoughMode && snap.InterlockRescue)
+        {
+            int decimated = 0;
+            segFragments = fragments.Select(m =>
+            {
+                if (m == null || m.Faces.Count <= 130000) return m;
+                var dec = m.DuplicateMesh();
+                try { dec.Reduce(100000, true, 10, false); dec.RebuildNormals(); decimated++; }
+                catch { return m; }
+                return dec.Faces.Count > 8 ? dec : m;
+            }).ToList();
+            if (decimated > 0)
+                report.AppendLine($"Escalation: segmenting on {decimated} decimated " +
+                                  "~100k cop(y/ies); interlock uses full resolution.");
+        }
         bool useRegions = snap.Regions != null;
         for (int f = 0; f < fragments.Count; f++)
         {
             token.ThrowIfCancellationRequested();
-            var m = fragments[f];
+            var m = segFragments[f];
             if (m == null) continue;
             if (!m.IsClosed)
                 payload.Warnings.Add(
@@ -678,8 +702,13 @@ public sealed class FacetMatchComponent
                             // high, so debris still rejects. Needs a high-res
                             // host to bite; on a coarse host the std floor is
                             // high and this simply rejects (safe).
-                            var candFracSub = SubMesh(fragments[cand.FragIdx], cand.Faces);
-                            var hostFracSub = SubMesh(fragments[host.FragIdx], host.Faces);
+                            // candidate facet supplies the dense sample origins
+                            // (decimated is fine); the HOST fracture region is
+                            // remapped to FULL resolution so the interlock reads
+                            // the true micro-relief (INC-3).
+                            var candFracSub = SubMesh(segFragments[cand.FragIdx], cand.Faces);
+                            var hostDec = SubMesh(segFragments[host.FragIdx], host.Faces);
+                            var hostFracSub = MapFacetToFullRes(fragments[host.FragIdx], hostDec);
                             if (hostFracSub != null) hostFracSub.Transform(pose[host.FragIdx]);
                             var Ti = InterlockRefine(candFracSub, hostFracSub, Tt,
                                 candSpacing, out double interStd, out double slideOff);
@@ -1967,6 +1996,39 @@ public sealed class FacetMatchComponent
         { double s = StdAt(off); if (s < bestStd) { bestStd = s; bestOff = off; } }
         minStd = bestStd; slideOffset = bestOff;
         return Transform.Multiply(Transform.Translation(bandDir * bestOff), T0);
+    }
+
+    /// <summary>
+    /// INC-3 (2026-07-12): map a facet region found on a DECIMATED mesh to the
+    /// corresponding region of the FULL-RES mesh, so the interlock reads the
+    /// true micro-relief. Selects full-res faces whose centre lies within a
+    /// decimated-edge radius of any decimated-facet vertex (RTree lookup, so a
+    /// 400k host costs a fast build + a few hundred sphere searches, and the
+    /// result is bounded to the fracture region, not the whole mesh). Returns
+    /// the decimated facet unchanged when there is nothing denser to map to.
+    /// </summary>
+    private static Mesh MapFacetToFullRes(Mesh full, Mesh decFacet)
+    {
+        if (full == null || decFacet == null || decFacet.Faces.Count < 4) return decFacet;
+        if (full.Faces.Count <= decFacet.Faces.Count) return decFacet; // seg == full
+        double area = 0;
+        for (int i = 0; i < decFacet.Faces.Count; i++)
+        {
+            var f = decFacet.Faces[i];
+            Point3d a = decFacet.Vertices[f.A], b = decFacet.Vertices[f.B], c = decFacet.Vertices[f.C];
+            area += 0.5 * Vector3d.CrossProduct(b - a, c - a).Length;
+        }
+        double dist = 2.5 * Math.Sqrt(area / Math.Max(1, decFacet.Faces.Count));
+        if (dist <= 0) return decFacet;
+        var centers = new Point3d[full.Faces.Count];
+        for (int i = 0; i < full.Faces.Count; i++) centers[i] = full.Faces.GetFaceCenter(i);
+        var tree = RTree.CreateFromPointArray(centers);
+        var keep = new HashSet<int>();
+        foreach (var vtx in decFacet.Vertices)
+            tree.Search(new Sphere(new Point3d(vtx.X, vtx.Y, vtx.Z), dist),
+                        (s, e) => keep.Add(e.Id));
+        if (keep.Count < 8) return decFacet;
+        return SubMesh(full, keep.ToList());
     }
 
     /// <summary>Compact standalone copy of a face subset (facet region).</summary>
