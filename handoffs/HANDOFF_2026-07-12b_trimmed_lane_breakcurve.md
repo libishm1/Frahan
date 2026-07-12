@@ -102,3 +102,21 @@ same folder").
   TrimmedIcpMesh, TrimmedRegister, RigidFromPairs, SubMesh.
 - Deploy: build Release, copy Frahan.StonePack.gha to
   %APPDATA%\Grasshopper\Libraries, close+respawn the slot.
+
+## SESSION B CLOSE (commit 956f7a1): break-curve alignment IMPLEMENTED
+
+BoundaryPointsOf clouds + weighted break-curve pairs in the Kabsch +
+brms/bcov gates + brms ranking are LIVE in the trimmed lane. Measured on
+FB 00002: discrimination sharpened (false-seed brms 1.0-1.9x vs 0.73x
+true basin) but recall still blocked: GT-seeded walk settles 14.7 units
+(30% of chip) along the band; frame-seeded search does not reach the
+basin. Debris negative control still places nothing (2 s).
+
+NEW measured dead-end: label-based crack-line filtering of the host
+outline is VACUOUS (a region's boundary borders non-fracture faces by
+construction). The crack line needs roughness VALUES: add a SECOND,
+lower threshold in SegmentFacetsRoughness marking TRUE skin (glazed);
+host outline edges qualify only when the outside face is below it.
+Resume exactly there, plus the 100k-face decimation lever (relief was
+mostly destroyed at 25k; Reduce normalizeSize:true; ~4-6 min for the
+2.48M-face scan - cache the result like fb00002_pair_scaled.3dm).
