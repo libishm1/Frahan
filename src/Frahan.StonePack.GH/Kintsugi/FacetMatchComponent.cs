@@ -1666,7 +1666,10 @@ public sealed class FacetMatchComponent
         if (candB.Length >= 8 && hostB.Length >= 8)
         {
             var movedB = TransformPoints(candB, T);
+            double covTolB2 = 1.5 * candSpacing * (1.5 * candSpacing);
+            // candidate -> host nearest distances (drive the trimmed brms)
             var bd2 = new List<double>(movedB.Length);
+            int candCovered = 0;
             foreach (var p in movedB)
             {
                 double bd = double.MaxValue;
@@ -1676,14 +1679,26 @@ public sealed class FacetMatchComponent
                     if (d2 < bd) bd = d2;
                 }
                 bd2.Add(bd);
+                if (bd < covTolB2) candCovered++;
             }
             bd2.Sort();
             int bKeep = Math.Max(8, (int)(bd2.Count * 0.7));
             double sumB = 0;
             for (int k = 0; k < bKeep && k < bd2.Count; k++) sumB += bd2[k];
             bRms = Math.Sqrt(sumB / Math.Min(bKeep, bd2.Count));
-            double covTolB = 1.5 * candSpacing;
-            bCov = (double)bd2.Count(d2 => d2 < covTolB * covTolB) / bd2.Count;
+            // NOTE (FB 00003, honest boundary 2026-07-12): a very PARTIAL
+            // host rim (mug 138 pts vs chip's complete 551) makes candidate-
+            // side coverage cap at ~0.29 even at the TRUE 3%-error pose.
+            // Measuring coverage relative to the smaller ring (max of both
+            // directions) DID let the true pose pass the gate -- but it also
+            // admitted false partial-overlap poses that then WON the rms*brms
+            // ranking (measured: 00003 placed at 56% error, a false
+            // positive). Kept candidate-side only: precision (zero false
+            // placements: debris control + 00003 safe-reject) outranks
+            // recall on the most partial rims. Distinguishing true from
+            // false partial seats needs a host-side-trimmed boundary score,
+            // not a looser coverage gate -- next work.
+            bCov = (double)candCovered / movedB.Length;
         }
         // final coverage + OPPOSING FRACTION against the hit faces. The
         // covered set at a TRUE seat mixes the opposing fracture band with
