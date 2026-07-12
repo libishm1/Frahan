@@ -178,3 +178,33 @@ FIRST REAL-SCAN PLACEMENT achieved and shipped (00002); real-scan recall
 generalizes when both rims are reasonably complete, safely rejects (no
 false positives) when a rim is very partial. Precision is the invariant
 throughout. Two example canvases live in examples/14_kintsugi/.
+
+## SESSION D: Phases 1-4 IMPLEMENTED + TESTED -> definitive negative result
+
+Implemented and live-tested the research-synthesis phases against the FB
+00003 partial-rim gap. Full detail + numbers:
+D:\code_ws\outputs6-07-12\kintsugi_n3plus\PHASE1234_findings.md.
+- Phase 1 (host-side boundary score + spread + ratio): regressed 00002
+  (band-slid false pose matches true-pose host metrics). Reverted.
+- Phase 2 (skin-normal continuity): measured, sign was inverted (mating
+  skins ANTI-align, true -0.29 vs false >-0.15); as a per-seed mate
+  filter it still admitted a band-slid false pose. Reverted.
+- Phase 4 (fracture overlap + relief cross-correlation): direct measure
+  looked decisive (true coverage 1.0 corr -0.22 vs false 0.09-0.21 corr
+  +0.29..+0.97) but INTEGRATED it still went wrong, because the real
+  competitor is a BAND-SLIDE (translation along the rough band) that
+  keeps fracture coverage HIGH (0.82). Reverted.
+- ROOT CAUSE (definitive): the fracture band is self-similar under
+  translation along its length; no surface metric pins the along-band
+  position. Only the crack RING pins it, and only a COMPLETE ring
+  suffices (00002 places, 00003's 138-pt partial ring does not). The
+  pinned pipeline correctly REJECTS 00003 rather than place it wrong.
+- SHIPPED STATE UNCHANGED and re-verified: 00002 CORRECT (13%), 00003
+  safe-reject, debris zero false placements. Component byte-identical to
+  468e294. Tag kintsugi-first-real-placement intact.
+- REAL next levers (out of deterministic scope): native-resolution
+  relief near the crack band (adaptive decimation - the highest-value
+  untested experiment); a learned pose prior (GARF-style); or N>=3
+  cycle-consistency. METHOD LESSON: build the false-pose test set from
+  the OPTIMIZER'S band-slides, not hand-picked rotations, before
+  trusting any cue.
