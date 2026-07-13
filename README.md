@@ -78,3 +78,6 @@ masonry/quarry decision. Test battery (2026-06-14): 1034 PASS / 0 FAIL / 147 SKI
 Every kept algorithm has a measured benchmark, a math derivation (SLM tier), a statistics review (PRISMA),
 and an interdisciplinary synthesis (ROSES). Example: the 2D nester crosses the 80% stock-utilization bar at
 0 overlap with holes; the studies are in `wiki/research/`.
+
+## Contact
+Questions, a collaboration, or a walkthrough of the plugin? **[Book a meeting](https://calendly.com/libish-1234/30min)** (Calendly).
