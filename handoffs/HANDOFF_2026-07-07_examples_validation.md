@@ -94,6 +94,11 @@ done.
 
 ## Tracking
 
+**Image recapture flags (2026-07-07 full sweep — see Image-quality audit below):**
+examples with ≥1 BAD image needing recapture during their HITL turn: **04, 07, 09,
+10 (flagship), 13, 15, 17, 21, 27, 30, 32, 34, 42, 43, 44, 48, 49 (flagship),
+vault**. Cleanest (leave alone): 25, 40, 41, 23, 35-figures, 08-packs.
+
 | # | example | .gh | img | README | status |
 |---|---|---|---|---|---|
 | 01 | quarry_to_wall | 1 | 0 | no | needs README+img+validate |
@@ -152,31 +157,156 @@ done.
 ### Proposed new example — 52_mayan_corbel_vault (block-mode vault, corbelled)
 
 Libish's proposal 2026-07-07. A Mayan (corbelled) vault: triangular section
-with a truncated top (capstone course) and two flat gable ends — structurally
-NOT a true arch: cantilevered staggered courses, stability = COM-over-support
-/ overturning, the exact regime the RBE/COM checkers validate. Composes from
-EXISTING components, no new code:
+with a truncated top (capstone course) and two flat gable ends. Structurally it
+is NOT a true arch — cantilevered courses stepping inward.
 
-1. Solid: trapezoidal-section prism (base width B, height H, top width T,
-   length L; e.g. B=3.0, T=0.6, H=2.4, L=4.0 m) — two inclined faces at the
-   classic ~steep corbel angle, two flat ends. Native GH box/loft or a small
-   internalized Brep->Mesh.
-2. `Staggered Block Decompose` (Form=the solid mesh, Course Height ~0.25,
-   Block Length ~0.6, Stagger 0.5, Up=Z) -> running-bond cells; corbelling
-   emerges automatically because the section narrows with height.
-3. Cell meshes -> assembly -> `Masonry Stability (RBE)` (K=8 inscribed, ground
-   course fixed) -> verdict + per-interface utilization; expect stable at
-   modest corbel angle, UNSTABLE when the user steepens the overhang — the
-   didactic knob.
-4. Colour by course index (= build order output), bake, capture.
-5. README: corbel-vs-arch mechanics note (Maya/tholos precedent), the
-   overhang-ratio rule of thumb, numeric sanity row (max tension <= gate,
-   utilization < 1, per-course cantilever ratio).
+**MODELLING CORRECTION (Libish, 2026-07-07): Maya vaults are MORTARED, not dry-
+stacked.** They are a battered facing of dressed stones over a thick core of
+lime-mortar-and-rubble (a near-monolithic cementitious hearting). Stability in
+reality comes from BOTH the massive wall/overburden mass counterweighting each
+cantilever AND the mortar's tensile/shear bond. Frahan's stability model is
+strictly **no-tension frictional** (Heyman/CRA): friction cone anchored at
+`f_n >= 0`, tension penalized to zero, and there is NO cohesion / tensile-bond
+parameter and NO surcharge term (verified in code 2026-07-07:
+`FrictionConeBuilder`, `RbeQpFormulation` lowerBounds). So the checker as
+shipped models the DRY-STONE idealisation only. Three honest ways to represent
+the mortared vault:
+
+- **Path A — dry-stone conservative bound (works today, no code).** Model the
+  full massive walls + overburden and run the existing RBE. A STABLE verdict is
+  a true lower bound: it stands from geometry + self-weight alone, mortar only
+  adds margin. A steep/thin corbel that historically stood ONLY because of
+  mortar will read UNSTABLE — honest ("would not stand un-mortared"), but not
+  the historical mechanism. Frame the example as "stable without relying on
+  mortar."
+- **Path B — add interface cohesion (Mohr-Coulomb), the true mortared model.**
+  Extend the cone to `|f_t| <= c*A + mu*f_n` with a tension cutoff
+  `f_n >= -sigma_t*A` (bond tensile strength). This is the correct
+  cementitious/lime-mortar model and unlocks a whole CLASS (mortared rubble
+  walls, Roman concrete), not just this vault. It changes the validated RBE
+  solver -> HITL-gated + re-validation + parameter calibration (lime-mortar
+  bond ~0.1-0.5 MPa). Opus-tier. When it lands, THIS example gains a "with
+  mortar" toggle: steeper corbels that fail dry-stone become feasible — a
+  before/after teaching moment.
+- **Path C — monolithic-core approximation (works today, geometry trick).**
+  Represent the mortared core as a few large blocks so the interfaces sit in
+  compression and the no-tension model does not spuriously fail. Approximates
+  the mortar's binding via geometry.
+
+Recommendation: **build on Path A now** (honest, ships without touching the
+solver), and log Path B (cohesion) as a real feature. Do NOT present the
+example as dry-stone corbelling if the README shows lime mortar — state the
+model is a conservative no-tension bound and mortar adds margin.
+
+Composition (Path A):
+1. Solid: trapezoidal-section prism (base B, height H, top T, length L; e.g.
+   B=3.0, T=0.6, H=2.4, L=4.0 m) with the FULL wall thickness (mass = the
+   counterweight), two inclined faces, two flat gable ends.
+2. `Staggered Block Decompose` (Course Height ~0.25, Block Length ~0.6,
+   Stagger 0.5, Up=Z) -> running-bond cells; corbelling emerges as the section
+   narrows with height.
+3. Cells -> assembly -> `Masonry Stability (RBE)` (K=8 inscribed, ground course
+   fixed) -> verdict + per-interface utilization.
+4. Colour by course index (= build order), bake, capture.
+5. README: corbel-vs-arch note (Maya precedent, and that it is MORTARED),
+   the no-tension-conservative caveat, overhang-ratio rule of thumb, numeric
+   sanity row.
 
 Numeric-sanity acceptance: RBE verdict present + stable at the reference
-geometry; flipping corbel angle past the documented threshold flips the
-verdict (shows the checker actually computes).
+geometry with full wall mass; steepening the corbel past the documented
+threshold flips the verdict (shows the checker computes). README explicitly
+states mortar is not modelled (conservative).
 
+
+## Image-quality audit (2026-07-07) — FULL SWEEP, recapture register
+
+Swept ALL 125 example images (8 parallel subagents against a fixed rubric +
+main-loop verification of a cross-tag sample of 8 BADs — every agent verdict
+held). No blank / 0-byte / low-res files (all >=720px). The problem is framing,
+not code. **Totals: 65 GOOD, 31 BAD, 29 BORDERLINE.** Recapture the 31 BAD (and,
+budget permitting, the 29 BORDERLINE) during the HITL pass. Backend note: the
+reconstruction native stack is HEALTHY (DLLs bundled, all Phase H/I entry points
+exported, `ReconstructionCleanup` wired at `ScanReconstructComponent.cs:315`) —
+the bad reconstruction images are STALE captures, not broken output.
+
+### Systemic root causes (fix once, applies broadly)
+1. **Edge-on / low camera** hiding 3D structure — 04, 17, 34, 49, guell barrel.
+2. **Deadspace**: tiny subject in a huge gray/white void — 42, 48, 30/32 clouds,
+   15 detail, 27_06/09.
+3. **Wireframe instead of shaded** (README says "shaded"), noisy fan-triangulation
+   slivers — 16, 18, 21_arch, 22, 15_exploded.
+4. **Thin diagonal-band demonstrator layout** — 15A/B/C, 19, 20.
+5. **Loose/gappy result** underselling the feature — 10 (flagship), 43, 27_10,
+   27_06_canvas.
+6. **Pillowy/inflated block material** — 27_10_portal, 27_10_castle_keep.
+Capture standard for every recapture: zoom-extents (subject fills frame, nothing
+clipped), 3/4 (not edge-on) view, SHADED not wireframe, colour-by-metric, no
+large dead areas.
+
+### Special-handling flags (not just a reframe)
+- **STALE (code already fixed):** `07_scan_to_mesh.png` — pre-cleanup slivers;
+  re-run produces a clean mesh.
+- **DEPRECATED viz:** `15B_rubble_match_scaled.png` — old AABB proxy with red
+  spikes; drop it or re-render the current matcher.
+- **CONTRADICTS README (fix image or text):** `09_uncertainty_3d` (README says
+  "rendered 3D result", is a wireframe tangle) · `12_trencadis_result` (~90 shards
+  vs README 28/28) · `27_07_voronoi_3d_pyref` (title 100-stone vs 50 cells) ·
+  `39_concave_nest_hero` (5 vs README 6/6; input panel shows 3) · `44_nbo_to_robot`
+  (README promises TCP triads + approach vectors + magenta base; image shows a bare
+  pile).
+- **ORPHANED (not referenced by any README — prune or wire in):** the six 27_06 /
+  27_07_lambda / 27_09 / 27_10 experimental cards · `32_scan_to_blocks.png`
+  (folder namesake, README uses 32_dfn_bench) · `guell_barrel_452_stable.jpg`
+  (vault, README uses whole_shell_cra_barrel) · `03_gpr_radargram_AU.png`.
+
+### BAD (31) — recapture required
+| example | image | issue | fix |
+|---|---|---|---|
+| 04 | 04_lidar_las_cloud.png | camera/deadspace | 3/4 orbit, zoom-fit, colour by height |
+| 04 | 04_packable_volume.png | camera | orbit off edge-on, Clean Scan Mesh to peel cap slivers |
+| 07 | 07_scan_to_mesh.png | stale/artifacts | re-run (cleanup fixed), zoom-fit 3/4 |
+| 09 | uncertainty_safe_yield_3d.png | mismatch | re-render shaded blocks by per-zone yield |
+| 10 | 10_pack2d_result.png | loose (FLAGSHIP) | right-size the sheet, top-view, no floaters |
+| 13 | 13_surface_trencadis.png | artifacts | shade, retriangulate fan cap, drop stray panel |
+| 15 | 15_step2_blocks_exploded.png | artifacts (hero) | shaded solids, clean caps, tighter 3/4 |
+| 15 | 15_step2_block_detail.png | deadspace | zoom block to ~65% frame, shade, label face vs cut |
+| 15 | 15A_evolvedfit.png | deadspace | crop to a few pairs, 3/4, fill frame |
+| 15 | 15B_multibin_pack.png | deadspace | zoom to a couple bins, 3/4 |
+| 15 | 15B_rubble_match_scaled.png | deprecated | drop or re-render current matcher |
+| 15 | 15C_multibin_pack.png | deadspace | zoom to representative bins, 3/4 |
+| 17 | 17_ashlar_wall.png | deadspace | zoom to fill, front-3/4, remove stray origin stone |
+| 21 | 21_stone_to_voussoir.png | artifacts | re-trim to one clean voussoir, centre before/after |
+| 27 | 27_06_wall_generator_stability.png | deadspace/orphan | fix or drop (README holds card 06) |
+| 27 | 27_06_doublecurved_stability.png | loose/orphan | opaque shade, zoom; or drop |
+| 27 | 27_06_canvas_native.png | loose/orphan | close wall gaps, fill frame; or drop |
+| 27 | 27_07_stone_match_lambda.png | deadspace/orphan | zoom the 3 panels, front-on; or drop |
+| 27 | 27_09_ifc_export.png | deadspace/orphan | centre+zoom, colour by metric; or drop |
+| 27 | 27_10_portal_closeup.png | loose/orphan | tighten joints, opaque stone; or drop |
+| 30 | 30_discontinuity_sets.png | deadspace | centre cloud, use matplotlib stereonet inset |
+| 30 | segmentation_tongjiang_AB.png | deadspace | zoom cluster, drop outlier specks |
+| 30 | segmentation_tongjiang_XB.png | deadspace | zoom/centre, crop empty top |
+| 32 | 32_scan_to_blocks.png | deadspace/orphan | recompose one scene; or drop (not in README) |
+| 34 | marble_oblique_hero.jpg | deadspace | opaque size-colour, zoom, expose bed tilt |
+| 42 | hero.png | deadspace | zoom to fill, dark fills, close input↔result gap |
+| 43 | hero.jpg | loose | settle first, frame both straight+curved walls |
+| 44 | hero.jpg | mismatch | zoom on triads + approach vectors + base, scale up |
+| 48 | hero.png | deadspace | bring input+result together, zoom to fill |
+| 49 | hero.jpg | cutoff (FLAGSHIP) | 3/4, all 8 blocks + order labels, nothing clipped |
+| vault | figures/guell_barrel_452_stable.jpg | camera/orphan | 3/4 fill, colour by stability + cert; or drop |
+
+### BORDERLINE (29) — improve if the HITL pass has budget
+03_gpr_radargram_AU · 07_photogrammetry_ingest · 08_gpr_radargram_marble ·
+08f_flat_guillotine · 11_pack3d_result · 12_trencadis_result(mismatch) ·
+14_kintsugi_result · 16_rubble_wall(+stray stone) · 18_settle_bullet ·
+19_evolved_fit · 20_multibin · 21_rubble_arch · 22_pendentive_vault ·
+24_stage3_crossZ_allcuts · 25_0_bench_fractures · 29_classify_irregular ·
+31_discontinuity_ingest · 27_04_wall_with_holes · 27_07_voronoi_3d_pyref(mismatch) ·
+27_10_castle_keep · 27_10_castle_canvas · 30_segmentation_granite_dells ·
+30_segmentation_rockalign · 35_quarry_fab_tail_hero · 35_quarry_fab_facemap ·
+37_cladding_facade_hero(labels overlap) · 39_concave_nest_hero(mismatch) ·
+40_gprsoft_validation · 40_andesite_pipeline_canvas.
+
+### Cleanest folders (leave alone): 25, 40, 41, 23, 35(figures), 08(packs).
 
 ## After validation
 
