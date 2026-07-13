@@ -20,6 +20,12 @@ scratchpad/example_audit.txt (regenerate with the harness below).
 
 ## The 11 with errors, categorized + prioritized
 
+P1 - FIXED 2026-07-13 (commit f51b8de, pushed to main). Chose option (a):
+added GprPresets.TryResolve (named-key first, else parse the constructed
+string) and pointed the component at it. All 5 examples re-audited live in
+Rhino 8: 1 error -> 0. Named keys + garbage-rejection preserved. Original
+report below for provenance.
+
 P1 - REAL BUG: GPR preset mismatch (5 examples, one fix)
 - 03_gpr_fracture_granite/granite_160_AU.gh, .../granite_160_VE.gh
 - 08_gpr_marble/marble_600_grid1.gh, grid2.gh, grid3.gh
