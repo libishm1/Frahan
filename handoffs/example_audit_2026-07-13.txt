@@ -1,0 +1,76 @@
+PASS	01_quarry_to_wall\01_quarry_to_wall.gh	comps=12	err=0	warn=0	
+PASS	02_masonry_assembly\02_masonry_assembly_color_order.gh	comps=17	err=0	warn=0	
+ERR 	03_gpr_fracture_granite\granite_160_AU.gh	comps=10	err=1	warn=0	GPR Fracture Extract: Unknown preset 'custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)'. Have: marble_600, granite_160, granite_25, granite_50, granite_100, granite_150, granite_1200, travertine_390, andesite_390, limestone_200
+ERR 	03_gpr_fracture_granite\granite_160_VE.gh	comps=10	err=1	warn=0	GPR Fracture Extract: Unknown preset 'custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)'. Have: marble_600, granite_160, granite_25, granite_50, granite_100, granite_150, granite_1200, travertine_390, andesite_390, limestone_200
+PASS	03_quarry_to_slabs\03_quarry_to_slabs_full.gh	comps=13	err=0	warn=0	
+ERR 	04_scan_to_bench_engineer\04_scan_to_bench.gh	comps=15	err=1	warn=0	Bench From Mesh: A valid Mesh input is required.
+ERR 	04_scan_to_bench_engineer\11_granite_scan_to_bench.gh	comps=37	err=9	warn=2	Estimate Cloud Normals: Need >= 3 points (wire Points or Cloud). | Scan Reconstruct: Need at least 4 points (wire Points or Cloud). | Bench From Mesh: A valid Mesh input is required. | Mesh Remesh (Geogram): Provide a Mesh or a File Path.
+PASS	05_artist_pointing_machine\06_carving_stages.gh	comps=12	err=0	warn=0	
+ERR 	05_artist_pointing_machine\stone_carving_simulation_LIGHT.gh	comps=34	err=5	warn=5	Carving Stages: Invalid or missing Target mesh. | Enlarge Sculpture: Invalid or missing mesh. | Fit In Block: Invalid sculpture mesh. | Mesh Remesh (Geogram): Provide a Mesh or a File Path.
+PASS	07_scan_ingest_full\07_scan_ingest_full.gh	comps=34	err=0	warn=3	
+ERR 	08_gpr_marble\marble_600_grid1.gh	comps=10	err=1	warn=0	GPR Fracture Extract: Unknown preset 'custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)'. Have: marble_600, granite_160, granite_25, granite_50, granite_100, granite_150, granite_1200, travertine_390, andesite_390, limestone_200
+ERR 	08_gpr_marble\marble_600_grid2.gh	comps=10	err=1	warn=0	GPR Fracture Extract: Unknown preset 'custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)'. Have: marble_600, granite_160, granite_25, granite_50, granite_100, granite_150, granite_1200, travertine_390, andesite_390, limestone_200
+ERR 	08_gpr_marble\marble_600_grid3.gh	comps=10	err=1	warn=0	GPR Fracture Extract: Unknown preset 'custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)'. Have: marble_600, granite_160, granite_25, granite_50, granite_100, granite_150, granite_1200, travertine_390, andesite_390, limestone_200
+PASS	09_uncertainty_safe_yield\uncertainty_safe_yield.gh	comps=10	err=0	warn=0	
+PASS	10_pack2d\10_pack2d_nfp_nest.gh	comps=13	err=0	warn=0	
+PASS	11_pack3d\11_pack3d_block_pack.gh	comps=23	err=0	warn=0	
+PASS	12_trencadis\12_trencadis_catalog.gh	comps=14	err=0	warn=0	
+PASS	13_surface_mapping\13_surface_segment.gh	comps=8	err=0	warn=0	
+PASS	14_kintsugi\14_kintsugi_bb_parity.gh	comps=5	err=0	warn=0	
+PASS	14_kintsugi\14_kintsugi_escalation_rescue.gh	comps=7	err=0	warn=3	
+PASS	14_kintsugi\14_kintsugi_facet_reassembly.gh	comps=22	err=0	warn=0	
+PASS	14_kintsugi\14_kintsugi_fantastic_breaks_bench.gh	comps=26	err=0	warn=0	
+PASS	14_kintsugi\14_kintsugi_rims_facets_bench.gh	comps=20	err=0	warn=3	
+PASS	14_kintsugi\14_kintsugi_synthetic.gh	comps=19	err=0	warn=0	
+PASS	15_statue_to_blocks\15C_coacd_demo.gh	comps=7	err=0	warn=0	
+PASS	16_rubble_masonry\16_rubble_wall.gh	comps=2	err=0	warn=0	
+PASS	17_ashlar_masonry\17_ashlar_wall.gh	comps=7	err=0	warn=0	
+PASS	18_pack_settle_bullet\18_pack_settle_bullet.gh	comps=5	err=0	warn=0	
+PASS	19_rubble_evolved_fit_demo\19_rubble_evolved_fit.gh	comps=4	err=0	warn=0	
+PASS	20_rubble_multibin_demo\20_rubble_multibin.gh	comps=4	err=0	warn=0	
+PASS	26_loviisa_surface_fractures\26_loviisa_vector_load.gh	comps=10	err=0	warn=0	
+PASS	27_polygonal_masonry\27_01_three_band_wall.gh	comps=6	err=0	warn=0	
+PASS	27_polygonal_masonry\27_02_twelve_angled.gh	comps=6	err=0	warn=0	
+PASS	27_polygonal_masonry\27_03_chains_wall.gh	comps=6	err=0	warn=0	
+PASS	27_polygonal_masonry\27_04_wall_with_holes.gh	comps=7	err=0	warn=0	
+PASS	27_polygonal_masonry\27_05_wavy_perlin.gh	comps=6	err=0	warn=0	
+PASS	27_polygonal_masonry\27_06_wall_generator_stability.gh	comps=15	err=0	warn=0	
+PASS	27_polygonal_masonry\27_07_stone_match_lambda.gh	comps=22	err=0	warn=0	
+PASS	27_polygonal_masonry\27_07_voronoi_3d.gh	comps=5	err=0	warn=0	
+ERR 	27_polygonal_masonry\27_08_negative_cases.gh	comps=8	err=1	warn=0	Polygonal Masonry Sequence: chain 0 is not monotone in x or y
+PASS	27_polygonal_masonry\27_09_ifc_export.gh	comps=11	err=0	warn=0	
+PASS	27_polygonal_masonry\27_10_castle_keep.gh	comps=38	err=0	warn=0	
+PASS	28_hole_nest\28_hole_nest_demo.gh	comps=4	err=0	warn=0	
+PASS	29_liveedge_floor\29_liveedge_floor.gh	comps=2	err=0	warn=6	
+PASS	30_discontinuity_sets\30_discontinuity_sets.gh	comps=13	err=0	warn=2	
+PASS	31_discontinuity_ingest\31_discontinuity_ingest.gh	comps=13	err=0	warn=0	
+ERR 	32_scan_to_blocks\32_scan_to_blocks.gh	comps=22	err=1	warn=2	Joint Sets to DFN: No usable joint sets (need spacing>0).
+PASS	33_gpr_marble_guillotine\marble_guillotine_hero.gh	comps=25	err=0	warn=0	
+PASS	34_gpr_marble_oblique\marble_oblique_hero.gh	comps=18	err=0	warn=0	
+PASS	35_gpr_quarry_full_workflow\quarry_full_workflow_fab_tail.gh	comps=45	err=0	warn=0	
+PASS	35_gpr_quarry_full_workflow\quarry_full_workflow.gh	comps=13	err=0	warn=0	
+PASS	36_fractured_block_to_slabs\fractured_block_to_slabs.gh	comps=7	err=0	warn=0	
+PASS	37_block_to_cladding_facade\block_to_cladding_panels.gh	comps=4	err=0	warn=0	
+PASS	38_surface_discretize_tiles\panel_tile_surface.gh	comps=8	err=0	warn=0	
+PASS	39_concave_nest\concave_nest.gh	comps=6	err=0	warn=0	
+PASS	40_travertine_crosslithology\andesite_pipeline.gh	comps=18	err=0	warn=0	
+PASS	40_travertine_crosslithology\travertine_pack.gh	comps=3	err=0	warn=0	
+PASS	40_travertine_crosslithology\travertine_pipeline.gh	comps=18	err=0	warn=0	
+PASS	41_floor_tiling\41_floor_tiling.gh	comps=3	err=0	warn=0	
+PASS	42_wholeside_reassembly\wholeside_reassembly.gh	comps=4	err=0	warn=0	
+PASS	43_nbo_dry_stone_wall\nbo_dry_stone_wall.gh	comps=3	err=0	warn=0	
+PASS	44_nbo_to_robot\nbo_to_robot.gh	comps=4	err=0	warn=0	
+PASS	45_cut_and_fill_excavation\cut_and_fill.gh	comps=3	err=0	warn=0	
+PASS	46_kinematic_intensity_screen\kinematic_intensity_screen.gh	comps=9	err=0	warn=0	
+PASS	47_fabrication_handoff\fabrication_handoff.gh	comps=6	err=0	warn=0	
+PASS	48_block_matching_3d\block_matching_3d.gh	comps=9	err=0	warn=0	
+PASS	49_extraction_order_plan\extraction_order_plan.gh	comps=5	err=0	warn=0	
+PASS	50_castle_keep_ifc\castle_keep.gh	comps=38	err=0	warn=0	
+PASS	vault_generation\fabrication_schedule_v001.gh	comps=3	err=0	warn=0	
+PASS	vault_generation\guell_formfind_v001.gh	comps=8	err=0	warn=0	
+PASS	vault_generation\guell_quadrubble_v002.gh	comps=21	err=0	warn=3	
+PASS	vault_generation\guell_quadstructure_v001.gh	comps=5	err=0	warn=0	
+PASS	vault_generation\three_prong_formfind_v001.gh	comps=9	err=0	warn=0	
+PASS	vault_generation\three_prong_quadrubble_v001.gh	comps=21	err=0	warn=3	
+ERR 	vault_generation\three_prong_staggered_cra_v002.gh	comps=12	err=1	warn=0	Vault Shell CRA: Shell mesh is missing or too small.
+PASS	vault_generation\trim_shell_by_curves_v001.gh	comps=2	err=0	warn=0	
