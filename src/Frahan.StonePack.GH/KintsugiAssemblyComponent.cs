@@ -1525,11 +1525,25 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
             if (haveNorm && !isAnchor)
             {
                 var nf = np[f];
-                Transform tNormF = Transform.Multiply(
-                    Transform.Scale(Point3d.Origin, 1.0 / nf.MaxAbs),
-                    Transform.Translation(-nf.Cx, -nf.Cy, -nf.Cz));
-                portTransforms.Add(Transform.Multiply(tUnnormAnchor,
-                                                       Transform.Multiply(tNetwork, tNormF)));
+                // PARITY FIX (2026-07-13, P1): un-normalize each fragment by its
+                // OWN scale, not the anchor's. The reference (dataset.py:212)
+                // normalizes AND un-normalizes each fragment by its own
+                // part_scale, so the net scale is 1 (scale-preserving). The old
+                // composition used anchor.MaxAbs for every fragment, enlarging a
+                // non-anchor fragment by anchorScale/fragScale (measured up to
+                // 33x on real BB, the FB chip 1.77x). Keep the ORIGINAL
+                // translation (anchor centroid + anchor-scaled network trans, the
+                // frame that worked on same-scale synthetic) and drop ONLY the
+                // scale distortion: rotate + recenter the real-size fragment.
+                Transform rot = tNetwork;
+                rot.M03 = 0.0; rot.M13 = 0.0; rot.M23 = 0.0;   // rotation only
+                Transform recenterF = Transform.Translation(-nf.Cx, -nf.Cy, -nf.Cz);
+                Transform place = Transform.Translation(
+                    anchor.Cx + anchor.MaxAbs * trans[0],
+                    anchor.Cy + anchor.MaxAbs * trans[1],
+                    anchor.Cz + anchor.MaxAbs * trans[2]);
+                portTransforms.Add(Transform.Multiply(place,
+                                                       Transform.Multiply(rot, recenterF)));
             }
             else
             {
