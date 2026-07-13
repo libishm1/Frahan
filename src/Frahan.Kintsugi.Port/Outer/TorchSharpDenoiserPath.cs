@@ -65,6 +65,22 @@ public sealed class TorchSharpDenoiserPath : IDisposable
                                    int outChannels = 7)
     {
         if (reader == null) throw new ArgumentNullException(nameof(reader));
+        // Version guard: in Rhino 8 (CoreCLR) the default AssemblyLoadContext is
+        // first-loader-wins by simple name, so another plugin (e.g. LunchBox's ML
+        // pack, which ships TorchSharp 0.101.5) can load an OLDER TorchSharp first
+        // and shadow ours (0.105.0). Our 0.105.0-compiled calls would then throw a
+        // cryptic MissingMethodException (e.g. Tensor.to(Device,bool,bool,bool)).
+        // Detect it up front and throw a CLEAR, actionable message; the caller
+        // (KintsugiPortInference) catches and falls back to the faithful manual
+        // C# denoiser, which is now bit-exact to the reference.
+        var _tsVer = typeof(torch).Assembly.GetName().Version;
+        if (_tsVer != null && _tsVer < new Version(0, 105, 0, 0))
+            throw new InvalidOperationException(
+                $"TorchSharp {_tsVer} is already loaded by another plugin (e.g. LunchBox); " +
+                "Frahan needs >= 0.105.0. The exact libtorch denoiser is unavailable in this " +
+                "session; using the faithful manual C# denoiser (bit-exact to the reference). " +
+                "To enable the exact path, disable that plugin's ML components so Frahan's " +
+                "TorchSharp 0.105.0 loads first.");
         _D = embedDim; _H = numHeads; _NumLayers = numLayers;
         _L = numPoint; _NumDim = numDim;
         _Multires = multires; _OutCh = outChannels;
