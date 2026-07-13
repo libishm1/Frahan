@@ -328,8 +328,13 @@ public sealed class TorchSharpDenoiserPath : IDisposable
         var scores = q.matmul(k.transpose(-2, -1)) * scale;  // [B, H, M, M]
         if (attendMask is not null)
         {
-            // Match diffusers convention: scores += mask (broadcast over H).
-            scores = scores + attendMask.unsqueeze(1);
+            // HARD mask (SDPA bool-mask semantics): torch 2.x diffusers uses
+            // AttnProcessor2_0 -> F.scaled_dot_product_attention, whose bool
+            // attn_mask blocks False positions with -inf, NOT a +1 soft bias.
+            // (Soft bias let cross-fragment attention leak; verified the manual
+            // path went from 11.66% off to EXACT after this fix.)
+            var mExpanded = attendMask.unsqueeze(1);  // broadcast over heads
+            scores = scores.masked_fill(mExpanded.eq(0.0f), -1e9);
         }
         var probs = nn.functional.softmax(scores, -1);
         var attn = probs.matmul(v);  // [B, H, M, headDim]

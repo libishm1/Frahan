@@ -122,18 +122,18 @@ public sealed class MultiHeadAttention
                     scores[i * M + j] = s * scale;
                 }
             }
-            // 2a'. Apply attention mask if provided. Matches the diffusers
-            // 0.21.4 Attention.get_attention_scores convention: the mask
-            // is ADDED to attention_scores BEFORE softmax (baddbmm with
-            // beta=1). PuzzleFusion++ passes boolean masks where
-            // True=1.0 and False=0.0, so True positions get a +1 bias
-            // and False positions are unchanged. (This is a SOFT bias,
-            // not a hard -inf mask -- treating it as -inf was suppressing
-            // the legitimate attention weights too much.)
+            // 2a'. Apply attention mask (HARD). The reference runs on torch 2.x,
+            // so diffusers uses AttnProcessor2_0 -> F.scaled_dot_product_attention
+            // with a BOOL attn_mask, whose semantics are: True = attend,
+            // False = -inf (fully blocked). PuzzleFusion++ passes bool masks
+            // (self_mask block-diagonal, gen_mask key-validity). So mask==0 must
+            // become -inf, NOT a soft +1 bias. The prior +1-bias code let
+            // cross-fragment self-attention leak, diverging from the reference
+            // (isolated: after-self_attn 11.66% off with +1 bias).
             if (attendMask != null)
             {
                 for (int idx = 0; idx < M * M; idx++)
-                    scores[idx] += attendMask[idx];
+                    if (attendMask[idx] <= 0.5f) scores[idx] = -1e9f;
             }
             // 2b. Softmax along last axis (each row).
             Activations.SoftmaxRowwise(scores, M, M);

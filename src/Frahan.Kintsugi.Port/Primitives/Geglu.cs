@@ -63,13 +63,24 @@ public static class Geglu
             {
                 float val = proj[srcOff + c];
                 float gate = proj[srcOff + Dout + c];
-                // GeLU(gate) -- using the same tanh-approx Activations.Gelu uses.
-                float g3 = gate * gate * gate;
-                float t = 0.7978845608f * (gate + 0.044715f * g3);
-                float gelu = 0.5f * gate * (1.0f + (float)Math.Tanh(t));
+                // GeLU(gate) -- EXACT erf form. diffusers GEGLU uses F.gelu(gate)
+                // with approximate='none' (erf), NOT the tanh approximation. The
+                // tanh approx (prior code) diverged from the reference denoiser.
+                float gelu = 0.5f * gate * (1.0f + Erf(gate * 0.70710678f)); // /sqrt(2)
                 output[dstOff + c] = val * gelu;
             }
         }
         return output;
+    }
+
+    /// <summary>Exact error function (Abramowitz-Stegun 7.1.26, ~1e-7).</summary>
+    private static float Erf(float x)
+    {
+        float sign = x < 0 ? -1f : 1f;
+        float ax = Math.Abs(x);
+        float t = 1f / (1f + 0.3275911f * ax);
+        float y = 1f - (((((1.061405429f * t - 1.453152027f) * t) + 1.421413741f) * t
+                        - 0.284496736f) * t + 0.254829592f) * t * (float)Math.Exp(-ax * ax);
+        return sign * y;
     }
 }

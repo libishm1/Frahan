@@ -154,7 +154,8 @@ public sealed class KintsugiPortInference
         float[][] pointClouds, int N, float[] partScale = null,
         int anchorIndex = 0, int seed = 42,
         Action<int, int, string> progress = null,
-        CancellationToken cancel = default)
+        CancellationToken cancel = default,
+        float[] anchorPose = null)
     {
         int F = pointClouds.Length;
         int NMax = _denoiserCfg.MaxLen;          // 20
@@ -167,8 +168,13 @@ public sealed class KintsugiPortInference
         var noisyPoses = new float[NMax * 7];
         for (int i = 0; i < NMax * 7; i++) noisyPoses[i] = NextGaussian(rng);
 
-        // ---- Anchor: ref part has identity pose: trans=0, quat=(1,0,0,0).
-        var refPose = new float[7] { 0f, 0f, 0f, 1f, 0f, 0f, 0f };
+        // ---- Anchor: ref part is pinned to a fixed pose every step. Default =
+        // identity (trans=0, quat=(1,0,0,0)). The reference (auto_aggl.py:103-106)
+        // pins the anchor at its GROUND-TRUTH pose instead; anchorPose lets a
+        // parity harness match that convention (the model is trained GT-pinned).
+        var refPose = (anchorPose != null && anchorPose.Length >= 7)
+            ? new float[7] { anchorPose[0], anchorPose[1], anchorPose[2], anchorPose[3], anchorPose[4], anchorPose[5], anchorPose[6] }
+            : new float[7] { 0f, 0f, 0f, 1f, 0f, 0f, 0f };
         Array.Copy(refPose, 0, noisyPoses, anchorIndex * 7, 7);
 
         var partValids = new float[NMax];
