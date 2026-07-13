@@ -174,9 +174,13 @@ public sealed class GprFractureExtractComponent : FrahanComponentBase
         if (!System.IO.File.Exists(file))
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "File not found: " + file); return; }
 
-        if (!GprPresets.TryGet(presetKey, out var preset))
+        // Accept either a named preset key (marble_600, ...) OR a constructed-
+        // preset string (e.g. from Construct GPR Preset wired as text:
+        // "custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)").
+        if (!GprPresets.TryResolve(presetKey, out var preset))
         { AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
-            $"Unknown preset '{presetKey}'. Have: {string.Join(", ", GprPresets.Keys)}"); return; }
+            $"Unknown preset '{presetKey}'. Have: {string.Join(", ", GprPresets.Keys)} " +
+            "(or a constructed-preset string with v=.. m/ns, .. MHz, eps_r=..)."); return; }
         if (!preset.IsEmpirical)
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
                 $"Preset '{presetKey}' is literature-default (not yet tuned on real data); verify the velocity.");

@@ -193,6 +193,58 @@ public static class GprPresets
 
     public static bool TryGet(string key, out GprPreset p) => Map.TryGetValue(key ?? "", out p);
 
+    /// <summary>
+    /// Resolve a preset from a spec string. First tries a named preset key
+    /// (marble_600, granite_160, ...). If that fails, tries to parse a
+    /// CONSTRUCTED-preset string of the form produced by GprPresetGoo.ToString(),
+    /// e.g. "custom - 600 MHz (constructed) (v=0.1 m/ns, 600 MHz, eps_r=9)". A
+    /// constructed preset wired into a text Preset input arrives as this string;
+    /// this recovers velocity / frequency / eps_r and rebuilds an ad-hoc preset
+    /// with the standard constructed gate defaults (marble_600 family), so a user's
+    /// custom preset works anywhere a named preset does. Returns false only when
+    /// the spec is neither a known key nor a parseable constructed string.
+    /// </summary>
+    public static bool TryResolve(string spec, out GprPreset preset)
+    {
+        preset = null;
+        if (string.IsNullOrWhiteSpace(spec)) return false;
+        if (Map.TryGetValue(spec.Trim(), out preset)) return true;
+
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        var mV = System.Text.RegularExpressions.Regex.Match(spec, @"v\s*=\s*([-+0-9.eE]+)\s*m\s*/\s*ns");
+        var mF = System.Text.RegularExpressions.Regex.Match(spec, @"([0-9]+(?:\.[0-9]+)?)\s*MHz");
+        var mE = System.Text.RegularExpressions.Regex.Match(spec, @"eps_?r\s*=\s*([-+0-9.eE]+)");
+        if (!mV.Success && !mF.Success && !mE.Success) return false; // not a constructed spec
+
+        double v   = mV.Success ? double.Parse(mV.Groups[1].Value, ci) : 0.0;
+        double eps = mE.Success ? double.Parse(mE.Groups[1].Value, ci) : 0.0;
+        int freq   = mF.Success ? (int)System.Math.Round(double.Parse(mF.Groups[1].Value, ci)) : 600;
+        // Velocity is the leverage value; derive whichever of v / eps_r is absent
+        // via v = c/sqrt(eps_r) with c ~ 0.2998 m/ns.
+        if (v <= 0 && eps > 0) v = 0.2998 / System.Math.Sqrt(eps);
+        if (eps <= 0 && v > 0) eps = System.Math.Pow(0.2998 / v, 2);
+        if (v <= 0) { v = 0.10; eps = 9.0; }
+
+        string stone = "custom";
+        int dash = spec.IndexOf(" - ", StringComparison.Ordinal);
+        if (dash > 0 && dash <= 40) stone = spec.Substring(0, dash).Trim();
+
+        preset = new GprPreset
+        {
+            Key = stone.ToLowerInvariant(),
+            Label = stone + " - " + freq + " MHz (constructed)",
+            Stone = stone, FrequencyMhz = freq, EpsR = eps, VelocityMNsPerNs = v,
+            IsEmpirical = false,
+            DewowFraction = 1.0 / 30, TimeZeroMuteFraction = 0.05, TPowerGainExponent = 1.6,
+            AgcFraction = 1.0 / 25, Migrate = true, DepthEqualize = true, EqualizeWindow = 31,
+            EnergyQuantile = 0.985, ContinuityWindowTraces = 27, MinContinuitySupport = 9,
+            DepthBandHalfSamples = 2,
+            Note = "Parsed from a constructed-preset string; gates use the marble_600 " +
+                   "constructed defaults. Verify velocity against a known reflector depth.",
+        };
+        return true;
+    }
+
     public static IEnumerable<string> Keys => Map.Keys;
     public static IEnumerable<GprPreset> All => Map.Values;
 }
