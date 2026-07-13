@@ -32,6 +32,11 @@ wiki/
   (`eps_geo = max(floor, 1e-3·L)`, kept under a third of kerf).
 - [`stereotomy_voussoir_from_rubble.md`](research/stereotomy_voussoir_from_rubble.md)
   — cutting voussoirs from irregular rubble stock.
+- [`kintsugi_port_parity.md`](research/kintsugi_port_parity.md) — the learned
+  reassembler (PuzzleFusion++ Port): the denoiser attention-mask parity fix that
+  made the transformer bit-exact, the in-distribution reassembly result, and the
+  honest scope (deterministic solver stays primary; learned Port is
+  research-only, in-distribution).
 - [`research/packing/`](research/packing/SYNTHESIS_2D.md) — the 2D/3D packing
   study series: synthesis reports (2D, 3D, beyond-BLF), the pack-study
   reports with utilization/validity tables, the masonry-vs-quarry decision
