@@ -14,7 +14,7 @@ public sealed class StonePackPlugin : PlugIn
 
     protected override LoadReturnCode OnLoad(ref string errorMessage)
     {
-        MasonrySolverRegistry.EnsureDefaultSolver();
+        MasonrySolverRegistry.UseOsqpIfAvailable();
         return base.OnLoad(ref errorMessage);
     }
 }
