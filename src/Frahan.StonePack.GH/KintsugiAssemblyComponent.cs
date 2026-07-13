@@ -539,6 +539,20 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
                     }
                 }
 
+                // PARITY FIX (2026-07-13, P0): the reference anchor (ref_part)
+                // is the LARGEST fragment (max part_scale), not index 0. And the
+                // denoiser scale conditioning takes each fragment's own
+                // part_scale (== NormParams.MaxAbs). Build both here so the
+                // inference and the composition below agree on one anchor.
+                var partScale = new float[F];
+                int portAnchorIndex = 0;
+                float maxScale = -1f;
+                for (int f = 0; f < F; f++)
+                {
+                    partScale[f] = norms[f].MaxAbs;
+                    if (partScale[f] > maxScale) { maxScale = partScale[f]; portAnchorIndex = f; }
+                }
+
                 var fragmentsCopy = new List<Mesh>(F);
                 foreach (var m in fragments) fragmentsCopy.Add(m.DuplicateMesh());
 
@@ -589,7 +603,7 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
                         var inference = new Frahan.Kintsugi.Port.Outer.KintsugiPortInference(
                             reader, numInferenceSteps: steps, useTorchSharpDenoiser: useTorchSharpCapture);
                         var asm = inference.RunAssembly(clouds, Nsamp,
-                            anchorIndex: 0, seed: 42,
+                            partScale: partScale, anchorIndex: portAnchorIndex, seed: 42,
                             progress: (cur, total, label) =>
                             {
                                 _portProgress = label;
@@ -1452,13 +1466,26 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         //   T_norm(f)        = scale(1/MaxAbs_f) * translate(-Centroid_f)
         //   T_unnorm(anchor) = translate(+Centroid_0) * scale(MaxAbs_0)
         //
-        // For f=0: T_network is identity and T_unnorm * T_norm collapses to
-        // identity -- the anchor stays at its original document position.
-        // For f>0: the fragment is brought to its own normalised frame,
-        // placed by the network, then lifted into the anchor's world frame.
+        // For the anchor fragment: T_network is identity and T_unnorm * T_norm
+        // collapses to identity -- the anchor stays at its original document
+        // position. For every other fragment: it is brought to its own
+        // normalised frame, placed by the network, then lifted into the
+        // anchor's world frame. The anchor is the LARGEST fragment (below),
+        // not index 0.
         var np = result.NormParamsSnapshot;
         bool haveNorm = np != null && np.Length >= F;
-        var anchor = haveNorm ? np[0] : default;
+        // PARITY FIX (2026-07-13, P0): anchor = LARGEST fragment (max part_scale
+        // == MaxAbs), matching the reference ref_part and the anchorIndex fed to
+        // RunAssembly. Recomputed here from the same NormParams snapshot so the
+        // composition and the inference agree on which fragment is the anchor.
+        int anchorIndex = 0;
+        if (haveNorm)
+        {
+            float maxAbs = -1f;
+            for (int f = 0; f < F; f++)
+                if (np[f].MaxAbs > maxAbs) { maxAbs = np[f].MaxAbs; anchorIndex = f; }
+        }
+        var anchor = haveNorm ? np[anchorIndex] : default;
         Transform tUnnormAnchor = haveNorm
             ? Transform.Multiply(
                 Transform.Translation(anchor.Cx, anchor.Cy, anchor.Cz),
@@ -1504,11 +1531,11 @@ public sealed class KintsugiAssemblyComponent : FrahanComponentBase
         var portUnplacedIdx = new List<int>();
         for (int f = 0; f < F; f++)
         {
-            // Anchor (f=0): always at identity per orchestrator.
+            // Anchor (largest fragment): always at identity per orchestrator.
             // Others: verifier-gated. Weak fragments stay at INPUT world
             // position (identity) and join Unplaced; for BB GT-aligned data
             // this preserves their canonical positions.
-            bool isAnchor = (f == 0);
+            bool isAnchor = (f == anchorIndex);
             bool accept = isAnchor || confidence[f] >= VerifierAcceptThreshold;
 
             if (!accept)

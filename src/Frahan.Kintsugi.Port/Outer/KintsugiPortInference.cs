@@ -151,7 +151,8 @@ public sealed class KintsugiPortInference
     /// <param name="cancel">Cancellation token. Inference checks at each diffusion step
     ///   and after each fragment encode; throws OperationCanceledException on cancel.</param>
     public AssemblyResult RunAssembly(
-        float[][] pointClouds, int N, int anchorIndex = 0, int seed = 42,
+        float[][] pointClouds, int N, float[] partScale = null,
+        int anchorIndex = 0, int seed = 42,
         Action<int, int, string> progress = null,
         CancellationToken cancel = default)
     {
@@ -173,7 +174,18 @@ public sealed class KintsugiPortInference
         var partValids = new float[NMax];
         var scale = new float[NMax];
         var refPart = new int[NMax];
-        for (int f = 0; f < F; f++) { partValids[f] = 1f; scale[f] = 1f; }
+        for (int f = 0; f < F; f++)
+        {
+            partValids[f] = 1f;
+            // PARITY FIX (2026-07-13): scale conditioning. Feed the denoiser
+            // each fragment's TRUE part_scale (max-abs extent, dataset.py:212 ==
+            // NormaliseInPlace.MaxAbs), not a constant 1. The denoiser embeds
+            // this scalar (denoiser_transformer._gen_cond, NeRF scale_embedding)
+            // and was trained on real per-fragment scales; a constant 1 is
+            // out-of-distribution. Null partScale => legacy behaviour (1).
+            scale[f] = (partScale != null && f < partScale.Length && partScale[f] > 1e-12f)
+                ? partScale[f] : 1f;
+        }
         refPart[anchorIndex] = 1;
 
         // ---- Pre-allocate the per-step latent + xyz tensors.
