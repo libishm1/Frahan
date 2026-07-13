@@ -84,4 +84,48 @@ public static class MasonrySolverRegistry
         if (Default == null) Default = new ManagedQpSolver();
         return Default.Name;
     }
+
+    /// <summary>
+    /// Probe for the native OSQP binding (frahan_osqp.dll) and install
+    /// <see cref="OsqpQpSolver"/> as the default when available.
+    ///
+    /// Priority ladder (first available wins):
+    ///   1. OsqpQpSolver   — native OSQP (~10-50× faster than ADMM for walls > 50 interfaces)
+    ///   2. AdmmQpSolver   — pure-managed ADMM fallback (always available)
+    ///
+    /// ManagedQpSolver (Dykstra) is no longer in the ladder: it diverges on
+    /// mixed-scale masonry RBE systems.  AdmmQpSolver is the reliable managed
+    /// fallback.
+    ///
+    /// Returns the name of the solver that was registered.
+    /// </summary>
+    public static string UseOsqpIfAvailable()
+    {
+        if (Default != null) return Default.Name;
+
+        if (OsqpQpSolver.IsAvailable)
+        {
+            Default = new OsqpQpSolver();
+            return Default.Name;
+        }
+
+        // Fallback: robust managed ADMM (pure C#, no native deps).
+        Default = new AdmmQpSolver();
+        return Default.Name;
+    }
+
+    /// <summary>
+    /// Returns a human-readable string describing the current default solver
+    /// and its source (native vs managed), for use in GH component messages.
+    /// </summary>
+    public static string SolverDescription()
+    {
+        if (Default is OsqpQpSolver)
+            return "OSQP native (frahan_osqp v" + OsqpQpSolver.NativeVersion + ")";
+        if (Default is AdmmQpSolver)
+            return "ADMM managed (pure C# fallback — build native/osqp_shim for 10-50x speedup)";
+        if (Default is ManagedQpSolver)
+            return "Dykstra managed (legacy — prefer AdmmQpSolver or OSQP)";
+        return Default != null ? Default.Name : "(no solver)";
+    }
 }
