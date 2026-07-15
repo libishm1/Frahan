@@ -136,6 +136,50 @@ public static class GprPresets
             EnergyQuantile = 0.985, ContinuityWindowTraces = 41, MinContinuitySupport = 12, DepthBandHalfSamples = 2,
             Note = "Porsani 2006 Dix RMS v=0.117 m/ns (eps_r~6.6); detailed on fresh granite to ~15 m; lambda/4 ~0.29 m.",
         });
+        // --- INDIAN granite (Maheswari 2013, CSIR-NGRI, Hyderabad). The ONLY CMP-measured
+        // velocity we have for Indian granite, and the closest analogue on disk to a Tamil
+        // Nadu charnockite / granite-gneiss bench (same Archaean peninsular terrain).
+        // Use these for Krishnagiri work IN PREFERENCE to granite_100 (Brazil): Porsani's
+        // v=0.117 would UNDERESTIMATE depth here by ~11% (depth = v*t/2).
+        // Maheswari, K.; Senthil Kumar, P.; Mysaiah, D.; Ratnamala, K.; Sri Hari Rao, M.;
+        // Seshunarayana, T. (2013) "Ground Penetrating Radar for Groundwater Exploration in
+        // Granitic Terrains: A Case Study from Hyderabad", J. Geol. Soc. India 81, 781-790.
+        // Verbatim: "We used 100 MHz and 400 MHz GPR systems manufactured by M/S GSSI, USA";
+        // "For 100 MHz data, the mode of acquisition was bistatic ... offset was 1 m, whereas
+        // the 400 MHz data were obtained in the monostatic mode"; "After processing the CMP
+        // data, velocity analysis was performed and the results showed a mean velocity value
+        // of 0.13 m/ns"; "up to a depth of ~35 m for 100 MHz and ~6 m for 400 MHz".
+        // CAVEAT: their site is a WEATHERED, groundwater-SATURATED lineament. A dry fresh
+        // quarry bench is LESS lossy, so those depths are a conservative floor, and the true
+        // bench velocity may run slightly higher still. ALWAYS override with an on-site
+        // CMP/WARR. IsEmpirical=false: the velocity is paper-measured but we hold none of
+        // their raw data, and the filter windows are inherited/extrapolated, not tuned by us.
+        Add(new GprPreset
+        {
+            Key = "granite_100_india", Label = "Granite (India) - 100 MHz deep (Maheswari CMP v=0.13)",
+            Stone = "granite", FrequencyMhz = 100, EpsR = 5.3, VelocityMNsPerNs = 0.13, IsEmpirical = false,
+            DewowFraction = 1.0 / 30, TimeZeroMuteFraction = 0.09, TPowerGainExponent = 2.1,
+            AgcFraction = 1.0 / 25, Migrate = true, DepthEqualize = true, EqualizeWindow = 43,
+            EnergyQuantile = 0.985, ContinuityWindowTraces = 41, MinContinuitySupport = 12, DepthBandHalfSamples = 2,
+            Note = "Maheswari 2013 CMP-measured v=0.13 m/ns in Hyderabad granite (eps_r=(c/v)^2~5.3); " +
+                   "GSSI 100 MHz BISTATIC, 1 m offset; reached ~35 m on a weathered/saturated site, so a " +
+                   "dry fresh bench is a conservative floor; lambda/4 ~0.33 m. Deep channel for Indian " +
+                   "granite. Windows inherited from granite_100 (same frequency); only v/eps_r are Indian.",
+        });
+        Add(new GprPreset
+        {
+            Key = "granite_400_india", Label = "Granite (India) - 400 MHz shallow (Maheswari CMP v=0.13)",
+            Stone = "granite", FrequencyMhz = 400, EpsR = 5.3, VelocityMNsPerNs = 0.13, IsEmpirical = false,
+            DewowFraction = 1.0 / 30, TimeZeroMuteFraction = 0.062, TPowerGainExponent = 1.73,
+            AgcFraction = 1.0 / 25, Migrate = true, DepthEqualize = true, EqualizeWindow = 35,
+            EnergyQuantile = 0.985, ContinuityWindowTraces = 41, MinContinuitySupport = 12, DepthBandHalfSamples = 2,
+            Note = "Maheswari 2013 GSSI 400 MHz MONOSTATIC, same site/CMP velocity 0.13 m/ns; reached ~6 m; " +
+                   "lambda/4 ~0.08 m. Shallow channel for Indian granite. Mute/t-gain/equalize log-interpolated " +
+                   "between granite_150 and granite_1200 at 400 MHz (0.062/1.73/35) and sanity-checked to sit " +
+                   "between granite_150 and marble_600. Continuity stays at the granite 41-trace (~1 m) gate, " +
+                   "NOT marble's 27. NOTE: 400 MHz cannot do CMP monostatically -- pair it with the bistatic " +
+                   "100 MHz for velocity, as Maheswari did.",
+        });
         Add(new GprPreset
         {
             Key = "granite_150", Label = "Granite - 150 MHz (Isakova Karelia OKO-2)",
