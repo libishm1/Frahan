@@ -127,15 +127,17 @@ static void pca(const std::vector<V3>&P,const std::vector<int>&idx,V3&nrm,double
 // ---- minimal binary-LE PLY reader (float x/y/z) ----
 static bool readPLY(const char*path,std::vector<V3>&out){
     FILE*f=fopen(path,"rb"); if(!f)return false;
-    std::string hdr; char ch; long nv=0; int stride=0,xo=-1,yo=-1,zo=-1; std::string line;
+    std::string hdr; char ch; long nv=0; int stride=0,xo=-1,yo=-1,zo=-1,xs=4,ys=4,zs=4; std::string line;
     auto tsize=[&](const std::string&t)->int{ if(t=="char"||t=="uchar"||t=="int8"||t=="uint8")return 1; if(t=="short"||t=="ushort"||t=="int16"||t=="uint16")return 2; if(t=="int"||t=="uint"||t=="int32"||t=="uint32"||t=="float"||t=="float32")return 4; if(t=="double"||t=="float64")return 8; return 4; };
     while(fread(&ch,1,1,f)==1){ if(ch=='\n'){ if(line.rfind("element vertex",0)==0) nv=atol(line.c_str()+15);
-            else if(line.rfind("property",0)==0){ char tp[64],nm[64]; if(sscanf(line.c_str(),"property %63s %63s",tp,nm)==2){ int sz=tsize(tp); if(!strcmp(nm,"x"))xo=stride; else if(!strcmp(nm,"y"))yo=stride; else if(!strcmp(nm,"z"))zo=stride; stride+=sz; } }
+            else if(line.rfind("property",0)==0){ char tp[64],nm[64]; if(sscanf(line.c_str(),"property %63s %63s",tp,nm)==2){ int sz=tsize(tp); if(!strcmp(nm,"x")){xo=stride;xs=sz;} else if(!strcmp(nm,"y")){yo=stride;ys=sz;} else if(!strcmp(nm,"z")){zo=stride;zs=sz;} stride+=sz; } }
             else if(line=="end_header") break; line.clear(); } else if(ch!='\r') line+=ch; }
     if(xo<0||yo<0||zo<0||nv<=0){ fclose(f); return false; }
     std::vector<char> buf(stride);
     out.reserve(nv);
-    for(long i=0;i<nv;i++){ if(fread(buf.data(),1,stride,f)!=(size_t)stride) break; float x,y,z; memcpy(&x,buf.data()+xo,4);memcpy(&y,buf.data()+yo,4);memcpy(&z,buf.data()+zo,4); out.push_back({x,y,z}); }
+    // read one coord honouring its declared TYPE SIZE: 8-byte double (cast) or the 4-byte float path.
+    auto rd=[&](int off,int sz)->double{ if(sz==8){ double d; memcpy(&d,buf.data()+off,8); return d; } float g; memcpy(&g,buf.data()+off,4); return g; };
+    for(long i=0;i<nv;i++){ if(fread(buf.data(),1,stride,f)!=(size_t)stride) break; out.push_back({rd(xo,xs),rd(yo,ys),rd(zo,zs)}); }
     fclose(f); return true;
 }
 static void writeSegPLY(const char*path,const std::vector<V3>&P,const std::vector<unsigned char>&rgb,V3 origin){
