@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Rhino-free console parity harness for the fracture-following STAGED GUILLOTINE
+    packer (P2 pattern). Source-links exactly ONE production file
+    (StagedGuillotinePacker.cs) from Frahan.StonePack.Core and references NOTHING
+    Rhino / NuGet, so it builds and runs headless with only the .NET SDK. This
+    proves the port is Rhino-free (the same technique web/engine/Frahan.Nest2D uses
+    to prove the 2D nester is framework-portable).
+
+    net9.0: the source-linked file is net48-written managed code, which net9
+    compiles as a superset. Targeting net9 means CI needs only the base SDK (no
+    net48 targeting pack, no RhinoCommon, no package restore).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Frahan.GuillotineParity</AssemblyName>
+    <RootNamespace>Frahan.GuillotineParity</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- source-link exactly the packer file (Rhino-free) from Core -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Frahan.StonePack.Core\Masonry\Quarry\GeoPack\StagedGuillotinePacker.cs"
+             Link="StagedGuillotinePacker.cs" />
+  </ItemGroup>
+
+</Project>
