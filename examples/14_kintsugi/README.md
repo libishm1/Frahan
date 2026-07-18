@@ -90,7 +90,27 @@ both place NOTHING wrong. The fix that recovers the most partial rims without lo
 precision is a host-side-trimmed boundary score (documented inline in FacetMatchComponent);
 that is the next research step (partial-overlap matching, research pack RQ1/RQ3).
 
+## Escalation rescue on a real break (added 2026-07-18)
+
+`14_kintsugi_escalation_rescue.gh` is the INTERLOCK-RESCUE canvas: Facet Match with the
+second-pass rescue toggle exposed. Wire fragments into **F** (nothing is internalized; use the
+synthetic Fragment Shatter chain or real scans) and toggle Run + Interlock Rescue.
+
+![Fantastic Breaks 00002: mug + gold repair chip](14_kintsugi_escalation_rescue.png)
+
+Run on record (Fantastic Breaks 00002, mug + rim chip, big piece decimated to 25k faces):
+segmentation finds the fracture facets on both pieces; the matcher's TOP candidate is the
+true pose (sample RMS 0.50x the density floor at coverage 0.64) but the bilateral-coverage
+gate rejects it (bcov 0.00 - a small chip covers only a sliver of the mug's fracture face),
+and the rescue pass then rejects its candidate on the interlock metric (3.43 >= 0.55).
+Verdict: **1/2 placed, zero false placements** - the same one-sided partial-overlap
+limitation documented for the bench above (host-side-trimmed boundary score is the queued
+fix). The image shows the dataset's aligned ground-truth pose: chip (gold) seated in the
+mug (ceramic), facet outlines in blue.
+
 ## Files
+- `14_kintsugi_escalation_rescue.gh` - interlock-rescue canvas (section above);
+  `14_kintsugi_escalation_rescue.png` = real-break run artifact.
 - `14_kintsugi_fantastic_breaks_bench.gh` - real-scan calibration bench (section above).
 - `14_kintsugi_facet_reassembly.gh` - DETERMINISTIC REASSEMBLY example (canvas above):
   three coloured groups (Generate / Scramble / Reassemble), Fragments + Seed +
