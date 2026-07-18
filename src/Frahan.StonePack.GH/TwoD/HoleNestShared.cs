@@ -173,6 +173,17 @@ public static class HoleNestShared
         if (partHolesTree != null && !partHolesTree.IsEmpty)
         {
             holesByPartIndex = new Dictionary<int, List<GH_Curve>>();
+            // COINCIDENT-PART TIE BREAK (2026-07-18): identical part outlines
+            // stacked at the same coordinates (internalized demos, quantity
+            // workflows) all "contain" the same hole with the same area. A
+            // strict smallest-wins routed EVERY duplicate hole curve to the
+            // first such part, giving it N coincident holes while its twins
+            // got none — downstream the nester seats one filler per coincident
+            // hole at the same spot and Validate() correctly rejects the
+            // layout. Ties now spread across the tied parts, fewest-assigned
+            // first, so each twin receives its own copy of the hole.
+            var assignedHoles = new int[partCurves.Count];
+            var tied = new List<int>();
             for (int b = 0; b < partHolesTree.PathCount; b++)
             {
                 var path = partHolesTree.Paths[b];
@@ -184,20 +195,46 @@ public static class HoleNestShared
                     if (gc == null || gc.Value == null) continue;
                     var bb = gc.Value.GetBoundingBox(false);
                     var centroid = bb.Center;
+                    // FULL-containment probe (2026-07-18): centroid-only PIP
+                    // mis-routes when parts are stacked world-coincident (a
+                    // hole's centroid also lies inside SMALLER parts sitting
+                    // at the same spot, e.g. internalized demo fixtures, and
+                    // "smallest containing" then hands the hole to a part it
+                    // does not even fit inside). A part is a candidate only if
+                    // it contains the hole's centroid AND all 8 curve samples.
+                    var probes = new List<Point3d> { centroid };
+                    var hc2 = gc.Value;
+                    var dom = hc2.Domain;
+                    for (int s = 0; s < 8; s++)
+                        probes.Add(hc2.PointAt(dom.ParameterAt((s + 0.5) / 8.0)));
                     int bestPart = -1; double bestArea = double.MaxValue;
+                    tied.Clear();
                     for (int pi2 = 0; pi2 < partCurves.Count; pi2++)
                     {
                         var pc = partCurves[pi2];
                         if (pc == null || !pc.IsClosed) continue;
                         var plane = new Plane(new Point3d(0, 0, centroid.Z), Vector3d.ZAxis);
-                        if (pc.Contains(centroid, plane, 1e-6) != PointContainment.Inside) continue;
+                        bool allIn = true;
+                        foreach (var pt in probes)
+                            if (pc.Contains(pt, plane, 1e-6) == PointContainment.Outside) { allIn = false; break; }
+                        if (!allIn) continue;
                         var amp = AreaMassProperties.Compute(pc);
                         double area = amp != null ? amp.Area : double.MaxValue;
-                        if (area < bestArea) { bestArea = area; bestPart = pi2; }
+                        double tieTol = 1e-9 * Math.Max(1.0, Math.Min(area, bestArea));
+                        if (area < bestArea - tieTol)
+                        { bestArea = area; bestPart = pi2; tied.Clear(); tied.Add(pi2); }
+                        else if (Math.Abs(area - bestArea) <= tieTol)
+                        { tied.Add(pi2); }
+                    }
+                    if (tied.Count > 1)
+                    {
+                        foreach (var cand in tied)
+                            if (assignedHoles[cand] < assignedHoles[bestPart]) bestPart = cand;
                     }
                     int key = bestPart >= 0 ? bestPart
                         : (pathKey >= 0 && pathKey < partCurves.Count ? pathKey : -1);
                     if (key < 0) { unroutedHoles++; continue; }
+                    assignedHoles[key]++;
                     if (!holesByPartIndex.TryGetValue(key, out var list))
                     { list = new List<GH_Curve>(); holesByPartIndex[key] = list; }
                     list.Add(gc);
