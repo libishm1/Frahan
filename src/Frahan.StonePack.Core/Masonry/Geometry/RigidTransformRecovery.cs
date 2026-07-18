@@ -189,6 +189,72 @@ public static class RigidTransformRecovery
     }
 
     /// <summary>
+    /// Optimal proper rotation R (det = +1) that maximises Σ (R·aᵢ)·bᵢ given the
+    /// 3×3 correlation matrix M = Σ wᵢ aᵢ ⊗ bᵢ (M[i,j] = Σ w aᵢ bⱼ). This is the
+    /// un-centred Wahba specialisation of the Horn absolute-orientation solver
+    /// used by <see cref="Solve"/>: the SAME 4×4 N-matrix (Horn 1987 eq. 25) and
+    /// quaternion→R, with the centroid/translation step omitted because a frame
+    /// fit has no translation. Column j of the returned R is the direction that
+    /// the canonical axis aᵢ = eⱼ maps to.
+    ///
+    /// Reused by the cuboid-frame estimator
+    /// (<c>Frahan.Core.Discontinuity.CuboidFrameFit</c>). This is the exact C#
+    /// counterpart of pyfrahan.cluster._rotation_from_correlation (G12), which is
+    /// itself a transcription of g4_registration_report.horn (validated 4e-16).
+    /// </summary>
+    public static double[,] RotationFromCorrelation(double[,] m)
+    {
+        if (m == null) throw new ArgumentNullException(nameof(m));
+        if (m.GetLength(0) != 3 || m.GetLength(1) != 3)
+            throw new ArgumentException("correlation matrix must be 3x3", nameof(m));
+
+        double Sxx = m[0, 0], Sxy = m[0, 1], Sxz = m[0, 2];
+        double Syx = m[1, 0], Syy = m[1, 1], Syz = m[1, 2];
+        double Szx = m[2, 0], Szy = m[2, 1], Szz = m[2, 2];
+
+        // Build N (4x4 symmetric). Horn 1987 eq. 25 — identical to Solve.
+        var nm = new double[4, 4];
+        nm[0, 0] = Sxx + Syy + Szz;
+        nm[0, 1] = Syz - Szy; nm[1, 0] = nm[0, 1];
+        nm[0, 2] = Szx - Sxz; nm[2, 0] = nm[0, 2];
+        nm[0, 3] = Sxy - Syx; nm[3, 0] = nm[0, 3];
+        nm[1, 1] = Sxx - Syy - Szz;
+        nm[1, 2] = Sxy + Syx; nm[2, 1] = nm[1, 2];
+        nm[1, 3] = Szx + Sxz; nm[3, 1] = nm[1, 3];
+        nm[2, 2] = -Sxx + Syy - Szz;
+        nm[2, 3] = Syz + Szy; nm[3, 2] = nm[2, 3];
+        nm[3, 3] = -Sxx - Syy + Szz;
+
+        JacobiEigen4x4Symmetric(nm, out double[] eigvals, out double[,] eigvecs);
+
+        int best = 0;
+        for (int i = 1; i < 4; i++)
+            if (eigvals[i] > eigvals[best]) best = i;
+
+        double q0 = eigvecs[0, best];
+        double q1 = eigvecs[1, best];
+        double q2 = eigvecs[2, best];
+        double q3 = eigvecs[3, best];
+        double qm = Math.Sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+        if (qm < 1e-12)
+            throw new InvalidOperationException(
+                "RotationFromCorrelation produced a near-zero quaternion; correlation is degenerate.");
+        q0 /= qm; q1 /= qm; q2 /= qm; q3 /= qm;
+
+        var R = new double[3, 3];
+        R[0, 0] = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3;
+        R[0, 1] = 2.0 * (q1 * q2 - q0 * q3);
+        R[0, 2] = 2.0 * (q1 * q3 + q0 * q2);
+        R[1, 0] = 2.0 * (q1 * q2 + q0 * q3);
+        R[1, 1] = q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3;
+        R[1, 2] = 2.0 * (q2 * q3 - q0 * q1);
+        R[2, 0] = 2.0 * (q1 * q3 - q0 * q2);
+        R[2, 1] = 2.0 * (q2 * q3 + q0 * q1);
+        R[2, 2] = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3;
+        return R;
+    }
+
+    /// <summary>
     /// Cyclic Jacobi eigendecomposition for a 4x4 symmetric matrix.
     /// Returns eigenvalues on the diagonal (vals[i]) and eigenvectors
     /// as columns of vecs (vecs[row, col]).
