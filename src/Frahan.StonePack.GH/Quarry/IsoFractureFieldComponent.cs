@@ -53,6 +53,11 @@ namespace Frahan.GH;
 [Algorithm("Delta-method position uncertainty",
     "sigma_pos = sigma_F / |grad F| (floor-guarded); G13 v3 result",
     Note = "Grid central-difference |grad F|; trilinear-sampled at the isosurface verts; floor 0.2*median|grad F|.")]
+[Algorithm("Gradient cokriging polarity (route i mode)",
+    "Lajaunie, Courrioux & Manuel 1997 (Math. Geol. 29:571); Chiles & Delfiner 2012 sec. 2; Calcagno et al. 2008 (GemPy lineage)",
+    Note = "Polarity Source = 1: increments F(x_i)-F(x_ref)=0 + gradient data grad F = n_i (no manufactured " +
+           "+-h shells); analytic grad F for sigma_pos. Port of pyfrahan/krige3d_grad (G17). Needs per-pick " +
+           "normals to beat the signed mode; rejects the exponential covariance.")]
 [RelatedComponent("Frahan > Quarry > GPR Fracture Surfaces 3D",
     Reason = "Graph-surface twin: kriges a height d(x,y) per bed + the tolerance ladder. Prefer it for sub-horizontal, single-valued beds; use IsoFractureField for dipping / vertical / overhanging / stacked surfaces.",
     ComponentGuid = "A7E0B0F2-0C0F-4A16-9E3D-0FACE0FACE03")]
@@ -69,9 +74,11 @@ public sealed class IsoFractureFieldComponent
         : base("Iso Fracture Field", "IsoFrac3D",
             "Implicit (level-set) kriging of a 3D fracture SURFACE from picks. Kriges the scalar field " +
             "F(x,y,z) whose zero level-set is the surface (dip-agnostic: vertical / overhanging / stacked " +
-            "surfaces are representable, unlike a height field). +-h off-surface polarity (Carr 2001), " +
-            "clean-room marching cubes, and sigma_pos = sigma_F/|grad F| vertex colouring (green confident " +
-            "-> red uncertain). Async (Run gate). Lajaunie 1997 / Carr 2001; MC Lorensen-Cline 1987 (method).",
+            "surfaces are representable, unlike a height field). Polarity Source picks the polarity engine: " +
+            "0 = signed +-h off-surface shells (Carr 2001, route ii, default) | 1 = gradient cokriging " +
+            "(Lajaunie 1997, route i: normals as honest gradient data, analytic sigma_pos). Clean-room " +
+            "marching cubes and sigma_pos = sigma_F/|grad F| vertex colouring (green confident -> red " +
+            "uncertain). Async (Run gate). Lajaunie 1997 / Carr 2001; MC Lorensen-Cline 1987 (method).",
             "Frahan", "Quarry")
     {
     }
@@ -140,6 +147,17 @@ public sealed class IsoFractureFieldComponent
         p.AddBooleanParameter("Run", "R",
             "Set true to build the field + surface on a background thread. False = idle; the canvas never freezes.",
             GH_ParamAccess.item, false);
+        // Appended AFTER Run (2026-07-18, route-i port) so existing canvases keep their
+        // wiring; same GUID, no new component (PORT_ACCEPTANCE F5).
+        p.AddIntegerParameter("Polarity Source", "Ps",
+            "Where the field polarity comes from. 0 = SIGNED off-surface (route ii, default): Carr +-h " +
+            "manufactured shells along the Normal. 1 = GRADIENT cokriging (route i, Lajaunie 1997): " +
+            "increments F(pick)-F(ref)=0 + the Normal(s) as honest gradient data grad F = n (no manufactured " +
+            "values; analytic grad F for sigma_pos). Gradient mode beats signed only with per-pick normals " +
+            "(G17); it rejects the exponential covariance (not differentiable) and, when Range <= 0, uses the " +
+            "fixed default 0.3 * extent (the Python CV auto-fit is not ported). With Layered, layers become " +
+            "INTERFACES (per-layer isovalues) instead of alternating polarity.",
+            GH_ParamAccess.item, 0);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager p)
@@ -184,6 +202,8 @@ public sealed class IsoFractureFieldComponent
         public int LayerCount;
         public bool NormalDefaulted;
         public bool NormalMismatch;
+        public bool Gradient;        // Polarity Source: false = signed (ii), true = gradient (i)
+        public int[] InterfaceLabels; // gradient + Layered: depth-layer -> interface labels
     }
 
     // -------- result produced on the background thread (plain data only) --------
@@ -230,8 +250,17 @@ public sealed class IsoFractureFieldComponent
         bool layered = false; da.GetData(9, ref layered);
         double layerGap = -1.0; da.GetData(10, ref layerGap);
         bool shrink = false; da.GetData(11, ref shrink);
+        int polaritySource = 0; da.GetData(13, ref polaritySource);
+        bool gradient = polaritySource == 1;
 
         covIdx = Math.Max(0, Math.Min(Families.Length - 1, covIdx));
+        if (gradient && Families[covIdx] == "exponential")
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                "Gradient cokriging (Polarity Source = 1) needs a mean-square differentiable covariance: " +
+                "gaussian, matern15, or matern25. The exponential family has no derivative at 0.");
+            return false;
+        }
         latN = Math.Max(12, Math.Min(80, latN));
         if (!(hFrac > 0)) hFrac = 1.5;
         if (!(padFrac >= 0)) padFrac = 0.15;
@@ -254,6 +283,7 @@ public sealed class IsoFractureFieldComponent
             ? new[] { normalsIn[0].X, normalsIn[0].Y, normalsIn[0].Z }
             : new[] { 0.0, 0.0, 1.0 };
 
+        int[] interfaceLabels = null;
         if (layered)
         {
             if (normalsIn == null || normalsIn.Count == 0) defaulted = true;
@@ -261,10 +291,21 @@ public sealed class IsoFractureFieldComponent
             layerGap = gap;
             var coords = new double[n][];
             for (int i = 0; i < n; i++) coords[i] = new[] { px[i], py[i], pz[i] };
-            normals = PolarityNormals.LayeredPolarityNormals(coords, baseNormal, gap);
             var labels = PolarityNormals.DepthLayers(coords, baseNormal, gap);
             int mx = 0; for (int i = 0; i < labels.Length; i++) if (labels[i] > mx) mx = labels[i];
             layerCount = mx + 1;
+            if (gradient)
+            {
+                // route i: layers are INTERFACES (per-layer emergent isovalues via the
+                // increment labels); the base normal is the gradient direction for all
+                // picks -- no alternating polarity sign needed (krige3d_grad semantics).
+                normals = new[] { baseNormal };
+                interfaceLabels = labels;
+            }
+            else
+            {
+                normals = PolarityNormals.LayeredPolarityNormals(coords, baseNormal, gap);
+            }
         }
         else
         {
@@ -300,6 +341,7 @@ public sealed class IsoFractureFieldComponent
             LatN = latN, PadFrac = padFrac, Level = level,
             ShrinkWrap = shrink, Layered = layered, LayerGap = layerGap, LayerCount = layerCount,
             NormalDefaulted = defaulted, NormalMismatch = mismatch,
+            Gradient = gradient, InterfaceLabels = interfaceLabels,
         };
         return true;
     }
@@ -310,13 +352,29 @@ public sealed class IsoFractureFieldComponent
         progress($"building implicit kriging field ({n} picks)...");
         token.ThrowIfCancellationRequested();
 
-        KrigingField3D kr;
+        KrigingField3D kr = null;
+        GradientKrigingField gkr = null;
         try
         {
-            kr = new KrigingField3D(s.Px, s.Py, s.Pz, s.Normals,
-                family: s.Family, hFrac: s.HFrac, spacing: double.NaN, pointSigma: s.PointSigma,
-                range: s.Range, rangeZ: double.NaN, sill: double.NaN,
-                gradFloorFrac: 0.2, fit: s.Fit);
+            if (s.Gradient)
+            {
+                // route i: Lajaunie gradient cokriging (no manufactured +-h shells).
+                // Range <= 0 -> the fixed no-fit default 0.3*extent inside the core
+                // (the Python CV auto-fit is not ported; see the port doc).
+                var coords = new double[n][];
+                for (int i = 0; i < n; i++) coords[i] = new[] { s.Px[i], s.Py[i], s.Pz[i] };
+                gkr = new GradientKrigingField(coords, s.Normals,
+                    interfaceLabels: s.InterfaceLabels, family: s.Family,
+                    range: s.Range, pointSigma: s.PointSigma,
+                    fit: false, gradFloorFrac: 0.2);
+            }
+            else
+            {
+                kr = new KrigingField3D(s.Px, s.Py, s.Pz, s.Normals,
+                    family: s.Family, hFrac: s.HFrac, spacing: double.NaN, pointSigma: s.PointSigma,
+                    range: s.Range, rangeZ: double.NaN, sill: double.NaN,
+                    gradFloorFrac: 0.2, fit: s.Fit);
+            }
         }
         catch (Exception kex)
         {
@@ -342,7 +400,9 @@ public sealed class IsoFractureFieldComponent
 
         progress($"evaluating field on {nx} x {ny} x {nz} = {nx * ny * nz} lattice nodes...");
         token.ThrowIfCancellationRequested();
-        var (F, Sig, _, _, _) = kr.PredictLattice3d(xs, ys, zs);
+        var (F, Sig, _, _, _) = s.Gradient
+            ? gkr.PredictLattice3d(xs, ys, zs)
+            : kr.PredictLattice3d(xs, ys, zs);
 
         progress("marching cubes...");
         token.ThrowIfCancellationRequested();
@@ -356,20 +416,42 @@ public sealed class IsoFractureFieldComponent
 
         progress("gradient + sigma_pos colouring...");
         token.ThrowIfCancellationRequested();
-        // |grad F| on the lattice (central differences), median -> floor
-        double[] gradMag = GradMagLattice(F, nx, ny, nz, dx, dy, dz);
-        double medGrad = Median(gradMag);
-        double floor = kr.GradFloorFrac * medGrad;
-        if (!(floor > 0)) floor = 1e-9;
-
         int V = verts.Count;
         var sigmaPos = new double[V];
-        for (int v = 0; v < V; v++)
+        double floor;
+        if (s.Gradient)
         {
-            double[] p = verts[v];
-            double sF = Trilinear(Sig, nx, ny, nz, ox, oy, oz, dx, dy, dz, p[0], p[1], p[2]);
-            double g = Trilinear(gradMag, nx, ny, nz, ox, oy, oz, dx, dy, dz, p[0], p[1], p[2]);
-            sigmaPos[v] = sF / Math.Max(g, floor);
+            // route i: sigma_F + ANALYTIC grad F at the actual vertices (no lattice-
+            // spacing floor) -- mirrors krige3d_grad.extract_isosurface.
+            var vq = verts.ToArray();
+            var sFv = gkr.Predict(vq, withSigma: true).SigmaF;
+            var gv = gkr.GradF(vq);
+            var gm = new double[V];
+            var pos = new List<double>(V);
+            for (int v = 0; v < V; v++)
+            {
+                double g2 = gv[v][0] * gv[v][0] + gv[v][1] * gv[v][1] + gv[v][2] * gv[v][2];
+                gm[v] = Math.Sqrt(g2);
+                if (gm[v] > 0) pos.Add(gm[v]);
+            }
+            floor = Math.Max(pos.Count > 0 ? gkr.GradFloorFrac * Median(pos.ToArray()) : 0.0, 1e-9);
+            for (int v = 0; v < V; v++) sigmaPos[v] = sFv[v] / Math.Max(gm[v], floor);
+        }
+        else
+        {
+            // route ii: |grad F| on the lattice (central differences), median -> floor,
+            // trilinear-sampled at the mesh verts (the shipped G13 path).
+            double[] gradMag = GradMagLattice(F, nx, ny, nz, dx, dy, dz);
+            double medGrad = Median(gradMag);
+            floor = kr.GradFloorFrac * medGrad;
+            if (!(floor > 0)) floor = 1e-9;
+            for (int v = 0; v < V; v++)
+            {
+                double[] p = verts[v];
+                double sF = Trilinear(Sig, nx, ny, nz, ox, oy, oz, dx, dy, dz, p[0], p[1], p[2]);
+                double g = Trilinear(gradMag, nx, ny, nz, ox, oy, oz, dx, dy, dz, p[0], p[1], p[2]);
+                sigmaPos[v] = sF / Math.Max(g, floor);
+            }
         }
 
         // robust colour scale [p5, p95] of the vertex sigma_pos, green(low)->red(high)
@@ -396,22 +478,52 @@ public sealed class IsoFractureFieldComponent
         warn.Add("Deep reflectors imaged as one surface may be MULTIPLE sub-parallel structures; the surface " +
                  "is the imaged extent, not a proven single fracture. Use Layered for a stacked-reflector split.");
         if (s.Layered)
-            warn.Add($"Layered polarity: {s.LayerCount} reflector layer(s) along the base normal " +
-                     $"(gap = {s.LayerGap:0.###}).");
+            warn.Add(s.Gradient
+                ? $"Layered interfaces (gradient mode): {s.LayerCount} reflector layer(s) = {s.LayerCount} " +
+                  $"interface(s) along the base normal (gap = {s.LayerGap:0.###}); F=0 is interface 0, other " +
+                  "interfaces sit at their emergent isovalues (see Diagnostics; extract via Level)."
+                : $"Layered polarity: {s.LayerCount} reflector layer(s) along the base normal " +
+                  $"(gap = {s.LayerGap:0.###}).");
+        if (s.Gradient && s.Fit)
+            warn.Add("Gradient mode with Range unset: fixed default range 0.3 * pick extent (the Python CV " +
+                     "auto-fit is not ported, route i). Wire an explicit Range to control smoothness.");
+        if (s.Gradient && !s.Layered && s.Normals.Length == 1)
+            warn.Add("Gradient mode with ONE broadcast normal: the exact gradient constraint over-planarises " +
+                     "rough surfaces (G17 honest limitation). Wire per-pick normals (e.g. Discontinuity Sets " +
+                     "local plane normals) for the accuracy win over the signed mode.");
         if (s.ShrinkWrap)
             warn.Add("ShrinkWrap post-clean requested: it wraps the isosurface but is NOT the isosurfacer; the " +
                      "surface is the marching-cubes F=level extraction. Colours index the un-wrapped surface.");
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"IsoFractureField | picks={n}, spacing={s.Spacing:0.###} (median NN), h={kr.H:0.###} " +
-                      $"(Carr +-h), cov={s.Family}, range={kr.Range:0.###}{(s.Fit ? " (auto-fit)" : " (fixed)")}" +
-                      $", rangeZ={kr.RangeZ:0.###}, sill={kr.Sill:0.####}" +
-                      (s.PointSigma != null ? ", per-pick sigma ON" : ""));
+        if (s.Gradient)
+        {
+            sb.AppendLine($"IsoFractureField | mode=GRADIENT cokriging (route i, Lajaunie 1997) | picks={n}, " +
+                          $"increments={gkr.IncrementCount}, gradient eqs={gkr.GradientCount * 3}, cov={s.Family}, " +
+                          $"range={gkr.Ranges[0]:0.###}{(s.Fit ? " (default 0.3*extent)" : " (fixed)")}, " +
+                          $"sill={gkr.Sill:0.####} (gauge R^2/|phi''(0)|)" +
+                          (s.PointSigma != null ? ", per-pick sigma ON" : ""));
+            if (s.InterfaceLabels != null)
+            {
+                var lv = gkr.InterfaceLevels();
+                var parts = new List<string>();
+                foreach (var kvp in lv) parts.Add($"{kvp.Key}:{kvp.Value:0.####}");
+                sb.AppendLine("interface isovalues (label:F): " + string.Join(", ", parts));
+            }
+        }
+        else
+        {
+            sb.AppendLine($"IsoFractureField | picks={n}, spacing={s.Spacing:0.###} (median NN), h={kr.H:0.###} " +
+                          $"(Carr +-h), cov={s.Family}, range={kr.Range:0.###}{(s.Fit ? " (auto-fit)" : " (fixed)")}" +
+                          $", rangeZ={kr.RangeZ:0.###}, sill={kr.Sill:0.####}" +
+                          (s.PointSigma != null ? ", per-pick sigma ON" : ""));
+        }
         sb.AppendLine($"lattice {nx} x {ny} x {nz} = {nx * ny * nz} nodes, cell (dx,dy,dz)=" +
                       $"({dx:0.###},{dy:0.###},{dz:0.###}), level={s.Level:0.###}");
         sb.AppendLine($"isosurface: {V} verts, {faces.Count} tris, {comp} disjoint structure(s)");
-        sb.AppendLine($"sigma_pos = sigma_F/max(|grad F|, floor), floor=0.2*median|grad F|={floor:0.#####}; " +
-                      $"colour scale green->red over [p5,p95]=[{lo:0.####},{hi:0.####}]");
+        sb.AppendLine($"sigma_pos = sigma_F/max(|grad F|, floor), floor=0.2*median|grad F|={floor:0.#####}" +
+                      (s.Gradient ? " (ANALYTIC grad F at the verts)" : "") +
+                      $"; colour scale green->red over [p5,p95]=[{lo:0.####},{hi:0.####}]");
         foreach (var w in warn) sb.AppendLine("WARN: " + w);
 
         return new Payload
