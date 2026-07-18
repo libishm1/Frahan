@@ -62,6 +62,8 @@ namespace Frahan.Packing.TwoD
     public static class ContactNfpHoleNester
     {
         private const double Eps = 1e-6;
+        public static long ProfIfpMs, ProfMinkMs, ProfMinkCalls;
+        public static void ProfReset() { ProfIfpMs = ProfMinkMs = ProfMinkCalls = 0; }
 
         public static HoleNestResult Pack(
             IReadOnlyList<(double X, double Y)> sheetOuter,
@@ -547,7 +549,9 @@ namespace Frahan.Packing.TwoD
                 var refl = Reflect(rot);
 
                 // IFP(part, sheet): translations keeping the part inside the sheet
+                var swIfp = System.Diagnostics.Stopwatch.StartNew();
                 var feasible = InnerFit(rot, sheetOuter);
+                swIfp.Stop(); ProfIfpMs += swIfp.ElapsedMilliseconds;
                 if (feasible.Count == 0) continue;
 
                 // accumulate obstacle NFPs, then subtract in ONE boolean (cheaper
