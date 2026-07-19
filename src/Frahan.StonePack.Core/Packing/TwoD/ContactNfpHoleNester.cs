@@ -1586,6 +1586,7 @@ namespace Frahan.Packing.TwoD
         {
             double used = 0;
             var outerMats = new List<List<(double X, double Y)>>();   // non-nested part outers
+            var outerIds = new List<int>();                            // PartIndex per outerMats entry
             var nestedMats = new List<List<(double X, double Y)>>();  // nested part outers
             foreach (var pl in res.Placements)
             {
@@ -1648,8 +1649,32 @@ namespace Frahan.Packing.TwoD
                         { res.Note = $"part {pl.PartIndex} pierces another part"; return false; }
                     }
                     outerMats.Add(ToList(outer));
+                    outerIds.Add(pl.PartIndex);
                 }
                 used += a;
+            }
+            // HARDENING (2026-07-18, second pass so placement order cannot hide
+            // it): every nested part must also clear every NON-nested part
+            // other than its assigned host (the host's outer loop legitimately
+            // contains its own hole region, so the host is skipped). Caught by
+            // the 28 routing bug, where mis-routed holes let nested fillers
+            // land on free parts while the in-loop gate saw only other nested
+            // parts.
+            foreach (var pl in res.Placements)
+            {
+                if (!pl.NestedInHost) continue;
+                var outer = pl.PlacedOuter;
+                double a2 = Math.Abs(SignedArea(outer));
+                double tolArea2 = 1e-3 * a2 + Eps;
+                double depthTol2 = DepthTolFor(a2);
+                for (int oi2 = 0; oi2 < outerMats.Count; oi2++)
+                {
+                    if (outerIds[oi2] == pl.HostIndex) continue;
+                    if (Clipper2Adapter.Intersect(outer, outerMats[oi2]).Sum(l => Math.Abs(SignedArea(l))) > tolArea2)
+                    { res.Note = $"nested part {pl.PartIndex} overlaps non-host part {outerIds[oi2]}"; return false; }
+                    if (PenetrationDepth(outer, outerMats[oi2], out _, out _) > depthTol2)
+                    { res.Note = $"nested part {pl.PartIndex} pierces non-host part {outerIds[oi2]}"; return false; }
+                }
             }
             res.UsedArea = used;
             // an EMPTY layout is vacuously valid (no parts -> no overlaps): a
