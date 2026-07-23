@@ -3,4 +3,5 @@ import FrahanProofs.Common
 import FrahanProofs.Scheduling
 import FrahanProofs.Power
 import FrahanProofs.Clustering
+import FrahanProofs.Coloring
 import FrahanProofs.Roadmap
