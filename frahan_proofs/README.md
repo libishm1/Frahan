@@ -18,24 +18,27 @@ order is [`spec/PLAN_lean_formalization.md`](spec/PLAN_lean_formalization.md).
   ingredient as a *named axiom with a literature citation* when stated —
   the development is explicit about what is proved versus cited.
 
-## Status (Milestone 1)
+## Status
 
-Proved in `FrahanProofs/Common.lean`, dimension-generic over any real
-inner-product space:
+Proved (no `sorry`), dimension-generic over any real inner-product
+space where applicable:
 
-| tex label | result |
-|---|---|
-| `lem:sh` | a half-plane clip is exactly intersection: subset + measure-monotone ("every clip only removes material") |
-| `thm:trim` | the greedy-trim chain equals `P ∩ ⋂ Hₜ`, stays inside `P`, never gains measure, and is convex for convex input |
-| `lem:clip3d` | subsumed — the formalization is dimension-generic |
-| `thm:kahn` | source-existence half: a finite acyclic precedence order always offers a next installable part (Kahn's loop never sticks) |
+| tex label | result | file |
+| --- | --- | --- |
+| `lem:sh` | a half-plane clip is exactly intersection: subset + measure-monotone ("every clip only removes material") | `Common.lean` |
+| `thm:trim` | the greedy-trim chain equals `P ∩ ⋂ Hₜ`, stays inside `P`, never gains measure, and is convex for convex input | `Common.lean` |
+| `lem:clip3d` | subsumed — the formalization is dimension-generic | `Common.lean` |
+| `thm:kahn` | source-existence: a finite acyclic precedence order always offers a next installable part (Kahn's loop never sticks) | `Common.lean` |
+| `thm:kahn` | order-existence: every strict precedence embeds in a total install order with all edges strict (via Szpilrajn / `extend_partialOrder`) | `Scheduling.lean` |
+| `prop:power` | the power cell is convex — the quadratic terms cancel, each constraint is a half-space | `Power.lean` |
+| `thm:kplanes` | descent inequality: one reassign-then-refit round never increases the cost (abstract alternating minimization) | `Clustering.lean` |
 
 `FrahanProofs/Roadmap.lean` holds the exact-statement `proof_wanted`
-queue and the full tier map for the remaining ~29 results.
+queue and the full tier map for the remaining ~26 results.
 
 ## Build
 
-```
+```sh
 cd frahan_proofs
 lake exe cache get   # fetch Mathlib olean cache (first time)
 lake build
