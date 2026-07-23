@@ -34,6 +34,7 @@ space where applicable:
 | `thm:kplanes` | descent inequality: one reassign-then-refit round never increases the cost (abstract alternating minimization) | `Clustering.lean` |
 | `thm:kplanes` | termination: the antitone cost sequence has finitely many attainable values, so Lloyd iteration stabilizes | `Clustering.lean` |
 | Welsh–Powell | greedy `Δ+1` coloring of a conflict graph, any insertion order (from scratch — Mathlib has no such bound) | `Coloring.lean` |
+| `thm:potato` | the sandwich `μ(greedy trim) ≤ convex skull ≤ μ(P)`: the trim is a feasible convex blank, the skull dominates all of them | `Common.lean` |
 
 `FrahanProofs/Roadmap.lean` holds the full tier map for the remaining
 ~24 results; new exact statements land there as `proof_wanted` before

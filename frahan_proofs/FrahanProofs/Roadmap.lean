@@ -32,7 +32,8 @@ Tier 1 — combinatorial / induction / order
   [D] thm:hm        Hertel–Mehlhorn ≤ 4·OPT convex partition
   [D] thm:lpt       Graham LPT (4/3 − 1/3m) bound
   [D] (FFD)         first-fit-decreasing 11/9·OPT + 6/9
-  [D] thm:potato    greedy trim ≤ convex skull ≤ area(P)
+  [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
+                    Chang–Yap exactness/complexity stays prose
 
 Tier 2 — linear algebra / spectral / Fourier
   [P] prop:power    power cell convex (Power)

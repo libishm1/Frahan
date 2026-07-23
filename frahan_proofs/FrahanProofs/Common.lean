@@ -28,6 +28,7 @@ open scoped RealInnerProductSpace
 namespace Frahan
 
 open MeasureTheory
+open scoped ENNReal
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
@@ -128,6 +129,38 @@ theorem clipChain_convex {P : Set E} (hP : Convex ℝ P)
     (Hs : List (Halfplane E)) : Convex ℝ (clipChain P Hs) := by
   rw [clipChain_eq]
   exact hP.inter (convex_chain_halfplanes Hs)
+
+section Potato
+
+/-- The convex-skull value (tex Definition "Convex skull / potato"):
+the best measure attainable by a convex subregion of `P`. (The tex
+skull is the maximum-AREA convex polygon; at region level the value
+is a supremum over all convex subsets.) -/
+noncomputable def convexSkull [MeasurableSpace E] (μ : Measure E) (P : Set E) : ℝ≥0∞ :=
+  ⨆ (C : Set E) (_ : Convex ℝ C ∧ C ⊆ P), μ C
+
+/-- tex Theorem `thm:potato`, right inequality: the skull never beats
+the slab, `area(convex skull) ≤ area(P)`. -/
+theorem convexSkull_le [MeasurableSpace E] (μ : Measure E) (P : Set E) :
+    convexSkull μ P ≤ μ P :=
+  iSup₂_le fun _C hC => measure_mono hC.2
+
+/-- Any feasible convex blank is dominated by the skull. -/
+theorem le_convexSkull [MeasurableSpace E] (μ : Measure E) {P C : Set E}
+    (hC : Convex ℝ C) (hCP : C ⊆ P) : μ C ≤ convexSkull μ P :=
+  le_iSup₂ (f := fun (C : Set E) (_ : Convex ℝ C ∧ C ⊆ P) => μ C) C ⟨hC, hCP⟩
+
+/-- tex Theorem `thm:potato`, left inequality: the greedy half-plane
+trim returns SOME convex blank inside `P`, so its area is bounded by
+the convex skull: `area(greedy Q) ≤ area(convex skull) ≤ area(P)`.
+(The Chang–Yap exact algorithm and its complexity are prose, not
+formalized.) -/
+theorem clipChain_le_convexSkull [MeasurableSpace E] (μ : Measure E)
+    {P : Set E} (hP : Convex ℝ P) (Hs : List (Halfplane E)) :
+    μ (clipChain P Hs) ≤ convexSkull μ P :=
+  le_convexSkull μ (clipChain_convex hP Hs) (clipChain_subset P Hs)
+
+end Potato
 
 section Kahn
 
