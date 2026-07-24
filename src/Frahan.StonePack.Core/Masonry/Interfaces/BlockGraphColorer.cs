@@ -6,12 +6,15 @@ using Frahan.Masonry.DataModel;
 namespace Frahan.Masonry.Interfaces;
 
 // =============================================================================
-// BlockGraphColorer — assigns one of 4 colours to every block in a
-// MasonryAssembly such that no two blocks sharing an interface (= adjacent
-// in the contact graph) share a colour. The 4-Colour Theorem (Appel &
-// Haken 1976) guarantees this is always possible for any planar contact
-// graph; for non-planar masonry topologies we fall back to ≤ 8 colours
-// via the same greedy algorithm.
+// BlockGraphColorer — assigns a colour to every block in a MasonryAssembly
+// such that no two blocks sharing an interface (= adjacent in the contact
+// graph) share a colour. Uses at most Δ+1 colours (Δ = maximum contact
+// degree): the greedy Welsh-Powell algorithm always finds a free colour
+// within Δ+1, machine-checked as `greedy_coloring_exists` in
+// frahan_proofs/FrahanProofs/Coloring.lean. (A previous fixed cap of 8 was
+// wrong: non-planar 3D masonry contact graphs can need more — a clique of
+// 9 mutually-touching blocks needs 9 colours — and the code threw on them.
+// The Appel-Haken 4-colour theorem covers PLANAR graphs only.)
 //
 // Use cases:
 //   - Visualization: 4 distinct colours make wall structure scannable.
@@ -29,8 +32,6 @@ namespace Frahan.Masonry.Interfaces;
 
 public static class BlockGraphColorer
 {
-    private const int MaxColours = 8;
-
     /// <summary>
     /// Color the contact graph. Returns a dictionary
     /// <c>blockId → colourIndex</c> where colourIndex is in [0, NumColoursUsed).
@@ -59,25 +60,34 @@ public static class BlockGraphColorer
         var order = new List<string>(adj.Keys);
         order.Sort((a, b) => adj[b].Count.CompareTo(adj[a].Count));
 
+        // Palette sized to Δ+1 (max contact degree + 1). Greedy Welsh-Powell
+        // always finds a free colour within Δ+1, so it never fails on a valid
+        // contact graph (frahan_proofs Coloring.lean, greedy_coloring_exists).
+        // For graphs of degree ≤ 7 this yields the exact same colouring as the
+        // old fixed cap of 8 (greedy picks the lowest free colour, always < Δ+1).
+        int palette = 1;
+        foreach (var kv in adj)
+            if (kv.Value.Count + 1 > palette) palette = kv.Value.Count + 1;
+
         var color = new Dictionary<string, int>(StringComparer.Ordinal);
         for (int i = 0; i < order.Count; i++)
         {
             string id = order[i];
-            var used = new bool[MaxColours];
+            var used = new bool[palette];
             foreach (var neighbour in adj[id])
             {
-                if (color.TryGetValue(neighbour, out int nc) && nc < MaxColours)
+                if (color.TryGetValue(neighbour, out int nc) && nc < palette)
                     used[nc] = true;
             }
             int chosen = -1;
-            for (int c = 0; c < MaxColours; c++)
+            for (int c = 0; c < palette; c++)
             {
                 if (!used[c]) { chosen = c; break; }
             }
             if (chosen < 0)
                 throw new InvalidOperationException(
-                    $"Block graph requires more than {MaxColours} colours; " +
-                    "pathological contact graph.");
+                    "Block graph colouring failed unexpectedly (Δ+1 palette " +
+                    "should always suffice).");
             color[id] = chosen;
         }
         return color;
