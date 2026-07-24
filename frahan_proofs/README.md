@@ -38,6 +38,7 @@ space where applicable:
 | NFP separation | translated part meets a fixed part iff `t ∈ A−B` (the no-fit polygon); placing outside it ⇒ disjoint — the nester's zero-overlap guarantee | `Packing.lean` |
 | `lem:plane` | the least-squares Gram form is positive definite iff the picks span (non-collinear) — existence/uniqueness of the dip plane | `Fitting.lean` |
 | `thm:lambert` | the Schmidt/Lambert radial map `r=√2 sin(θ/2)` satisfies `r·r' = ½ sinθ` — equal-area (undistorted pole density) | `Projection.lean` |
+| `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
 | `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 

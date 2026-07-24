@@ -8,4 +8,5 @@ import FrahanProofs.Registration
 import FrahanProofs.Packing
 import FrahanProofs.Fitting
 import FrahanProofs.Projection
+import FrahanProofs.Machines
 import FrahanProofs.Roadmap

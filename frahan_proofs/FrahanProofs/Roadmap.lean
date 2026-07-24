@@ -30,7 +30,9 @@ Tier 1 — combinatorial / induction / order
   [D] thm:imaiiri   BFS fewest-edges path = min-# approximation
   [D] thm:guillodp  Bellman recursion optimal over guillotine tilings
   [D] thm:hm        Hertel–Mehlhorn ≤ 4·OPT convex partition
-  [D] thm:lpt       Graham LPT (4/3 − 1/3m) bound
+  [P] thm:lpt       OPT lower bounds + (2−1/m) list-schedule bound + tight
+                    4/3−1/3m arithmetic core (Machines); [W] execution-trace
+                    realization + full Graham 4/3 (proof_wanted)
   [D] (FFD)         first-fit-decreasing 11/9·OPT + 6/9
   [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
                     Chang–Yap exactness/complexity stays prose
