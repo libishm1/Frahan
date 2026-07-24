@@ -51,7 +51,8 @@ Tier 2 — linear algebra / spectral / Fourier
   [P] lem:clip3d    subsumed: the development is dimension-generic (Common)
   [P] lem:plane     non-collinear ⇒ Gram form PosDef ⇔ picks span (Fitting);
                     [W] matrix θ=M⁻¹b closed-form uniqueness (ls_fit_unique)
-  [D] thm:nugget    nugget=0 interpolates; nugget>0 strictly smooths
+  [P] thm:nugget    τ=0 interpolation kⱼᵀK⁻¹=eⱼ ⇒ d̂(pⱼ)=dⱼ (Kriging);
+                    [W] τ>0 strict-smoother contraction (nugget_strict_smoother)
   [D] thm:horn      optimal rotation = top eigenvector of N(M)
   [D] prop:kabsch   weighted Kabsch SVD = Horn (det-sign correction)
   [P] prop:pca      least-eigenvalue direction minimizes variance = surface
