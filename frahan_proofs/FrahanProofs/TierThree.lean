@@ -177,6 +177,31 @@ axiom settle_kkt {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 end Settle
 
+/-! ### tex Theorem `thm:stolt` — constant-velocity dispersion Jacobian (PROVED) -/
+
+/-- tex Theorem `thm:stolt`, the amplitude-Jacobian core (PROVED). The Stolt
+migration remaps `ω → k_z` along the constant-velocity dispersion
+`ω = c√(kₓ²+k_z²)`, with amplitude factor `c·k_z/√(kₓ²+k_z²)`. That factor is
+exactly the Jacobian `∂ω/∂k_z`: differentiating `c√(kₓ²+k_z²)` in `k_z` gives
+`c·k_z/√(kₓ²+k_z²)`. (The full 2D-Fourier change of variables is prose; this is
+its analytic heart, the same shape as `thm:lambert`.) Needs `kₓ²+k_z² ≠ 0`. -/
+theorem stolt_dispersion_jacobian (c kx kz : ℝ) (h : kx ^ 2 + kz ^ 2 ≠ 0) :
+    HasDerivAt (fun t => c * Real.sqrt (kx ^ 2 + t ^ 2))
+      (c * kz / Real.sqrt (kx ^ 2 + kz ^ 2)) kz := by
+  have hpos : 0 < kx ^ 2 + kz ^ 2 := lt_of_le_of_ne (by positivity) (Ne.symm h)
+  have hs : Real.sqrt (kx ^ 2 + kz ^ 2) ≠ 0 := ne_of_gt (Real.sqrt_pos.mpr hpos)
+  have hg : HasDerivAt (fun t : ℝ => kx ^ 2 + t ^ 2) (2 * kz) kz := by
+    simpa using (hasDerivAt_pow 2 kz).const_add (kx ^ 2)
+  have hsqrtg : HasDerivAt (fun t : ℝ => Real.sqrt (kx ^ 2 + t ^ 2))
+      (1 / (2 * Real.sqrt (kx ^ 2 + kz ^ 2)) * (2 * kz)) kz :=
+    (Real.hasDerivAt_sqrt h).comp kz hg
+  have hfull := hsqrtg.const_mul c
+  have hval : c * (1 / (2 * Real.sqrt (kx ^ 2 + kz ^ 2)) * (2 * kz))
+      = c * kz / Real.sqrt (kx ^ 2 + kz ^ 2) := by
+    field_simp
+  rw [hval] at hfull
+  exact hfull
+
 /-! ### tex Theorem `thm:blocktheory` — Shi finiteness / removability -/
 
 /-- tex Theorem `thm:blocktheory` (Shi, Block Theory). Shi's removability
@@ -203,18 +228,18 @@ Discharged by PROOF (not axiomatized):
     the closed convex image `A '' K` (closedness stated as an honest hypothesis).
   * `thm:settle` convex half — `settle_convex_optimality` (variational-inequality
     stationary point ⇒ global constrained minimum of a convex energy).
+  * `thm:stolt` Jacobian — `stolt_dispersion_jacobian`, the amplitude factor
+    `c·k_z/√(kₓ²+k_z²) = ∂/∂k_z [c√(kₓ²+k_z²)]` (the analytic heart of the remap).
 
 Discharged by a CITED AXIOM (sound existence statement under explicit hypotheses,
 the classical ingredient Mathlib does not yet carry):
   * `thm:settle` KKT necessity — `settle_kkt` (multiplier existence under LICQ;
     Karush; Kuhn–Tucker). The ONLY `axiom` declaration in the library.
 
-Still queued — each needs its precise hypotheses / heavy machinery before it is a
-genuinely-true, faithfully-stated axiom:
-  * `thm:stolt` — constant-velocity dispersion remap `ω = c√(kₓ²+k_z²)` with the
-    `c·k_z/√(kₓ²+k_z²)` amplitude Jacobian (2D Fourier machinery).
+Still queued — needs heavy machinery before it is a genuinely-true, faithfully-
+stated axiom:
   * `thm:heat` — Varadhan `lim_{t→0} −4t log u_t = φ²` (heat-kernel / geodesic
-    machinery).
+    machinery). The last Tier-3 residue.
 -/
 
 end Frahan

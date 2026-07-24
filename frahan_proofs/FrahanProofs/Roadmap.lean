@@ -72,8 +72,9 @@ classical ingredient with a citation; discharge as Mathlib grows)
   [P] thm:blocktheory  Removable def + not_removable half (TierThree, Shi)
   [P] thm:settle       convex-optimality core settle_convex_optimality +
                        [A] KKT necessity settle_kkt (cited axiom, LICQ) — TierThree
-  [A] thm:stolt        constant-v dispersion remap + Jacobian (queued)
-  [A] thm:heat         Varadhan limit recovers geodesic distance (queued)
+  [P] thm:stolt        amplitude Jacobian ∂ω/∂k_z = c·k_z/√ (TierThree,
+                       stolt_dispersion_jacobian); full Fourier remap = prose
+  [A] thm:heat         Varadhan limit recovers geodesic distance (last queued)
   NOTE: Tier-3 policy — prove the sound abstract core, never axiomatize an
   equivalence to a free predicate (unsound). See TierThree.lean.
   [P] thm:kintsugi     world-pose composition + faithful uniqueness +

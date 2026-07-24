@@ -51,8 +51,9 @@ free predicate (which would be unsound). Under this policy the Gale/Farkas
 duality converse and the settle convex core were *proved* outright. The library
 contains exactly **one** `axiom` — `settle_kkt`, the KKT-necessity multiplier
 existence under LICQ (Karush; Kuhn–Tucker), a genuinely-true classical statement
-Mathlib does not yet carry, asserted with its exact hypotheses. The remaining
-Tier-3 ingredients (Stolt, Varadhan) stay a documented queue there.
+Mathlib does not yet carry, asserted with its exact hypotheses. The Stolt
+amplitude Jacobian was *proved* (`stolt_dispersion_jacobian`); only Varadhan's
+heat-kernel limit stays a documented queue there.
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
 | `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
