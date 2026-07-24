@@ -40,9 +40,11 @@ Tier 1 — combinatorial / induction / order
                     (Guillotine, GuillotineTree + stagedThreeStage)
   [P] thm:hm        Hertel–Mehlhorn 4·OPT counting core (Approx,
                     hertelMehlhorn_four_opt; geometric facts = hypotheses)
-  [P] thm:lpt       OPT lower bounds + (2−1/m) list-schedule bound + tight
-                    4/3−1/3m arithmetic core (Machines); [W] execution-trace
-                    realization + full Graham 4/3 (proof_wanted)
+  [P] thm:lpt       OPT bounds + (2−1/m) bound + tight 4/3 arith core +
+                    execution-trace realization (Machines, list_schedule_
+                    decomposition PROVED); [W] full Graham 4/3 lpt_tight_bound —
+                    needs the Case-B pigeonhole optimality (not reducible to the
+                    conditional arith core; concrete counterexample in-file)
   [P] (FFD)         first-fit 2·OPT core (Approx, firstFit_lt_two_opt);
                     [W] tight 11/9·OPT+6/9 (Dósa)
   [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
