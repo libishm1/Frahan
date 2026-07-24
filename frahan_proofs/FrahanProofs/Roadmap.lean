@@ -63,12 +63,11 @@ classical ingredient with a citation; discharge as Mathlib grows)
   [P] thm:cpd          EM/MM monotonicity mm_monotone (TierThree)
   [P] thm:poisson      least-squares E–L normal equation poisson_normal_eq_min
                        (TierThree, T=∇ ⇒ Δχ=∇·V); operator-level QEM too
-  [P] thm:cra          convex-feasibility structure admissibleSet_convex
-                       (TierThree); [A] Gale/Farkas converse queued (sound
-                       hypotheses pending)
+  [P] thm:cra          convex-feasibility admissibleSet_convex + Gale/Farkas
+                       duality converse cra_farkas (TierThree, via Hahn–Banach)
   [P] thm:blocktheory  Removable def + not_removable half (TierThree, Shi)
-  [A] thm:settle       rest = KKT of constrained energy minimum (queued;
-                       convex "stationary ⇒ min" half provable)
+  [P] thm:settle       convex-optimality core settle_convex_optimality
+                       (TierThree); [A] KKT multiplier existence queued
   [A] thm:stolt        constant-v dispersion remap + Jacobian (queued)
   [A] thm:heat         Varadhan limit recovers geodesic distance (queued)
   NOTE: Tier-3 policy — prove the sound abstract core, never axiomatize an

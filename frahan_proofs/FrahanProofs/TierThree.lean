@@ -100,6 +100,61 @@ theorem admissibleSet_convex (A : F →ₗ[ℝ] L) (K : Set F) (hK : Convex ℝ 
 
 end CRA
 
+section CRAduality
+
+variable {F L : Type*}
+  [NormedAddCommGroup F] [NormedSpace ℝ F]
+  [NormedAddCommGroup L] [NormedSpace ℝ L]
+
+/-- tex Theorem `thm:cra`, the DUALITY CONVERSE (Gale/Farkas), PROVED: for a
+convex yield set `K` and a load `g`, either the equilibrium `A f = g, f ∈ K` is
+feasible (the assembly is safe), or a collapse mechanism `φ` strictly separates
+`g` from every admissible internal force (`φ g < φ (A f)` for all `f ∈ K`, with
+a strict gap) — i.e. a statically inadmissible load is certified by a mechanism.
+This is the classical converse of the safe theorem; it reduces to Hahn–Banach
+separation of the point `g` from the closed convex image `A '' K`. The closedness
+of `A '' K` is the honest hypothesis the classical theorem needs (a
+closedness / Slater condition), stated explicitly rather than hidden. -/
+theorem cra_farkas (A : F →L[ℝ] L) (K : Set F) (hK : Convex ℝ K)
+    (hclosed : IsClosed (A '' K)) (g : L) :
+    (∃ f ∈ K, A f = g) ∨
+    (∃ φ : StrongDual ℝ L, ∃ u : ℝ, φ g < u ∧ ∀ f ∈ K, u < φ (A f)) := by
+  by_cases hg : g ∈ A '' K
+  · obtain ⟨f, hf, hAf⟩ := hg
+    exact Or.inl ⟨f, hf, hAf⟩
+  · refine Or.inr ?_
+    have hconv : Convex ℝ (A '' K) := hK.linear_image A.toLinearMap
+    obtain ⟨φ, u, hgu, hbu⟩ := geometric_hahn_banach_point_closed hconv hclosed hg
+    exact ⟨φ, u, hgu, fun f hf => hbu (A f) ⟨f, hf, rfl⟩⟩
+
+end CRAduality
+
+/-! ### tex Theorem `thm:settle` — rest = constrained energy minimum (core) -/
+
+section Settle
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+
+/-- tex Theorem `thm:settle`, the convex-optimality core (PROVED): a feasible
+pose `x` at which the variational inequality holds (`⟪grad, y − x⟫ ≥ 0` for
+every feasible `y` — the KKT stationarity of the constrained energy) is a global
+minimizer of the energy `U` over the feasible set, provided `U` is convex there
+(encoded by the subgradient lower bound `U x + ⟪grad, y − x⟫ ≤ U y`). Physically:
+a dropped block whose contact reactions balance gravity under the non-penetration
+constraints is at a constrained energy minimum, hence at static rest. The KKT
+MULTIPLIER-existence direction (constraint qualification) is the classical
+residue, queued below. -/
+theorem settle_convex_optimality (U : E → ℝ) (s : Set E) (x : E) (grad : E)
+    (hsub : ∀ y ∈ s, U x + ⟪grad, y - x⟫ ≤ U y)
+    (hstat : ∀ y ∈ s, 0 ≤ ⟪grad, y - x⟫) :
+    ∀ y ∈ s, U x ≤ U y := by
+  intro y hy
+  have h1 := hsub y hy
+  have h2 := hstat y hy
+  linarith
+
+end Settle
+
 /-! ### tex Theorem `thm:blocktheory` — Shi finiteness / removability -/
 
 /-- tex Theorem `thm:blocktheory` (Shi, Block Theory). Shi's removability
@@ -121,18 +176,20 @@ theorem not_removable_of_not_disjoint {V : Type*} {JP EP : Set V}
 /-!
 ### Tier-3 cited-axiom queue (to add with exact, sound hypotheses)
 
-Not yet stated as axioms — each needs its precise hypotheses so the axiom is a
-genuinely-true classical statement, not an unsound shortcut:
+Discharged since the first pass (PROVED above, not axiomatized):
+  * `thm:cra` converse — `cra_farkas`, via Hahn–Banach separation of `g` from
+    the closed convex image `A '' K` (closedness stated as an honest hypothesis).
+  * `thm:settle` convex half — `settle_convex_optimality` (variational-inequality
+    stationary point ⇒ global constrained minimum of a convex energy).
 
-  * `thm:cra` converse — Gale/Farkas cone duality: if `A f = g, f ∈ K` is
-    infeasible then a collapse mechanism separates it. Sound only for a CLOSED
-    convex cone `K` with a closedness/Slater condition; to be stated with those.
-  * `thm:settle` — KKT characterization of the constrained energy rest point
-    (`∇U = Σ λⱼ ∇φⱼ`, `λⱼ ≥ 0`, `λⱼφⱼ = 0`), citing standard NLP under a
-    constraint qualification. The convex "stationary ⇒ global min" half is
-    provable and mirrors `poisson_normal_eq_min`.
+Still queued — each needs its precise hypotheses so any axiom is a genuinely-true
+classical statement, not an unsound shortcut:
+
+  * `thm:settle` KKT MULTIPLIER existence (`∇U = Σ λⱼ ∇φⱼ`, `λⱼ ≥ 0`,
+    `λⱼφⱼ = 0`) under a constraint qualification — standard NLP, needs the
+    gradient/constraint setup.
   * `thm:stolt` — constant-velocity dispersion remap `ω = c√(kₓ²+k_z²)` with the
-    `c·k_z/√(kₓ²+k_z²)` amplitude Jacobian (Fourier machinery).
+    `c·k_z/√(kₓ²+k_z²)` amplitude Jacobian (2D Fourier machinery).
   * `thm:heat` — Varadhan `lim_{t→0} −4t log u_t = φ²` (heat-kernel / geodesic
     machinery).
 -/

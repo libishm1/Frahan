@@ -41,7 +41,8 @@ space where applicable:
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |
 | `thm:poisson` | the least-squares Euler–Lagrange normal equation `T†(Tx−V)=0 ⇒` minimizer (with `T=∇` this is `Δχ=∇·V`) | `TierThree.lean` |
-| `thm:cra` | the safe-theorem feasible region `K ∩ A⁻¹{g}` is convex (stability = convex SOC feasibility) | `TierThree.lean` |
+| `thm:cra` | the safe-theorem feasible region `K ∩ A⁻¹{g}` is convex, and the Gale/Farkas duality converse (infeasible load ⇒ a separating collapse mechanism, via Hahn–Banach) | `TierThree.lean` |
+| `thm:settle` | a variational-inequality stationary point of a convex energy is a global constrained minimum (rest = constrained energy min, sufficiency) | `TierThree.lean` |
 
 Tier-3 (analysis/duality/PDE) is handled by `TierThree.lean` under a strict
 policy: prove the sound abstract core, never axiomatize an equivalence to a
