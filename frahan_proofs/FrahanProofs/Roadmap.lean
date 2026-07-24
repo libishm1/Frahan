@@ -60,7 +60,8 @@ Tier 2 — linear algebra / spectral / Fourier
                     identification (spectral theorem); OBB-in-eigenbasis prose
   [P] thm:qem       vᵀKₚv = squared plane dist; QEM convex; ∇=0 ⇒ global
                     min (Registration) — matrix-block Q̄v̄=−b stays basis form
-  [D] thm:phasecorr Fourier shift ⇒ δ at the translation
+  [P] thm:phasecorr DFT shift theorem + normalized cross-power = unit phase
+                    (Fourier); [W] inverse-DFT of phase = shifted delta/peak
   [P] thm:lambert   r = √2 sin(θ/2): r·r' = ½ sinθ area-element identity
                     (Projection)
   [D] §5 planarity  best-fit plane = least eigvec; Chebyshev deviation
