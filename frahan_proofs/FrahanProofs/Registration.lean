@@ -201,4 +201,47 @@ theorem qem_min_of_normal_eq (s : Finset ι) (n : ι → E) (d : ι → ℝ) (v0
 
 end QEM
 
+/-! ### tex Theorem `thm:horn` / Prop `prop:kabsch` — rigid alignment -/
+
+section Horn
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+variable {ι : Type*} [Fintype ι]
+
+/-- tex Theorem `thm:horn` / `prop:kabsch`, the centroid-alignment reduction
+(PROVED): minimizing the rigid-alignment energy over the translation gives
+centroid alignment. For residual vectors `a i = q i − s·R(p i)`, the translation
+`t` minimizing `Σ ‖a i − t‖²` is the centroid `t₀ = (1/|ι|) Σ a i` (characterized
+here by `Σ (a i − t₀) = 0`) — i.e. `t = q̄ − s R p̄`. This is the step that
+reduces `E(s,R,t)` to the centred residual; the remaining rotation part
+(maximize `tr(R Mᵀ)` ⇒ `R` = top eigenvector of the `4×4` `N(M)`) is
+`horn_optimal_rotation`. Same expansion as `qem_min_of_normal_eq`. -/
+theorem horn_optimal_translation (a : ι → E) (t₀ : E)
+    (hcen : ∑ i, (a i - t₀) = 0) (t : E) :
+    ∑ i, ‖a i - t₀‖ ^ 2 ≤ ∑ i, ‖a i - t‖ ^ 2 := by
+  have expand : ∀ i ∈ Finset.univ, ‖a i - t‖ ^ 2
+      = ‖a i - t₀‖ ^ 2 + 2 * ⟪a i - t₀, t₀ - t⟫ + ‖t₀ - t‖ ^ 2 := by
+    intro i _
+    have hsplit : a i - t = (a i - t₀) + (t₀ - t) := by abel
+    rw [hsplit, norm_add_sq_real]
+  rw [Finset.sum_congr rfl expand, Finset.sum_add_distrib, Finset.sum_add_distrib]
+  have hcross : ∑ i, 2 * ⟪a i - t₀, t₀ - t⟫ = 0 := by
+    rw [← Finset.mul_sum, ← sum_inner, hcen, inner_zero_left, mul_zero]
+  rw [hcross, add_zero]
+  have hnn : 0 ≤ ∑ _i : ι, ‖t₀ - t‖ ^ 2 := Finset.sum_nonneg fun _ _ => sq_nonneg _
+  linarith
+
+/-
+tex `thm:horn` / `prop:kabsch`, the rotation part (PROSE — the research-scale
+residue): after centring (`horn_optimal_translation`), the optimal rotation
+maximizes `tr(R Mᵀ)` with `M = Σ p'ᵢ q'ᵢᵀ`, and equals `R(ê)` for `ê` the unit
+eigenvector of the largest eigenvalue of the symmetric `4×4` matrix `N(M)` (Horn
+quaternion form; the weighted Kabsch SVD gives the same rotation up to a
+determinant-sign correction). This needs a quaternion→rotation representation
+and the Wahba/eigenvector maximization, which Mathlib does not yet carry; it is
+left as prose rather than a vacuous `proof_wanted`.
+-/
+
+end Horn
+
 end Frahan

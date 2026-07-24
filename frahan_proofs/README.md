@@ -46,6 +46,7 @@ space where applicable:
 | `thm:kahn` (converse) | Kahn's loop sticks only on a cyclic input: a stuck (left-total) finite precedence relation has a cycle | `Scheduling.lean` |
 | FFD / `thm:hm` | approximation-ratio cores: First-Fit `< 2·OPT`, and Hertel–Mehlhorn `≤ 4·OPT` (counting, with the geometric facts as hypotheses) | `Approx.lean` |
 | `thm:guillodp` / `thm:guillotine` | guillotine DP optimal substructure `V=max(place,cut)`, and the wire-saw-separable = guillotine-tree model | `Guillotine.lean` |
+| `thm:horn` / `prop:kabsch` | the rigid-alignment centroid reduction: the optimal translation is the centroid difference `q̄ − sRp̄` (rotation-eigenvector part is prose) | `Registration.lean` |
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | mode-merge | the joint-set clusterer's greedy mode-merge keeps a pairwise-separated set of set-poles (no two joint sets collapse together) | `Clustering.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |

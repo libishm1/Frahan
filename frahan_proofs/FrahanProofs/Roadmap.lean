@@ -60,8 +60,10 @@ Tier 2 — linear algebra / spectral / Fourier
                     [W] matrix θ=M⁻¹b closed-form uniqueness (ls_fit_unique)
   [P] thm:nugget    τ=0 interpolation kⱼᵀK⁻¹=eⱼ ⇒ d̂(pⱼ)=dⱼ (Kriging);
                     [W] τ>0 strict-smoother contraction (nugget_strict_smoother)
-  [D] thm:horn      optimal rotation = top eigenvector of N(M)
-  [D] prop:kabsch   weighted Kabsch SVD = Horn (det-sign correction)
+  [P] thm:horn      centroid-alignment reduction: optimal translation = centroid
+                    difference (Registration, horn_optimal_translation); rotation
+                    = top eigenvector of N(M) is prose (quaternion, research-scale)
+  [P] prop:kabsch   shares horn_optimal_translation; SVD=Horn det-sign is prose
   [P] prop:pca      least-eigenvalue direction minimizes variance = surface
                     normal (Spectral, Rayleigh lower-bound); [W] eigenvalue
                     identification (spectral theorem); OBB-in-eigenbasis prose
@@ -85,7 +87,12 @@ classical ingredient with a citation; discharge as Mathlib grows)
                        [A] KKT necessity settle_kkt (cited axiom, LICQ) — TierThree
   [P] thm:stolt        amplitude Jacobian ∂ω/∂k_z = c·k_z/√ (TierThree,
                        stolt_dispersion_jacobian); full Fourier remap = prose
-  [A] thm:heat         Varadhan limit recovers geodesic distance (last queued)
+  [~] thm:heat         heat-method geodesics: the Poisson integration step
+                       Δφ=∇·X IS proved (poisson_normal_eq_min); the Varadhan
+                       asymptotic −4t·log uₜ→φ² is PROSE — stating it soundly
+                       needs heat-kernel + geodesic machinery Mathlib lacks (a
+                       free-parameter axiom relating two arbitrary functions
+                       would be unsound). The one deliberately-prose residue.
   NOTE: Tier-3 policy — prove the sound abstract core, never axiomatize an
   equivalence to a free predicate (unsound). See TierThree.lean.
   [P] thm:kintsugi     world-pose composition + faithful uniqueness +
