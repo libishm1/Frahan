@@ -566,4 +566,138 @@ theorem lpt_prefix_loads_le {m : ℕ} {J : Type*} {p : J → ℝ} {a b : J → F
   have hk := hfull k
   rwa [List.take_length] at hk
 
+/-! ### Stage 3 — assembly of the tight LPT `4/3 − 1/(3m)` bound
+
+Mechanizes Stage 3 of `proofs/DESIGN_lpt_optimality.md`, discharging the last
+`proof_wanted` of `Machines.lean`. Split on the critical (last-placed) job `jstar`
+that `Machines.list_schedule_decomposition'` exposes together with its prefix index
+`i₀`:
+
+  * SMALL case `3·p jstar ≤ cStar`: the greedy certificate alone closes the bound —
+    `Machines.lpt_tight_bound_small_case`.
+  * LARGE case `cStar < 3·p jstar`: every job in the prefix `P = js.take (i₀+1)` is
+    `> cStar/3` (LPT sortedness, `jstar` being `P`'s last and smallest job). The
+    optimum achiever `bopt` restricted to `P` keeps every machine `≤ cStar`, so the
+    Stage-1/2 pigeonhole + trace invariant (`lpt_prefix_loads_le`) forces the GREEDY
+    prefix loads `≤ cStar`; the critical machine's load is `start + p jstar` (Stage-2
+    `listLoad_take_succ`) `= makespan`, hence `makespan ≤ cStar`, and the ratio's
+    `≥ 1` slack (`Machines.le_tight_bound_of_le_opt`) finishes.
+
+Nothing here uses `sorry` or a new `axiom`. -/
+
+section Assembly
+
+variable {m : ℕ} {J : Type*} [Fintype J]
+
+/-- tex Theorem `thm:lpt` (Graham 1969), headline statement, PROVED: the LPT list
+schedule's makespan is within `4/3 − 1/(3m)` of the OPTIMUM makespan `cStar`
+(characterized as a lower bound on every assignment's makespan that is itself
+achieved). Assembles the index-exposing greedy certificate
+(`Machines.list_schedule_decomposition'`), the small-critical-job arithmetic
+(`Machines.lpt_tight_bound_small_case`), and — for the large-critical-job case — the
+Stage-1 static pair lemma and the Stage-2 trace invariant (`lpt_prefix_loads_le`)
+that together replace the classical `≤2 jobs/machine ⇒ LPT optimal` exchange
+induction. -/
+theorem lpt_tight_bound (hm : 0 < m) (p : J → ℝ) (hp : ∀ j, 0 ≤ p j)
+    (a : J → Fin m) (js : List J) (hlpt : IsLPTSchedule p a js)
+    (cStar : ℝ) (hcstar_lb : ∀ b : J → Fin m, cStar ≤ makespan hm p b)
+    (hcstar_ach : ∃ b : J → Fin m, makespan hm p b = cStar) :
+    makespan hm p a ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
+  classical
+  obtain ⟨hls, hsort_js⟩ := hlpt
+  rcases eq_or_ne js [] with hnil | hne
+  · -- degenerate empty case: no jobs, every makespan is `0`
+    subst hnil
+    haveI hIE : IsEmpty J := ⟨fun j => by have := hls.2.1 j; simp at this⟩
+    have hmk_zero : ∀ c : J → Fin m, makespan hm p c = 0 := by
+      intro c
+      have hload0 : ∀ k, load p c k = 0 := by
+        intro k; simp [load, Finset.univ_eq_empty]
+      apply le_antisymm
+      · unfold makespan
+        rw [Finset.sup'_le_iff]
+        intro k _
+        exact le_of_eq (hload0 k)
+      · rw [← hload0 ⟨0, hm⟩]
+        exact load_le_makespan hm p c ⟨0, hm⟩
+    obtain ⟨b, hb⟩ := hcstar_ach
+    have hcs0 : cStar = 0 := hb.symm.trans (hmk_zero b)
+    have hle : makespan hm p a ≤ cStar := le_of_eq (by rw [hmk_zero a, hcs0])
+    exact le_tight_bound_of_le_opt hm hle (le_of_eq hcs0.symm)
+  · -- main case: expose the critical index and job
+    obtain ⟨i₀, hi₀, start, hmk, hstart, hstart_eq⟩ :=
+      list_schedule_decomposition' hm p hp a js hls hne
+    set jstar : J := js.get ⟨i₀, hi₀⟩ with hjstar_def
+    by_cases hcase : 3 * p jstar ≤ cStar
+    · -- Case A: small critical job — greedy certificate closes it
+      exact lpt_tight_bound_small_case hm p a cStar hcstar_ach jstar start hmk hstart hcase
+    · -- Case B: large critical job — Stage-1/2 machinery on the LPT prefix
+      have hlt : cStar < 3 * p jstar := not_le.mp hcase
+      set P : List J := js.take (i₀ + 1) with hP
+      obtain ⟨bopt, hbopt⟩ := hcstar_ach
+      have hnodupP : P.Nodup := by
+        rw [hP]; exact List.Nodup.sublist (List.take_sublist (i₀ + 1) js) hls.1
+      have hsortP : P.Pairwise (fun j j' => p j' ≤ p j) := by
+        rw [hP]; exact List.Pairwise.sublist (List.take_sublist (i₀ + 1) js) hsort_js
+      have hPeq : P = js.take i₀ ++ [jstar] := by
+        rw [hP, hjstar_def, List.get_eq_getElem]
+        exact List.take_succ_eq_append_getElem hi₀
+      have hlargeP : ∀ j ∈ P, cStar < 3 * p j := by
+        intro j hj
+        have hsort_app : (js.take i₀ ++ [jstar]).Pairwise (fun j j' => p j' ≤ p j) := by
+          rw [← hPeq]; exact hsortP
+        rw [List.pairwise_append] at hsort_app
+        have hpjstar : p jstar ≤ p j := by
+          rw [hPeq, List.mem_append] at hj
+          rcases hj with hjf | hjl
+          · exact hsort_app.2.2 j hjf jstar (List.mem_singleton.mpr rfl)
+          · rw [List.mem_singleton] at hjl
+            exact le_of_eq (congrArg p hjl.symm)
+        calc cStar < 3 * p jstar := hlt
+          _ ≤ 3 * p j := by linarith
+      have hbnd : ∀ k : Fin m, ((P.filter (fun j => bopt j = k)).map p).sum ≤ cStar := by
+        intro k
+        have hPfilt_nodup : (P.filter (fun j => bopt j = k)).Nodup := hnodupP.filter _
+        have hsub : (P.filter (fun j => bopt j = k)).toFinset ⊆
+            Finset.univ.filter (fun j => bopt j = k) := by
+          intro x hx
+          rw [List.mem_toFinset, List.mem_filter] at hx
+          rw [Finset.mem_filter]
+          exact ⟨Finset.mem_univ x, by simpa using hx.2⟩
+        calc ((P.filter (fun j => bopt j = k)).map p).sum
+            = ∑ j ∈ (P.filter (fun j => bopt j = k)).toFinset, p j :=
+              (List.sum_toFinset p hPfilt_nodup).symm
+          _ ≤ ∑ j ∈ Finset.univ.filter (fun j => bopt j = k), p j :=
+              Finset.sum_le_sum_of_subset_of_nonneg hsub (fun j _ _ => hp j)
+          _ = load p bopt k := rfl
+          _ ≤ cStar := by rw [← hbopt]; exact load_le_makespan hm p bopt k
+      have hgreedyP : ∀ (i : ℕ) (hi : i < P.length) (k : Fin m),
+          listLoad p a (P.take i) (a (P.get ⟨i, hi⟩)) ≤ listLoad p a (P.take i) k := by
+        intro i hi k
+        have hilt : i < i₀ + 1 := by
+          have hPl : P.length = min (i₀ + 1) js.length := by rw [hP, List.length_take]
+          omega
+        have hijs : i < js.length := by omega
+        have htt : P.take i = js.take i := by
+          rw [hP, List.take_take]; congr 1; omega
+        have hgetP : P.get ⟨i, hi⟩ = js.get ⟨i, hijs⟩ := by
+          simp only [List.get_eq_getElem, hP, List.getElem_take]
+        rw [htt, hgetP]
+        exact hls.2.2 i hijs k
+      have hloadsP : ∀ k, listLoad p a P k ≤ cStar :=
+        lpt_prefix_loads_le hm hp hnodupP hsortP hlargeP hbnd hgreedyP
+      have hcrit : listLoad p a P (a jstar) ≤ cStar := hloadsP (a jstar)
+      have hPsucc : listLoad p a P (a jstar) = start + p jstar := by
+        have h := listLoad_take_succ p a js i₀ hi₀ (a jstar)
+        rw [hP, h, ← hjstar_def, if_pos rfl, ← hstart_eq]
+      have hle_opt : makespan hm p a ≤ cStar := by
+        rw [hmk, ← hPsucc]; exact hcrit
+      have hcnn : 0 ≤ cStar := by
+        rw [← hbopt]
+        refine le_trans ?_ (load_le_makespan hm p bopt ⟨0, hm⟩)
+        unfold load; exact Finset.sum_nonneg (fun j _ => hp j)
+      exact le_tight_bound_of_le_opt hm hle_opt hcnn
+
+end Assembly
+
 end Frahan

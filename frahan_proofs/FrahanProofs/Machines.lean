@@ -22,7 +22,7 @@ Formalized here (PROVED, no sorry):
     ratio, from the same certificate PLUS the LPT counting hypothesis
     (`0 < start → 3q ≤ C*`: a machine with ≥2 jobs has a small last job).
 
-Left as `proof_wanted` (statements exact; proofs need the execution-trace
+Formerly left as `proof_wanted` — NOW ALL PROVED (the execution-trace
 layer, staged like the other Tier-1 `[D]` rows of `Roadmap.lean`):
   * `list_schedule_decomposition` — an actual greedy list schedule realizes the
     `greedy_makespan_bound` certificate (`makespan = start + q`, `m·start ≤ …`).
@@ -135,7 +135,7 @@ critical machine, if it runs more than one job (`0 < start`) then its last —
 hence (by LPT ordering) smallest — job is small, `3q ≤ C*`. Graham 1969. Two
 cases: single job (`start = 0`, `C_LPT = q ≤ C*`) or `3q ≤ C*`, both landing
 under `(4/3 − 1/(3m))·C*`. The hypothesis `hlpt` is exactly the counting lemma
-`proof_wanted` below discharges from the execution trace. -/
+trace layer below + `LptOptimal.lean` discharge from the execution trace. -/
 theorem lpt_makespan_bound (hm : 0 < m)
     {cLPT start q total cStar : ℝ}
     (hmk : cLPT = start + q)
@@ -163,7 +163,7 @@ theorem lpt_makespan_bound (hm : 0 < m)
     nlinarith [hstart, htot, h3q, hM1, hm_pos,
       mul_nonneg (by linarith : (0:ℝ) ≤ cStar - 3 * q) (by linarith : (0:ℝ) ≤ (m:ℝ) - 1)]
 
-/-! ### The execution-trace layer (`proof_wanted`)
+/-! ### The execution-trace layer (proved; Graham 4/3 completed in LptOptimal.lean)
 
 The two bounds above take the list-schedule certificate as hypotheses. What
 remains — building that certificate from an actual greedy run, and the LPT
@@ -379,6 +379,131 @@ theorem list_schedule_decomposition (hm : 0 < m) (p : J → ℝ)
     · rw [hpj0]; simp only [mul_zero, sub_zero]
       exact Finset.sum_nonneg (fun j _ => hp j)
 
+/-- Index-exposing VARIANT of `list_schedule_decomposition`. In addition to the
+greedy certificate (`makespan = start + p jstar`, `m·start ≤ total − p jstar`) it
+returns the critical PREFIX INDEX `i₀` (the position of the last job on the makespan
+machine, `jstar = js.get ⟨i₀, hi₀⟩`) and the identification
+`start = listLoad p a (js.take i₀) (a jstar)` bridging the makespan machine's load to
+the LPT-prefix trace. Consumed by `FrahanProofs.LptOptimal.lpt_tight_bound` (Stage 3),
+whose large-critical-job branch needs `listLoad p a (js.take (i₀+1)) (a jstar) =
+start + p jstar`. The proof mirrors `list_schedule_decomposition`. -/
+theorem list_schedule_decomposition' (hm : 0 < m) (p : J → ℝ)
+    (hp : ∀ j, 0 ≤ p j) (a : J → Fin m) (js : List J)
+    (hls : IsListSchedule p a js) (hne : js ≠ []) :
+    ∃ (i₀ : ℕ) (hi₀ : i₀ < js.length) (start : ℝ),
+      makespan hm p a = start + p (js.get ⟨i₀, hi₀⟩) ∧
+        (m : ℝ) * start ≤ totalWork p - p (js.get ⟨i₀, hi₀⟩) ∧
+        start = listLoad p a (js.take i₀) (a (js.get ⟨i₀, hi₀⟩)) := by
+  classical
+  obtain ⟨hnodup, hall, hmin⟩ := hls
+  have hne_univ : (Finset.univ : Finset (Fin m)).Nonempty := ⟨⟨0, hm⟩, Finset.mem_univ _⟩
+  obtain ⟨kstar, -, hks⟩ := Finset.exists_mem_eq_sup' hne_univ (load p a)
+  have hmake : makespan hm p a = load p a kstar := by unfold makespan; exact hks
+  set T : Finset (Fin js.length) :=
+    Finset.univ.filter (fun i => a (js.get i) = kstar) with hT_def
+  by_cases hTne : T.Nonempty
+  · set i₀ := T.max' hTne with hi0_def
+    have hi0_mem : i₀ ∈ T := T.max'_mem hTne
+    have hi0lt : (i₀ : ℕ) < js.length := i₀.isLt
+    have hkstar : a (js.get i₀) = kstar := by
+      have h := hi0_mem; rw [hT_def] at h
+      simpa using (Finset.mem_filter.mp h).2
+    set jstar : J := js.get i₀ with hjstar_def
+    set start : ℝ := listLoad p a (js.take (i₀ : ℕ)) kstar with hstart_def
+    have hlast : ∀ (n : ℕ) (hn : n < js.length),
+        (i₀ : ℕ) < n → a (js.get ⟨n, hn⟩) ≠ kstar := by
+      intro n hn hlt hcontra
+      have hmemT : (⟨n, hn⟩ : Fin js.length) ∈ T := by
+        rw [hT_def]; simp only [Finset.mem_filter, Finset.mem_univ, true_and]; exact hcontra
+      have hle : (⟨n, hn⟩ : Fin js.length) ≤ i₀ := by
+        rw [hi0_def]; exact Finset.le_max' T _ hmemT
+      have hn_le : n ≤ (i₀ : ℕ) := hle
+      omega
+    have havoid_drop : ∀ j ∈ js.drop ((i₀ : ℕ) + 1), a j ≠ kstar := by
+      intro j hj
+      obtain ⟨t, htlt, hgt⟩ := List.mem_iff_getElem.mp hj
+      rw [List.getElem_drop] at hgt
+      have hnlt : (i₀ : ℕ) + 1 + t < js.length := by
+        rw [List.length_drop] at htlt; omega
+      have hne_k : a (js.get ⟨(i₀ : ℕ) + 1 + t, hnlt⟩) ≠ kstar :=
+        hlast ((i₀ : ℕ) + 1 + t) hnlt (by omega)
+      rw [List.get_eq_getElem] at hne_k
+      rw [← hgt]; exact hne_k
+    have hload_split : ∀ k, listLoad p a js k
+        = listLoad p a (js.take (i₀ : ℕ)) k + listLoad p a (js.drop (i₀ : ℕ)) k := by
+      intro k; rw [← listLoad_append, List.take_append_drop]
+    have hdrop : js.drop (i₀ : ℕ) = jstar :: js.drop ((i₀ : ℕ) + 1) := by
+      rw [hjstar_def, List.get_eq_getElem]; exact List.drop_eq_getElem_cons hi0lt
+    have haj : a jstar = kstar := by rw [hjstar_def]; exact hkstar
+    have hmk : makespan hm p a = start + p jstar := by
+      rw [hmake, ← listLoad_full p a kstar hnodup hall, hload_split kstar, hdrop,
+        listLoad_cons, if_pos haj,
+        listLoad_eq_zero p a (js.drop ((i₀ : ℕ) + 1)) kstar havoid_drop, hstart_def]
+      ring
+    have hmin_kstar : ∀ k, start ≤ listLoad p a (js.take (i₀ : ℕ)) k := by
+      intro k
+      have h2 : listLoad p a (js.take (i₀ : ℕ)) (a jstar)
+          ≤ listLoad p a (js.take (i₀ : ℕ)) k := hmin (i₀ : ℕ) hi0lt k
+      rw [haj] at h2
+      rw [hstart_def]; exact h2
+    have hsum_min : (m : ℝ) * start ≤ ∑ k, listLoad p a (js.take (i₀ : ℕ)) k := by
+      have h1 : (∑ _k : Fin m, start) ≤ ∑ k, listLoad p a (js.take (i₀ : ℕ)) k :=
+        Finset.sum_le_sum (fun k _ => hmin_kstar k)
+      rwa [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] at h1
+    have htot_eq : totalWork p = (js.map p).sum := by
+      rw [← sum_load p a, ← sum_listLoad p a js]
+      exact Finset.sum_congr rfl (fun k _ => (listLoad_full p a k hnodup hall).symm)
+    have hmap_split : ((js.take (i₀ : ℕ)).map p).sum + ((js.drop (i₀ : ℕ)).map p).sum
+        = (js.map p).sum := by
+      rw [← List.sum_append, ← List.map_append, List.take_append_drop]
+    have hdrop_map : ((js.drop (i₀ : ℕ)).map p).sum
+        = p jstar + ((js.drop ((i₀ : ℕ) + 1)).map p).sum := by
+      rw [hdrop]; simp
+    have hrest_nonneg : 0 ≤ ((js.drop ((i₀ : ℕ) + 1)).map p).sum := by
+      apply List.sum_nonneg
+      intro x hx
+      simp only [List.mem_map] at hx
+      obtain ⟨j, -, rfl⟩ := hx; exact hp j
+    have hsum_take : (∑ k, listLoad p a (js.take (i₀ : ℕ)) k)
+        = ((js.take (i₀ : ℕ)).map p).sum := sum_listLoad p a _
+    have haverage : (m : ℝ) * start ≤ totalWork p - p jstar := by
+      have htake_le : ((js.take (i₀ : ℕ)).map p).sum ≤ totalWork p - p jstar := by
+        have key : ((js.take (i₀ : ℕ)).map p).sum + ((js.drop (i₀ : ℕ)).map p).sum
+            = totalWork p := by rw [hmap_split, htot_eq]
+        rw [hdrop_map] at key
+        linarith [hrest_nonneg]
+      calc (m : ℝ) * start ≤ ∑ k, listLoad p a (js.take (i₀ : ℕ)) k := hsum_min
+        _ = ((js.take (i₀ : ℕ)).map p).sum := hsum_take
+        _ ≤ totalWork p - p jstar := htake_le
+    have hstart_eq' : start = listLoad p a (js.take (i₀ : ℕ)) (a jstar) := by
+      rw [hstart_def, haj]
+    have hidx : js.get ⟨(i₀ : ℕ), hi0lt⟩ = jstar := by rw [hjstar_def]
+    refine ⟨(i₀ : ℕ), hi0lt, start, ?_, ?_, ?_⟩
+    · rw [hidx]; exact hmk
+    · rw [hidx]; exact haverage
+    · rw [hidx]; exact hstart_eq'
+  · rw [Finset.not_nonempty_iff_eq_empty] at hTne
+    have havoid : ∀ j ∈ js, a j ≠ kstar := by
+      intro j hj hcontra
+      obtain ⟨i, hi, hji⟩ := List.mem_iff_getElem.mp hj
+      have hmemT : (⟨i, hi⟩ : Fin js.length) ∈ T := by
+        rw [hT_def]; simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+        rw [List.get_eq_getElem, hji]; exact hcontra
+      rw [hTne] at hmemT; simp at hmemT
+    have hmake0 : makespan hm p a = 0 := by
+      rw [hmake, ← listLoad_full p a kstar hnodup hall,
+        listLoad_eq_zero p a js kstar havoid]
+    have h0lt : 0 < js.length := List.length_pos_iff.mpr hne
+    have hpj0 : p (js.get ⟨0, h0lt⟩) = 0 :=
+      le_antisymm
+        (by have := opt_ge_max_job hm p hp a (js.get ⟨0, h0lt⟩); rw [hmake0] at this; exact this)
+        (hp _)
+    refine ⟨0, h0lt, 0, ?_, ?_, ?_⟩
+    · rw [hmake0, hpj0]; ring
+    · rw [hpj0, mul_zero, sub_zero]; unfold totalWork
+      exact Finset.sum_nonneg (fun j _ => hp j)
+    · simp [listLoad]
+
 /-! ### Case A of the tight LPT bound (small critical job) — PROVED
 
 Graham's proof splits on the critical (last-placed) job `q = p jstar` of the LPT
@@ -420,7 +545,7 @@ what `list_schedule_decomposition` produces) plus the optimum-average bound
 `total ≤ m·C*` (from `opt_ge_avg` at the optimum-achieving assignment). Only the
 large-critical-job case (`3·p jstar > C*`) — the pairing/exchange argument — is
 left open at `lpt_tight_bound`. -/
-private theorem lpt_tight_bound_small_case (hm : 0 < m) (p : J → ℝ) (a : J → Fin m)
+theorem lpt_tight_bound_small_case (hm : 0 < m) (p : J → ℝ) (a : J → Fin m)
     (cStar : ℝ) (hcstar_ach : ∃ b : J → Fin m, makespan hm p b = cStar)
     (jstar : J) (start : ℝ)
     (hmk : makespan hm p a = start + p jstar)
@@ -498,7 +623,7 @@ once the large-critical-job case has established that the LPT makespan does not
 exceed the optimum (`makespan a ≤ C*`), the tight bound is immediate. This
 isolates the sole remaining obligation of `lpt_tight_bound`: proving LPT optimal
 on the reduced (all jobs `> C*/3`) instance. -/
-private theorem le_tight_bound_of_le_opt (hm : 0 < m) {L cStar : ℝ}
+theorem le_tight_bound_of_le_opt (hm : 0 < m) {L cStar : ℝ}
     (hLopt : L ≤ cStar) (hc : 0 ≤ cStar) :
     L ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
   have hM1 : (1 : ℝ) ≤ m := by exact_mod_cast hm
@@ -521,18 +646,11 @@ private theorem pair_exchange_max_le {x x' y y' : ℝ} (hx : x' ≤ x) (hy : y �
   · exact le_trans (by linarith : x + y ≤ x + y') (le_max_left _ _)
   · exact le_trans (by linarith : x' + y' ≤ x + y') (le_max_left _ _)
 
-/-- tex Theorem `thm:lpt` (Graham 1969), headline statement: the LPT list
-schedule's makespan is within `4/3 − 1/(3m)` of the OPTIMUM makespan `cStar`
-(characterized as a lower bound on every assignment's makespan that is itself
-achieved). Discharged by feeding `lpt_makespan_bound` the certificate of
-`list_schedule_decomposition` together with the LPT counting lemma
-(`0 < start → 3q ≤ cStar`). The tight LPT-specific counting argument is the long
-part deferred here. -/
-proof_wanted lpt_tight_bound (hm : 0 < m) (p : J → ℝ) (hp : ∀ j, 0 ≤ p j)
-    (a : J → Fin m) (js : List J) (hlpt : IsLPTSchedule p a js)
-    (cStar : ℝ) (hcstar_lb : ∀ b : J → Fin m, cStar ≤ makespan hm p b)
-    (hcstar_ach : ∃ b : J → Fin m, makespan hm p b = cStar) :
-    makespan hm p a ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar
+-- tex Theorem `thm:lpt` (Graham 1969), headline statement, is now PROVED as
+-- `FrahanProofs.LptOptimal.lpt_tight_bound` (Stage 3), assembled from the
+-- index-exposing `list_schedule_decomposition'` above, the small-case helpers
+-- (`lpt_tight_bound_small_case`, `le_tight_bound_of_le_opt`), and the Stage-1/2
+-- static-pigeonhole + trace machinery of `FrahanProofs.LptOptimal`.
 
 end ListScheduling
 

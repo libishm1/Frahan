@@ -9,6 +9,7 @@ import FrahanProofs.Packing
 import FrahanProofs.Fitting
 import FrahanProofs.Projection
 import FrahanProofs.Machines
+import FrahanProofs.LptOptimal
 import FrahanProofs.Spectral
 import FrahanProofs.Kriging
 import FrahanProofs.Fourier
