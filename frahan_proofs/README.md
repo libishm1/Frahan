@@ -11,12 +11,12 @@ order is [`spec/PLAN_lean_formalization.md`](spec/PLAN_lean_formalization.md).
 
 - Every Lean result carries a docstring citing its `.tex` label, so the
   informal proof and the mechanized one stay in sync.
-- **No `sorry` anywhere.** A result is either proved, or stated as
-  `proof_wanted` in `FrahanProofs/Roadmap.lean`, or listed there as a
-  TODO awaiting supporting definitions. Tier-3 analysis results
-  (Varadhan, Stolt, EM convergence, KKT) will import their classical
-  ingredient as a *named axiom with a literature citation* when stated —
-  the development is explicit about what is proved versus cited.
+- **No `sorry` anywhere, and zero open `proof_wanted`.** Every named result is
+  either PROVED, or its genuinely-classical residue is the ONE cited axiom
+  (`settle_kkt`, KKT necessity under LICQ) or documented prose where Mathlib
+  cannot yet state it faithfully (Varadhan's heat-kernel limit, Dósa's tight
+  FFD constant, the Horn rotation eigenvector). The development is explicit
+  about what is proved versus cited versus prose.
 
 ## Status
 
@@ -48,6 +48,8 @@ space where applicable:
 | `thm:guillodp` / `thm:guillotine` | guillotine DP optimal substructure `V=max(place,cut)`, and the wire-saw-separable = guillotine-tree model | `Guillotine.lean` |
 | `thm:horn` / `prop:kabsch` | the rigid-alignment centroid reduction: the optimal translation is the centroid difference `q̄ − sRp̄` (rotation-eigenvector part is prose) | `Registration.lean` |
 | `thm:lpt` | the FULL Graham 1969 bound: LPT makespan `≤ (4/3 − 1/3m)·OPT`, proved end-to-end (a static pigeonhole pair lemma replaces the classical exchange induction) | `Machines.lean` + `LptOptimal.lean` |
+| `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
+| `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 | mode-merge | the joint-set clusterer's greedy mode-merge keeps a pairwise-separated set of set-poles (no two joint sets collapse together) | `Clustering.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |
 | `thm:poisson` | the least-squares Euler–Lagrange normal equation `T†(Tx−V)=0 ⇒` minimizer (with `T=∇` this is `Δχ=∇·V`) | `TierThree.lean` |
@@ -63,12 +65,10 @@ existence under LICQ (Karush; Kuhn–Tucker), a genuinely-true classical stateme
 Mathlib does not yet carry, asserted with its exact hypotheses. The Stolt
 amplitude Jacobian was *proved* (`stolt_dispersion_jacobian`); only Varadhan's
 heat-kernel limit stays a documented queue there.
-| `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
-| `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
-`FrahanProofs/Roadmap.lean` holds the full tier map for the remaining
-~24 results; new exact statements land there as `proof_wanted` before
-their proofs.
+`FrahanProofs/Roadmap.lean` holds the full tier map: every named tex result is
+now dispositioned (proved / the one cited axiom / documented prose), with zero
+open `proof_wanted`.
 
 ## Build
 
