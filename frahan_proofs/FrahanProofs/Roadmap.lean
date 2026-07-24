@@ -34,6 +34,11 @@ Tier 1 — combinatorial / induction / order
   [D] (FFD)         first-fit-decreasing 11/9·OPT + 6/9
   [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
                     Chang–Yap exactness/complexity stays prose
+  [D] nfp-sep       no-fit-polygon placement ⇒ interior-disjoint parts.
+                    CODE-VERIFIED (ContactNfpHoleNester: 0 overlap / 34832
+                    pairs; code_ws outputs/2026-07-24/nester_verification),
+                    Lean from scratch — Mathlib has no NFP/Minkowski-diff
+                    packing theory. The one row where code leads the proof.
 
 Tier 2 — linear algebra / spectral / Fourier
   [P] prop:power    power cell convex (Power)
