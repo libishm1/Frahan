@@ -308,4 +308,262 @@ theorem lpt_prefix_pair_le (hm : 0 < m) (hp : ∀ j, 0 ≤ p j) (hnodup : l.Nodu
 
 end Prefix
 
+/-! ### Stage 2 — the trace invariant: every greedy prefix load stays `≤ C`
+
+Mechanizes Stage 2 of `proofs/DESIGN_lpt_optimality.md`. Greedy least-loaded
+placement of the large, descending-sorted jobs keeps EVERY machine load `≤ C`
+after every step. Proved by the stronger induction
+`∀ t ≤ l.length, ∀ k, listLoad p a (l.take t) k ≤ C`. The step places job `t`
+on a machine of minimal current load `s`; only that load changes, so it suffices
+that `s + p jₜ ≤ C`. If some machine is empty, `s ≤ 0` and `p jₜ ≤ C`
+(`lpt_prefix_job_le` on the WITNESS `b`). Otherwise every machine runs `≤ 2`
+prefix jobs (Stage-1 fiber bound on the GREEDY prefix), so with `u := 2m − t`
+single-job machines the minimal single load is `≤ q_{u-1}`, giving
+`s ≤ p (l.get ⟨2m−t−1, _⟩)`; the Stage-1 pair lemma on `b` with `i := t+1−m`
+then closes `s + p jₜ ≤ C`. Consumed by Stage 3 (assembly into `lpt_tight_bound`).
+
+The conclusion is phrased in `Machines.listLoad` vocabulary; the greedy
+hypothesis `hgreedy` is exactly the third conjunct of `Machines.IsListSchedule`.
+Nothing here uses `sorry` or a new `axiom`. -/
+
+/-- `listLoad` as a plain map-and-sum with an `if`-guard (no `filterMap`). The
+local twin of `Machines.listLoad_cons`/`listLoad_append` bookkeeping. -/
+private theorem listLoad_eq_mapIte_sum {m : ℕ} {J : Type*} (p : J → ℝ) (a : J → Fin m)
+    (L : List J) (k : Fin m) :
+    listLoad p a L k = (L.map (fun j => if a j = k then p j else 0)).sum := by
+  induction L with
+  | nil => simp [listLoad]
+  | cons j t ih =>
+    have hcons : listLoad p a (j :: t) k
+        = (if a j = k then p j else 0) + listLoad p a t k := by
+      by_cases h : a j = k <;> simp [listLoad, h]
+    rw [hcons, ih, List.map_cons, List.sum_cons]
+
+/-- Placing the `t`-th job adds its time to exactly its own machine's prefix load:
+`listLoad` over `take (t+1)` is `take t` plus a single guarded term. -/
+private theorem listLoad_take_succ {m : ℕ} {J : Type*} (p : J → ℝ) (a : J → Fin m)
+    (l : List J) (t : ℕ) (ht : t < l.length) (k : Fin m) :
+    listLoad p a (l.take (t + 1)) k
+      = listLoad p a (l.take t) k
+        + (if a (l.get ⟨t, ht⟩) = k then p (l.get ⟨t, ht⟩) else 0) := by
+  have hsplit : l.take (t + 1) = l.take t ++ [l.get ⟨t, ht⟩] := by
+    rw [List.get_eq_getElem]; exact List.take_succ_eq_append_getElem ht
+  rw [listLoad_eq_mapIte_sum p a (l.take (t + 1)) k, hsplit, List.map_append, List.sum_append,
+    List.map_singleton, List.sum_singleton, ← listLoad_eq_mapIte_sum p a (l.take t) k]
+
+/-- Stage-2 deliverable, THE TRACE INVARIANT. On the LPT prefix `l` (nodup,
+descending-sorted, all jobs large) with a witness assignment `b` keeping every
+machine `≤ C` (`hb`), any GREEDY least-loaded list schedule `a` for `l`
+(`hgreedy`, the minimality conjunct of `Machines.IsListSchedule p a l`) keeps
+every machine load `≤ C` on the full prefix: `∀ k, listLoad p a l k ≤ C`.
+Stage 3 consumes this verbatim. -/
+theorem lpt_prefix_loads_le {m : ℕ} {J : Type*} {p : J → ℝ} {a b : J → Fin m} {C : ℝ}
+    {l : List J} (hm : 0 < m) (hp : ∀ j, 0 ≤ p j) (hnodup : l.Nodup)
+    (hsort : l.Pairwise (fun j j' => p j' ≤ p j)) (hlarge : ∀ j ∈ l, C < 3 * p j)
+    (hb : ∀ k : Fin m, ((l.filter (fun j => b j = k)).map p).sum ≤ C)
+    (hgreedy : ∀ (i : ℕ) (hi : i < l.length) (k : Fin m),
+        listLoad p a (l.take i) (a (l.get ⟨i, hi⟩)) ≤ listLoad p a (l.take i) k) :
+    ∀ k, listLoad p a l k ≤ C := by
+  classical
+  -- `0 ≤ C` from any machine's nonnegative witness load.
+  have hC : 0 ≤ C := by
+    refine le_trans ?_ (hb ⟨0, hm⟩)
+    apply List.sum_nonneg
+    intro x hx
+    rw [List.mem_map] at hx
+    obtain ⟨j, -, rfl⟩ := hx
+    exact hp j
+  have hlen : l.length ≤ 2 * m := lpt_prefix_length_le hp hnodup hlarge hb
+  -- Stronger induction: every prefix keeps all loads `≤ C`.
+  have main : ∀ t, t ≤ l.length → ∀ k, listLoad p a (l.take t) k ≤ C := by
+    intro t
+    induction t with
+    | zero => intro _ k; simpa [listLoad] using hC
+    | succ t ih =>
+      intro hsucc k
+      have ht : t < l.length := by omega
+      have htle : t ≤ l.length := by omega
+      have iht : ∀ k', listLoad p a (l.take t) k' ≤ C := ih htle
+      rw [listLoad_take_succ p a l t ht k]
+      by_cases hk : a (l.get ⟨t, ht⟩) = k
+      · -- the placed job lands on machine `k`; only this load changes
+        rw [if_pos hk]
+        subst hk
+        have hjt_mem : l.get ⟨t, ht⟩ ∈ l := List.get_mem l _
+        have hmin : ∀ k', listLoad p a (l.take t) (a (l.get ⟨t, ht⟩))
+            ≤ listLoad p a (l.take t) k' := hgreedy t ht
+        -- positions of the greedy prefix as `Fin t`
+        have hlt : ∀ r : Fin t, (r : ℕ) < l.length := fun r => lt_of_lt_of_le r.isLt htle
+        set job : Fin t → J := fun r => l.get ⟨(r : ℕ), hlt r⟩ with hjob
+        have hjob_inj : Function.Injective job := by
+          have hget : Function.Injective l.get := List.nodup_iff_injective_get.mp hnodup
+          intro r r' hrr
+          simp only [hjob] at hrr
+          have h1 : (⟨(r : ℕ), hlt r⟩ : Fin l.length) = ⟨(r' : ℕ), hlt r'⟩ := hget hrr
+          exact Fin.ext (by simpa using congrArg Fin.val h1)
+        -- `l.take t = ofFn job`, giving the position/list load bridge
+        have hofFn : l.take t = List.ofFn job := by
+          apply List.ext_getElem
+          · rw [List.length_ofFn, List.length_take]; omega
+          · intro i h₁ h₂
+            rw [List.getElem_take, List.getElem_ofFn]
+            simp only [hjob, List.get_eq_getElem]
+        have bridge : ∀ c : Fin m, listLoad p a (l.take t) c
+            = ∑ r ∈ Finset.univ.filter (fun r : Fin t => a (job r) = c), p (job r) := by
+          intro c
+          rw [listLoad_eq_mapIte_sum, hofFn,
+            show ((List.ofFn job).map (fun j => if a j = c then p j else 0))
+                = List.ofFn (fun r => if a (job r) = c then p (job r) else 0) from List.map_ofFn,
+            List.sum_ofFn, Finset.sum_filter]
+        -- per-machine prefix job counts
+        set cnt : Fin m → ℕ :=
+          fun c => (Finset.univ.filter (fun r : Fin t => a (job r) = c)).card with hcnt
+        have hcnt_eq : ∀ c : Fin m,
+            cnt c = (Finset.univ.filter (fun r : Fin t => a (job r) = c)).card :=
+          fun c => by simp only [hcnt]
+        have hcnt_sum : ∑ c : Fin m, cnt c = t := by
+          simp only [hcnt_eq]
+          have h := Finset.card_eq_sum_card_fiberwise (f := fun r : Fin t => a (job r))
+            (s := (Finset.univ : Finset (Fin t))) (t := (Finset.univ : Finset (Fin m)))
+            (fun x _ => Finset.mem_univ _)
+          rw [Finset.card_univ, Fintype.card_fin] at h
+          exact h.symm
+        have hcnt_le2 : ∀ c : Fin m, cnt c ≤ 2 := by
+          intro c
+          have himg : cnt c
+              = ((Finset.univ.filter (fun r : Fin t => a (job r) = c)).image job).card := by
+            rw [hcnt_eq c]
+            exact (Finset.card_image_of_injOn hjob_inj.injOn).symm
+          rw [himg]
+          apply card_le_two_of_sum p hp
+          · intro j hj
+            rw [Finset.mem_image] at hj
+            obtain ⟨x, -, rfl⟩ := hj
+            exact hlarge (job x) (by simp only [hjob]; exact List.get_mem l _)
+          · rw [Finset.sum_image (fun x _ y _ h => hjob_inj h), ← bridge c]
+            exact iht c
+        -- case split: some machine has an empty prefix fiber?
+        by_cases hEmpty : ∃ c : Fin m, cnt c = 0
+        · obtain ⟨k0, hk0⟩ := hEmpty
+          have hk0' : (Finset.univ.filter (fun r : Fin t => a (job r) = k0)).card = 0 := by
+            rw [← hcnt_eq k0]; exact hk0
+          have hfib0 : Finset.univ.filter (fun r : Fin t => a (job r) = k0) = ∅ :=
+            Finset.card_eq_zero.mp hk0'
+          have hload0 : listLoad p a (l.take t) k0 = 0 := by
+            rw [bridge k0, hfib0, Finset.sum_empty]
+          have hs0 : listLoad p a (l.take t) (a (l.get ⟨t, ht⟩)) ≤ 0 := by
+            rw [← hload0]; exact hmin k0
+          have hpjt : p (l.get ⟨t, ht⟩) ≤ C := lpt_prefix_job_le hp hnodup hb _ hjt_mem
+          linarith
+        · -- every machine nonempty ⇒ every fiber ∈ {1,2}
+          push_neg at hEmpty
+          have hcnt_ge1 : ∀ c, 1 ≤ cnt c := fun c => Nat.one_le_iff_ne_zero.mpr (hEmpty c)
+          have hpart : ∀ c, cnt c = 1 ∨ cnt c = 2 := by
+            intro c; have := hcnt_le2 c; have := hcnt_ge1 c; omega
+          set Ones : Finset (Fin m) := Finset.univ.filter (fun c => cnt c = 1) with hOnes
+          -- |Ones| = 2m − t
+          have hindic : (∑ c : Fin m, (if cnt c = 1 then 1 else 0)) = Ones.card := by
+            rw [hOnes, Finset.card_filter]
+          have heach : ∀ c : Fin m, cnt c + (if cnt c = 1 then 1 else 0) = 2 := by
+            intro c; rcases hpart c with h | h <;> simp [h]
+          have hsum2 :
+              (∑ c : Fin m, cnt c) + (∑ c : Fin m, (if cnt c = 1 then 1 else 0)) = 2 * m := by
+            rw [← Finset.sum_add_distrib, Finset.sum_congr rfl (fun c _ => heach c),
+              Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul, Nat.mul_comm]
+          have hOnes_card : Ones.card = 2 * m - t := by
+            rw [hindic, hcnt_sum] at hsum2; omega
+          -- t ≥ m (all fibers ≥ 1)
+          have htm : m ≤ t := by
+            have h : (∑ _c : Fin m, (1 : ℕ)) ≤ ∑ c : Fin m, cnt c :=
+              Finset.sum_le_sum (fun c _ => hcnt_ge1 c)
+            simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul,
+              mul_one] at h
+            rw [hcnt_sum] at h; exact h
+          -- singleton positions: |SP| = |Ones| = 2m − t
+          set SP : Finset (Fin t) := Finset.univ.filter (fun r => cnt (a (job r)) = 1) with hSP
+          have hSP_card : SP.card = Ones.card := by
+            have H : ∀ r ∈ SP, a (job r) ∈ Ones := by
+              intro r hr
+              simp only [hSP, Finset.mem_filter, Finset.mem_univ, true_and] at hr
+              simp only [hOnes, Finset.mem_filter, Finset.mem_univ, true_and]
+              exact hr
+            rw [Finset.card_eq_sum_card_fiberwise (s := SP) (t := Ones)
+              (f := fun r : Fin t => a (job r)) H]
+            have hterm : ∀ c ∈ Ones, (SP.filter (fun r => a (job r) = c)).card = 1 := by
+              intro c hc
+              simp only [hOnes, Finset.mem_filter, Finset.mem_univ, true_and] at hc
+              have hfe : SP.filter (fun r => a (job r) = c)
+                  = Finset.univ.filter (fun r : Fin t => a (job r) = c) := by
+                ext r
+                simp only [hSP, Finset.mem_filter, Finset.mem_univ, true_and]
+                constructor
+                · rintro ⟨-, hr2⟩; exact hr2
+                · intro hr2; exact ⟨by rw [hr2]; exact hc, hr2⟩
+              rw [hfe, ← hcnt_eq c]; exact hc
+            rw [Finset.sum_congr rfl hterm, Finset.sum_const, smul_eq_mul, mul_one]
+          have hSPne : SP.Nonempty := by
+            rw [← Finset.card_pos, hSP_card, hOnes_card]; omega
+          set rmax : Fin t := SP.max' hSPne with hrmax
+          have hrmax_mem : rmax ∈ SP := by rw [hrmax]; exact SP.max'_mem hSPne
+          have hcnt1 : cnt (a (job rmax)) = 1 := by
+            have h := hrmax_mem
+            simp only [hSP, Finset.mem_filter, Finset.mem_univ, true_and] at h
+            exact h
+          -- rmax ≥ 2m − t − 1 (|SP| distinct positions all `≤ rmax`)
+          have hcard_le : SP.card ≤ (rmax : ℕ) + 1 := by
+            have himg : SP.image Fin.val ⊆ Finset.range ((rmax : ℕ) + 1) := by
+              intro x hx
+              rw [Finset.mem_image] at hx
+              obtain ⟨r, hrSP, rfl⟩ := hx
+              rw [Finset.mem_range]
+              have hle : r ≤ rmax := by rw [hrmax]; exact Finset.le_max' SP r hrSP
+              have hle' : (r : ℕ) ≤ (rmax : ℕ) := hle
+              omega
+            calc SP.card = (SP.image Fin.val).card :=
+                  (Finset.card_image_of_injective SP Fin.val_injective).symm
+              _ ≤ (Finset.range ((rmax : ℕ) + 1)).card := Finset.card_le_card himg
+              _ = (rmax : ℕ) + 1 := Finset.card_range _
+          have hrmax_ge : 2 * m - t - 1 ≤ (rmax : ℕ) := by
+            rw [hSP_card, hOnes_card] at hcard_le; omega
+          -- the singleton machine at rmax carries exactly its own job
+          have hfib_single :
+              Finset.univ.filter (fun x : Fin t => a (job x) = a (job rmax)) = {rmax} := by
+            obtain ⟨w, hw⟩ := Finset.card_eq_one.mp
+              (by rw [← hcnt_eq (a (job rmax))]; exact hcnt1 :
+                (Finset.univ.filter (fun x : Fin t => a (job x) = a (job rmax))).card = 1)
+            have hrmem : rmax ∈ ({w} : Finset (Fin t)) := by
+              rw [← hw]; exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, rfl⟩
+            rw [Finset.mem_singleton] at hrmem
+            rw [hw, hrmem]
+          have hload_single : listLoad p a (l.take t) (a (job rmax)) = p (job rmax) := by
+            rw [bridge (a (job rmax)), hfib_single, Finset.sum_singleton]
+          -- the minimal single load is `≤ p (l.get ⟨2m−t−1, _⟩)`
+          have hq : 2 * m - t - 1 < l.length := by omega
+          have hmono_le : p (job rmax) ≤ p (l.get ⟨2 * m - t - 1, hq⟩) := by
+            simp only [hjob]
+            rcases eq_or_lt_of_le hrmax_ge with heq | hlt2
+            · exact le_of_eq (congrArg p (congrArg l.get (Fin.ext heq.symm)))
+            · exact List.Pairwise.rel_get_of_lt hsort
+                (a := ⟨2 * m - t - 1, hq⟩) (b := ⟨(rmax : ℕ), hlt rmax⟩) hlt2
+          have hs_le : listLoad p a (l.take t) (a (l.get ⟨t, ht⟩))
+              ≤ p (l.get ⟨2 * m - t - 1, hq⟩) := by
+            refine le_trans (hmin (a (job rmax))) ?_
+            rw [hload_single]; exact hmono_le
+          -- the Stage-1 pair lemma on the WITNESS closes `s + p jₜ ≤ C`
+          have hi1 : 1 ≤ t + 1 - m := by omega
+          have hin : m + (t + 1 - m) ≤ l.length := by omega
+          have hpair := lpt_prefix_pair_le hm hp hnodup hsort hlarge hb (t + 1 - m) hi1 hin
+          have hpair' : p (l.get ⟨2 * m - t - 1, hq⟩) + p (l.get ⟨t, ht⟩) ≤ C := by
+            have e1 : (⟨2 * m - t - 1, hq⟩ : Fin l.length) = ⟨m - (t + 1 - m), by omega⟩ :=
+              Fin.ext (show (2 * m - t - 1 : ℕ) = m - (t + 1 - m) by omega)
+            have e2 : (⟨t, ht⟩ : Fin l.length) = ⟨m + (t + 1 - m) - 1, by omega⟩ :=
+              Fin.ext (show (t : ℕ) = m + (t + 1 - m) - 1 by omega)
+            rw [e1, e2]; exact hpair
+          linarith
+      · rw [if_neg hk, add_zero]; exact iht k
+  have hfull := main l.length (le_refl _)
+  intro k
+  have hk := hfull k
+  rwa [List.take_length] at hk
+
 end Frahan
