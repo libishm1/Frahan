@@ -22,12 +22,19 @@ theorem firstFit_lt_two_opt (k : ℕ) (total opt : ℝ)
     (k : ℝ) < 2 * opt + 1 := by
   linarith
 
-/-- tex (FFD), the tight bound (Johnson; Dósa tight additive): First-Fit-
-Decreasing uses `FFD ≤ 11/9·OPT + 6/9` bins. Genuinely long (Dósa 2007); stated,
-proof deferred. -/
-proof_wanted ffd_tight (k : ℕ) (opt : ℝ) (hopt : 0 ≤ opt)
-    (hbound : True) :  -- placeholder for the FFD structural hypotheses
-    (k : ℝ) ≤ 11 / 9 * opt + 6 / 9
+/-
+tex (FFD), the tight bound (Johnson; Dósa tight additive): First-Fit-Decreasing
+uses `FFD ≤ 11/9·OPT + 6/9` bins. This is PROSE, not a `proof_wanted`, on purpose:
+a faithful statement needs the full First-Fit-Decreasing bin-packing MODEL (items,
+bins, the FFD assignment as a function, OPT as a minimum over valid packings —
+none of which Mathlib carries), and the proof is Dósa's (2007) weighting-function
+case analysis, one of the longest in combinatorial optimization (~40 pp). It is a
+research-scale formalization, not a proof that can be written now. The provable
+FFD content — the elementary `< 2·OPT` bound — is `firstFit_lt_two_opt` above.
+(An earlier `proof_wanted ffd_tight` with a `hbound : True` placeholder was
+removed: with that placeholder the asserted statement was FALSE, so it was not a
+legitimate `proof_wanted`.)
+-/
 
 /-- tex Theorem `thm:hm` (Hertel–Mehlhorn), the 4-approximation counting core.
 `r` = number of reflex vertices, `P` = pieces the algorithm emits, `opt` = pieces

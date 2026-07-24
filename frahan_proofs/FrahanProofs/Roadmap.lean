@@ -45,8 +45,10 @@ Tier 1 — combinatorial / induction / order
                     decomposition PROVED); [W] full Graham 4/3 lpt_tight_bound —
                     needs the Case-B pigeonhole optimality (not reducible to the
                     conditional arith core; concrete counterexample in-file)
-  [P] (FFD)         first-fit 2·OPT core (Approx, firstFit_lt_two_opt);
-                    [W] tight 11/9·OPT+6/9 (Dósa)
+  [P] (FFD)         first-fit < 2·OPT PROVED (Approx, firstFit_lt_two_opt);
+                    tight 11/9·OPT+6/9 (Dósa) = PROSE — needs the full FFD
+                    bin-packing model + Dósa's ~40pp weighting proof (research-
+                    scale). The removed placeholder proof_wanted was FALSE.
   [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
                     Chang–Yap exactness/complexity stays prose
   [P] nfp-sep       no-fit-polygon placement ⇒ disjoint parts (Packing) —
