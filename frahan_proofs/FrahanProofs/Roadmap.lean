@@ -31,7 +31,8 @@ Tier 1 — combinatorial / induction / order
                     outputs/2026-07-24/clustering_verification)
   [P] (WelshPowell) greedy Δ+1 coloring, any insertion order (Coloring) —
                     built from scratch; Mathlib has no such bound
-  [D] thm:imaiiri   BFS fewest-edges path = min-# approximation
+  [P] thm:imaiiri   min segments = G.dist, achieved by a shortest walk +
+                    lower bound for every approximation (Paths); walk=path form
   [D] thm:guillodp  Bellman recursion optimal over guillotine tilings
   [D] thm:hm        Hertel–Mehlhorn ≤ 4·OPT convex partition
   [P] thm:lpt       OPT lower bounds + (2−1/m) list-schedule bound + tight
