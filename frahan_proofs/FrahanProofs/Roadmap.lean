@@ -58,8 +58,8 @@ Tier 2 — linear algebra / spectral / Fourier
   [P] lem:clip3d    subsumed: the development is dimension-generic (Common)
   [P] lem:plane     non-collinear ⇒ Gram PosDef ⇔ picks span + LS-fit
                     UNIQUENESS (Fitting, ls_fit_unique proved); matrix θ=M⁻¹b prose
-  [P] thm:nugget    τ=0 interpolation kⱼᵀK⁻¹=eⱼ ⇒ d̂(pⱼ)=dⱼ (Kriging);
-                    [W] τ>0 strict-smoother contraction (nugget_strict_smoother)
+  [P] thm:nugget    τ=0 interpolation kⱼᵀK⁻¹=eⱼ ⇒ d̂(pⱼ)=dⱼ + τ>0 strict-
+                    smoother contraction PROVED (Kriging, both; elementary r=K₀s+τs)
   [P] thm:horn      centroid-alignment reduction: optimal translation = centroid
                     difference (Registration, horn_optimal_translation); rotation
                     = top eigenvector of N(M) is prose (quaternion, research-scale)
