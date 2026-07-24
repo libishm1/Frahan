@@ -132,11 +132,32 @@ public sealed class ConvexPolyhedron
         // signed distances (positive = on the side that gets discarded)
         int nv = _verts.Count;
         var d = new double[nv];
+        double scale = 1.0;
         for (int i = 0; i < nv; i++)
         {
             var p = _verts[i];
             d[i] = (p.X - pX) * nX + (p.Y - pY) * nY + (p.Z - pZ) * nZ;
+            double m = Math.Max(Math.Abs(p.X), Math.Max(Math.Abs(p.Y), Math.Abs(p.Z)));
+            if (m > scale) scale = m;
         }
+
+        // Robustness no-op guard: if the plane removes nothing beyond a
+        // numerical (~nm) tolerance -- in particular when it coincides with an
+        // existing cut face, which is exactly what a repeated cut produces --
+        // return this polyhedron unchanged rather than spuriously re-cutting and
+        // re-capping, which inflates the computed volume. This enforces the
+        // clip_idempotent obligation (frahan_proofs/FrahanProofs/Common.lean).
+        // planeEps is a NUMERICAL epsilon, far below the mm-scale geometric
+        // feature tolerance, so every genuine cut falls through to the exact,
+        // unchanged clip below.
+        double planeEps = 1.0e-9 * scale;
+        bool anyDiscarded = false;
+        for (int i = 0; i < nv; i++)
+            if (d[i] > planeEps) { anyDiscarded = true; break; }
+        if (!anyDiscarded)
+            return new ConvexPolyhedron(
+                new List<(double X, double Y, double Z)>(_verts),
+                new List<int[]>(_faces));
 
         // pass 1: emit kept original vertices + intersection points (shared across faces)
         var newVerts = new List<(double X, double Y, double Z)>(nv + _faces.Count);
