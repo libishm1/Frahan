@@ -24,7 +24,7 @@ conflict relation whose degree within `s` is at most `D` admits a
 proper coloring of `s` with `D + 1` colors. -/
 theorem greedy_coloring_exists {V : Type*}
     (adj : V → V → Prop) [DecidableRel adj]
-    (hsymm : Symmetric adj) (hirr : ∀ v, ¬ adj v v) (D : ℕ)
+    (hsymm : ∀ ⦃x y⦄, adj x y → adj y x) (hirr : ∀ v, ¬ adj v v) (D : ℕ)
     (s : Finset V) (hdeg : ∀ v ∈ s, (s.filter (adj v)).card ≤ D) :
     ∃ c : V → Fin (D + 1), ∀ v ∈ s, ∀ w ∈ s, adj v w → c v ≠ c w := by
   classical
@@ -50,7 +50,7 @@ theorem greedy_coloring_exists {V : Type*}
       -- pigeonhole: some color is free
       have hfree : ∃ k : Fin (D + 1), k ∉ used := by
         by_contra h
-        push_neg at h
+        push Not at h
         have : used = Finset.univ := Finset.eq_univ_iff_forall.mpr h
         rw [this, Finset.card_univ, Fintype.card_fin] at hcard
         omega

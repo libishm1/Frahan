@@ -1,0 +1,30 @@
+name: Lean proofs
+
+on:
+  push:
+    paths:
+      - 'frahan_proofs/**'
+      - '.github/workflows/lean-proofs.yml'
+  pull_request:
+    paths:
+      - 'frahan_proofs/**'
+      - '.github/workflows/lean-proofs.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and check no `sorry`
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: 'frahan_proofs'
+          build-args: 'FrahanProofs'
+          use-mathlib-cache: true
+      - name: Fail if any `sorry` slipped in
+        run: |
+          if grep -rn --include='*.lean' -w 'sorry' frahan_proofs/FrahanProofs; then
+            echo "::error::found a sorry in the proof library"
+            exit 1
+          fi

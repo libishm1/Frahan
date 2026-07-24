@@ -23,18 +23,18 @@ there is a total install order `s` with every precedence edge `r a b`
 strict in `s`. `Finite` is not even needed for existence; Kahn's loop
 (`dag_has_source`) uses finiteness only to terminate. -/
 theorem kahn_linear_extension {α : Type*} (r : α → α → Prop)
-    [IsTrans α r] [IsIrrefl α r] :
+    [IsTrans α r] [Std.Irrefl r] :
     ∃ s : α → α → Prop, IsLinearOrder α s ∧ ∀ a b, r a b → s a b ∧ a ≠ b := by
   -- the reflexive closure of the strict precedence
   let r' : α → α → Prop := fun a b => r a b ∨ a = b
-  haveI : IsRefl α r' := ⟨fun a => Or.inr rfl⟩
+  haveI : Std.Refl r' := ⟨fun a => Or.inr rfl⟩
   haveI : IsTrans α r' := ⟨by
     rintro a b c (hab | rfl) (hbc | rfl)
     · exact Or.inl (Trans.trans hab hbc)
     · exact Or.inl hab
     · exact Or.inl hbc
     · exact Or.inr rfl⟩
-  haveI : IsAntisymm α r' := ⟨by
+  haveI : Std.Antisymm r' := ⟨by
     rintro a b (hab | rfl) (hba | h)
     · exact absurd (Trans.trans hab hba) (irrefl a)
     · exact h.symm

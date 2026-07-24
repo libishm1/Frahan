@@ -172,7 +172,7 @@ stuck on a DAG, i.e. a valid install order always offers a next part.
 (The full loop-correctness statement, and the converse "stuck ⇒ cycle",
 are staged in `Roadmap.lean`.) -/
 theorem dag_has_source {α : Type*} [Finite α] (r : α → α → Prop)
-    [IsTrans α r] [IsIrrefl α r] (s : Set α) (hs : s.Nonempty) :
+    [IsTrans α r] [Std.Irrefl r] (s : Set α) (hs : s.Nonempty) :
     ∃ m ∈ s, ∀ x ∈ s, ¬ r x m := by
   have hwf : WellFounded r := Finite.wellFounded_of_trans_of_irrefl r
   exact hwf.has_min s hs
