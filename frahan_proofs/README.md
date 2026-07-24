@@ -35,6 +35,8 @@ space where applicable:
 | `thm:kplanes` | termination: the antitone cost sequence has finitely many attainable values, so Lloyd iteration stabilizes | `Clustering.lean` |
 | Welsh–Powell | greedy `Δ+1` coloring of a conflict graph, any insertion order (from scratch — Mathlib has no such bound) | `Coloring.lean` |
 | `thm:potato` | the sandwich `μ(greedy trim) ≤ convex skull ≤ μ(P)`: the trim is a feasible convex blank, the skull dominates all of them | `Common.lean` |
+| `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
+| `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
 `FrahanProofs/Roadmap.lean` holds the full tier map for the remaining
 ~24 results; new exact statements land there as `proof_wanted` before

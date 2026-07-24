@@ -43,7 +43,8 @@ Tier 2 — linear algebra / spectral / Fourier
   [D] thm:horn      optimal rotation = top eigenvector of N(M)
   [D] prop:kabsch   weighted Kabsch SVD = Horn (det-sign correction)
   [D] prop:pca      normal = least eigenvector; OBB in eigenbasis
-  [D] thm:qem       vᵀKₚv = squared plane distance; optimum solves Q̄v̄ = −b
+  [P] thm:qem       vᵀKₚv = squared plane dist; QEM convex; ∇=0 ⇒ global
+                    min (Registration) — matrix-block Q̄v̄=−b stays basis form
   [D] thm:phasecorr Fourier shift ⇒ δ at the translation
   [D] thm:lambert   r = √2 sin(θ/2) is area-preserving (Jacobian identity)
   [D] §5 planarity  best-fit plane = least eigvec; Chebyshev deviation
@@ -57,7 +58,8 @@ classical ingredient with a citation; discharge as Mathlib grows)
   [A] thm:poisson      argmin ∫‖∇χ−V‖² solves Δχ = ∇·V (weak E–L)
   [A] thm:stolt        constant-v dispersion remap + Jacobian
   [A] thm:heat         Varadhan limit recovers geodesic distance
-  [D] thm:kintsugi     world-pose composition T_world = T_unnorm·T_net·T_norm
+  [P] thm:kintsugi     world-pose composition + faithful uniqueness +
+                    g-conjugation equivariance (Registration)
   [D] thm:surfpack     surface-packing transfer (chart scale bound)
   [D] thm:guillotine   wire-saw separability ⇔ guillotine, staged φ=1
 -/
