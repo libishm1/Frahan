@@ -22,9 +22,16 @@ jobs:
           lake-package-directory: 'frahan_proofs'
           build-args: 'FrahanProofs'
           use-mathlib-cache: true
-      - name: Fail if any `sorry` slipped in
+      - name: Fail if any real `sorry` slipped in
         run: |
-          if grep -rn --include='*.lean' -w 'sorry' frahan_proofs/FrahanProofs; then
-            echo "::error::found a sorry in the proof library"
+          # Match `sorry` as a tactic/term (after :=, by, =>, |, ;, ⟨, comma, or
+          # line start), NOT the word inside docstrings ("no sorry", "uses sorry").
+          if grep -rnE '(:=|\bby\b|=>|\||;|⟨|,|^)[[:space:]]*sorry\b' \
+               --include='*.lean' frahan_proofs/FrahanProofs; then
+            echo "::error::a declaration uses sorry"
             exit 1
           fi
+      - name: List declared axioms (exactly one expected: settle_kkt)
+        run: |
+          echo "axiom declarations in the library:"
+          grep -rnE '^[[:space:]]*axiom ' --include='*.lean' frahan_proofs/FrahanProofs || true

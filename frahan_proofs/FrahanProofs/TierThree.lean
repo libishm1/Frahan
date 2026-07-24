@@ -153,6 +153,28 @@ theorem settle_convex_optimality (U : E → ℝ) (s : Set E) (x : E) (grad : E)
   have h2 := hstat y hy
   linarith
 
+/-- tex Theorem `thm:settle`, the KKT NECESSITY direction — the one genuinely
+classical ingredient, introduced as a CITED AXIOM (Karush; Kuhn–Tucker; e.g.
+Nocedal–Wright, Bertsekas). At a constrained minimum of the potential energy
+`U` subject to the non-penetration constraints `φ_j ≥ 0`, IF the active-constraint
+gradients are linearly independent (LICQ, the constraint qualification), THEN
+Lagrange multipliers `λ_j ≥ 0` exist with `∇U = Σ λ_j ∇φ_j` and complementary
+slackness `λ_j φ_j = 0` — the contact-force equilibrium of §6. This is a
+genuinely-true theorem asserted here (multiplier EXISTENCE under an explicit CQ),
+NOT an equivalence to a free predicate; sound but not yet mechanized in Mathlib
+(no inequality-KKT). The SUFFICIENCY direction is proved above
+(`settle_convex_optimality`). -/
+axiom settle_kkt {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [CompleteSpace E]
+    {n : ℕ} (U : E → ℝ) (φ : Fin n → E → ℝ) (x : E)
+    (gU : E) (gφ : Fin n → E)
+    (hU : HasGradientAt U gU x)
+    (hφ : ∀ j, HasGradientAt (φ j) (gφ j) x)
+    (hmin : ∀ y, (∀ j, 0 ≤ φ j y) → U x ≤ U y)
+    (hLICQ : LinearIndependent ℝ fun j : {j : Fin n // φ j x = 0} => gφ j.1) :
+    ∃ lam : Fin n → ℝ, (∀ j, 0 ≤ lam j) ∧
+      gU = ∑ j, lam j • gφ j ∧ ∀ j, lam j * φ j x = 0
+
 end Settle
 
 /-! ### tex Theorem `thm:blocktheory` — Shi finiteness / removability -/
@@ -176,18 +198,19 @@ theorem not_removable_of_not_disjoint {V : Type*} {JP EP : Set V}
 /-!
 ### Tier-3 cited-axiom queue (to add with exact, sound hypotheses)
 
-Discharged since the first pass (PROVED above, not axiomatized):
+Discharged by PROOF (not axiomatized):
   * `thm:cra` converse — `cra_farkas`, via Hahn–Banach separation of `g` from
     the closed convex image `A '' K` (closedness stated as an honest hypothesis).
   * `thm:settle` convex half — `settle_convex_optimality` (variational-inequality
     stationary point ⇒ global constrained minimum of a convex energy).
 
-Still queued — each needs its precise hypotheses so any axiom is a genuinely-true
-classical statement, not an unsound shortcut:
+Discharged by a CITED AXIOM (sound existence statement under explicit hypotheses,
+the classical ingredient Mathlib does not yet carry):
+  * `thm:settle` KKT necessity — `settle_kkt` (multiplier existence under LICQ;
+    Karush; Kuhn–Tucker). The ONLY `axiom` declaration in the library.
 
-  * `thm:settle` KKT MULTIPLIER existence (`∇U = Σ λⱼ ∇φⱼ`, `λⱼ ≥ 0`,
-    `λⱼφⱼ = 0`) under a constraint qualification — standard NLP, needs the
-    gradient/constraint setup.
+Still queued — each needs its precise hypotheses / heavy machinery before it is a
+genuinely-true, faithfully-stated axiom:
   * `thm:stolt` — constant-velocity dispersion remap `ω = c√(kₓ²+k_z²)` with the
     `c·k_z/√(kₓ²+k_z²)` amplitude Jacobian (2D Fourier machinery).
   * `thm:heat` — Varadhan `lim_{t→0} −4t log u_t = φ²` (heat-kernel / geodesic

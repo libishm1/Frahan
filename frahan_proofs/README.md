@@ -46,10 +46,13 @@ space where applicable:
 | `thm:settle` | a variational-inequality stationary point of a convex energy is a global constrained minimum (rest = constrained energy min, sufficiency) | `TierThree.lean` |
 
 Tier-3 (analysis/duality/PDE) is handled by `TierThree.lean` under a strict
-policy: prove the sound abstract core, never axiomatize an equivalence to a
-free predicate (which would be unsound). The remaining classical ingredients
-(Gale/Farkas duality, KKT, Stolt, Varadhan) are a documented queue there,
-each to be added as a cited axiom only with its exact, sound hypotheses.
+policy: prove the sound abstract core, and never axiomatize an equivalence to a
+free predicate (which would be unsound). Under this policy the Gale/Farkas
+duality converse and the settle convex core were *proved* outright. The library
+contains exactly **one** `axiom` — `settle_kkt`, the KKT-necessity multiplier
+existence under LICQ (Karush; Kuhn–Tucker), a genuinely-true classical statement
+Mathlib does not yet carry, asserted with its exact hypotheses. The remaining
+Tier-3 ingredients (Stolt, Varadhan) stay a documented queue there.
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
 | `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
