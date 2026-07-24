@@ -9,4 +9,5 @@ import FrahanProofs.Packing
 import FrahanProofs.Fitting
 import FrahanProofs.Projection
 import FrahanProofs.Machines
+import FrahanProofs.TierThree
 import FrahanProofs.Roadmap

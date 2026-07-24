@@ -60,13 +60,19 @@ Tier 2 — linear algebra / spectral / Fourier
 
 Tier 3 — analysis / duality / PDE (state exactly; axiomatize the named
 classical ingredient with a citation; discharge as Mathlib grows)
-  [A] thm:cra          static/safe theorem = SOC cone feasibility (Farkas)
-  [A] thm:blocktheory  removability = polyhedral cone emptiness (Shi)
-  [A] thm:settle       rest = KKT of constrained energy minimum
-  [A] thm:cpd          EM round is likelihood-non-decreasing
-  [A] thm:poisson      argmin ∫‖∇χ−V‖² solves Δχ = ∇·V (weak E–L)
-  [A] thm:stolt        constant-v dispersion remap + Jacobian
-  [A] thm:heat         Varadhan limit recovers geodesic distance
+  [P] thm:cpd          EM/MM monotonicity mm_monotone (TierThree)
+  [P] thm:poisson      least-squares E–L normal equation poisson_normal_eq_min
+                       (TierThree, T=∇ ⇒ Δχ=∇·V); operator-level QEM too
+  [P] thm:cra          convex-feasibility structure admissibleSet_convex
+                       (TierThree); [A] Gale/Farkas converse queued (sound
+                       hypotheses pending)
+  [P] thm:blocktheory  Removable def + not_removable half (TierThree, Shi)
+  [A] thm:settle       rest = KKT of constrained energy minimum (queued;
+                       convex "stationary ⇒ min" half provable)
+  [A] thm:stolt        constant-v dispersion remap + Jacobian (queued)
+  [A] thm:heat         Varadhan limit recovers geodesic distance (queued)
+  NOTE: Tier-3 policy — prove the sound abstract core, never axiomatize an
+  equivalence to a free predicate (unsound). See TierThree.lean.
   [P] thm:kintsugi     world-pose composition + faithful uniqueness +
                     g-conjugation equivariance (Registration)
   [D] thm:surfpack     surface-packing transfer (chart scale bound)

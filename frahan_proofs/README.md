@@ -39,6 +39,15 @@ space where applicable:
 | `lem:plane` | the least-squares Gram form is positive definite iff the picks span (non-collinear) — existence/uniqueness of the dip plane | `Fitting.lean` |
 | `thm:lambert` | the Schmidt/Lambert radial map `r=√2 sin(θ/2)` satisfies `r·r' = ½ sinθ` — equal-area (undistorted pole density) | `Projection.lean` |
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
+| `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |
+| `thm:poisson` | the least-squares Euler–Lagrange normal equation `T†(Tx−V)=0 ⇒` minimizer (with `T=∇` this is `Δχ=∇·V`) | `TierThree.lean` |
+| `thm:cra` | the safe-theorem feasible region `K ∩ A⁻¹{g}` is convex (stability = convex SOC feasibility) | `TierThree.lean` |
+
+Tier-3 (analysis/duality/PDE) is handled by `TierThree.lean` under a strict
+policy: prove the sound abstract core, never axiomatize an equivalence to a
+free predicate (which would be unsound). The remaining classical ingredients
+(Gale/Farkas duality, KKT, Stolt, Varadhan) are a documented queue there,
+each to be added as a cited axiom only with its exact, sound hypotheses.
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
 | `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
