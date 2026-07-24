@@ -73,7 +73,8 @@ Tier 2 — linear algebra / spectral / Fourier
                     (Fourier); [W] inverse-DFT of phase = shifted delta/peak
   [P] thm:lambert   r = √2 sin(θ/2): r·r' = ½ sinθ area-element identity
                     (Projection)
-  [D] §5 planarity  best-fit plane = least eigvec; Chebyshev deviation
+  [P] §5 planarity  best-fit plane = least eigenvector: subsumed by prop:pca
+                    (Spectral) + lem:plane (Fitting); Chebyshev (min-max) dev prose
 
 Tier 3 — analysis / duality / PDE (state exactly; axiomatize the named
 classical ingredient with a citation; discharge as Mathlib grows)
