@@ -23,7 +23,8 @@ Tier 1 — combinatorial / induction / order
   [P] lem:sh        clip = intersection; subset + measure monotone (Common)
   [P] thm:trim      chain identity, subset, measure, convexity (Common)
   [P] thm:kahn      source-existence (Common) + linear extension (Scheduling)
-  [D] thm:kahn      loop-correctness of the literal emit loop; stuck ⇒ cycle
+  [P] thm:kahn      emit-loop converse stuck ⇒ cycle (Scheduling,
+                    stuck_implies_cycle) — the loop sticks only on a non-DAG
   [P] thm:kplanes   descent inequality + finite termination (Clustering)
   [P] mode-merge    greedy mode-merge keeps pairwise-separated joint-set poles
                     (Clustering, mergeKeep_separated) — the clusterer merge step;
@@ -33,12 +34,17 @@ Tier 1 — combinatorial / induction / order
                     built from scratch; Mathlib has no such bound
   [P] thm:imaiiri   min segments = G.dist, achieved by a shortest walk +
                     lower bound for every approximation (Paths); walk=path form
-  [D] thm:guillodp  Bellman recursion optimal over guillotine tilings
-  [D] thm:hm        Hertel–Mehlhorn ≤ 4·OPT convex partition
+  [P] thm:guillodp  DP optimal substructure V=max(place,cut) (Guillotine,
+                    guillotine_dp_recursion via Finset.sup'_union)
+  [P] thm:guillotine wire-saw separability ⇔ guillotine tree + staged φ=1
+                    (Guillotine, GuillotineTree + stagedThreeStage)
+  [P] thm:hm        Hertel–Mehlhorn 4·OPT counting core (Approx,
+                    hertelMehlhorn_four_opt; geometric facts = hypotheses)
   [P] thm:lpt       OPT lower bounds + (2−1/m) list-schedule bound + tight
                     4/3−1/3m arithmetic core (Machines); [W] execution-trace
                     realization + full Graham 4/3 (proof_wanted)
-  [D] (FFD)         first-fit-decreasing 11/9·OPT + 6/9
+  [P] (FFD)         first-fit 2·OPT core (Approx, firstFit_lt_two_opt);
+                    [W] tight 11/9·OPT+6/9 (Dósa)
   [P] thm:potato    greedy trim ≤ convex skull ≤ area(P) (Common) —
                     Chang–Yap exactness/complexity stays prose
   [P] nfp-sep       no-fit-polygon placement ⇒ disjoint parts (Packing) —
@@ -88,7 +94,7 @@ classical ingredient with a citation; discharge as Mathlib grows)
                        placements stay disjoint on the surface (Surface,
                        single + pairwise); area-scale e^{2u} = conformal
                        Jacobian, prose
-  [D] thm:guillotine   wire-saw separability ⇔ guillotine, staged φ=1
+  (thm:guillotine moved to Tier-1: proved via GuillotineTree + staged φ=1)
 -/
 
 -- No `proof_wanted` is currently open: every remaining [D] item needs

@@ -14,5 +14,7 @@ import FrahanProofs.Kriging
 import FrahanProofs.Fourier
 import FrahanProofs.Surface
 import FrahanProofs.Paths
+import FrahanProofs.Approx
+import FrahanProofs.Guillotine
 import FrahanProofs.TierThree
 import FrahanProofs.Roadmap

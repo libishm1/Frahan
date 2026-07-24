@@ -43,6 +43,9 @@ space where applicable:
 | `thm:phasecorr` | the DFT shift theorem, and the normalized cross-power spectrum of two shifted signals equals the pure unit phase (phase-correlation registration) | `Fourier.lean` |
 | `thm:surfpack` | an injective chart map sends disjoint UV placements to disjoint surface parts — the 2D pack stays non-overlapping when mapped onto the surface (single + pairwise) | `Surface.lean` |
 | `thm:imaiiri` | the fewest-edges path is optimal: minimum admissible-segment count equals the graph distance, achieved by a shortest walk and a lower bound for every approximation | `Paths.lean` |
+| `thm:kahn` (converse) | Kahn's loop sticks only on a cyclic input: a stuck (left-total) finite precedence relation has a cycle | `Scheduling.lean` |
+| FFD / `thm:hm` | approximation-ratio cores: First-Fit `< 2·OPT`, and Hertel–Mehlhorn `≤ 4·OPT` (counting, with the geometric facts as hypotheses) | `Approx.lean` |
+| `thm:guillodp` / `thm:guillotine` | guillotine DP optimal substructure `V=max(place,cut)`, and the wire-saw-separable = guillotine-tree model | `Guillotine.lean` |
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | mode-merge | the joint-set clusterer's greedy mode-merge keeps a pairwise-separated set of set-poles (no two joint sets collapse together) | `Clustering.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |

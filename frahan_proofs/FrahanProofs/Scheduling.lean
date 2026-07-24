@@ -47,4 +47,23 @@ theorem kahn_linear_extension {α : Type*} (r : α → α → Prop)
   rintro rfl
   exact irrefl a hab
 
+/-- tex Theorem `thm:kahn`, the emit-loop converse ("stuck ⇒ cycle"): if Kahn's
+loop ever gets STUCK — every remaining part still has an unplaced predecessor,
+i.e. the precedence relation is left-total (`∀ x, ∃ y, r y x`) on a finite set —
+then there is a cycle (`∃ x, r x x` in the transitive closure). So the loop
+sticks only on a cyclic (non-DAG) input; on a DAG it always finds a next part
+(`dag_has_source`) and terminates. -/
+theorem stuck_implies_cycle {α : Type*} [Finite α] [Nonempty α] (r : α → α → Prop)
+    [IsTrans α r] (hstuck : ∀ x, ∃ y, r y x) : ∃ x, r x x := by
+  by_contra hno
+  push_neg at hno
+  -- no self-loop ⇒ r is irreflexive; with transitivity + finiteness it is
+  -- well-founded, so it has a minimal element — a source with no predecessor,
+  -- contradicting left-totality (`hstuck`).
+  haveI : IsIrrefl α r := ⟨hno⟩
+  have hwf : WellFounded r := Finite.wellFounded_of_trans_of_irrefl r
+  obtain ⟨m, _, hm⟩ := hwf.has_min Set.univ ⟨Classical.arbitrary α, Set.mem_univ _⟩
+  obtain ⟨y, hy⟩ := hstuck m
+  exact hm y (Set.mem_univ _) hy
+
 end Frahan
