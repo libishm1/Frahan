@@ -25,6 +25,10 @@ Tier 1 — combinatorial / induction / order
   [P] thm:kahn      source-existence (Common) + linear extension (Scheduling)
   [D] thm:kahn      loop-correctness of the literal emit loop; stuck ⇒ cycle
   [P] thm:kplanes   descent inequality + finite termination (Clustering)
+  [P] mode-merge    greedy mode-merge keeps pairwise-separated joint-set poles
+                    (Clustering, mergeKeep_separated) — the clusterer merge step;
+                    CODE-VERIFIED (0/19274 pole pairs within MergeDeg; code_ws
+                    outputs/2026-07-24/clustering_verification)
   [P] (WelshPowell) greedy Δ+1 coloring, any insertion order (Coloring) —
                     built from scratch; Mathlib has no such bound
   [D] thm:imaiiri   BFS fewest-edges path = min-# approximation
