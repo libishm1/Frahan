@@ -83,7 +83,10 @@ classical ingredient with a citation; discharge as Mathlib grows)
   equivalence to a free predicate (unsound). See TierThree.lean.
   [P] thm:kintsugi     world-pose composition + faithful uniqueness +
                     g-conjugation equivariance (Registration)
-  [D] thm:surfpack     surface-packing transfer (chart scale bound)
+  [P] thm:surfpack     non-overlap transfer: injective chart ⇒ disjoint UV
+                       placements stay disjoint on the surface (Surface,
+                       single + pairwise); area-scale e^{2u} = conformal
+                       Jacobian, prose
   [D] thm:guillotine   wire-saw separability ⇔ guillotine, staged φ=1
 -/
 

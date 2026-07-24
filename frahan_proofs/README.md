@@ -41,6 +41,7 @@ space where applicable:
 | `prop:pca` | the least-eigenvalue direction minimizes the directional variance over the unit sphere (Rayleigh) — the estimated surface normal | `Spectral.lean` |
 | `thm:nugget` | zero-nugget kriging interpolates exactly: the weights collapse to a basis vector (`kⱼᵀK⁻¹=eⱼ`), so `d̂(pⱼ)=dⱼ` | `Kriging.lean` |
 | `thm:phasecorr` | the DFT shift theorem, and the normalized cross-power spectrum of two shifted signals equals the pure unit phase (phase-correlation registration) | `Fourier.lean` |
+| `thm:surfpack` | an injective chart map sends disjoint UV placements to disjoint surface parts — the 2D pack stays non-overlapping when mapped onto the surface (single + pairwise) | `Surface.lean` |
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | mode-merge | the joint-set clusterer's greedy mode-merge keeps a pairwise-separated set of set-poles (no two joint sets collapse together) | `Clustering.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |

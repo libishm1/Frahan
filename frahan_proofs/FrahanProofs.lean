@@ -12,5 +12,6 @@ import FrahanProofs.Machines
 import FrahanProofs.Spectral
 import FrahanProofs.Kriging
 import FrahanProofs.Fourier
+import FrahanProofs.Surface
 import FrahanProofs.TierThree
 import FrahanProofs.Roadmap
