@@ -37,8 +37,8 @@ bound `T ⪰ λ` — self-contained, WITHOUT invoking the full spectral theorem:
 `λ` is kept abstract with the faithful hypothesis `T ⪰ λ` (the operator
 inequality that `C ⪰ 0` symmetric supplies). Pinning `λ` to the **actual
 smallest eigenvalue** — existence of the eigenvector attaining the sphere
-infimum — is the spectral-theorem content and is recorded as the one
-`proof_wanted` `least_eigenvalue_lowerBound` below (heavy; see the flag).
+infimum — is the spectral-theorem content and is now PROVED (`least_eigenvalue_lowerBound` below) via Mathlib's
+`hasEigenvalue_iInf_of_finiteDimensional`.
 
 The PCA-OBB "box in the eigenbasis" (prop:pca (i)) and the Hoppe-MST normal
 orientation (prop:pca (iii)) are prose in the tex and are NOT formalized here.
@@ -112,8 +112,7 @@ theorem isMinOn_variance_of_eigenvector (T : E →L[ℝ] E) {lam : ℝ} {u : E}
   rw [mem_sphere_zero_iff_norm] at hv
   exact eigenvector_isMinOn_rayleigh T hlb hev hu v hv
 
-/-- Eigenvalue identification (HEAVY: the spectral-theorem content, left as
-`proof_wanted`). For a symmetric operator `T` on a finite-dimensional
+/-- Eigenvalue identification (PROVED via the spectral eigenvalue theorem). For a symmetric operator `T` on a finite-dimensional
 nontrivial real inner-product space, the abstract `λ` of this section can be
 pinned to the ACTUAL smallest eigenvalue: there is a least eigenvalue `λ` with
 a unit eigenvector `u` (attaining the sphere infimum of the Rayleigh quotient,
@@ -125,10 +124,42 @@ PCA claim: `u = u₃` (least-eigenvalue axis) is the minimum-variance /
 surface-normal direction. Left wanted: this bundles the spectral theorem
 (orthonormal eigenbasis) plus the `iInf`-attainment argument; kept out of the
 self-contained lower-bound development above per the abstract-`λ` design. -/
-proof_wanted least_eigenvalue_lowerBound [FiniteDimensional ℝ E] [Nontrivial E]
+theorem least_eigenvalue_lowerBound [FiniteDimensional ℝ E] [Nontrivial E]
     (T : E →L[ℝ] E) (hT : (T : E →ₗ[ℝ] E).IsSymmetric) :
     ∃ (lam : ℝ) (u : E), ‖u‖ = 1 ∧ T u = lam • u ∧
-      ∀ v : E, lam * ‖v‖ ^ 2 ≤ ⟪T v, v⟫
+      ∀ v : E, lam * ‖v‖ ^ 2 ≤ ⟪T v, v⟫ := by
+  -- The Rayleigh quotient is bounded below (by `-‖T‖`), so its infimum exists.
+  have hbdd : BddBelow (Set.range fun x : { x : E // x ≠ 0 } => T.rayleighQuotient x) := by
+    refine ⟨-‖T‖, ?_⟩
+    rintro y ⟨x, rfl⟩
+    exact (abs_le.mp (T.rayleighQuotient_le_norm (x : E))).1
+  -- In finite dimension the infimum of the Rayleigh quotient of a symmetric
+  -- operator IS an eigenvalue (Mathlib's Rayleigh + spectral theorem):
+  -- `LinearMap.IsSymmetric.hasEigenvalue_iInf_of_finiteDimensional`.
+  have hEig : Module.End.HasEigenvalue (T : E →ₗ[ℝ] E)
+      (⨅ x : { x : E // x ≠ 0 }, T.rayleighQuotient x) :=
+    hT.hasEigenvalue_iInf_of_finiteDimensional
+  obtain ⟨w, hw⟩ := hEig.exists_hasEigenvector
+  have hw_ne : w ≠ 0 := hw.2
+  have hTw : T w = (⨅ x : { x : E // x ≠ 0 }, T.rayleighQuotient x) • w := hw.apply_eq_smul
+  refine ⟨⨅ x : { x : E // x ≠ 0 }, T.rayleighQuotient x, (‖w‖⁻¹ : ℝ) • w,
+      norm_smul_inv_norm hw_ne, ?_, ?_⟩
+  · -- The normalized vector `‖w‖⁻¹ • w` is still an eigenvector for the same `lam`.
+    rw [map_smul, hTw, smul_comm]
+  · -- `lam = ⨅ rayleigh` lower-bounds the Rayleigh quotient in every direction,
+    -- which rearranges to `lam ‖v‖² ≤ ⟪T v, v⟫`.
+    intro v
+    rcases eq_or_ne v 0 with rfl | hv
+    · simp
+    · have hvpos : (0 : ℝ) < ‖v‖ := norm_pos_iff.mpr hv
+      have hb : (0 : ℝ) < ‖v‖ ^ 2 := pow_pos hvpos 2
+      have hle : (⨅ x : { x : E // x ≠ 0 }, T.rayleighQuotient x) ≤ T.rayleighQuotient v :=
+        ciInf_le hbdd (⟨v, hv⟩ : { x : E // x ≠ 0 })
+      have hrq : T.rayleighQuotient v = ⟪T v, v⟫ / ‖v‖ ^ 2 := by
+        rw [show T.rayleighQuotient v = T.reApplyInnerSelf v / ‖v‖ ^ 2 from rfl,
+          reApplyInnerSelf_real]
+      rw [hrq, le_div_iff₀ hb] at hle
+      exact hle
 
 end Spectral
 

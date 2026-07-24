@@ -56,8 +56,8 @@ Tier 1 — combinatorial / induction / order
 Tier 2 — linear algebra / spectral / Fourier
   [P] prop:power    power cell convex (Power)
   [P] lem:clip3d    subsumed: the development is dimension-generic (Common)
-  [P] lem:plane     non-collinear ⇒ Gram form PosDef ⇔ picks span (Fitting);
-                    [W] matrix θ=M⁻¹b closed-form uniqueness (ls_fit_unique)
+  [P] lem:plane     non-collinear ⇒ Gram PosDef ⇔ picks span + LS-fit
+                    UNIQUENESS (Fitting, ls_fit_unique proved); matrix θ=M⁻¹b prose
   [P] thm:nugget    τ=0 interpolation kⱼᵀK⁻¹=eⱼ ⇒ d̂(pⱼ)=dⱼ (Kriging);
                     [W] τ>0 strict-smoother contraction (nugget_strict_smoother)
   [P] thm:horn      centroid-alignment reduction: optimal translation = centroid
@@ -65,12 +65,12 @@ Tier 2 — linear algebra / spectral / Fourier
                     = top eigenvector of N(M) is prose (quaternion, research-scale)
   [P] prop:kabsch   shares horn_optimal_translation; SVD=Horn det-sign is prose
   [P] prop:pca      least-eigenvalue direction minimizes variance = surface
-                    normal (Spectral, Rayleigh lower-bound); [W] eigenvalue
-                    identification (spectral theorem); OBB-in-eigenbasis prose
+                    normal + eigenvalue identification PROVED (Spectral,
+                    least_eigenvalue_lowerBound); OBB-in-eigenbasis prose
   [P] thm:qem       vᵀKₚv = squared plane dist; QEM convex; ∇=0 ⇒ global
                     min (Registration) — matrix-block Q̄v̄=−b stays basis form
-  [P] thm:phasecorr DFT shift theorem + normalized cross-power = unit phase
-                    (Fourier); [W] inverse-DFT of phase = shifted delta/peak
+  [P] thm:phasecorr DFT shift + normalized cross-power = unit phase + inverse-
+                    DFT of phase = shifted delta PROVED (Fourier, all three)
   [P] thm:lambert   r = √2 sin(θ/2): r·r' = ½ sinθ area-element identity
                     (Projection)
   [P] §5 planarity  best-fit plane = least eigenvector: subsumed by prop:pca

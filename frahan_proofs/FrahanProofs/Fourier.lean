@@ -35,7 +35,7 @@ Formalized here (PROVED, no sorry):
     magnitude (when `dft Φ k ≠ 0`) leaves precisely the unit phase
     `conj(phase) = e^{i k·t}`.
 
-Staged (`proof_wanted`; the inverse-DFT-of-a-character step needs the
+PROVED (via Fourier inversion `dft_dft`; the inverse-DFT-of-a-character step uses the
 additive-character orthogonality sum, which `ZMod.dft`'s inversion proof
 keeps private):
   * `dft_inv_phase_eq_delta` — the transform of the pure phase `k ↦ e^{i k·t}`
@@ -132,12 +132,29 @@ theorem normalized_crossPower_eq_phase (Φ : ZMod N → ℂ) (s k : ZMod N)
 phase `k ↦ stdAddChar (s·k)` (the discrete `e^{+i k·t}`) is a scaled shifted
 delta, peaked at `x = s` — `F⁻¹[e^{i k·t}] = δ(x − t)`.
 
-Left as `proof_wanted`: the value follows from the additive-character
-orthogonality sum `∑_k stdAddChar (k·t) = if t = 0 then N else 0`, which
-`ZMod.dft`'s Fourier-inversion proof (`ZMod.dft_dft`) keeps as a private
-`have`; re-deriving it here from `ZMod.isPrimitive_stdAddChar` and
-`AddChar.sum_eq_zero_of_ne_one` is a self-contained follow-up. -/
-proof_wanted dft_inv_phase_eq_delta (s x : ZMod N) :
-    ZMod.dft (fun k => stdAddChar (s * k)) x = if x = s then (N : ℂ) else 0
+Proof by Fourier inversion (bypassing the private orthogonality `have`): the
+pure phase `k ↦ stdAddChar (s·k)` is exactly `ZMod.dft` of the unit spike
+`δ_{-s}` — the DFT of the indicator at `-s` is
+`k ↦ stdAddChar (-((-s)·k)) = stdAddChar (s·k)`. Hence its transform is
+`dft (dft δ_{-s})`, which the inversion formula `ZMod.dft_dft` collapses to
+`N • δ_{-s}(-·)`: value `N` when `x = s` and `0` otherwise. -/
+theorem dft_inv_phase_eq_delta (s x : ZMod N) :
+    ZMod.dft (fun k => stdAddChar (s * k)) x = if x = s then (N : ℂ) else 0 := by
+  classical
+  -- The pure phase `k ↦ stdAddChar (s·k)` is `ZMod.dft` of the unit spike at `-s`.
+  have hδ : ZMod.dft (fun j => if j = -s then (1 : ℂ) else 0)
+      = fun k => stdAddChar (s * k) := by
+    funext k
+    rw [dft_apply, Finset.sum_eq_single_of_mem (-s) (Finset.mem_univ _)]
+    · have hexp : -(-s * k) = s * k := by ring
+      rw [if_pos rfl, smul_eq_mul, mul_one, hexp]
+    · intro j _ hj
+      rw [if_neg hj, smul_zero]
+  -- Fourier inversion collapses `dft (dft δ)` to `N • δ(-·)`.
+  have hinv := dft_dft (fun j => if j = -s then (1 : ℂ) else 0)
+  rw [hδ] at hinv
+  rw [hinv]
+  simp only [neg_inj]
+  split_ifs with h <;> simp
 
 end Frahan

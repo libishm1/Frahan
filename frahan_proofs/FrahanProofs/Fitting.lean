@@ -27,10 +27,11 @@ The `E = ℝ³` instance recovers the tex statement: the homogeneous picks
 span `ℝ³` exactly when the planimetric `pᵢ` are not collinear, and that
 is exactly when `M ≻ 0` and the dip plane `θ` is unique.
 
-Nothing here uses `sorry` or introduces an axiom. The concrete matrix
-`M = Σ p̃p̃ᵀ`, the closed form `θ = M⁻¹b`, and the fit-uniqueness
-statement it packages are recorded as one `proof_wanted` (`ls_fit_unique`)
-below.
+Nothing here uses `sorry` or introduces an axiom. Fit UNIQUENESS is PROVED
+(`ls_fit_unique`): positive-definite Gram form ⇒ any two least-squares
+minimizers coincide (parallelogram identity + `gramQuad`). The concrete matrix
+`M = Σ p̃p̃ᵀ` and its closed form `θ = M⁻¹b` are the basis-dependent restatement,
+left as prose.
 -/
 
 open scoped RealInnerProductSpace
@@ -117,11 +118,42 @@ form makes the objective strictly convex, so any two global minimizers
 coincide. Stated but not yet proved — the strict-convexity ⇒ unique-argmin
 step and the closed form `M⁻¹b` (existence via the finite-dimensional
 normal-equations solve) are pending. -/
-proof_wanted ls_fit_unique (p : ι → E) (d : ι → ℝ)
+theorem ls_fit_unique (p : ι → E) (d : ι → ℝ)
     (hpd : ∀ u, gramQuad p u = 0 → u = 0) (θ θ' : E)
     (hθ : ∀ w, ∑ i, (⟪p i, θ⟫ - d i) ^ 2 ≤ ∑ i, (⟪p i, w⟫ - d i) ^ 2)
     (hθ' : ∀ w, ∑ i, (⟪p i, θ'⟫ - d i) ^ 2 ≤ ∑ i, (⟪p i, w⟫ - d i) ^ 2) :
-    θ = θ'
+    θ = θ' := by
+  -- It suffices to show the difference `θ − θ'` is annihilated by the Gram
+  -- form, since `hpd` then forces it to be `0`.
+  have hzero : θ - θ' = 0 := by
+    apply hpd
+    -- `gramQuad p (θ−θ') ≥ 0` always; show `≤ 0`, hence `= 0`.
+    refine le_antisymm ?_ (gram_quad_nonneg p _)
+    rw [gramQuad]
+    -- Midpoint of the two minimizers.
+    set m : E := (2⁻¹ : ℝ) • (θ + θ') with hm
+    -- Both are global minima, so they attain the same objective value.
+    have hFeq : (∑ i, (⟪p i, θ⟫ - d i) ^ 2) = ∑ i, (⟪p i, θ'⟫ - d i) ^ 2 :=
+      le_antisymm (hθ θ') (hθ' θ)
+    -- Parallelogram identity for the least-squares objective:
+    -- `F(m) = ½·F(θ) + ½·F(θ') − ¼·∑ᵢ ⟪pᵢ, θ−θ'⟫²`.
+    have key : (∑ i, (⟪p i, m⟫ - d i) ^ 2)
+        = (∑ i, (⟪p i, θ⟫ - d i) ^ 2) / 2
+          + (∑ i, (⟪p i, θ'⟫ - d i) ^ 2) / 2
+          - (1 / 4) * ∑ i, ⟪p i, θ - θ'⟫ ^ 2 := by
+      rw [Finset.sum_div, Finset.sum_div, Finset.mul_sum,
+        ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      have h1 : ⟪p i, m⟫ = 2⁻¹ * (⟪p i, θ⟫ + ⟪p i, θ'⟫) := by
+        rw [hm, real_inner_smul_right, inner_add_right]
+      have h2 : ⟪p i, θ - θ'⟫ = ⟪p i, θ⟫ - ⟪p i, θ'⟫ := by
+        rw [inner_sub_right]
+      rw [h1, h2]; ring
+    -- `θ` is a minimizer, so `F(θ) ≤ F(m)`. With the identity and `F(θ)=F(θ')`
+    -- this pins `∑ᵢ ⟪pᵢ, θ−θ'⟫² ≤ 0`.
+    have hmin : (∑ i, (⟪p i, θ⟫ - d i) ^ 2) ≤ ∑ i, (⟪p i, m⟫ - d i) ^ 2 := hθ m
+    linarith [hFeq, key, hmin]
+  exact sub_eq_zero.mp hzero
 
 end Fitting
 
