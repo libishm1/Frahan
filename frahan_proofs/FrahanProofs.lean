@@ -5,4 +5,7 @@ import FrahanProofs.Power
 import FrahanProofs.Clustering
 import FrahanProofs.Coloring
 import FrahanProofs.Registration
+import FrahanProofs.Packing
+import FrahanProofs.Fitting
+import FrahanProofs.Projection
 import FrahanProofs.Roadmap

@@ -35,6 +35,9 @@ space where applicable:
 | `thm:kplanes` | termination: the antitone cost sequence has finitely many attainable values, so Lloyd iteration stabilizes | `Clustering.lean` |
 | Welsh–Powell | greedy `Δ+1` coloring of a conflict graph, any insertion order (from scratch — Mathlib has no such bound) | `Coloring.lean` |
 | `thm:potato` | the sandwich `μ(greedy trim) ≤ convex skull ≤ μ(P)`: the trim is a feasible convex blank, the skull dominates all of them | `Common.lean` |
+| NFP separation | translated part meets a fixed part iff `t ∈ A−B` (the no-fit polygon); placing outside it ⇒ disjoint — the nester's zero-overlap guarantee | `Packing.lean` |
+| `lem:plane` | the least-squares Gram form is positive definite iff the picks span (non-collinear) — existence/uniqueness of the dip plane | `Fitting.lean` |
+| `thm:lambert` | the Schmidt/Lambert radial map `r=√2 sin(θ/2)` satisfies `r·r' = ½ sinθ` — equal-area (undistorted pole density) | `Projection.lean` |
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |
 | `thm:qem` | per-plane quadric `= (⟪n,v⟫+d)²` = squared point-plane distance; total QEM convex; normal equations `∇=0 ⇒` global minimum | `Registration.lean` |
 
