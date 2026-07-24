@@ -78,6 +78,18 @@ theorem clip_measure_le [MeasurableSpace E] (μ : Measure E)
     (P : Set E) (H : Halfplane E) : μ (clip P H) ≤ μ P :=
   measure_mono (clip_subset P H)
 
+/-- tex Lemma `lem:sh`, idempotence: repeating an identical wire cut is a
+no-op, `clip (clip P H) H = clip P H`. Trivial at the region level
+(`H.carrier ∩ H.carrier = H.carrier`). Stated because it is the exact
+guarantee the `ConvexPolyhedron.ClipByHalfSpace` implementation must meet
+and empirically FAILS on: re-clipping by a plane coincident with an
+existing cap face inflates the computed volume (~2.8% of random cuts,
+up to ~8× on thin slivers — see `outputs/2026-07-24/clip_verification`).
+The spec is idempotent; the floating-point implementation is not. -/
+@[simp] theorem clip_idempotent (P : Set E) (H : Halfplane E) :
+    clip (clip P H) H = clip P H := by
+  simp only [clip, Set.inter_assoc, Set.inter_self]
+
 /-- The greedy-trim clip sequence (tex Definition "Greedy convex trim"):
 apply the cuts in order. -/
 def clipChain (P : Set E) : List (Halfplane E) → Set E
