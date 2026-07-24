@@ -54,7 +54,9 @@ Tier 2 — linear algebra / spectral / Fourier
   [D] thm:nugget    nugget=0 interpolates; nugget>0 strictly smooths
   [D] thm:horn      optimal rotation = top eigenvector of N(M)
   [D] prop:kabsch   weighted Kabsch SVD = Horn (det-sign correction)
-  [D] prop:pca      normal = least eigenvector; OBB in eigenbasis
+  [P] prop:pca      least-eigenvalue direction minimizes variance = surface
+                    normal (Spectral, Rayleigh lower-bound); [W] eigenvalue
+                    identification (spectral theorem); OBB-in-eigenbasis prose
   [P] thm:qem       vᵀKₚv = squared plane dist; QEM convex; ∇=0 ⇒ global
                     min (Registration) — matrix-block Q̄v̄=−b stays basis form
   [D] thm:phasecorr Fourier shift ⇒ δ at the translation

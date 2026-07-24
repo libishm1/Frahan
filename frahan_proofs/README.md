@@ -38,6 +38,7 @@ space where applicable:
 | NFP separation | translated part meets a fixed part iff `t ∈ A−B` (the no-fit polygon); placing outside it ⇒ disjoint — the nester's zero-overlap guarantee | `Packing.lean` |
 | `lem:plane` | the least-squares Gram form is positive definite iff the picks span (non-collinear) — existence/uniqueness of the dip plane | `Fitting.lean` |
 | `thm:lambert` | the Schmidt/Lambert radial map `r=√2 sin(θ/2)` satisfies `r·r' = ½ sinθ` — equal-area (undistorted pole density) | `Projection.lean` |
+| `prop:pca` | the least-eigenvalue direction minimizes the directional variance over the unit sphere (Rayleigh) — the estimated surface normal | `Spectral.lean` |
 | `thm:lpt` | scheduling optimum lower bounds, the `(2−1/m)` list-scheduling makespan bound, and the tight `4/3−1/3m` arithmetic core | `Machines.lean` |
 | mode-merge | the joint-set clusterer's greedy mode-merge keeps a pairwise-separated set of set-poles (no two joint sets collapse together) | `Clustering.lean` |
 | `thm:cpd` | EM / Soft-ICP / CPD monotonicity (abstract minorize-maximize: the objective never decreases) | `TierThree.lean` |
