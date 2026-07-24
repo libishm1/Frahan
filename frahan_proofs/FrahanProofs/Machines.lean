@@ -379,6 +379,148 @@ theorem list_schedule_decomposition (hm : 0 < m) (p : J → ℝ)
     · rw [hpj0]; simp only [mul_zero, sub_zero]
       exact Finset.sum_nonneg (fun j _ => hp j)
 
+/-! ### Case A of the tight LPT bound (small critical job) — PROVED
+
+Graham's proof splits on the critical (last-placed) job `q = p jstar` of the LPT
+makespan machine. When `q` is small (`3q ≤ C*`), the list-schedule certificate
+of `list_schedule_decomposition` closes the tight bound with no further LPT
+structure. The two lemmas below discharge that case completely; only the large
+case (`3q > C*`, the pairing/exchange argument) is deferred at `lpt_tight_bound`.
+-/
+
+/-- Case A arithmetic core (small critical job). From the greedy certificate
+`C_LPT = start + q`, `m·start ≤ total − q`, `total ≤ m·C*` and the smallness
+hypothesis `3q ≤ C*`, the tight bound follows with NO case split on `start` and
+NO sign hypothesis on `start` or `q`: `m·start ≤ m·C* − q` gives
+`start ≤ C* − q/m`, so `C_LPT = start + q ≤ C* + q(m−1)/m ≤ (4/3 − 1/3m)·C*`
+using `3q ≤ C*` and `m ≥ 1`. This is exactly the `hlpt`-free branch of
+`lpt_makespan_bound`, isolated so Case A of `lpt_tight_bound` composes from it. -/
+private theorem lpt_small_critical_arith (hm : 0 < m)
+    {cLPT start q total cStar : ℝ}
+    (hmk : cLPT = start + q)
+    (hstart : (m : ℝ) * start ≤ total - q)
+    (htot : total ≤ (m : ℝ) * cStar)
+    (h3q : 3 * q ≤ cStar) :
+    cLPT ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
+  have hm_pos : (0 : ℝ) < m := by exact_mod_cast hm
+  have hm_ne : (m : ℝ) ≠ 0 := ne_of_gt hm_pos
+  have hM1 : (1 : ℝ) ≤ m := by exact_mod_cast hm
+  have h3m : (0 : ℝ) < 3 * m := by positivity
+  have heq : (4 / 3 - 1 / (3 * (m : ℝ))) * cStar = (4 * (m : ℝ) - 1) * cStar / (3 * m) := by
+    field_simp
+  rw [hmk, heq, le_div_iff₀ h3m]
+  nlinarith [hstart, htot, h3q, hM1, hm_pos,
+    mul_nonneg (by linarith : (0:ℝ) ≤ cStar - 3 * q) (by linarith : (0:ℝ) ≤ (m:ℝ) - 1)]
+
+/-- Case A of tex `thm:lpt` (Graham 1969), FULLY PROVED: whenever the critical
+(last-placed) job on the LPT makespan machine is small (`3·p jstar ≤ C*`), the
+LPT makespan meets the tight `4/3 − 1/(3m)` bound. Consumes the greedy
+certificate `makespan a = start + p jstar`, `m·start ≤ total − p jstar` (exactly
+what `list_schedule_decomposition` produces) plus the optimum-average bound
+`total ≤ m·C*` (from `opt_ge_avg` at the optimum-achieving assignment). Only the
+large-critical-job case (`3·p jstar > C*`) — the pairing/exchange argument — is
+left open at `lpt_tight_bound`. -/
+private theorem lpt_tight_bound_small_case (hm : 0 < m) (p : J → ℝ) (a : J → Fin m)
+    (cStar : ℝ) (hcstar_ach : ∃ b : J → Fin m, makespan hm p b = cStar)
+    (jstar : J) (start : ℝ)
+    (hmk : makespan hm p a = start + p jstar)
+    (hstart : (m : ℝ) * start ≤ totalWork p - p jstar)
+    (hsmall : 3 * p jstar ≤ cStar) :
+    makespan hm p a ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
+  have hm_pos : (0 : ℝ) < m := by exact_mod_cast hm
+  have hm_ne : (m : ℝ) ≠ 0 := ne_of_gt hm_pos
+  obtain ⟨b, hb⟩ := hcstar_ach
+  have htot : totalWork p ≤ (m : ℝ) * cStar := by
+    have h := opt_ge_avg hm p b
+    rw [hb] at h
+    calc totalWork p = (totalWork p / m) * m := by field_simp
+      _ ≤ cStar * m := by exact mul_le_mul_of_nonneg_right h hm_pos.le
+      _ = (m : ℝ) * cStar := by ring
+  exact lpt_small_critical_arith hm hmk hstart htot hsmall
+
+/-- Case A assembled end-to-end (machine-checked composition). For ANY list
+schedule, if the critical job the greedy certificate exposes is small
+(`3·p jstar ≤ C*`), the makespan meets the tight bound. Composes
+`list_schedule_decomposition` (the greedy certificate) with
+`lpt_tight_bound_small_case`. This is exactly the `p jstar ≤ C*/3` branch of the
+`by_cases` in the standard proof of `lpt_tight_bound`; only the complementary
+large-job branch (`3·p jstar > C*`, the pairing/exchange argument) remains. -/
+private theorem list_schedule_tight_bound_small (hm : 0 < m) (p : J → ℝ)
+    (hp : ∀ j, 0 ≤ p j) (a : J → Fin m) (js : List J)
+    (hls : IsListSchedule p a js) (hne : js ≠ [])
+    (cStar : ℝ) (hcstar_ach : ∃ b : J → Fin m, makespan hm p b = cStar)
+    (hsmall : ∀ (jstar : J) (start : ℝ), makespan hm p a = start + p jstar →
+        (m : ℝ) * start ≤ totalWork p - p jstar → 3 * p jstar ≤ cStar) :
+    makespan hm p a ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
+  obtain ⟨jstar, start, hmk, hstart⟩ := list_schedule_decomposition hm p hp a js hls hne
+  exact lpt_tight_bound_small_case hm p a cStar hcstar_ach jstar start hmk hstart
+    (hsmall jstar start hmk hstart)
+
+/-! ### Case B counting step (large critical job) — pigeonhole PROVED
+
+In the large case every job at-or-before the critical one has size `> C*/3`, so
+in any schedule of makespan `≤ C*` each machine runs `≤ 2` of them. That is the
+hypothesis of the pairing/exchange lemma. The pigeonhole itself is proved here;
+the WLOG reduction and the `≤2/machine ⇒ LPT optimal` exchange step are the parts
+left open at `lpt_tight_bound`. -/
+
+/-- Pigeonhole for Case B: on a machine whose load is `≤ c`, if EVERY job it runs
+exceeds `c/3` (i.e. `c < 3·p j`), then it runs at most two jobs — three jobs each
+`> c/3` would sum to `> c`. After the WLOG reduction to the jobs `≥ p jstar >
+C*/3`, this forces the optimum to use `≤ 2` jobs per machine. -/
+private theorem card_jobs_le_two_of_large (p : J → ℝ) (hp : ∀ j, 0 ≤ p j)
+    (a : J → Fin m) (k : Fin m) {c : ℝ}
+    (hload : load p a k ≤ c)
+    (hlarge : ∀ j, a j = k → c < 3 * p j) :
+    (Finset.univ.filter (fun j => a j = k)).card ≤ 2 := by
+  classical
+  have hloadS : load p a k = ∑ j ∈ Finset.univ.filter (fun j => a j = k), p j := rfl
+  rw [hloadS] at hload
+  have hcnn : 0 ≤ c := le_trans (Finset.sum_nonneg (fun j _ => hp j)) hload
+  by_contra hcon
+  have h3 : 3 ≤ (Finset.univ.filter (fun j => a j = k)).card := by omega
+  have hSne : (Finset.univ.filter (fun j => a j = k)).Nonempty := Finset.card_pos.mp (by omega)
+  have hlt : ∑ _j ∈ Finset.univ.filter (fun j => a j = k), (c / 3)
+      < ∑ j ∈ Finset.univ.filter (fun j => a j = k), p j := by
+    apply Finset.sum_lt_sum_of_nonempty hSne
+    intro j hj
+    have hjk : a j = k := (Finset.mem_filter.mp hj).2
+    linarith [hlarge j hjk]
+  rw [Finset.sum_const, nsmul_eq_mul] at hlt
+  have hcard3 : (3 : ℝ) ≤ ((Finset.univ.filter (fun j => a j = k)).card : ℝ) := by
+    exact_mod_cast h3
+  nlinarith [hlt, hload,
+    mul_nonneg (by linarith : (0:ℝ) ≤ ((Finset.univ.filter (fun j => a j = k)).card : ℝ) - 3)
+      (by linarith : (0:ℝ) ≤ c / 3)]
+
+/-- Case B reduces to LPT OPTIMALITY. The ratio `4/3 − 1/3m ≥ 1` for `m ≥ 1`, so
+once the large-critical-job case has established that the LPT makespan does not
+exceed the optimum (`makespan a ≤ C*`), the tight bound is immediate. This
+isolates the sole remaining obligation of `lpt_tight_bound`: proving LPT optimal
+on the reduced (all jobs `> C*/3`) instance. -/
+private theorem le_tight_bound_of_le_opt (hm : 0 < m) {L cStar : ℝ}
+    (hLopt : L ≤ cStar) (hc : 0 ≤ cStar) :
+    L ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := by
+  have hM1 : (1 : ℝ) ≤ m := by exact_mod_cast hm
+  have h3m : (3 : ℝ) ≤ 3 * (m : ℝ) := by linarith
+  have hfrac : 1 / (3 * (m : ℝ)) ≤ 1 / 3 := one_div_le_one_div_of_le (by norm_num) h3m
+  have h1 : (1 : ℝ) ≤ 4 / 3 - 1 / (3 * (m : ℝ)) := by linarith
+  calc L ≤ cStar := hLopt
+    _ = 1 * cStar := (one_mul cStar).symm
+    _ ≤ (4 / 3 - 1 / (3 * (m : ℝ))) * cStar := mul_le_mul_of_nonneg_right h1 hc
+
+/-- Local exchange step of the deferred pairing argument. When a larger job
+`x ≥ x'` is paired with a smaller partner `y ≤ y'` rather than the other way
+round, the worse of the two machine loads does not increase: pairing
+big-with-small is never worse than big-with-big. This elementary inequality is
+the atomic move of the `≤2 jobs/machine ⇒ LPT optimal` exchange induction — the
+research crux of Case B left open at `lpt_tight_bound`. -/
+private theorem pair_exchange_max_le {x x' y y' : ℝ} (hx : x' ≤ x) (hy : y ≤ y') :
+    max (x + y) (x' + y') ≤ max (x + y') (x' + y) := by
+  apply max_le
+  · exact le_trans (by linarith : x + y ≤ x + y') (le_max_left _ _)
+  · exact le_trans (by linarith : x' + y' ≤ x + y') (le_max_left _ _)
+
 /-- tex Theorem `thm:lpt` (Graham 1969), headline statement: the LPT list
 schedule's makespan is within `4/3 − 1/(3m)` of the OPTIMUM makespan `cStar`
 (characterized as a lower bound on every assignment's makespan that is itself

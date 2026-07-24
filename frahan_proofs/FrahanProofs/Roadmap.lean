@@ -40,11 +40,11 @@ Tier 1 — combinatorial / induction / order
                     (Guillotine, GuillotineTree + stagedThreeStage)
   [P] thm:hm        Hertel–Mehlhorn 4·OPT counting core (Approx,
                     hertelMehlhorn_four_opt; geometric facts = hypotheses)
-  [P] thm:lpt       OPT bounds + (2−1/m) bound + tight 4/3 arith core +
-                    execution-trace realization (Machines, list_schedule_
-                    decomposition PROVED); [W] full Graham 4/3 lpt_tight_bound —
-                    needs the Case-B pigeonhole optimality (not reducible to the
-                    conditional arith core; concrete counterexample in-file)
+  [P] thm:lpt       (2−1/m) bound + trace realization + Graham Case A (small
+                    critical job) FULLY PROVED end-to-end + Case B pigeonhole
+                    (≤2 jobs/machine) + exchange atom (Machines, 9 helpers);
+                    [W] lpt_tight_bound: only the ≤2/machine⇒LPT-optimal exchange
+                    lemma + WLOG sub-instance remain (~500-1000 lines, research-scale)
   [P] (FFD)         first-fit < 2·OPT PROVED (Approx, firstFit_lt_two_opt);
                     tight 11/9·OPT+6/9 (Dósa) = PROSE — needs the full FFD
                     bin-packing model + Dósa's ~40pp weighting proof (research-
