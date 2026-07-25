@@ -41,6 +41,12 @@
     <PackageReference Include="CsCheck" Version="4.7.0" />
     <PackageReference Include="Clipper2" Version="2.0.0" />
     <PackageReference Include="Rhino3dm" Version="8.*" />
+    <!-- Soft-ICP kernel dependency. EXACT pin [4.15.0] mirrors the
+         Frahan.EdgeMatching.Core.csproj: 4.15.x is the last MathNet line
+         targeting net48; its netstandard2.0 assembly also loads on net8.0, so
+         SoftIcpRefiner (3x3 SVD weighted Kabsch) and SoftIcpLbfgs
+         (BfgsMinimizer) link unchanged. -->
+    <PackageReference Include="MathNet.Numerics" Version="[4.15.0]" />
   </ItemGroup>
 
   <!-- ================= REAL shipping sources (link, do not copy) ============ -->
@@ -230,6 +236,63 @@
     </Compile>
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/RobustPolygon2D.cs">
       <Link>Linked/Masonry/Geometry/RobustPolygon2D.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Soft-ICP CPD/EM pose refiner (SoftIcpTests). The kernels live in the
+       SIBLING project Frahan.EdgeMatching.Core (namespace Frahan.EdgeMatching),
+       so these link via ../../src/Frahan.EdgeMatching.Core/... . SoftIcpRefiner
+       is the production EM weighted-Kabsch alternation; SoftIcpLbfgs is the
+       gradient-descent (MathNet BfgsMinimizer) sibling. Both reference
+       RhinoCommon-native Mesh.IsPointInside / Mesh.ClosestPoint / Curve.Contains
+       in their penetration term ONLY; those symbols are supplied compile-only by
+       Stubs/RhinoCommonPenetrationShims.cs and never invoked (tests run with
+       Solid=null / Contour2D=null so only the CPD contact + Kabsch path runs).
+       SpatialHash3D (E-step neighbour query) and LieGroups (DampDelta so(3) Exp)
+       are the two internal helpers the refiner calls. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.EdgeMatching.Core/SoftIcpRefiner.cs">
+      <Link>Linked/EdgeMatching/SoftIcpRefiner.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.EdgeMatching.Core/SoftIcpOptions.cs">
+      <Link>Linked/EdgeMatching/SoftIcpOptions.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.EdgeMatching.Core/SoftIcpLbfgs.cs">
+      <Link>Linked/EdgeMatching/SoftIcpLbfgs.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.EdgeMatching.Core/SpatialHash3D.cs">
+      <Link>Linked/EdgeMatching/SpatialHash3D.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.EdgeMatching.Core/LieGroups.cs">
+      <Link>Linked/EdgeMatching/LieGroups.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Saw-bed LPT greedy scheduler (SawBedScheduleTests). SawBedScheduler is the
+       greedy list scheduler (LPT-sorted, least-loaded assignment); SawBedSchedule
+       carries the per-bed timelines. ExtractionPlan / BlockYieldEstimate /
+       BenchBlock are the input data model; BenchBlock's footprint is a
+       BoundingBox3. BoundingBox3.FromSlab references Frahan.Masonry.Cutting.Slab,
+       stubbed under Stubs/ (never called; tests use the 6-double ctor). All pure
+       managed (no Rhino types). -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/CutOpt/SawBedScheduler.cs">
+      <Link>Linked/CutOpt/SawBedScheduler.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/CutOpt/SawBedSchedule.cs">
+      <Link>Linked/CutOpt/SawBedSchedule.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/CutOpt/ExtractionPlan.cs">
+      <Link>Linked/CutOpt/ExtractionPlan.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/CutOpt/BlockYieldEstimate.cs">
+      <Link>Linked/CutOpt/BlockYieldEstimate.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/CutOpt/BenchBlock.cs">
+      <Link>Linked/CutOpt/BenchBlock.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Fractures/BoundingBox3.cs">
+      <Link>Linked/CutOpt/BoundingBox3.cs</Link>
     </Compile>
   </ItemGroup>
 
