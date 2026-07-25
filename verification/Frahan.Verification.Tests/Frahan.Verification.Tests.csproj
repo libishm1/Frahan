@@ -296,4 +296,11 @@
     </Compile>
   </ItemGroup>
 
+  <!-- Cloud ICP registration (KB-14 robust pre-alignment). -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/ScanIngest/PointCloudIcp.cs" Link="Src/PointCloudIcp.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/ScanIngest/ReconstructionNative.cs" Link="Src/ReconstructionNative.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Registration/RegistrationApi.cs" Link="Src/RegistrationApi.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/RigidTransformRecovery.cs" Link="Src/RigidTransformRecovery.cs" />
+  </ItemGroup>
 </Project>

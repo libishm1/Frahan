@@ -273,12 +273,20 @@ races the completion schedule and can kill the process.
   One far outlier drags the target centroid (here ~15 units per axis), so the "helpful" initial guess
   throws the source ~26 units off a ~4 unit grid and the remaining iterations cannot recover.
   `trimFraction` exists precisely for outlier robustness but never gets to act on the pre-align.
-- **Fix (proposed, NOT applied):** make the pre-align robust — per-axis MEDIAN centroid, or trim
-  before computing centroids, or evaluate identity-start vs pre-align-start and keep the better RMS.
-  Changing mean -> median alters registration for all callers, so it needs its own property test
-  (a natural next `/verify-csharp` target: "a single far outlier must not move the initial guess").
-- **Status:** OPEN, pre-existing since 2026-07-10, unrelated to the v0.1.2 kernel fixes. Documented
-  as a known issue in the v0.1.2 notes. Battery: 1067 PASS / 1 FAIL / 154 SKIP.
+- **Fix (APPLIED, post-v0.1.2):** two parts, because the first alone was not enough.
+  (1) The pre-alignment centre is now a per-axis MEDIAN (sampled to 50k points so it stays cheap on
+  million-point clouds) instead of the arithmetic mean, so strays cannot move it.
+  (2) The shift is applied only when the clouds are genuinely FAR APART (`shift > 0.5x` the target
+  extent), which is the feature's stated purpose; overlapping clouds keep an identity start.
+  (3) That gate's reference extent is an INTERQUANTILE (5..95%) spread, not the bounding-box
+  diagonal. A property test caught that (1)+(2) alone still failed the far-apart-AND-contaminated
+  case: outliers inflate the bounding box, so the gate suppressed a rescue that was needed - the
+  same defect moved from the centre into the gate.
+- **Regression cover:** battery `PointCloudIcp trim drops outliers` PASSES, and
+  `verification/Frahan.Verification.Tests/IcpRobustnessTests.cs` adds 3 property tests
+  (60 randomised outlier configurations across mm/m/quarry scales; far-apart-still-rescued, which
+  guards against "fixing" this by deleting the feature; and both conditions together).
+- **Status:** FIXED. Battery 1068 PASS / 0 FAIL / 154 SKIP; verification suite 43/43.
 
 ## KB-15 — Masonry Stability (RBE) reports "error" for a primal-infeasible QP (open, verdict mapping)
 

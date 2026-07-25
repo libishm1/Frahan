@@ -167,17 +167,34 @@ public static class PointCloudIcp
         // local frame), where identity-start ICP has no overlap to latch on.
         if (cum.Equals(Transform.Identity))
         {
-            var sc = Centroid(srcFlat);
-            var tc = Centroid(tgtFlat);
+            // ROBUST centre (KB-14). The arithmetic mean is not outlier robust,
+            // and this runs BEFORE any trimming, so a single stray return (a
+            // bird, a reflection, a mis-registered scrap - routine in real
+            // scans) used to drag the initial guess arbitrarily far and defeat
+            // the trimmed-ICP design. A per-axis median cannot be moved by a
+            // few far points. Sampled: a centre estimate needs no more.
+            var sSample = StrideSubsample(srcFlat, CentroidSampleCap);
+            var tSample = StrideSubsample(tgtFlat, CentroidSampleCap);
+            var sc = MedianCentroid(sSample);
+            var tc = MedianCentroid(tSample);
             var shift = new Vector3d(tc.X - sc.X, tc.Y - sc.Y, tc.Z - sc.Z);
-            double rel = diagnostics == null && tDiag > 0 ? shift.Length / tDiag : 0.0;
-            if (shift.Length > 0)
+            // The reference extent must be robust too. A bounding-box diagonal
+            // is maximally outlier sensitive, so strays would inflate it and
+            // suppress a rescue that IS needed - the same defect as the mean
+            // centre, moved into the gate. Use an interquantile spread.
+            double robustDiag = RobustDiagonal(tSample);
+            if (robustDiag <= 0) robustDiag = tDiag;
+            double rel = robustDiag > 0 ? shift.Length / robustDiag : 0.0;
+            // Apply it only when the clouds are genuinely FAR APART - that is
+            // this feature's whole purpose. When they already overlap,
+            // identity-start ICP has correspondences to latch onto and a
+            // centroid shift can only bias the start.
+            if (shift.Length > 0 && rel > 0.5)
             {
                 cum = Transform.Translation(shift);
-                if (rel > 0.5)
-                    diagnostics = (diagnostics == null ? "" : diagnostics + " ")
-                        + $"Clouds were {shift.Length:G4} apart (>{rel:F1}x the target extent); "
-                        + "centroid pre-alignment applied as the initial guess.";
+                diagnostics = (diagnostics == null ? "" : diagnostics + " ")
+                    + $"Clouds were {shift.Length:G4} apart (>{rel:F1}x the target extent); "
+                    + "centroid pre-alignment applied as the initial guess.";
             }
         }
 
@@ -250,6 +267,51 @@ public static class PointCloudIcp
             }
         double dx = maxX - minX, dy = maxY - minY, dz = maxZ - minZ;
         return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /// <summary>Points sampled for the pre-alignment centre estimate. A centre
+    /// needs no more, and it keeps the median cheap on million-point clouds.</summary>
+    private const int CentroidSampleCap = 50000;
+
+    /// <summary>Per-axis MEDIAN centre. Robust: a handful of far outliers
+    /// cannot move it, unlike <see cref="Centroid"/> (KB-14). Used for the
+    /// pre-alignment initial guess, which runs before any trimming.</summary>
+    private static Point3d MedianCentroid(double[] flat)
+    {
+        int n = flat.Length / 3;
+        if (n == 0) return Point3d.Origin;
+        var buf = new double[n];
+        var med = new double[3];
+        for (int axis = 0; axis < 3; axis++)
+        {
+            for (int i = 0; i < n; i++) buf[i] = flat[3 * i + axis];
+            Array.Sort(buf);
+            med[axis] = (n % 2 == 1)
+                ? buf[n / 2]
+                : 0.5 * (buf[n / 2 - 1] + buf[n / 2]);
+        }
+        return new Point3d(med[0], med[1], med[2]);
+    }
+
+    /// <summary>Interquantile (5..95%) extent diagonal. Robust stand-in for the
+    /// bounding-box diagonal when outliers may be present (KB-14): a few strays
+    /// cannot inflate it, so it is a trustworthy scale reference.</summary>
+    private static double RobustDiagonal(double[] flat)
+    {
+        int n = flat.Length / 3;
+        if (n < 3) return 0.0;
+        var buf = new double[n];
+        double sum = 0.0;
+        for (int axis = 0; axis < 3; axis++)
+        {
+            for (int i = 0; i < n; i++) buf[i] = flat[3 * i + axis];
+            Array.Sort(buf);
+            int lo = (int)(0.05 * (n - 1));
+            int hi = (int)(0.95 * (n - 1));
+            double d = buf[hi] - buf[lo];
+            sum += d * d;
+        }
+        return Math.Sqrt(sum);
     }
 
     private static Point3d Centroid(double[] flat)
