@@ -119,4 +119,87 @@
     </Compile>
   </ItemGroup>
 
+  <!-- Masonry CRA / RBE equilibrium stack (CraStabilityTests). Pure-managed:
+       the equilibrium + friction-cone builders, the RBE QP formulation, and the
+       managed QP solvers. All Rhino-free (flat double[] geometry). Shares the
+       DataModel group above. OsqpQpSolver/OsqpNative P/Invoke frahan_osqp.dll but
+       are only reached when a caller pre-registers an OsqpQpSolver in the solver
+       registry; the test forces MasonrySolverRegistry.Default = null so the
+       deterministic managed lane (LS-first KKT + ADMM) runs on the CI runner. The
+       mesh contact detector chain (MeshContactDetector + MeshSnapshot/Bvh/Grid +
+       RobustPolygon2D) is linked because MasonryStabilityChecker references it in
+       its CheckMeshes/BuildAssemblyFromMeshes surface and the tests build
+       assemblies through the proven proximity detector. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumMatrixBuilder.cs">
+      <Link>Linked/Masonry/Equilibrium/EquilibriumMatrixBuilder.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/FrictionConeBuilder.cs">
+      <Link>Linked/Masonry/Equilibrium/FrictionConeBuilder.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumSystem.cs">
+      <Link>Linked/Masonry/Equilibrium/EquilibriumSystem.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/SparseMatrixCoo.cs">
+      <Link>Linked/Masonry/Equilibrium/SparseMatrixCoo.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/BlockCenterOfMass.cs">
+      <Link>Linked/Masonry/Equilibrium/BlockCenterOfMass.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonryStabilityChecker.cs">
+      <Link>Linked/Masonry/Solvers/MasonryStabilityChecker.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/CraStabilityChecker.cs">
+      <Link>Linked/Masonry/Solvers/CraStabilityChecker.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/RbeQpFormulation.cs">
+      <Link>Linked/Masonry/Solvers/RbeQpFormulation.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/AdmmQpSolver.cs">
+      <Link>Linked/Masonry/Solvers/AdmmQpSolver.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpQpSolver.cs">
+      <Link>Linked/Masonry/Solvers/OsqpQpSolver.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpNative.cs">
+      <Link>Linked/Masonry/Solvers/OsqpNative.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ManagedQpSolver.cs">
+      <Link>Linked/Masonry/Solvers/ManagedQpSolver.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/DenseLinAlg.cs">
+      <Link>Linked/Masonry/Solvers/DenseLinAlg.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IConvexQpSolver.cs">
+      <Link>Linked/Masonry/Solvers/IConvexQpSolver.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ConvexQpProblem.cs">
+      <Link>Linked/Masonry/Solvers/ConvexQpProblem.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonrySolverRegistry.cs">
+      <Link>Linked/Masonry/Solvers/MasonrySolverRegistry.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IIpoptSolver.cs">
+      <Link>Linked/Masonry/Solvers/IIpoptSolver.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IpoptManagedStub.cs">
+      <Link>Linked/Masonry/Solvers/IpoptManagedStub.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshContactDetector.cs">
+      <Link>Linked/Masonry/Interfaces/MeshContactDetector.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSnapshot.cs">
+      <Link>Linked/Masonry/Interfaces/MeshSnapshot.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshBvh.cs">
+      <Link>Linked/Masonry/Interfaces/MeshBvh.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSpatialGrid.cs">
+      <Link>Linked/Masonry/Interfaces/MeshSpatialGrid.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/RobustPolygon2D.cs">
+      <Link>Linked/Masonry/Geometry/RobustPolygon2D.cs</Link>
+    </Compile>
+  </ItemGroup>
+
 </Project>
