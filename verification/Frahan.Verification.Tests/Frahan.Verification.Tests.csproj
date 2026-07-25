@@ -119,6 +119,37 @@
     </Compile>
   </ItemGroup>
 
+  <!-- Stereonet Lambert/Schmidt equal-area projection (StereonetTests). Uses
+       Rhino3dm Point2d/Point3d/Vector3d/Plane value types; OrientationMath
+       (LowerHemisphere) is already linked in the clusterer group above, so it
+       is NOT re-listed here (a second Compile Include would double-define it). -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Discontinuity/StereonetProjection.cs">
+      <Link>Linked/Discontinuity/StereonetProjection.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- CloudMath PCA / orthogonal-least-squares plane fit (PlaneFitTests). This
+       one file carries both SpatialGrid and CloudMath; CloudMath.Pca is the
+       local least-squares plane fit the FACETS facet extractor calls. It is
+       self-contained (only Rhino3dm Point3d/Vector3d) and internal — but it is
+       compiled INTO this test assembly, so the tests reach it directly. The
+       clusterer does not reference SpatialGrid/CloudMath, so no symbol clash. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Discontinuity/CloudMath.cs">
+      <Link>Linked/Discontinuity/CloudMath.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Polygonal-masonry wall generator (PolygonalWallTests). Rhino-FREE
+       additively-weighted-Voronoi (power diagram) generator computed by exact
+       half-plane clipping; self-contained, no dependency to link. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Sequencing/PolygonalWallGenerator.cs">
+      <Link>Linked/Masonry/Sequencing/PolygonalWallGenerator.cs</Link>
+    </Compile>
+  </ItemGroup>
+
   <!-- Masonry CRA / RBE equilibrium stack (CraStabilityTests). Pure-managed:
        the equilibrium + friction-cone builders, the RBE QP formulation, and the
        managed QP solvers. All Rhino-free (flat double[] geometry). Shares the
