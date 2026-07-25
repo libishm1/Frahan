@@ -258,3 +258,40 @@ VERIFIED: debris negative control completes in ~1 s async, 1/8 placed
 (transform metric). Caveat for headless tests: poll by pumping
 doc.NewSolution(false); force-expiring the async component every 500 ms
 races the completion schedule and can kill the process.
+
+---
+
+## KB-14 — Cloud ICP centroid pre-alignment is not outlier robust (CONFIRMED, open)
+
+- **Symptom:** `PointCloudIcp.Register` fails to converge on a clean source when the TARGET cloud
+  contains a single far outlier. Battery test `PointCloudIcp trim drops outliers (Rhino)` expects
+  `FinalRms < 1e-3` and gets `0.682`.
+- **Trigger:** target = source + one far point (e.g. a stray return at 1000,1000,1000 beside a 4 m
+  grid), `trimFraction > 0`, no initial guess (identity), few iterations / single scale.
+- **Root cause:** the centroid pre-alignment added on 2026-07-10 (`PointCloudIcp.cs`, "Centroid
+  pre-alignment" block) uses the plain ARITHMETIC MEAN of each cloud and runs BEFORE any trimming.
+  One far outlier drags the target centroid (here ~15 units per axis), so the "helpful" initial guess
+  throws the source ~26 units off a ~4 unit grid and the remaining iterations cannot recover.
+  `trimFraction` exists precisely for outlier robustness but never gets to act on the pre-align.
+- **Fix (proposed, NOT applied):** make the pre-align robust — per-axis MEDIAN centroid, or trim
+  before computing centroids, or evaluate identity-start vs pre-align-start and keep the better RMS.
+  Changing mean -> median alters registration for all callers, so it needs its own property test
+  (a natural next `/verify-csharp` target: "a single far outlier must not move the initial guess").
+- **Status:** OPEN, pre-existing since 2026-07-10, unrelated to the v0.1.2 kernel fixes. Documented
+  as a known issue in the v0.1.2 notes. Battery: 1067 PASS / 1 FAIL / 154 SKIP.
+
+## KB-15 — Masonry Stability (RBE) reports "error" for a primal-infeasible QP (open, verdict mapping)
+
+- **Symptom:** on `examples/02_masonry_assembly_color_order.gh` the Masonry Stability (RBE) component
+  outputs `V=error`, `R=NaN`, with the report `Solver: OsqpQpSolver, status=SolverError ...
+  message: OSQP status: primal infeasible (val=3, iter=50)`.
+- **Root cause / question:** primal infeasibility of the equilibrium QP is not a solver malfunction.
+  By the static (safe) theorem and its Farkas converse (`cra_farkas`, `frahan_proofs/TierThree.lean`),
+  no admissible force state existing IS the certificate that the assembly is UNSTABLE. Mapping that
+  outcome to `error`/`NaN` instead of an `unstable` verdict hides a meaningful engineering result.
+- **Fix (proposed, NOT applied):** map OSQP `primal infeasible` to the UNSTABLE verdict (keeping the
+  certificate in the report), and reserve `error` for genuine solver failures. Verify against the
+  suite's `CraStabilityTests` (which already asserts the unstable-cantilever dichotomy on the
+  managed lane).
+- **Status:** OPEN. Solver + component code unchanged since 2026-07-13, so this is pre-existing and
+  not introduced by the v0.1.2 fixes. Found during the v0.1.2 canvas delta-audit.
