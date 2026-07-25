@@ -115,9 +115,9 @@ Gram form is positive definite (equivalently, the picks are not all
 collinear — `gram_posDef_iff_span`), the least-squares dip plane `θ`
 minimizing `Σᵢ (⟪p̃ᵢ, θ⟫ − dᵢ)²` is unique: the positive-definite Gram
 form makes the objective strictly convex, so any two global minimizers
-coincide. Stated but not yet proved — the strict-convexity ⇒ unique-argmin
-step and the closed form `M⁻¹b` (existence via the finite-dimensional
-normal-equations solve) are pending. -/
+coincide. PROVED below via a parallelogram/midpoint identity (no strict-convexity
+machinery needed). The closed form `θ = M⁻¹b` (existence via the
+finite-dimensional normal-equations solve) remains prose. -/
 theorem ls_fit_unique (p : ι → E) (d : ι → ℝ)
     (hpd : ∀ u, gramQuad p u = 0 → u = 0) (θ θ' : E)
     (hθ : ∀ w, ∑ i, (⟪p i, θ⟫ - d i) ^ 2 ≤ ∑ i, (⟪p i, w⟫ - d i) ^ 2)

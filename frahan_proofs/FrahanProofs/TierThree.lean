@@ -163,13 +163,21 @@ slackness `λ_j φ_j = 0` — the contact-force equilibrium of §6. This is a
 genuinely-true theorem asserted here (multiplier EXISTENCE under an explicit CQ),
 NOT an equivalence to a free predicate; sound but not yet mechanized in Mathlib
 (no inequality-KKT). The SUFFICIENCY direction is proved above
-(`settle_convex_optimality`). -/
+(`settle_convex_optimality`).
+
+AUDIT NOTE (2026-07-25): the feasibility hypothesis `hfeas` is ESSENTIAL — the
+2026-07-25 adversarial audit produced a counterexample to the axiom WITHOUT it
+(`E = ℝ, n = 1, U = id, φ₀ = (·+1), x = −2`: an infeasible strict lower-bound
+point satisfies every other hypothesis with a vacuous LICQ, while stationarity
+forces `λ₀ = 1` and complementary slackness forces `λ₀ = 0`). With `hfeas` the
+statement is the standard, true KKT necessity theorem. -/
 axiom settle_kkt {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E]
     {n : ℕ} (U : E → ℝ) (φ : Fin n → E → ℝ) (x : E)
     (gU : E) (gφ : Fin n → E)
     (hU : HasGradientAt U gU x)
     (hφ : ∀ j, HasGradientAt (φ j) (gφ j) x)
+    (hfeas : ∀ j, 0 ≤ φ j x)
     (hmin : ∀ y, (∀ j, 0 ≤ φ j y) → U x ≤ U y)
     (hLICQ : LinearIndependent ℝ fun j : {j : Fin n // φ j x = 0} => gφ j.1) :
     ∃ lam : Fin n → ℝ, (∀ j, 0 ≤ lam j) ∧

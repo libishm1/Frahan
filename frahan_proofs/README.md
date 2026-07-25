@@ -45,7 +45,7 @@ space where applicable:
 | `thm:imaiiri` | the fewest-edges path is optimal: minimum admissible-segment count equals the graph distance, achieved by a shortest walk and a lower bound for every approximation | `Paths.lean` |
 | `thm:kahn` (converse) | Kahn's loop sticks only on a cyclic input: a stuck (left-total) finite precedence relation has a cycle | `Scheduling.lean` |
 | FFD / `thm:hm` | approximation-ratio cores: First-Fit `< 2·OPT`, and Hertel–Mehlhorn `≤ 4·OPT` (counting, with the geometric facts as hypotheses) | `Approx.lean` |
-| `thm:guillodp` / `thm:guillotine` | guillotine DP optimal substructure `V=max(place,cut)`, and the wire-saw-separable = guillotine-tree model | `Guillotine.lean` |
+| `thm:guillodp` / `thm:guillotine` | the DP max-split substructure lemma (`sup'` over the place∪cut options), and a guillotine-tree MODEL of wire-saw separability (definitions; the ⇔/φ=1 claims are modeling, not proved theorems) | `Guillotine.lean` |
 | `thm:horn` / `prop:kabsch` | the rigid-alignment centroid reduction: the optimal translation is the centroid difference `q̄ − sRp̄` (rotation-eigenvector part is prose) | `Registration.lean` |
 | `thm:lpt` | the FULL Graham 1969 bound: LPT makespan `≤ (4/3 − 1/3m)·OPT`, proved end-to-end (a static pigeonhole pair lemma replaces the classical exchange induction) | `Machines.lean` + `LptOptimal.lean` |
 | `thm:kintsugi` | world-pose composition `T_world = T_unnorm·T_net·T_norm`, faithful-action uniqueness, and `g`-conjugation equivariance under a global pre-transform | `Registration.lean` |

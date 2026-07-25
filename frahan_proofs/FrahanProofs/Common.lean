@@ -165,12 +165,28 @@ theorem le_convexSkull [MeasurableSpace E] (μ : Measure E) {P C : Set E}
 /-- tex Theorem `thm:potato`, left inequality: the greedy half-plane
 trim returns SOME convex blank inside `P`, so its area is bounded by
 the convex skull: `area(greedy Q) ≤ area(convex skull) ≤ area(P)`.
-(The Chang–Yap exact algorithm and its complexity are prose, not
-formalized.) -/
+
+The hypothesis is convexity of the OUTPUT, which is exactly the
+algorithm's guarantee (the greedy trim keeps cutting until the result is
+convex — the reflex-elimination step, prose). Stated this way the bound
+is non-vacuous precisely in the substantive regime: a NON-convex slab
+`P`, whose skull is strictly smaller than `μ P`. (For convex `P` the
+output convexity follows from `clipChain_convex`, but then the skull
+degenerates to `μ P` and this adds nothing over `clipChain_measure_le` —
+see `clipChain_le_convexSkull_of_convex`.) Chang–Yap exactness and
+complexity are prose, not formalized. -/
 theorem clipChain_le_convexSkull [MeasurableSpace E] (μ : Measure E)
+    {P : Set E} (Hs : List (Halfplane E))
+    (hout : Convex ℝ (clipChain P Hs)) :
+    μ (clipChain P Hs) ≤ convexSkull μ P :=
+  le_convexSkull μ hout (clipChain_subset P Hs)
+
+/-- The convex-input corollary (vacuous as a potato bound — for convex `P`
+the skull equals `μ P` — but recorded for completeness). -/
+theorem clipChain_le_convexSkull_of_convex [MeasurableSpace E] (μ : Measure E)
     {P : Set E} (hP : Convex ℝ P) (Hs : List (Halfplane E)) :
     μ (clipChain P Hs) ≤ convexSkull μ P :=
-  le_convexSkull μ (clipChain_convex hP Hs) (clipChain_subset P Hs)
+  clipChain_le_convexSkull μ Hs (clipChain_convex hP Hs)
 
 end Potato
 

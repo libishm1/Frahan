@@ -215,7 +215,7 @@ centroid alignment. For residual vectors `a i = q i − s·R(p i)`, the translat
 here by `Σ (a i − t₀) = 0`) — i.e. `t = q̄ − s R p̄`. This is the step that
 reduces `E(s,R,t)` to the centred residual; the remaining rotation part
 (maximize `tr(R Mᵀ)` ⇒ `R` = top eigenvector of the `4×4` `N(M)`) is
-`horn_optimal_rotation`. Same expansion as `qem_min_of_normal_eq`. -/
+left as PROSE below — it is not formalized. Same expansion as `qem_min_of_normal_eq`. -/
 theorem horn_optimal_translation (a : ι → E) (t₀ : E)
     (hcen : ∑ i, (a i - t₀) = 0) (t : E) :
     ∑ i, ‖a i - t₀‖ ^ 2 ≤ ∑ i, ‖a i - t‖ ^ 2 := by

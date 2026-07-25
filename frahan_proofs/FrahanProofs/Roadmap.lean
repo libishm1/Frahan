@@ -16,8 +16,8 @@ Nothing in this repository uses `sorry`: a result is either proved or
 explicitly marked wanted here.
 
 Status key: [P] proved (file) · [W] proof_wanted below ·
-[D] needs definitions first · [A] Tier 3, will import a named classical
-result as an axiom with citation when stated.
+[D] needs definitions first · [M] modeled (defs, no correctness theorem) ·
+[A] Tier 3, named classical axiom with citation.
 
 Tier 1 — combinatorial / induction / order
   [P] lem:sh        clip = intersection; subset + measure monotone (Common)
@@ -36,8 +36,9 @@ Tier 1 — combinatorial / induction / order
                     lower bound for every approximation (Paths); walk=path form
   [P] thm:guillodp  DP optimal substructure V=max(place,cut) (Guillotine,
                     guillotine_dp_recursion via Finset.sup'_union)
-  [P] thm:guillotine wire-saw separability ⇔ guillotine tree + staged φ=1
-                    (Guillotine, GuillotineTree + stagedThreeStage)
+  [M] thm:guillotine MODELED, not proved: GuillotineTree + stagedThreeStage
+                    are a definition + construction; the ⇔ and φ=1 are the
+                    modeling claim, with no correctness theorem (audit 2026-07-25)
   [P] thm:hm        Hertel–Mehlhorn 4·OPT counting core (Approx,
                     hertelMehlhorn_four_opt; geometric facts = hypotheses)
   [P] thm:lpt       FULLY PROVED incl. the tight Graham 4/3−1/3m bound

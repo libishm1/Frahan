@@ -13,7 +13,9 @@ hypotheses by construction of the algorithm's two steps.
 The finite-termination half is `antitone_finite_range_eventually_constant`
 below: the cost sequence is antitone (by the descent inequality) and
 attains finitely many values (finitely many assignments), so it is
-eventually constant — Lloyd iteration stabilizes in finitely many rounds.
+eventually constant — the COST stabilizes in finitely many rounds. (Non-cycling
+among equal-cost configurations is not formalized; the claim is about the cost
+sequence, exactly what the theorem states.)
 -/
 
 namespace Frahan
