@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>StructuralStoneFacade</AssemblyName>
+    <RootNamespace>Frahan.Demos.StructuralStoneFacade</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Links the REAL shipping sources (never copies), same pattern as the
+       verification suite: the facade is analysed by the same kernels that ship,
+       so the verdict here is the product's verdict. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryAssembly.cs" Link="Src/MasonryAssembly.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryBlock.cs" Link="Src/MasonryBlock.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryInterface.cs" Link="Src/MasonryInterface.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/ContactVertex.cs" Link="Src/ContactVertex.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/BoundaryConditions.cs" Link="Src/BoundaryConditions.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/BlockBuildOrderer.cs" Link="Src/BlockBuildOrderer.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshContactDetector.cs" Link="Src/MeshContactDetector.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSnapshot.cs" Link="Src/MeshSnapshot.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshBvh.cs" Link="Src/MeshBvh.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSpatialGrid.cs" Link="Src/MeshSpatialGrid.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/RobustPolygon2D.cs" Link="Src/RobustPolygon2D.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumMatrixBuilder.cs" Link="Src/EquilibriumMatrixBuilder.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/FrictionConeBuilder.cs" Link="Src/FrictionConeBuilder.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumSystem.cs" Link="Src/EquilibriumSystem.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/SparseMatrixCoo.cs" Link="Src/SparseMatrixCoo.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/BlockCenterOfMass.cs" Link="Src/BlockCenterOfMass.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonryStabilityChecker.cs" Link="Src/MasonryStabilityChecker.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/CraStabilityChecker.cs" Link="Src/CraStabilityChecker.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/RbeQpFormulation.cs" Link="Src/RbeQpFormulation.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/AdmmQpSolver.cs" Link="Src/AdmmQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpQpSolver.cs" Link="Src/OsqpQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpNative.cs" Link="Src/OsqpNative.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ManagedQpSolver.cs" Link="Src/ManagedQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/DenseLinAlg.cs" Link="Src/DenseLinAlg.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IConvexQpSolver.cs" Link="Src/IConvexQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ConvexQpProblem.cs" Link="Src/ConvexQpProblem.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonrySolverRegistry.cs" Link="Src/MasonrySolverRegistry.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IIpoptSolver.cs" Link="Src/IIpoptSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IpoptManagedStub.cs" Link="Src/IpoptManagedStub.cs" />
+  </ItemGroup>
+
+</Project>
