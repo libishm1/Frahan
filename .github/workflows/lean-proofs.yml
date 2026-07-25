@@ -31,7 +31,7 @@ jobs:
             echo "::error::a declaration uses sorry"
             exit 1
           fi
-      - name: List declared axioms (exactly one expected: settle_kkt)
+      - name: "List declared axioms (exactly one expected - settle_kkt)"
         run: |
           echo "axiom declarations in the library:"
           grep -rnE '^[[:space:]]*axiom ' --include='*.lean' frahan_proofs/FrahanProofs || true
