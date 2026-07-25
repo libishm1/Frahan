@@ -1,0 +1,31 @@
+name: Verification tests
+
+# Layer-1 code verification (P1 of CODE_VERIFICATION_AUDIT.md). Runs the
+# Frahan.Verification.Tests xUnit suite, which links the real shipping kernels
+# and asserts the invariants proved in frahan_proofs/. A red run means the C#
+# has diverged from a machine-checked invariant.
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'verification/**'
+      - '.github/workflows/verification.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'verification/**'
+      - '.github/workflows/verification.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run the verification suite
+        run: dotnet test verification/Frahan.Verification.Tests -c Release --logger "console;verbosity=normal"

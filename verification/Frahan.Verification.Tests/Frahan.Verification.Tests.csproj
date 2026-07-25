@@ -1,0 +1,122 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Frahan.Verification.Tests — the permanent Layer-1 verification suite.
+    Consolidates the six ad-hoc harnesses (outputs/2026-07-24/*_verification)
+    into one CI-runnable xUnit project.
+
+    Philosophy: LINK the real shipping source, never copy kernel code. Each
+    <Compile Include> below points at the actual file under src/; a bug fixed
+    in src/ is immediately re-verified here. Paths are RELATIVE (../../src/...)
+    so the project restores and tests on the CI runner (ubuntu) exactly as it
+    does locally — the original harnesses used absolute D:\ paths and were not
+    portable. The only local code is the two tiny stubs under Stubs/ (unused
+    return types the kernels reference but the tests never exercise) and the
+    test classes themselves.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Override the repo-root Directory.Build.props (Nullable=enable,
+         LangVersion=10.0): the linked kernels + harness logic were authored
+         and verified under these settings. -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <AssemblyName>Frahan.Verification.Tests</AssemblyName>
+    <RootNamespace>Frahan.Verification.Tests</RootNamespace>
+    <!-- The suite intentionally overrides the release version props from
+         Directory.Build.props via Nullable/LangVersion above; no unsafe code
+         is used by any linked kernel. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!-- Test + property-based-testing + geometry NuGets. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="CsCheck" Version="4.7.0" />
+    <PackageReference Include="Clipper2" Version="2.0.0" />
+    <PackageReference Include="Rhino3dm" Version="8.*" />
+  </ItemGroup>
+
+  <!-- ================= REAL shipping sources (link, do not copy) ============ -->
+
+  <!-- BlockCutOpt convex-polyhedron kernel: shared by ClipTests + HrepTests. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/BlockCutOpt/ConvexPolyhedron.cs">
+      <Link>Linked/BlockCutOpt/ConvexPolyhedron.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/BlockCutOpt/OrientedBlock.cs">
+      <Link>Linked/BlockCutOpt/OrientedBlock.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Quarry/BlockCutOpt/BlockCutOptTolerances.cs">
+      <Link>Linked/BlockCutOpt/BlockCutOptTolerances.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Masonry data model: shared by KahnTests + ColoringTests. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryAssembly.cs">
+      <Link>Linked/DataModel/MasonryAssembly.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryBlock.cs">
+      <Link>Linked/DataModel/MasonryBlock.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryInterface.cs">
+      <Link>Linked/DataModel/MasonryInterface.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/ContactVertex.cs">
+      <Link>Linked/DataModel/ContactVertex.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/BoundaryConditions.cs">
+      <Link>Linked/DataModel/BoundaryConditions.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Kahn build-order toposort (KahnTests). -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/BlockBuildOrderer.cs">
+      <Link>Linked/Masonry/BlockBuildOrderer.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Welsh-Powell graph colourer (ColoringTests). -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/BlockGraphColorer.cs">
+      <Link>Linked/Masonry/BlockGraphColorer.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- CNH / NFP-BLF nester (NesterTests). Clipper2Adapter shares the
+       Frahan.Masonry.Geometry namespace with BlockBuildOrderer; distinct
+       classes, no conflict. NativeNfpKernel P/Invokes a Windows native dll
+       but its probe catches DllNotFoundException and falls back to the managed
+       Clipper2 lane, so it runs on the ubuntu CI runner. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Packing/TwoD/ContactNfpHoleNester.cs">
+      <Link>Linked/Packing/ContactNfpHoleNester.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Packing/TwoD/NativeNfpKernel.cs">
+      <Link>Linked/Packing/NativeNfpKernel.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/Clipper2Adapter.cs">
+      <Link>Linked/Masonry/Clipper2Adapter.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Joint-set clusterer (ClusteringTests). Needs Rhino3dm for headless
+       Vector3d/Point3d; Facet is stubbed under Stubs/. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Discontinuity/DiscontinuitySetClusterer.cs">
+      <Link>Linked/Discontinuity/DiscontinuitySetClusterer.cs</Link>
+    </Compile>
+    <Compile Include="../../src/Frahan.StonePack.Core/Discontinuity/OrientationMath.cs">
+      <Link>Linked/Discontinuity/OrientationMath.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+</Project>
