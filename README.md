@@ -79,5 +79,17 @@ Every kept algorithm has a measured benchmark, a math derivation (SLM tier), a s
 and an interdisciplinary synthesis (ROSES). Example: the 2D nester crosses the 80% stock-utilization bar at
 0 overlap with holes; the studies are in `wiki/research/`.
 
+## Formally verified algorithm core
+The algorithm derivations are **machine-checked in Lean 4 + Mathlib** ([`frahan_proofs/`](frahan_proofs/)):
+every named result of the derivations spec is proved or explicitly documented prose — **zero `sorry`, zero
+open goals, one cited axiom** (KKT necessity, audited with a counterexample-driven fix), CI-enforced.
+Highlights: the trim/clip theorems, no-fit-polygon separation (the nester's zero-overlap guarantee),
+Welsh–Powell Δ+1 coloring built from scratch, and the full **Graham 1969 LPT `4/3 − 1/3m` scheduling bound**
+— closed by replacing the classical exchange induction with a static pigeonhole argument. The proofs are
+tied back to the shipping C#: property-based verification tests exercise the real kernels against the same
+machine-checked invariants (two real bugs were found and fixed this way — a coincident-plane clip volume
+inflation and a graph-coloring palette cap). See [`frahan_proofs/README.md`](frahan_proofs/README.md) for
+the theorem table.
+
 ## Contact
 Questions, a collaboration, or a walkthrough of the plugin? **[Book a meeting](https://calendly.com/libish-1234/30min)** (Calendly).
