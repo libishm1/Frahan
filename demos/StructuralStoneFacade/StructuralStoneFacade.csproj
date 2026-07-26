@@ -19,6 +19,7 @@
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryInterface.cs" Link="Src/MasonryInterface.cs" />
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/ContactVertex.cs" Link="Src/ContactVertex.cs" />
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/BoundaryConditions.cs" Link="Src/BoundaryConditions.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Sequencing/StructuralWallGenerator.cs" Link="Src/StructuralWallGenerator.cs" />
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/BlockBuildOrderer.cs" Link="Src/BlockBuildOrderer.cs" />
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshContactDetector.cs" Link="Src/MeshContactDetector.cs" />
     <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSnapshot.cs" Link="Src/MeshSnapshot.cs" />

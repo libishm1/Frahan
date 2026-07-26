@@ -6,6 +6,7 @@ using System.Text;
 using Frahan.Masonry.DataModel;
 using Frahan.Masonry.Geometry;
 using Frahan.Masonry.Interfaces;
+using Frahan.Masonry.Sequencing;
 using Frahan.Masonry.Solvers;
 
 namespace Frahan.Demos.StructuralStoneFacade;
@@ -66,6 +67,7 @@ internal static class Program
         public bool ExpectStable = true;
         public string Why = "";
         public List<Box> Custom = null;      // bypasses the facade generator
+        public StructuralWallResult Generated = null;   // filled by BuildFacade
     }
 
     static void Main()
@@ -74,6 +76,16 @@ internal static class Program
         {
             new Opening { X0 = 1.2, X1 = 3.0, Z0 = 1.2, Z1 = 3.0, Name = "W1" },
             new Opening { X0 = 4.2, X1 = 6.0, Z0 = 1.2, Z1 = 3.0, Name = "W2" },
+        };
+
+        // The architectural elevation (A1): 9.0 x 6.0 m, ten courses. A central
+        // door 1.8 m wide running to the ground, and two 1.2 m windows at first
+        // floor, symmetric about the centre line (4.5 +/- 2.7).
+        var arch = new List<Opening>
+        {
+            new Opening { X0 = 3.6, X1 = 5.4, Z0 = 0.0, Z1 = 2.4, Name = "door" },
+            new Opening { X0 = 1.2, X1 = 2.4, Z0 = 3.0, Z1 = 4.8, Name = "W1" },
+            new Opening { X0 = 6.6, X1 = 7.8, Z0 = 3.0, Z1 = 4.8, Name = "W2" },
         };
 
         var cases = new List<Spec>
@@ -113,6 +125,16 @@ internal static class Program
             new Spec { Name = "B5 facade, zero lintel bearing", Openings = std, Bearing = 0.0,
                        ExpectStable = true,
                        Why = "lintel ends flush with the reveal still find a thrust line" },
+
+            // A1 - the architectural elevation. A real building face rather than
+            // a test panel: a central doorway running to the ground, two upper
+            // windows, everything set out on the 0.6 m course module. The door
+            // is the case the facade demonstrator never had - an opening with no
+            // sill course, whose jambs bear on the foundation rather than on
+            // masonry.
+            new Spec { Name = "A1 architectural elevation", WallW = 9.0, WallH = 6.0,
+                       Openings = arch, ExpectStable = true,
+                       Why = "door to ground + two windows; the flagship example" },
         };
 
         Console.WriteLine("=== Structural stone facade - baseline validation ===");
@@ -123,7 +145,11 @@ internal static class Program
         MasonrySolverRegistry.Default = null;   // deterministic managed lane
         int passed = 0;
         List<Box> heroBoxes = null; Dictionary<string, int> heroOrder = null;
-        bool heroStable = false; string heroStatus = ""; double heroUtil = 0; int heroAligned = 0;
+        bool heroStable = false; string heroStatus = ""; double heroUtil = 0;
+        int heroRunning = 0, heroJamb = 0;
+        List<Box> archBoxes = null; Dictionary<string, int> archOrder = null;
+        bool archStable = false; string archStatus = ""; double archUtil = 0;
+        Spec archSpec = null; int archInterfaces = 0, archFixed = 0, archLayers = 0;
 
         foreach (var spec in cases)
         {
@@ -142,20 +168,47 @@ internal static class Program
             {
                 heroBoxes = boxes; heroStable = r.IsStable; heroStatus = r.Status.ToString();
                 heroUtil = r.MaxFrictionUtilization;
-                heroAligned = CountBondFaults(boxes, spec);
+                heroRunning = spec.Generated.BondFaults;
+                heroJamb = spec.Generated.ProtectedJointViolations;
                 var steps = BlockBuildOrderer.Solve(asm);
                 heroOrder = new Dictionary<string, int>();
                 foreach (var s in steps) heroOrder[s.BlockId] = s.OrderIndex;
                 Console.WriteLine($"{"",-34} -> {asm.InterfaceCount} interfaces, {fixedCount} fixed, " +
-                                  $"build order {steps.Count} steps / {MaxLayer(steps) + 1} layers, " +
-                                  $"bond faults {heroAligned}");
+                                  $"build order {steps.Count} steps / {MaxLayer(steps) + 1} layers");
+            }
+
+            if (spec.Name.StartsWith("A1"))
+            {
+                archBoxes = boxes; archStable = r.IsStable; archStatus = r.Status.ToString();
+                archUtil = r.MaxFrictionUtilization; archSpec = spec;
+                archInterfaces = asm.InterfaceCount; archFixed = fixedCount;
+                var steps = BlockBuildOrderer.Solve(asm);
+                archLayers = MaxLayer(steps) + 1;
+                archOrder = new Dictionary<string, int>();
+                foreach (var s in steps) archOrder[s.BlockId] = s.OrderIndex;
+                Console.WriteLine($"{"",-34} -> {asm.InterfaceCount} interfaces, {fixedCount} fixed, " +
+                                  $"build order {steps.Count} steps / {archLayers} layers");
             }
         }
 
         Console.WriteLine(new string('-', 92));
         Console.WriteLine($"baseline: {passed}/{cases.Count} cases match their expected verdict");
 
-        // ---- hero facade detail + emit ---------------------------------------
+        // ---- emit the geometry BEFORE the slow part ---------------------------
+        // The collapse-tilt bisections below are 15 full QP solves each and take
+        // minutes. Writing the JSON first means an interrupted run still leaves
+        // usable data and drawable elevations (learned the hard way: a run killed
+        // mid-bisection produced no data file at all).
+        string outDir = Path.Combine("D:", "code_ws", "outputs", "2026-07-25", "structural_stone_facade");
+        Directory.CreateDirectory(outDir);
+        string json = Path.Combine(outDir, "facade.json");
+        WriteJson(json, heroBoxes, heroOrder, heroStable, heroStatus, heroUtil);
+        Console.WriteLine("wrote " + json);
+        string ajson = Path.Combine(outDir, "architectural.json");
+        WriteJson(ajson, archBoxes, archOrder, archStable, archStatus, archUtil);
+        Console.WriteLine("wrote " + ajson);
+
+        // ---- hero facade detail ----------------------------------------------
         Console.WriteLine();
         Console.WriteLine("=== B2 hero facade ===");
         double vol = 0, maxLen = 0; int lintels = 0;
@@ -182,13 +235,29 @@ internal static class Program
                           $"ratio {lam / hand:F2}");
         Console.WriteLine("vertical load        : unbounded in this model (rigid blocks, no");
         Console.WriteLine("                       crushing) - a material question, not a stability one");
-        Console.WriteLine($"bond faults (joint under a jamb / over a lintel bearing): {heroAligned}");
+        Console.WriteLine("--- bond quality (two DISTINCT faults, measured separately) ---");
+        Console.WriteLine($"head joint repeated in adjacent courses (running joint): {heroRunning}");
+        Console.WriteLine($"head joint under a jamb / over a lintel bearing       : {heroJamb}");
 
-        string outDir = Path.Combine("D:", "code_ws", "outputs", "2026-07-25", "structural_stone_facade");
-        Directory.CreateDirectory(outDir);
-        string json = Path.Combine(outDir, "facade.json");
-        WriteJson(json, heroBoxes, heroOrder, heroStable, heroStatus, heroUtil);
-        Console.WriteLine("wrote " + json);
+        // ---- A1 architectural elevation ---------------------------------------
+        Console.WriteLine();
+        Console.WriteLine("=== A1 architectural elevation (door + 2 windows) ===");
+        double aVol = 0, aMax = 0; int aLintels = 0;
+        foreach (var b in archBoxes) { aVol += b.Volume; aMax = Math.Max(aMax, b.Length); if (b.IsLintel) aLintels++; }
+        Console.WriteLine($"wall {archSpec.WallW:F1} x {archSpec.WallH:F1} x {archSpec.Depth:F1} m, " +
+                          $"{archSpec.Generated.CourseCount} courses");
+        Console.WriteLine($"blocks {archBoxes.Count}, lintels {aLintels}, stone {aVol:F2} m3 " +
+                          $"({aVol * Density / 1000.0:F1} t), largest unit {aMax:F2} m");
+        Console.WriteLine($"verdict {(archStable ? "STABLE" : "UNSTABLE")} ({archStatus}), " +
+                          $"{archInterfaces} interfaces, {archFixed} fixed, {archLayers} build layers");
+        double aTilt = CollapseTiltDegrees(archSpec);
+        double aLam = Math.Tan(aTilt * Math.PI / 180.0);
+        double aHand = archSpec.Depth / archSpec.WallH;
+        Console.WriteLine($"collapse tilt {aTilt:F2} deg = {aLam:F3} g | hand t/h {aHand:F3} " +
+                          $"| ratio {aLam / aHand:F2}");
+        Console.WriteLine($"running joints {archSpec.Generated.BondFaults}, " +
+                          $"joints under a jamb / bearing {archSpec.Generated.ProtectedJointViolations}");
+        foreach (var wmsg in archSpec.Generated.Warnings) Console.WriteLine("  note: " + wmsg);
 
         Environment.Exit(passed == cases.Count ? 0 : 1);
     }
@@ -242,43 +311,39 @@ internal static class Program
     // -------------------------------------------------------------------------
     // Generator
     // -------------------------------------------------------------------------
+    /// <summary>
+    /// The wall geometry comes from the SHIPPING generator
+    /// (Frahan.StonePack.Core, <c>StructuralWallGenerator</c>), linked and not
+    /// copied — so this demonstrator and the Grasshopper component cannot
+    /// diverge, and the numbers printed below are produced by the code that
+    /// ships. This demo adds only what is a load case rather than wall
+    /// geometry: the <see cref="Spec.Custom"/> bypass used by the B0 control,
+    /// and the tributary roof block.
+    /// </summary>
     static List<Box> BuildFacade(Spec s)
     {
         if (s.Custom != null) return s.Custom;
-        var boxes = new List<Box>();
-        int nCourses = (int)Math.Round(s.WallH / s.Course);
 
-        for (int c = 0; c < nCourses; c++)
+        var opts = new StructuralWallOptions
         {
-            double z0 = c * s.Course, z1 = z0 + s.Course;
+            Width = s.WallW, Height = s.WallH, Depth = s.Depth,
+            CourseHeight = s.Course, NominalLength = s.Nominal,
+            MinLength = s.MinLen, MaxLength = s.MaxLen,
+            LintelBearing = s.Bearing, Lintels = s.Lintels, Density = Density,
+        };
+        foreach (var op in s.Openings)
+            opts.Openings.Add(new StructuralWallOpening(op.X0, op.X1, op.Z0, op.Z1, op.Name));
 
-            var lintelSpans = new List<(double x0, double x1)>();
-            if (s.Lintels)
+        var wall = StructuralWallGenerator.Generate(opts);
+        s.Generated = wall;
+
+        var boxes = new List<Box>();
+        foreach (var b in wall.Blocks)
+            boxes.Add(new Box
             {
-                foreach (var op in s.Openings)
-                {
-                    if (Math.Abs(op.Z1 - z0) < 1e-9)
-                    {
-                        double lx0 = Math.Max(0.0, op.X0 - s.Bearing);
-                        double lx1 = Math.Min(s.WallW, op.X1 + s.Bearing);
-                        boxes.Add(new Box { X0 = lx0, Y0 = 0, Z0 = z0, X1 = lx1, Y1 = s.Depth, Z1 = z1,
-                                            Course = c, IsLintel = true, Density = Density });
-                        lintelSpans.Add((lx0, lx1));
-                    }
-                }
-            }
-
-            var blocked = new List<(double x0, double x1)>();
-            foreach (var op in s.Openings)
-                if (op.Z0 < z1 - 1e-9 && op.Z1 > z0 + 1e-9) blocked.Add((op.X0, op.X1));
-            blocked.AddRange(lintelSpans);
-
-            // Joints that must NOT fall in this course (see ProtectedJoints).
-            var protect = ProtectedJoints(s, c, z0, z1);
-
-            foreach (var span in SolidSpans(0.0, s.WallW, blocked))
-                LayCourse(boxes, span.x0, span.x1, z0, z1, s, c, protect);
-        }
+                X0 = b.X0, Y0 = b.Y0, Z0 = b.Z0, X1 = b.X1, Y1 = b.Y1, Z1 = b.Z1,
+                Course = b.Course, IsLintel = b.IsLintel, Density = Density
+            });
 
         // Tributary roof/floor load, carried as a real bearing block on the top
         // course (an honest load path, not an abstract force): its density is
@@ -287,130 +352,14 @@ internal static class Program
         {
             double th = 0.3;
             double v = s.WallW * s.Depth * th;
+            double top = wall.EffectiveHeight;
             boxes.Add(new Box
             {
-                X0 = 0, Y0 = 0, Z0 = s.WallH, X1 = s.WallW, Y1 = s.Depth, Z1 = s.WallH + th,
-                Course = nCourses, IsRoof = true, Density = s.RoofLoadTonnes * 1000.0 / v
+                X0 = 0, Y0 = 0, Z0 = top, X1 = s.WallW, Y1 = s.Depth, Z1 = top + th,
+                Course = wall.CourseCount, IsRoof = true, Density = s.RoofLoadTonnes * 1000.0 / v
             });
         }
         return boxes;
-    }
-
-    /// <summary>
-    /// x positions where a head joint would be a genuine masonry fault in this
-    /// course, so the layout merges across them instead:
-    ///   * directly UNDER an opening jamb - the jamb must bear on solid stone;
-    ///   * directly OVER a lintel bearing - the lintel end must be built over
-    ///     solid stone, not a joint.
-    /// (The opening reveal itself is a straight vertical line by definition and
-    /// is not a fault; it is excluded from the fault count too.)
-    /// </summary>
-    static List<double> ProtectedJoints(Spec s, int c, double z0, double z1)
-    {
-        var p = new List<double>();
-        foreach (var op in s.Openings)
-        {
-            if (Math.Abs(op.Z0 - z1) < 1e-9) { p.Add(op.X0); p.Add(op.X1); }        // course below the sill
-            if (s.Lintels && Math.Abs(op.Z1 + s.Course - z0) < 1e-9)                // course above the lintel
-            {
-                p.Add(Math.Max(0.0, op.X0 - s.Bearing));
-                p.Add(Math.Min(s.WallW, op.X1 + s.Bearing));
-            }
-        }
-        return p;
-    }
-
-    static List<(double x0, double x1)> SolidSpans(double lo, double hi, List<(double x0, double x1)> blocked)
-    {
-        var cuts = new List<(double x0, double x1)>(blocked);
-        cuts.Sort((a, b) => a.x0.CompareTo(b.x0));
-        var spans = new List<(double x0, double x1)>();
-        double cur = lo;
-        foreach (var b in cuts)
-        {
-            if (b.x0 > cur + 1e-9) spans.Add((cur, Math.Min(b.x0, hi)));
-            cur = Math.Max(cur, b.x1);
-        }
-        if (cur < hi - 1e-9) spans.Add((cur, hi));
-        return spans;
-    }
-
-    static void LayCourse(List<Box> boxes, double x0, double x1, double z0, double z1,
-        Spec s, int c, List<double> protect)
-    {
-        double runLen = x1 - x0;
-        if (runLen < s.MinLen - 1e-9)
-        {
-            if (runLen > 1e-9)
-                boxes.Add(new Box { X0 = x0, Y0 = 0, Z0 = z0, X1 = x1, Y1 = s.Depth, Z1 = z1,
-                                    Course = c, Density = Density });
-            return;
-        }
-
-        var edges = new List<double> { x0 };
-        double first = (c % 2 == 1) ? s.Nominal * 0.5 : s.Nominal;
-        double cur = x0 + Math.Min(first, runLen);
-        while (cur < x1 - 1e-9) { edges.Add(cur); cur += s.Nominal; }
-        edges.Add(x1);
-
-        // trailing sliver -> merge into its neighbour
-        if (edges.Count >= 3 && edges[edges.Count - 1] - edges[edges.Count - 2] < s.MinLen - 1e-9)
-            edges.RemoveAt(edges.Count - 2);
-
-        // Remove joints that would sit under a jamb or over a lintel bearing, by
-        // merging the two stones into one longer one (kept within MaxLen).
-        for (int i = edges.Count - 2; i >= 1; i--)
-        {
-            bool bad = false;
-            foreach (double px in protect) if (Math.Abs(edges[i] - px) < 1e-6) { bad = true; break; }
-            if (!bad) continue;
-            double merged = edges[i + 1] - edges[i - 1];
-            if (merged <= s.MaxLen + 1e-9) edges.RemoveAt(i);
-        }
-
-        for (int i = 0; i + 1 < edges.Count; i++)
-            boxes.Add(new Box { X0 = edges[i], Y0 = 0, Z0 = z0, X1 = edges[i + 1], Y1 = s.Depth, Z1 = z1,
-                                Course = c, Density = Density });
-    }
-
-    /// <summary>
-    /// Genuine bond faults: a head joint repeated in vertically adjacent courses
-    /// where BOTH courses are solid there. Opening reveals (the straight vertical
-    /// edge of a window) are excluded - those are geometry, not a bond fault.
-    /// </summary>
-    static int CountBondFaults(List<Box> boxes, Spec s)
-    {
-        var byCourse = new Dictionary<int, List<Box>>();
-        foreach (var b in boxes)
-        {
-            if (b.IsRoof) continue;
-            if (!byCourse.TryGetValue(b.Course, out var l)) { l = new List<Box>(); byCourse[b.Course] = l; }
-            l.Add(b);
-        }
-        bool IsReveal(double x, double zMid)
-        {
-            foreach (var op in s.Openings)
-                if ((Math.Abs(op.X0 - x) < 1e-6 || Math.Abs(op.X1 - x) < 1e-6)
-                    && op.Z0 < zMid && op.Z1 > zMid) return true;
-            return false;
-        }
-        int faults = 0;
-        foreach (var kv in byCourse)
-        {
-            if (!byCourse.TryGetValue(kv.Key + 1, out var above)) continue;
-            var lowJ = new HashSet<double>();
-            foreach (var b in kv.Value) if (b.X1 < s.WallW - 1e-9) lowJ.Add(Math.Round(b.X1, 6));
-            foreach (var a in above)
-            {
-                if (a.X1 >= s.WallW - 1e-9) continue;
-                double x = Math.Round(a.X1, 6);
-                if (!lowJ.Contains(x)) continue;
-                double zLow = (kv.Key + 0.5) * s.Course, zUp = (kv.Key + 1.5) * s.Course;
-                if (IsReveal(x, zLow) || IsReveal(x, zUp)) continue;   // window reveal, not a fault
-                faults++;
-            }
-        }
-        return faults;
     }
 
     static MasonryAssembly BuildAssembly(List<Box> boxes, out int fixedCount, double tiltDeg = 0.0)

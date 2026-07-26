@@ -303,3 +303,36 @@ races the completion schedule and can kill the process.
   managed lane).
 - **Status:** OPEN. Solver + component code unchanged since 2026-07-13, so this is pre-existing and
   not introduced by the v0.1.2 fixes. Found during the v0.1.2 canvas delta-audit.
+
+## KB-16 — friction utilisation reported at 140.7% on a STABLE/Optimal verdict (open, needs diagnosis)
+
+- **Symptom:** demo baseline case **B5** (`demos/StructuralStoneFacade`, the facade with
+  `LintelBearing = 0`, so each lintel is flush with its window reveal) returns
+  `STABLE / Optimal` with `MaxFrictionUtilization = 140.7%`. Every other case in the
+  suite — including the hero facade B2 and the architectural elevation A1 — reports 92.4%.
+- **Why it matters:** `MaxFrictionUtilization` is documented in
+  `src/.../Solvers/MasonryStabilityChecker.cs:44` as `max over vertices of |f_t| / (mu_eff * f_n)`,
+  where `1.0` = friction cone saturated. A value of 1.407 therefore says the returned contact-force
+  certificate lies OUTSIDE the Coulomb cone — which, taken at face value, is not an admissible
+  state, so it cannot be the witness the safe theorem asks for.
+- **Candidate explanations (not yet resolved — do not assume):**
+  1. Linearisation mismatch. The QP enforces a polygonal friction constraint while the metric
+     measures the circular cone, so corner states read above 1.0 legitimately. But the documented
+     default is a **K=8 inscribed** pyramid (`mu_eff = mu*cos(pi/8)`, header lines 25-27), whose
+     corners sit at only ~1.082 in this metric. **1.407 ~= sqrt(2)** is the **K=4 circumscribed**
+     corner — the configuration that header comment says was removed as a V3-review blocker. So
+     either a K=4 path is still reachable, or `mu_eff` differs between the constraint and the metric.
+  2. The metric is computed against a different `mu` than the constraint used.
+- **Scope:** B2 (48 blocks) and A1 (72 blocks) are unaffected — both at 92.4%, inside the cone —
+  so the shipped facade and architectural examples do not rest on this. B5 is a deliberately
+  degenerate probe (zero bearing).
+- **Not a regression from the joint-protection fix in the geometric sense:** that fix changed B5's
+  block layout (52 blocks) and moved it onto this corner; the earlier layout read 92.4%. The
+  *reporting* behaviour is pre-existing.
+- **Also observed:** B5 is now dramatically slower to solve than any other case (minutes vs seconds),
+  which is consistent with the QP struggling near this configuration.
+- **Next step:** extend `verification/Frahan.Verification.Tests/CraStabilityTests.cs` — which already
+  re-checks stable certificates for equilibrium residual AND friction-cone admissibility — to cover
+  a zero-bearing lintel wall. If the independent check fails, this is a soundness bug in the verdict,
+  not a reporting artefact, and takes priority.
+- **Status:** OPEN, found 2026-07-25 while building the structural wall generator.

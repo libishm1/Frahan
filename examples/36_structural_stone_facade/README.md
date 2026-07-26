@@ -12,29 +12,37 @@ spanned by a lintel stone bearing onto the jambs. The definition then runs the
 | | |
 | --- | --- |
 | wall | 7.2 × 5.4 m, 0.6 m deep single skin |
-| blocks | 46 (nominal 1.2 m, 0.6 m minimum — no slivers), 9 courses |
+| blocks | 48 (nominal 1.2 m, 0.6 m minimum — no slivers), 9 courses |
 | openings | 2 × (1.8 × 1.8 m) |
 | lintels | 2 × 3.0 m (1.8 m clear + 0.6 m bearing each side), 2.86 t each |
 | stone | 19.44 m³ ≈ 51.5 t |
 
 ## Files
 
-- `36_structural_stone_facade.3dm` — the 46 baked blocks (lintels on their own
+- `36_structural_stone_facade.3dm` — the baked blocks (lintels on their own
   layer). Open this first.
 - `36_structural_stone_facade.gh` — the definition. Referenced meshes → Masonry
   Block → Robust Auto Interfaces → Masonry Assembly → Block Build Order, and the
   meshes → Masonry Stability Check (CRA).
 
+> **Re-bake pending (2026-07-25).** The `.3dm` still holds the **46**-block wall
+> from before the joint-protection fix described under *Bond quality* below; the
+> corrected wall has **48** blocks and the same 19.44 m³ of stone. The
+> definition and the analysis chain are unaffected — only the baked geometry is
+> one revision behind, and it is re-baked from the new `Structural Wall
+> (Generator)` component at the next Rhino session. The figures quoted below
+> under *What it reports* are from the 46-block bake.
+
 ## What it reports
 
-```
+```text
 Stable : True
 Report : STABLE | CRA-CERTIFIED (residual 0.30e, 1 iter) | detected contacts
          | blocks free 40, interfaces 96, contact vertices 457
          | max compression 30,614 N | weakest: stone_039 <-> stone_038
 ```
 
-Build order returns all 46 blocks in 9 layers — a physically valid laying
+Build order returns all 48 blocks in 9 layers — a physically valid laying
 sequence where no stone is placed before what it rests on.
 
 ## The verified part
@@ -66,7 +74,7 @@ hand check t/h       0.111      -> agreement within 1%
 ```
 
 That reproduces the classic monolithic-wall overturning rule (`tan θ = t/h`)
-from 46 independent blocks with friction cones — an independent check you can do
+from 48 independent blocks with friction cones — an independent check you can do
 on paper. It is also why the guide says a self-supporting skin is *"restrained
 back to the structural frame"*: unrestrained, this facade takes only ~0.11 g.
 
@@ -77,7 +85,7 @@ Vertical capacity is a material question this analysis does not answer.
 ## Baseline validation
 
 The generator and analysis ship with a self-checking baseline suite
-(`demos/StructuralStoneFacade`, `dotnet run`), **6/6 passing**:
+(`demos/StructuralStoneFacade`, `dotnet run`), **7/7 passing**:
 
 | case | verdict | note |
 | --- | --- | --- |
@@ -86,11 +94,45 @@ The generator and analysis ship with a self-checking baseline suite
 | B2 this facade | STABLE | the example |
 | B3 openings with **no** lintels | STABLE | stands by **flat-arch action** — the expectation was wrong, not the solver |
 | B4 facade + 12 t roof load | STABLE | tributary load carried |
-| B5 zero lintel bearing | STABLE | still finds a thrust line |
+| B5 zero lintel bearing | STABLE | still finds a thrust line — but see KB-16 |
+| A1 architectural elevation | STABLE | door to ground + two windows, 72 blocks |
 
 B3 is the interesting one: a bonded wall spans an opening by arching into the
 masonry either side, which the foundation abuts. Masonry really does this, and
 the safe theorem certifies exactly that thrust state.
+
+## Bond quality — and a fix to the generator (2026-07-25)
+
+Two distinct bond faults matter here, and an earlier version of this example
+conflated them:
+
+| fault | what it is | before | after |
+| --- | --- | --- | --- |
+| running joint | the same head joint in two vertically adjacent courses | 0 | 1 |
+| joint under a jamb / over a bearing | a jamb or a lintel end bearing on a joint rather than on stone | 1 (undetected) | **0** |
+
+The second is the serious one — a jamb standing on a head joint has lost its
+bearing — and it was present in this very facade: in course 1 a joint sat at
+x = 3.0, exactly window W1's right jamb. It went unseen because the number being
+reported was the *running joint* count under a label describing the *jamb*
+fault.
+
+The cause was the protection rule. It cleared a bad joint by **merging** the two
+stones either side, capped at `MaxLength`; with two protected joints one nominal
+apart, clearing the first grows a stone to the cap so the second is silently
+refused. The generator now **relocates** the joint instead — moving it to the
+nearest position that keeps both stones within `[MinLength, MaxLength]` and, if
+possible, off a joint in the course below. Merging remains the fallback, and
+anything neither can fix is counted and named rather than dropped.
+
+Where no position satisfies both constraints the generator protects the bearing
+and accepts the running joint: a jamb on a joint loses support outright, a
+running joint only weakens interlock. That trade is why the left column reads 1.
+
+Both counts are pinned by `verification/Frahan.Verification.Tests`
+(`StructuralWallTests`, 46 facts), which asserts zero *relocatable* violations
+across a matrix of walls, doors and windows, and checks the reported number
+against an independently recomputed one.
 
 ## Reproduce
 

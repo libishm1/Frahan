@@ -156,6 +156,15 @@
     </Compile>
   </ItemGroup>
 
+  <!-- Structural-stone (rectangular coursed) wall generator
+       (StructuralWallTests). Rhino-free layout math; its BuildAssembly helper
+       uses the DataModel + MeshContactDetector groups already linked above. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Sequencing/StructuralWallGenerator.cs">
+      <Link>Linked/Masonry/Sequencing/StructuralWallGenerator.cs</Link>
+    </Compile>
+  </ItemGroup>
+
   <!-- Masonry CRA / RBE equilibrium stack (CraStabilityTests). Pure-managed:
        the equilibrium + friction-cone builders, the RBE QP formulation, and the
        managed QP solvers. All Rhino-free (flat double[] geometry). Shares the
