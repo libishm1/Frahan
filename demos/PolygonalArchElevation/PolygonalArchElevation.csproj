@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>PolygonalArchElevation</AssemblyName>
+    <RootNamespace>Frahan.Demos.PolygonalArchElevation</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Clipper2 does the opening cut. The polygonal wall is a PLANAR set of
+       cells, so subtracting an opening is a 2D boolean - the 3D CGAL difference
+       used by examples/27_10 is only needed when the cut is not prismatic. -->
+  <ItemGroup>
+    <PackageReference Include="Clipper2" Version="2.0.0" />
+  </ItemGroup>
+
+  <!-- Links the REAL shipping sources (never copies), same pattern as the
+       structural-stone demo: both walls in the comparison are generated and
+       analysed by the code that ships. -->
+  <ItemGroup>
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Sequencing/PolygonalWallGenerator.cs" Link="Src/PolygonalWallGenerator.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/Clipper2Adapter.cs" Link="Src/Clipper2Adapter.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryAssembly.cs" Link="Src/MasonryAssembly.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryBlock.cs" Link="Src/MasonryBlock.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/MasonryInterface.cs" Link="Src/MasonryInterface.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/ContactVertex.cs" Link="Src/ContactVertex.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/DataModel/BoundaryConditions.cs" Link="Src/BoundaryConditions.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/BlockBuildOrderer.cs" Link="Src/BlockBuildOrderer.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshContactDetector.cs" Link="Src/MeshContactDetector.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSnapshot.cs" Link="Src/MeshSnapshot.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshBvh.cs" Link="Src/MeshBvh.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Interfaces/MeshSpatialGrid.cs" Link="Src/MeshSpatialGrid.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Geometry/RobustPolygon2D.cs" Link="Src/RobustPolygon2D.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumMatrixBuilder.cs" Link="Src/EquilibriumMatrixBuilder.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/FrictionConeBuilder.cs" Link="Src/FrictionConeBuilder.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/EquilibriumSystem.cs" Link="Src/EquilibriumSystem.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/SparseMatrixCoo.cs" Link="Src/SparseMatrixCoo.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Equilibrium/BlockCenterOfMass.cs" Link="Src/BlockCenterOfMass.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonryStabilityChecker.cs" Link="Src/MasonryStabilityChecker.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/CraStabilityChecker.cs" Link="Src/CraStabilityChecker.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/RbeQpFormulation.cs" Link="Src/RbeQpFormulation.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/AdmmQpSolver.cs" Link="Src/AdmmQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpQpSolver.cs" Link="Src/OsqpQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/OsqpNative.cs" Link="Src/OsqpNative.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ManagedQpSolver.cs" Link="Src/ManagedQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/DenseLinAlg.cs" Link="Src/DenseLinAlg.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IConvexQpSolver.cs" Link="Src/IConvexQpSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/ConvexQpProblem.cs" Link="Src/ConvexQpProblem.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/MasonrySolverRegistry.cs" Link="Src/MasonrySolverRegistry.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IIpoptSolver.cs" Link="Src/IIpoptSolver.cs" />
+    <Compile Include="../../src/Frahan.StonePack.Core/Masonry/Solvers/IpoptManagedStub.cs" Link="Src/IpoptManagedStub.cs" />
+  </ItemGroup>
+
+</Project>
