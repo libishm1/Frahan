@@ -19,31 +19,36 @@ spanned by a lintel stone bearing onto the jambs. The definition then runs the
 
 ## Files
 
-- `36_structural_stone_facade.3dm` — the baked blocks (lintels on their own
-  layer). Open this first.
-- `36_structural_stone_facade.gh` — the definition. Referenced meshes → Masonry
-  Block → Robust Auto Interfaces → Masonry Assembly → Block Build Order, and the
-  meshes → Masonry Stability Check (CRA).
-
-> **Re-bake pending (2026-07-25).** The `.3dm` still holds the **46**-block wall
-> from before the joint-protection fix described under *Bond quality* below; the
-> corrected wall has **48** blocks and the same 19.44 m³ of stone. The
-> definition and the analysis chain are unaffected — only the baked geometry is
-> one revision behind, and it is re-baked from the new `Structural Wall
-> (Generator)` component at the next Rhino session. The figures quoted below
-> under *What it reports* are from the 46-block bake.
+- `36_structural_stone_facade.3dm` — the 48 baked blocks, coloured by build
+  order, lintels on their own layer. Open this first.
+- `36_structural_stone_facade.gh` — the definition, now driven by the
+  **`Structural Wall (Generator)`** component: sliders → generator → its
+  exact-joint `Assembly` → Masonry Stability Check (CRA) + Block Build Order.
+  Fully parametric — drag `Width`, `Course` or the opening sliders and the whole
+  chain re-solves.
+- `36_structural_stone_facade.jpg` — the elevation as captured in Rhino.
 
 ## What it reports
 
 ```text
 Stable : True
-Report : STABLE | CRA-CERTIFIED (residual 0.30e, 1 iter) | detected contacts
-         | blocks free 40, interfaces 96, contact vertices 457
-         | max compression 30,614 N | weakest: stone_039 <-> stone_038
+Report : STABLE | CRA-CERTIFIED (residual 0.36e, 1 iter)
+         | exact joints (generator adjacency)
+         | blocks free 42, interfaces 101, contact vertices 488
+         | max compression 24,142 N | weakest: s006 <-> s007
+```
+
+```text
+structural stone wall (self-supporting single skin) | 7.2 x 5.4 x 0.6 m
+courses 9 @ 0.6 | blocks 48 | lintels 2 | running joints 1
+                | joints under a jamb / over a bearing 0
+stone 19.44 m3 (51.5 t at 2650 kg/m3) | largest unit 3.00 m
 ```
 
 Build order returns all 48 blocks in 9 layers — a physically valid laying
-sequence where no stone is placed before what it rests on.
+sequence where no stone is placed before what it rests on. Note the two lintels
+abut exactly at mid-span (each is 1.8 m clear + 0.6 m bearing either side, so
+they meet at x = 3.6); the generator warns when bearings would actually overlap.
 
 ## The verified part
 
@@ -67,7 +72,7 @@ than the structure. It reads about the same for a solid wall as for this facade.
 The margin that *is* a property of the structure comes from limit analysis —
 tilting the wall until certification is lost:
 
-```
+```text
 collapse tilt        6.40 deg   (out-of-plane overturning)
 lateral load factor  0.112 g equivalent
 hand check t/h       0.111      -> agreement within 1%
@@ -136,8 +141,8 @@ against an independently recomputed one.
 
 ## Reproduce
 
-Open the `.3dm`, then the `.gh`. A cold reopen reproduces the result (0 errors,
-0 warnings). To regenerate the geometry and the baseline suite:
+Open the `.3dm`, then the `.gh`. A cold reopen reproduces the result. To
+regenerate the geometry and run the baseline suite headlessly:
 
 ```sh
 dotnet run --project demos/StructuralStoneFacade -c Release
